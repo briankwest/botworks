@@ -126,6 +126,8 @@
     $(document).ready(function() {
       // Initialize DataTable
       $('#paramsTable').DataTable({
+        "responsive": true,  // Enable responsive design
+        "autoWidth": false,  // Disable auto-width to allow responsive adjustments
         "ajax": {
           "url": "{{ url_for('signalwire') }}",
           "dataSrc": "",

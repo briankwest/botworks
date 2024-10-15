@@ -151,8 +151,10 @@
 
   <script>
     $(document).ready(function() {
-      // Initialize DataTable
+      // Initialize DataTable with responsive and autoWidth options
       $('#functionTable').DataTable({
+        "responsive": true,
+        "autoWidth": false,
         "ajax": {
           "url": "{{ url_for('get_functions') }}",
           "dataSrc": ""

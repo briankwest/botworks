@@ -123,8 +123,10 @@
 
   <script>
     $(document).ready(function() {
-      // Initialize DataTable
+      // Initialize DataTable with responsive and autoWidth options
       $('#hintTable').DataTable({
+        "responsive": true,  // Enable responsive design
+        "autoWidth": false,  // Disable auto width to allow manual control
         "ajax": {
           "url": "{{ url_for('get_hints') }}",
           "dataSrc": ""

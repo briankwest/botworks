@@ -1,6 +1,6 @@
 import os  # Standard library import
 from datetime import datetime
-
+import requests
 from dotenv import load_dotenv
 
 from flask import Flask, flash, make_response, jsonify, redirect, render_template, request, url_for
@@ -1241,6 +1241,87 @@ def update_function_arg(function_id, arg_id):
     arg_entry.enum = data.get('enum', arg_entry.enum)
     db.session.commit()
     return jsonify({'message': 'Function argument updated successfully'}), 200
+
+# Datasphere routes
+# Get Datasphere route
+@app.route('/datasphere', methods=['GET'])
+@login_required
+def datasphere():
+    if request.method == 'GET':
+        if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
+            space_name = get_signal_wire_param(current_user.id, 'SPACE_NAME')
+            project_id = get_signal_wire_param(current_user.id, 'PROJECT_ID')
+            auth_token = get_signal_wire_param(current_user.id, 'AUTH_TOKEN')
+            
+            url = f'https://{space_name}/api/datasphere/documents'
+            headers = {'Accept': 'application/json'}
+            response = requests.get(url, headers=headers, auth=(project_id, auth_token))
+            print(response)
+            if response.status_code == 200:
+                return jsonify(response.json()), 200
+        else:   
+            return render_template('datasphere.html', user=current_user)
+
+# Create Datasphere route
+@app.route('/datasphere', methods=['POST'])
+@login_required
+def create_datasphere():
+    data = request.get_json()
+    space_name = get_signal_wire_param(current_user.id, 'SPACE_NAME')
+    project_id = get_signal_wire_param(current_user.id, 'PROJECT_ID')
+    auth_token = get_signal_wire_param(current_user.id, 'AUTH_TOKEN')
+    
+    url = f'https://{space_name}/api/datasphere/documents'
+    headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    }
+    response = requests.post(url, headers=headers, json=data, auth=(project_id, auth_token))
+    
+    if response.status_code == 201:
+        return jsonify(response.json()), 201
+    else:
+        return jsonify({'error': 'Failed to create datasphere'}), response.status_code
+
+# Delete Datasphere route
+@app.route('/datasphere/documents/<uuid:datasphere_id>', methods=['DELETE'])
+@login_required
+def delete_datasphere(datasphere_id):
+    space_name = get_signal_wire_param(current_user.id, 'SPACE_NAME')
+    project_id = get_signal_wire_param(current_user.id, 'PROJECT_ID')
+    auth_token = get_signal_wire_param(current_user.id, 'AUTH_TOKEN')
+    
+    url = f'https://{space_name}/api/datasphere/documents/{datasphere_id}'
+    headers = {
+        'Accept': 'application/json'
+    }
+    response = requests.delete(url, headers=headers, auth=(project_id, auth_token))
+    
+    if response.status_code == 200:
+        return jsonify({'message': 'Datasphere document deleted successfully'}), 200
+    else:
+        return jsonify({'error': 'Failed to delete datasphere document'}), response.status_code
+
+# Update Datasphere route
+@app.route('/datasphere/documents/<uuid:datasphere_id>', methods=['PATCH'])
+@login_required
+def update_datasphere(datasphere_id):
+    data = request.get_json()
+    space_name = get_signal_wire_param(current_user.id, 'SPACE_NAME')
+    project_id = get_signal_wire_param(current_user.id, 'PROJECT_ID')
+    auth_token = get_signal_wire_param(current_user.id, 'AUTH_TOKEN')
+    
+    url = f'https://{space_name}/api/datasphere/documents/{datasphere_id}'
+    headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    }
+    response = requests.patch(url, headers=headers, json=data, auth=(project_id, auth_token))
+    
+    if response.status_code == 200:
+        return jsonify(response.json()), 200
+    else:
+        return jsonify({'error': 'Failed to update datasphere'}), response.status_code
 
 
 

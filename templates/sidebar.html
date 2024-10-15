@@ -68,7 +68,7 @@
           <!-- Parameters -->
           <li class="nav-item">
             <a href="{{ url_for('params') }}" class="nav-link {{ 'active' if request.endpoint == 'params' else '' }}">
-              <i class="nav-icon fas fa-cogs"></i>
+              <i class="nav-icon fas fa-sliders-h"></i>
               <p>Parameters</p>
             </a>
           </li>
@@ -84,6 +84,13 @@
             <a href="{{ url_for('functions') }}" class="nav-link {{ 'active' if request.endpoint == 'functions' else '' }}">
               <i class="nav-icon fas fa-code"></i>
               <p>SWAIG Functions</p>
+            </a>
+          </li>
+          <!-- DataSphere -->
+          <li class="nav-item">
+            <a href="{{ url_for('datasphere') }}" class="nav-link {{ 'active' if request.endpoint == 'datasphere' else '' }}">
+              <i class="nav-icon fas fa-database"></i>
+              <p>DataSphere</p>
             </a>
           </li>
           <!-- Logout -->
