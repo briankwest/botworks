@@ -1,0 +1,317 @@
+{% extends 'base.html' %}
+
+{% block title %}Languages{% endblock %}
+
+{% block content %}
+  <!-- Navbar -->
+  {% include 'navbar.html' %}
+  <!-- /.navbar -->
+
+  <!-- Main Sidebar Container -->
+  {% include 'sidebar.html' %}
+
+  <!-- Content Wrapper. Contains page content -->
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1 class="m-0">Languages</h1>
+          </div><!-- /.col -->
+        </div><!-- /.row -->
+      </div><!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
+
+    <!-- Main content -->
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Language Entries</h3>
+              </div>
+              <!-- /.card-header -->
+              <div class="card-body">
+                <table id="languageTable" class="table table-bordered table-hover">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Name</th>
+                      <th>Code</th>
+                      <th>Voice</th>
+                      <th>Speech Fillers</th>
+                      <th>Function Fillers</th>
+                      <th>Language Order</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+              </div>
+              <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+          </div>
+          <!-- /.col -->
+        </div>
+        <!-- /.row -->
+
+        <!-- Add Language Form -->
+        <div class="row">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Add Language Entry</h3>
+              </div>
+              <!-- /.card-header -->
+              <div class="card-body">
+                <form id="addLanguageForm">
+                  <div class="form-group">
+                    <label for="name">Name</label>
+                    <input type="text" class="form-control" id="name" name="name" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="code">Code</label>
+                    <input type="text" class="form-control" id="code" name="code" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="voice">Voice</label>
+                    <input type="text" class="form-control" id="voice" name="voice">
+                  </div>
+                  <div class="form-group">
+                    <label for="speechFillers">Speech Fillers</label>
+                    <input type="text" class="form-control" id="speechFillers" name="speech_fillers">
+                  </div>
+                  <div class="form-group">
+                    <label for="functionFillers">Function Fillers</label>
+                    <input type="text" class="form-control" id="functionFillers" name="function_fillers">
+                  </div>
+                  <div class="form-group">
+                    <label for="languageOrder">Language Order</label>
+                    <input type="number" class="form-control" id="languageOrder" name="language_order" required>
+                  </div>
+                  <button type="submit" class="btn btn-primary">Add Language</button>
+                </form>
+              </div>
+              <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+          </div>
+          <!-- /.col -->
+        </div>
+        <!-- /.row -->
+
+      </div>
+      <!-- /.container-fluid -->
+    </section>
+    <!-- /.content -->
+
+    <!-- Add this modal at the end of the content block -->
+    <div class="modal fade" id="editLanguageModal" tabindex="-1" role="dialog" aria-labelledby="editLanguageModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editLanguageModalLabel">Edit Language Entry</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="editLanguageForm">
+              <input type="hidden" id="editId" name="id">
+              <div class="form-group">
+                <label for="editName">Name</label>
+                <input type="text" class="form-control" id="editName" name="name" required>
+              </div>
+              <div class="form-group">
+                <label for="editCode">Code</label>
+                <input type="text" class="form-control" id="editCode" name="code" required>
+              </div>
+              <div class="form-group">
+                <label for="editVoice">Voice</label>
+                <input type="text" class="form-control" id="editVoice" name="voice">
+              </div>
+              <div class="form-group">
+                <label for="editSpeechFillers">Speech Fillers</label>
+                <input type="text" class="form-control" id="editSpeechFillers" name="speech_fillers">
+              </div>
+              <div class="form-group">
+                <label for="editFunctionFillers">Function Fillers</label>
+                <input type="text" class="form-control" id="editFunctionFillers" name="function_fillers">
+              </div>
+              <div class="form-group">
+                <label for="editLanguageOrder">Language Order</label>
+                <input type="number" class="form-control" id="editLanguageOrder" name="language_order" required>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" id="saveEditButton">Save changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- /.content-wrapper -->
+
+  <!-- Footer -->
+  {% include 'footer.html' %}
+  <!-- /.footer -->
+{% endblock %}
+
+{% block scripts %}
+  <!-- Add DataTables CSS and JS -->
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
+  <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
+
+  <script>
+    $(document).ready(function() {
+      // Initialize DataTable
+      $('#languageTable').DataTable({
+        "ajax": {
+          "url": "{{ url_for('get_language') }}",
+          "dataSrc": ""
+        },
+        "columns": [
+          { "data": "id" },
+          { "data": "name" },
+          { "data": "code" },
+          { "data": "voice" },
+          { "data": "speech_fillers" },
+          { "data": "function_fillers" },
+          { "data": "language_order" },
+          {
+            "data": null,
+            "render": function(data, type, row) {
+              return `
+                <button class="btn btn-primary btn-sm edit-language" data-id="${row.id}">Edit</button>
+                <button class="btn btn-danger btn-sm delete-language" data-id="${row.id}">Delete</button>
+              `;
+            }
+          }
+        ]
+      });
+
+      // Function to show toast notification
+      function showToast(icon, title) {
+        const Toast = Swal.mixin({
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+          didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer)
+            toast.addEventListener('mouseleave', Swal.resumeTimer)
+          }
+        });
+
+        Toast.fire({
+          icon: icon,
+          title: title
+        });
+      }
+
+      // Handle form submission for creating new language entry
+      $('#addLanguageForm').submit(function(e) {
+        e.preventDefault();
+        const formData = {
+          name: $('#name').val(),
+          code: $('#code').val(),
+          voice: $('#voice').val(),
+          speech_fillers: $('#speechFillers').val(),
+          function_fillers: $('#functionFillers').val(),
+          language_order: $('#languageOrder').val()
+        };
+
+        $.ajax({
+          type: 'POST',
+          url: "{{ url_for('language') }}",
+          contentType: 'application/json',
+          data: JSON.stringify(formData),
+          success: function(response) {
+            $('#languageTable').DataTable().ajax.reload();
+            $('#addLanguageForm')[0].reset();
+            showToast('success', 'Language entry created successfully');
+          },
+          error: function(error) {
+            showToast('error', 'Error creating language entry');
+          }
+        });
+      });
+
+      // Handle delete button click
+      $('#languageTable').on('click', '.delete-language', function() {
+        const id = $(this).data('id');
+        if (confirm('Are you sure you want to delete this entry?')) {
+          $.ajax({
+            type: 'DELETE',
+            url: `/language/${id}`,
+            success: function(response) {
+              $('#languageTable').DataTable().ajax.reload();
+              showToast('success', 'Language entry deleted successfully');
+            },
+            error: function(error) {
+              showToast('error', 'Error deleting language entry');
+            }
+          });
+        }
+      });
+
+      // Handle edit button click
+      $('#languageTable').on('click', '.edit-language', function() {
+        const id = $(this).data('id');
+        $.ajax({
+          type: 'GET',
+          url: `/language/${id}`,  
+          success: function(response) {
+            $('#editId').val(response.id);
+            $('#editName').val(response.name);
+            $('#editCode').val(response.code);
+            $('#editVoice').val(response.voice);
+            $('#editSpeechFillers').val(response.speech_fillers);
+            $('#editFunctionFillers').val(response.function_fillers);
+            $('#editLanguageOrder').val(response.language_order);
+            $('#editLanguageModal').modal('show');
+          },
+          error: function(error) {
+            showToast('error', 'Error fetching language entry');
+          }
+        });
+      });
+
+      // Handle save changes button click in edit modal
+      $('#saveEditButton').click(function() {
+        const id = $('#editId').val();
+        const formData = {
+          name: $('#editName').val(),
+          code: $('#editCode').val(),
+          voice: $('#editVoice').val(),
+          speech_fillers: $('#editSpeechFillers').val(),
+          function_fillers: $('#editFunctionFillers').val(),
+          language_order: $('#editLanguageOrder').val()
+        };
+
+        $.ajax({
+          type: 'PUT',
+          url: `/language/${id}`,
+          contentType: 'application/json',
+          data: JSON.stringify(formData),
+          success: function(response) {
+            $('#languageTable').DataTable().ajax.reload();
+            $('#editLanguageModal').modal('hide');
+            showToast('success', 'Language entry updated successfully');
+          },
+          error: function(error) {
+            showToast('error', 'Error updating language entry');
+          }
+        });
+      });
+    });
+  </script>
+{% endblock %}

@@ -1,0 +1,102 @@
+<aside class="main-sidebar sidebar-dark-primary elevation-4">
+    <!-- Brand Logo removed -->
+  
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <!-- Sidebar user panel (optional) -->
+      <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+        <div class="image">
+          <img id="gravatar-img" src="#" class="img-circle elevation-2" alt="current_user.full_name">
+        </div>
+        <div class="info">
+          <a href="#" class="d-block">{{ current_user.full_name }}</a>
+        </div>
+      </div>
+  
+      <!-- Sidebar Menu -->
+      <nav class="mt-2">
+        <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+          <!-- Dashboard -->
+          <li class="nav-item">
+            <a href="{{ url_for('dashboard') }}" class="nav-link {{ 'active' if request.endpoint == 'dashboard' else '' }}">
+              <i class="nav-icon fas fa-tachometer-alt"></i>
+              <p>Dashboard</p>
+            </a>
+          </li>
+          <!-- Prompt -->
+          <li class="nav-item">
+            <a href="{{ url_for('prompt') }}" class="nav-link {{ 'active' if request.endpoint == 'prompt' else '' }}">
+              <i class="nav-icon fas fa-edit"></i>
+              <p>Prompt</p>
+            </a>
+          </li>
+          <!-- Conversations -->
+          <li class="nav-item">
+            <a href="{{ url_for('conversations') }}" class="nav-link {{ 'active' if request.endpoint == 'conversations' else '' }}">
+              <i class="nav-icon fas fa-comments"></i>
+              <p>Conversations</p>
+            </a>
+          </li>
+          <!-- SWML Requests -->
+          <li class="nav-item">
+            <a href="{{ url_for('swmlrequests') }}" class="nav-link {{ 'active' if request.endpoint == 'swmlrequests' else '' }}">
+              <i class="nav-icon fas fa-comments"></i>
+              <p>SWML Requests</p>
+            </a>
+          </li>
+          <!-- Pronounce -->
+          <li class="nav-item">
+            <a href="{{ url_for('pronounce') }}" class="nav-link {{ 'active' if request.endpoint == 'pronounce' else '' }}">
+              <i class="nav-icon fas fa-microphone"></i>
+              <p>Pronounce</p>
+            </a>
+          </li>
+          <!-- Language -->
+          <li class="nav-item">
+            <a href="{{ url_for('language') }}" class="nav-link {{ 'active' if request.endpoint == 'languages' else '' }}">
+              <i class="nav-icon fas fa-language"></i>
+              <p>Language</p>
+            </a>
+          </li>
+          <!-- Hints -->
+          <li class="nav-item">
+            <a href="{{ url_for('hints') }}" class="nav-link {{ 'active' if request.endpoint == 'hint' else '' }}">
+              <i class="nav-icon fas fa-lightbulb"></i>
+              <p>Hints</p>
+            </a>
+          </li>
+          <!-- Parameters -->
+          <li class="nav-item">
+            <a href="{{ url_for('params') }}" class="nav-link {{ 'active' if request.endpoint == 'params' else '' }}">
+              <i class="nav-icon fas fa-cogs"></i>
+              <p>Parameters</p>
+            </a>
+          </li>
+          <!-- SignalWire -->
+          <li class="nav-item">
+            <a href="{{ url_for('signalwire') }}" class="nav-link {{ 'active' if request.endpoint == 'signalwire' else '' }}">
+              <i class="nav-icon fas fa-cogs"></i>
+              <p>SignalWire</p>
+            </a>
+          </li>
+          <!-- Functions -->
+          <li class="nav-item">
+            <a href="{{ url_for('functions') }}" class="nav-link {{ 'active' if request.endpoint == 'functions' else '' }}">
+              <i class="nav-icon fas fa-code"></i>
+              <p>SWAIG Functions</p>
+            </a>
+          </li>
+          <!-- Logout -->
+          <li class="nav-item">
+            <a href="{{ url_for('logout') }}" class="nav-link">
+              <i class="nav-icon fas fa-sign-out-alt"></i>
+              <p>Logout</p>
+            </a>
+          </li>
+          <!-- Add more menu items here -->
+        </ul>
+      </nav>
+      <!-- /.sidebar-menu -->
+    </div>
+    <!-- /.sidebar -->
+  </aside>

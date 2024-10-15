@@ -1,0 +1,324 @@
+{% extends 'base.html' %}
+
+{% block title %}Prompts{% endblock %}
+
+{% block content %}
+  <!-- Navbar -->
+  {% include 'navbar.html' %}
+  <!-- /.navbar -->
+
+  <!-- Main Sidebar Container -->
+  {% include 'sidebar.html' %}
+<div class="content-wrapper">
+  <!-- Content Header (Page header) -->
+  <section class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1>Prompt Editor</h1>
+        </div>
+      </div>
+    </div><!-- /.container-fluid -->
+  </section>
+
+  <!-- Main content -->
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card card-primary">
+            <div class="card-header bg-primary">
+              <h3 class="card-title">Edit Prompt</h3>
+            </div>
+            <!-- /.card-header -->
+            <!-- form start -->
+            <form id="promptForm">
+              <div class="card-body">
+                <!-- Prompt Group -->
+                <div class="card mb-3">
+                  <div class="card-header bg-info">
+                    <h5 class="card-title">Prompt</h5>
+                  </div>
+                  <div class="card-body">
+                    <div class="form-group">
+                      <label for="prompt">Prompt</label>
+                      <textarea class="form-control" id="prompt" name="prompt" rows="3" required></textarea>
+                    </div>
+                    <div class="form-group">
+                      <label for="promptTopP">Prompt Top P</label>
+                      <input type="number" class="form-control" id="promptTopP" name="prompt_top_p" step="0.01" value="0.5">
+                    </div>
+                    <div class="form-group">
+                      <label for="promptTemperature">Prompt Temperature</label>
+                      <input type="number" class="form-control" id="promptTemperature" name="prompt_temperature" step="0.01" value="0.5">
+                    </div>
+                    <div class="form-group">
+                      <label for="promptMaxTokens">Prompt Max Tokens</label>
+                      <input type="number" class="form-control" id="promptMaxTokens" name="prompt_max_tokens">
+                    </div>
+                    <div class="form-group">
+                      <label for="promptConfidence">Prompt Confidence</label>
+                      <input type="number" class="form-control" id="promptConfidence" name="prompt_confidence" step="0.01">
+                    </div>
+                    <div class="form-group">
+                      <label for="promptFrequencyPenalty">Prompt Frequency Penalty</label>
+                      <input type="number" class="form-control" id="promptFrequencyPenalty" name="prompt_frequency_penalty" step="0.01">
+                    </div>
+                    <div class="form-group">
+                      <label for="promptPresencePenalty">Prompt Presence Penalty</label>
+                      <input type="number" class="form-control" id="promptPresencePenalty" name="prompt_presence_penalty" step="0.01">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Post Prompt Group -->
+                <div class="card mb-3">
+                  <div class="card-header bg-success">
+                    <h5 class="card-title">Post Prompt</h5>
+                  </div>
+                  <div class="card-body">
+                    <div class="form-group">
+                      <label for="postPrompt">Post Prompt</label>
+                      <textarea class="form-control" id="postPrompt" name="post_prompt" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                      <label for="postPromptTopP">Post Prompt Top P</label>
+                      <input type="number" class="form-control" id="postPromptTopP" name="post_prompt_top_p" step="0.01" value="0.5">
+                    </div>
+                    <div class="form-group">
+                      <label for="postPromptTemperature">Post Prompt Temperature</label>
+                      <input type="number" class="form-control" id="postPromptTemperature" name="post_prompt_temperature" step="0.01" value="0.5">
+                    </div>
+                    <div class="form-group">
+                      <label for="postPromptMaxTokens">Post Prompt Max Tokens</label>
+                      <input type="number" class="form-control" id="postPromptMaxTokens" name="post_prompt_max_tokens">
+                    </div>
+                    <div class="form-group">
+                      <label for="postPromptConfidence">Post Prompt Confidence</label>
+                      <input type="number" class="form-control" id="postPromptConfidence" name="post_prompt_confidence" step="0.01">
+                    </div>
+                    <div class="form-group">
+                      <label for="postPromptFrequencyPenalty">Post Prompt Frequency Penalty</label>
+                      <input type="number" class="form-control" id="postPromptFrequencyPenalty" name="post_prompt_frequency_penalty" step="0.01">
+                    </div>
+                    <div class="form-group">
+                      <label for="postPromptPresencePenalty">Post Prompt Presence Penalty</label>
+                      <input type="number" class="form-control" id="postPromptPresencePenalty" name="post_prompt_presence_penalty" step="0.01">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Outbound Prompt Group -->
+                <div class="card mb-3">
+                  <div class="card-header bg-warning">
+                    <h5 class="card-title">Outbound Prompt</h5>
+                  </div>
+                  <div class="card-body">
+                    <div class="form-group">
+                      <label for="outboundPrompt">Outbound Prompt</label>
+                      <textarea class="form-control" id="outboundPrompt" name="outbound_prompt" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                      <label for="outboundPromptTopP">Outbound Prompt Top P</label>
+                      <input type="number" class="form-control" id="outboundPromptTopP" name="outbound_prompt_top_p" step="0.01" value="0.5">
+                    </div>
+                    <div class="form-group">
+                      <label for="outboundPromptTemperature">Outbound Prompt Temperature</label>
+                      <input type="number" class="form-control" id="outboundPromptTemperature" name="outbound_prompt_temperature" step="0.01" value="0.5">
+                    </div>
+                    <div class="form-group">
+                      <label for="outboundPromptMaxTokens">Outbound Prompt Max Tokens</label>
+                      <input type="number" class="form-control" id="outboundPromptMaxTokens" name="outbound_prompt_max_tokens">
+                    </div>
+                    <div class="form-group">
+                      <label for="outboundPromptConfidence">Outbound Prompt Confidence</label>
+                      <input type="number" class="form-control" id="outboundPromptConfidence" name="outbound_prompt_confidence" step="0.01">
+                    </div>
+                    <div class="form-group">
+                      <label for="outboundPromptFrequencyPenalty">Outbound Prompt Frequency Penalty</label>
+                      <input type="number" class="form-control" id="outboundPromptFrequencyPenalty" name="outbound_prompt_frequency_penalty" step="0.01">
+                    </div>
+                    <div class="form-group">
+                      <label for="outboundPromptPresencePenalty">Outbound Prompt Presence Penalty</label>
+                      <input type="number" class="form-control" id="outboundPromptPresencePenalty" name="outbound_prompt_presence_penalty" step="0.01">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Outbound Post Prompt Group -->
+                <div class="card mb-3">
+                  <div class="card-header bg-danger">
+                    <h5 class="card-title">Outbound Post Prompt</h5>
+                  </div>
+                  <div class="card-body">
+                    <div class="form-group">
+                      <label for="outboundPostPrompt">Outbound Post Prompt</label>
+                      <textarea class="form-control" id="outboundPostPrompt" name="outbound_post_prompt" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                      <label for="outboundPostPromptTopP">Outbound Post Prompt Top P</label>
+                      <input type="number" class="form-control" id="outboundPostPromptTopP" name="outbound_post_prompt_top_p" step="0.01" value="0.5">
+                    </div>
+                    <div class="form-group">
+                      <label for="outboundPostPromptTemperature">Outbound Post Prompt Temperature</label>
+                      <input type="number" class="form-control" id="outboundPostPromptTemperature" name="outbound_post_prompt_temperature" step="0.01" value="0.5">
+                    </div>
+                    <div class="form-group">
+                      <label for="outboundPostPromptMaxTokens">Outbound Post Prompt Max Tokens</label>
+                      <input type="number" class="form-control" id="outboundPostPromptMaxTokens" name="outbound_post_prompt_max_tokens">
+                    </div>
+                    <div class="form-group">
+                      <label for="outboundPostPromptConfidence">Outbound Post Prompt Confidence</label>
+                      <input type="number" class="form-control" id="outboundPostPromptConfidence" name="outbound_post_prompt_confidence" step="0.01">
+                    </div>
+                    <div class="form-group">
+                      <label for="outboundPostPromptFrequencyPenalty">Outbound Post Prompt Frequency Penalty</label>
+                      <input type="number" class="form-control" id="outboundPostPromptFrequencyPenalty" name="outbound_post_prompt_frequency_penalty" step="0.01">
+                    </div>
+                    <div class="form-group">
+                      <label for="outboundPostPromptPresencePenalty">Outbound Post Prompt Presence Penalty</label>
+                      <input type="number" class="form-control" id="outboundPostPromptPresencePenalty" name="outbound_post_prompt_presence_penalty" step="0.01">
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- /.card-body -->
+
+              <div class="card-footer">
+                <button type="submit" class="btn btn-primary">Save</button>
+              </div>
+            </form>
+          </div>
+          <!-- /.card -->
+        </div>
+      </div>
+      <!-- /.row -->
+    </div><!-- /.container-fluid -->
+  </section>
+  <!-- /.content -->
+</div>
+  <!-- Footer -->
+  {% include 'footer.html' %}
+  <!-- /.footer -->
+
+<!-- Include SweetAlert -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- Ensure jQuery is loaded -->
+<script>
+  function showToast(type, message) {
+    // Use SweetAlert for toast notifications
+    const Toast = Swal.mixin({
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+      didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer)
+        toast.addEventListener('mouseleave', Swal.resumeTimer)
+      }
+    });
+
+    Toast.fire({
+      icon: type,
+      title: message
+    });
+  }
+
+  $(document).ready(function() {
+    // Fetch the prompt data
+    $.ajax({
+      type: 'GET',
+      url: "{{ url_for('prompt') }}",
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      success: function(response) {
+        $('#prompt').val(response.prompt);
+        $('#promptTopP').val(response.prompt_top_p);
+        $('#promptTemperature').val(response.prompt_temperature);
+        $('#promptMaxTokens').val(response.prompt_max_tokens);
+        $('#promptConfidence').val(response.prompt_confidence);
+        $('#promptFrequencyPenalty').val(response.prompt_frequency_penalty);
+        $('#promptPresencePenalty').val(response.prompt_presence_penalty);
+        $('#postPrompt').val(response.post_prompt);
+        $('#postPromptTopP').val(response.post_prompt_top_p);
+        $('#postPromptTemperature').val(response.post_prompt_temperature);
+        $('#postPromptMaxTokens').val(response.post_prompt_max_tokens);
+        $('#postPromptConfidence').val(response.post_prompt_confidence);
+        $('#postPromptFrequencyPenalty').val(response.post_prompt_frequency_penalty);
+        $('#postPromptPresencePenalty').val(response.post_prompt_presence_penalty);
+        $('#outboundPrompt').val(response.outbound_prompt);
+        $('#outboundPromptTopP').val(response.outbound_prompt_top_p);
+        $('#outboundPromptTemperature').val(response.outbound_prompt_temperature);
+        $('#outboundPromptMaxTokens').val(response.outbound_prompt_max_tokens);
+        $('#outboundPromptConfidence').val(response.outbound_prompt_confidence);
+        $('#outboundPromptFrequencyPenalty').val(response.outbound_prompt_frequency_penalty);
+        $('#outboundPromptPresencePenalty').val(response.outbound_prompt_presence_penalty);
+        $('#outboundPostPrompt').val(response.outbound_post_prompt);
+        $('#outboundPostPromptTopP').val(response.outbound_post_prompt_top_p);
+        $('#outboundPostPromptTemperature').val(response.outbound_post_prompt_temperature);
+        $('#outboundPostPromptMaxTokens').val(response.outbound_post_prompt_max_tokens);
+        $('#outboundPostPromptConfidence').val(response.outbound_post_prompt_confidence);
+        $('#outboundPostPromptFrequencyPenalty').val(response.outbound_post_prompt_frequency_penalty);
+        $('#outboundPostPromptPresencePenalty').val(response.outbound_post_prompt_presence_penalty);
+      },
+      error: function(error) {
+        showToast('error', 'Error fetching prompt data');
+      }
+    });
+
+    // Check if the form is being submitted correctly
+    $('#promptForm').submit(function(event) {
+      event.preventDefault();
+      const formData = {
+        prompt: $('#prompt').val(),
+        prompt_top_p: $('#promptTopP').val(),
+        prompt_temperature: $('#promptTemperature').val(),
+        prompt_max_tokens: $('#promptMaxTokens').val(),
+        prompt_confidence: $('#promptConfidence').val(),
+        prompt_frequency_penalty: $('#promptFrequencyPenalty').val(),
+        prompt_presence_penalty: $('#promptPresencePenalty').val(),
+        post_prompt: $('#postPrompt').val(),
+        post_prompt_top_p: $('#postPromptTopP').val(),
+        post_prompt_temperature: $('#postPromptTemperature').val(),
+        post_prompt_max_tokens: $('#postPromptMaxTokens').val(),
+        post_prompt_confidence: $('#postPromptConfidence').val(),
+        post_prompt_frequency_penalty: $('#postPromptFrequencyPenalty').val(),
+        post_prompt_presence_penalty: $('#postPromptPresencePenalty').val(),
+        outbound_prompt: $('#outboundPrompt').val(),
+        outbound_prompt_top_p: $('#outboundPromptTopP').val(),
+        outbound_prompt_temperature: $('#outboundPromptTemperature').val(),
+        outbound_prompt_max_tokens: $('#outboundPromptMaxTokens').val(),
+        outbound_prompt_confidence: $('#outboundPromptConfidence').val(),
+        outbound_prompt_frequency_penalty: $('#outboundPromptFrequencyPenalty').val(),
+        outbound_prompt_presence_penalty: $('#outboundPromptPresencePenalty').val(),
+        outbound_post_prompt: $('#outboundPostPrompt').val(),
+        outbound_post_prompt_top_p: $('#outboundPostPromptTopP').val(),
+        outbound_post_prompt_temperature: $('#outboundPostPromptTemperature').val(),
+        outbound_post_prompt_max_tokens: $('#outboundPostPromptMaxTokens').val(),
+        outbound_post_prompt_confidence: $('#outboundPostPromptConfidence').val(),
+        outbound_post_prompt_frequency_penalty: $('#outboundPostPromptFrequencyPenalty').val(),
+        outbound_post_prompt_presence_penalty: $('#outboundPostPromptPresencePenalty').val()
+      };
+
+      console.log('Form data to be submitted:', formData); // Debugging line
+
+      $.ajax({
+        type: 'POST',
+        url: "{{ url_for('prompt') }}",
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
+        success: function(response) {
+          showToast('success', 'Prompt data saved successfully'); // Ensure toast is shown on success
+        },
+        error: function(error) {
+          showToast('error', 'Error saving prompt data');
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

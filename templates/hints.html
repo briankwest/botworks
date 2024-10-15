@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+
+{% block title %}Pronounce{% endblock %}
+
+{% block content %}
+  <!-- Navbar -->
+  {% include 'navbar.html' %}
+  <!-- /.navbar -->
+
+  <!-- Main Sidebar Container -->
+  {% include 'sidebar.html' %}
+
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1>Hints</h1>
+          </div>
+        </div>
+      </div><!-- /.container-fluid -->
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Hints List</h3>
+              </div>
+              <!-- /.card-header -->
+              <div class="card-body">
+                <table id="hintTable" class="table table-bordered table-hover">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Hint Text</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+              </div>
+              <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+          </div>
+          <!-- /.col -->
+        </div>
+        <!-- /.row -->
+
+        <!-- Add Hint Form -->
+        <div class="row">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Add Hint Entry</h3>
+              </div>
+              <!-- /.card-header -->
+              <div class="card-body">
+                <form id="addHintForm">
+                  <div class="form-group">
+                    <label for="hintText">Hint Text</label>
+                    <input type="text" class="form-control" id="hintText" name="hint" required>
+                  </div>
+                  <button type="submit" class="btn btn-primary">Add Hint</button>
+                </form>
+              </div>
+              <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+          </div>
+          <!-- /.col -->
+        </div>
+        <!-- /.row -->
+
+      </div>
+      <!-- /.container-fluid -->
+    </section>
+    <!-- /.content -->
+
+    <!-- Add this modal at the end of the content block -->
+    <div class="modal fade" id="editHintModal" tabindex="-1" role="dialog" aria-labelledby="editHintModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editHintModalLabel">Edit Hint Entry</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="editHintForm">
+              <input type="hidden" id="editId" name="id">
+              <div class="form-group">
+                <label for="editHintText">Hint Text</label>
+                <input type="text" class="form-control" id="editHintText" name="hint" required>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" id="saveEditButton">Save changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- /.content-wrapper -->
+
+  <!-- Footer -->
+  {% include 'footer.html' %}
+  <!-- /.footer -->
+{% endblock %}
+
+{% block scripts %}
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
+  <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
+
+  <script>
+    $(document).ready(function() {
+      // Initialize DataTable
+      $('#hintTable').DataTable({
+        "ajax": {
+          "url": "{{ url_for('get_hints') }}",
+          "dataSrc": ""
+        },
+        "columns": [
+          { "data": "id" },
+          { "data": "hint" },
+          {
+            "data": null,
+            "render": function(data, type, row) {
+              return `
+                <button class="btn btn-primary btn-sm edit-hint" data-id="${row.id}">Edit</button>
+                <button class="btn btn-danger btn-sm delete-hint" data-id="${row.id}">Delete</button>
+              `;
+            }
+          }
+        ]
+      });
+
+      // Function to show toast notification
+      function showToast(icon, title) {
+        const Toast = Swal.mixin({
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+          didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer)
+            toast.addEventListener('mouseleave', Swal.resumeTimer)
+          }
+        });
+
+        Toast.fire({
+          icon: icon,
+          title: title
+        });
+      }
+
+      // Handle form submission for creating new hint entry
+      $('#addHintForm').submit(function(e) {
+        e.preventDefault();
+        const formData = {
+          hint: $('#hintText').val()
+        };
+
+        $.ajax({
+          type: 'POST',
+          url: "{{ url_for('hints') }}",
+          contentType: 'application/json',
+          data: JSON.stringify(formData),
+          success: function(response) {
+            $('#hintTable').DataTable().ajax.reload();
+            $('#addHintForm')[0].reset();
+            showToast('success', 'Hint entry created successfully');
+          },
+          error: function(error) {
+            showToast('error', 'Error creating hint entry');
+          }
+        });
+      });
+
+      // Handle delete button click
+      $('#hintTable').on('click', '.delete-hint', function() {
+        const id = $(this).data('id');
+        if (confirm('Are you sure you want to delete this entry?')) {
+          $.ajax({
+            type: 'DELETE',
+            url: "/hints/" + id,  // Updated URL
+            success: function(response) {
+              $('#hintTable').DataTable().ajax.reload();
+              showToast('success', 'Hint entry deleted successfully');
+            },
+            error: function(error) {
+              showToast('error', 'Error deleting hint entry');
+            }
+          });
+        }
+      });
+
+      // Handle edit button click
+      $('#hintTable').on('click', '.edit-hint', function() {
+        const id = $(this).data('id');
+        $.ajax({
+          type: 'GET',
+          url: "/hints/" + id,  // Updated URL
+          success: function(response) {
+            $('#editId').val(response.id);
+            $('#editHintText').val(response.hint);
+            $('#editHintModal').modal('show');
+          },
+          error: function(error) {
+            showToast('error', 'Error fetching hint entry');
+          }
+        });
+      });
+
+      // Handle save changes button click in edit modal
+      $('#saveEditButton').click(function() {
+        const id = $('#editId').val();
+        const formData = {
+          hint: $('#editHintText').val()
+        };
+
+        $.ajax({
+          type: 'PUT',
+          url: "/hints/" + id,  // Updated URL
+          contentType: 'application/json',
+          data: JSON.stringify(formData),
+          success: function(response) {
+            $('#hintTable').DataTable().ajax.reload();
+            $('#editHintModal').modal('hide');
+            showToast('success', 'Hint entry updated successfully');
+          },
+          error: function(error) {
+            showToast('error', 'Error updating hint entry');
+          }
+        });
+      });
+    });
+  </script>
+{% endblock %}
+
+
+
