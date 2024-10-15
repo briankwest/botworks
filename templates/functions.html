@@ -178,28 +178,38 @@
       // Add event listeners for delete buttons
       $('#functionTable').on('click', '.delete-function', function() {
         const functionId = $(this).data('id');
-        if (confirm('Are you sure you want to delete this function?')) {
-          fetch(`/functions/${functionId}`, {
-            method: 'DELETE'
-          })
-          .then(response => {
-            if (!response.ok) {
-              throw new Error('Network response was not ok');
-            }
-            return response.json();
-          })
-          .then(data => {
-            if (data.message === 'Function entry deleted successfully') {
-              location.reload();
-            } else {
+        Swal.fire({
+          title: 'Are you sure?',
+          text: "You won't be able to revert this!",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            fetch(`/functions/${functionId}`, {
+              method: 'DELETE'
+            })
+            .then(response => {
+              if (!response.ok) {
+                throw new Error('Network response was not ok');
+              }
+              return response.json();
+            })
+            .then(data => {
+              if (data.message === 'Function entry deleted successfully') {
+                location.reload();
+              } else {
+                alert('Error deleting function');
+              }
+            })
+            .catch(error => {
+              console.error('Error deleting function:', error);
               alert('Error deleting function');
-            }
-          })
-          .catch(error => {
-            console.error('Error deleting function:', error);
-            alert('Error deleting function');
-          });
-        }
+            });
+          }
+        });
       });
 
       // Add event listeners for edit buttons
@@ -295,23 +305,33 @@
         if (typeof argId === 'string' && argId.startsWith('new_')) {
           $row.remove();
         } else {
-          if (confirm('Are you sure you want to delete this argument?')) {
-            fetch(`/functions/${$('#editFunctionId').val()}/args/${argId}`, {
-              method: 'DELETE'
-            })
-            .then(response => response.json())
-            .then(data => {
-              if (data.message === 'Function argument deleted successfully') {
-                $row.remove();
-              } else {
-                alert('Error deleting argument');
-              }
-            })
-            .catch(error => {
-              console.error('Error deleting argument:', error);
-              alert('Error deleting argument');
-            });
-          }
+          Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              fetch(`/functions/${$('#editFunctionId').val()}/args/${argId}`, {
+                method: 'DELETE'
+              })
+              .then(response => response.json())
+              .then(data => {
+                if (data.message === 'Function argument deleted successfully') {
+                  $row.remove();
+                } else {
+                  Swal.fire('Error', 'Error deleting argument', 'error');
+                }
+              })
+              .catch(error => {
+                console.error('Error deleting argument:', error);
+                Swal.fire('Error', 'Error deleting argument', 'error');
+              });
+            }
+          });
         }
       });
 

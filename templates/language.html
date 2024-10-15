@@ -250,19 +250,29 @@
       // Handle delete button click
       $('#languageTable').on('click', '.delete-language', function() {
         const id = $(this).data('id');
-        if (confirm('Are you sure you want to delete this entry?')) {
-          $.ajax({
-            type: 'DELETE',
-            url: `/language/${id}`,
-            success: function(response) {
-              $('#languageTable').DataTable().ajax.reload();
-              showToast('success', 'Language entry deleted successfully');
-            },
-            error: function(error) {
-              showToast('error', 'Error deleting language entry');
-            }
-          });
-        }
+        Swal.fire({
+          title: 'Are you sure?',
+          text: "You won't be able to revert this!",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            $.ajax({
+              type: 'DELETE',
+              url: `/language/${id}`,
+              success: function(response) {
+                $('#languageTable').DataTable().ajax.reload();
+                showToast('success', 'Language entry deleted successfully');
+              },
+              error: function(error) {
+                showToast('error', 'Error deleting language entry');
+              }
+            });
+          }
+        });
       });
 
       // Handle edit button click
