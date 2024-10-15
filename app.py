@@ -274,7 +274,6 @@ def create_admin_user():
         try:
             hashed_password = generate_password_hash(admin_password, method='pbkdf2:sha256')
             admin_user = AIUser(
-                user_id=1,
                 full_name=full_name,
                 username=admin_username,
                 password=hashed_password,
