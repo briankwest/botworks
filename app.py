@@ -749,6 +749,7 @@ def login():
 
 # Generate SWML Response route
 def generate_swml_response(user_id, request_body):
+    request_body = request_body or {}
     swml = SignalWireML(version="1.0.0")
     
     prompt = AIPrompt.query.filter_by(user_id=user_id).first()
