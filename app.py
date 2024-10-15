@@ -828,29 +828,28 @@ def generate_swml_response(user_id, request_body):
     functions = AIFunctions.query.filter_by(user_id=user_id).all()
     for function in functions:
         function_data = {
-            "name": function.name,
+            "function": function.name,
             "purpose": function.purpose,
-            "arguments": []
+            "argument": {
+                "properties": {}
+            }
         }
         function_args = AIFunctionArgs.query.filter_by(function_id=function.id).all()
-        required_args = []
         for arg in function_args:
-            function_data["arguments"].append({
-                "name": arg.name,
+            function_data["argument"]["properties"][arg.name] = {
                 "type": arg.type,
-                "description": arg.description,
-            })
+                "description": arg.description
+            }
             if arg.enum and arg.type == 'array':
-                function_data["arguments"][-1]["enum"] = arg.enum.split(',')
-            
-            if arg.required:
-                required_args.append(arg.name)
+                function_data["argument"]["properties"][arg.name]["enum"] = arg.enum.split(',')
+
+        function_data["argument"]["type"] = "object"
+
         function_payload = {
             "name": function.name,
             "purpose": function.purpose,
-            "arguments": function_data["arguments"],
-            "required": required_args,
-        
+            "arguments": function_data["argument"],
+            "required": [arg.name for arg in function_args if arg.required]
         }
         if not function.active:
             function_payload["active"] = function.active
