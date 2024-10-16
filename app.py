@@ -63,7 +63,6 @@ class AIAgent(db.Model):
     def __repr__(self):
         return f'<AIAgent {self.name}>'
 
-
 # AISignalWireParams model definition
 class AISignalWireParams(db.Model):
     __tablename__ = 'ai_signalwire_params'
@@ -220,6 +219,7 @@ class AIConversation(db.Model):
     def __repr__(self):
         return f'<AIConversation {self.id}>'
 
+# AIParams model definition
 class AIParams(db.Model):
     __tablename__ = 'ai_params'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -294,9 +294,8 @@ def dashboard():
 @app.route('/swmlrequests', methods=['GET'])
 @login_required
 def swmlrequests():
-    print(request.headers.get('Accept'))
     if request.headers.get('Accept') == 'application/json':
-         # Fetch all SWML requests for the current user
+        # Fetch all SWML requests for the current user
         swml_requests = AISWMLRequest.query.filter_by(user_id=current_user.id).all()
 
         swml_requests_data = [{
