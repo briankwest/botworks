@@ -206,16 +206,10 @@
 {% endblock %}
 
 {% block scripts %}
-  <!-- jQuery -->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <!-- Bootstrap CSS -->
-  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Bootstrap JS -->
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
   <!-- DataTables CSS -->
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
-  <!-- DataTables JS -->
   <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
+
   <script>
     // Function to show toast notification
     function showToast(icon, title) {
@@ -289,6 +283,13 @@
             $('#editConfidence').val(data.confidence);
             $('#editFrequencyPenalty').val(data.frequency_penalty);
             $('#editPresencePenalty').val(data.presence_penalty);
+
+            // Update the displayed values for the sliders
+            $('#editTopPValue').text(data.top_p);
+            $('#editTemperatureValue').text(data.temperature);
+            $('#editFrequencyPenaltyValue').text(data.frequency_penalty);
+            $('#editPresencePenaltyValue').text(data.presence_penalty);
+
             $('#editPromptModal').modal('show'); // Ensure Bootstrap JS is loaded
           });
 
