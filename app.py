@@ -63,6 +63,20 @@ class AIAgent(db.Model):
     def __repr__(self):
         return f'<AIAgent {self.name}>'
 
+# AIDebugLogs model definition
+class AIDebugLogs(db.Model):
+    __tablename__ = 'ai_debug_logs'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
+    data = db.Column(db.JSON, nullable=False)  # Assuming JSONB is represented as JSON in SQLAlchemy
+    ip_address = db.Column(db.String(45), nullable=True)
+
+    user = db.relationship('AIUser', backref=db.backref('ai_debug_logs', lazy=True))
+
+    def __repr__(self):
+        return f'<AIDebugLogs {self.id}>'
+
 # AISignalWireParams model definition
 class AISignalWireParams(db.Model):
     __tablename__ = 'ai_signalwire_params'
@@ -1167,6 +1181,17 @@ def prompt():
             db.session.commit()
             return jsonify({'message': 'Prompt created successfully'}), 201
 
+@app.route('/prompt/<int:id>', methods=['DELETE'])
+@login_required
+def delete_prompt(id):
+    prompt_entry = AIPrompt.query.get_or_404(id)
+    
+    if prompt_entry.user_id != current_user.id:
+        return jsonify({'message': 'Permission denied'}), 403
+
+    db.session.delete(prompt_entry)
+    db.session.commit()
+    return jsonify({'message': 'Prompt deleted successfully'}), 200
 
 @app.route('/prompt/<int:id>', methods=['PUT'])
 @login_required
@@ -1445,6 +1470,32 @@ def update_agent(id):
     db.session.commit()
 
     return jsonify({'message': 'Agent updated successfully'}), 200
+
+@app.route('/debugwebhook/<int:user_id>', methods=['POST'])
+@auth.login_required
+def create_debuglog(user_id):
+    data = request.get_json()
+    ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
+
+    new_log = AIDebugLogs(
+        user_id=user_id,
+        data=data,
+        ip_address=ip_address
+    )
+    db.session.add(new_log)
+    db.session.commit()
+
+    return jsonify({'message': 'Debug log created successfully'}), 201
+@app.route('/debuglogs', methods=['GET'])
+@login_required
+def debuglogs():
+    if request.headers.get('Accept') == 'application/json':
+        logs = AIDebugLogs.query.filter_by(user_id=current_user.id).all()
+        logs_data = [{'id': log.id, 'created': log.created, 'data': log.data, 'ip_address': log.ip_address} for log in logs]
+        return jsonify(logs_data), 200
+    else:
+        return render_template('debuglog.html', user=current_user)
+
 
 
 

@@ -66,28 +66,40 @@ document.addEventListener("DOMContentLoaded", function() {
         const content = document.getElementById('PostPromptDataContent');
 
         // Display Interaction Details
-        const interactionDetailsCard = createCard('Interaction Details', createInteractionDetailsTable(data), 'bg-info');
-        content.appendChild(interactionDetailsCard);
+        if (data) {
+            const interactionDetailsCard = createCard('Interaction Details', createInteractionDetailsTable(data), 'bg-info');
+            content.appendChild(interactionDetailsCard);
+        }
 
         // Display Call Log
-        const callLogCard = createCard('Call Log', createCallLogTable(data.raw_call_log), 'bg-success');
-        content.appendChild(callLogCard);
+        if (data.raw_call_log) {
+            const callLogCard = createCard('Call Log', createCallLogTable(data.raw_call_log), 'bg-success');
+            content.appendChild(callLogCard);
+        }
 
         // Display Times
-        const timesCard = createCard('Times', createTimesTable(data.times), 'bg-warning');
-        content.appendChild(timesCard);
+        if (data.times) {
+            const timesCard = createCard('Times', createTimesTable(data.times), 'bg-warning');
+            content.appendChild(timesCard);
+        }
 
         // Display SWML Vars
-        const swmlVarsCard = createCard('SWML Vars', createSWMLVarsTable(data.SWMLVars), 'bg-danger');
-        content.appendChild(swmlVarsCard);
+        if (data.SWMLVars) {
+            const swmlVarsCard = createCard('SWML Vars', createSWMLVarsTable(data.SWMLVars), 'bg-danger');
+            content.appendChild(swmlVarsCard);
+        }
 
         // Display SWAIG Log
-        const swaigLogCard = createCard('SWAIG Log', createSwaigLogTable(data.swaig_log), 'bg-secondary');
-        content.appendChild(swaigLogCard);
+        if (data.swaig_log) {
+            const swaigLogCard = createCard('SWAIG Log', createSwaigLogTable(data.swaig_log), 'bg-secondary');
+            content.appendChild(swaigLogCard);
+        }
 
         // Display Post Prompt Data
-        const postPromptDataCard = createCard('Post Prompt Data', createPostPromptDataTable(data.post_prompt_data), 'bg-primary');
-        content.appendChild(postPromptDataCard);
+        if (data.post_prompt_data) {
+            const postPromptDataCard = createCard('Post Prompt Data', createPostPromptDataTable(data.post_prompt_data), 'bg-primary');
+            content.appendChild(postPromptDataCard);
+        }
     }
 
     function createCard(title, contentHtml, headerClass) {
