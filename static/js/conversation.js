@@ -114,7 +114,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     function createInteractionDetailsTable(data) {
-        let table = '<table class="table table-bordered table-hover table-sm">'; // Added 'table-sm' for smaller padding
+        let table = '<table class="table table-striped table-sm">'; // Added 'table-sm' for smaller padding
         table += `
         <tr>
             <th style="width: 45%;">Key</th>
@@ -188,7 +188,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     function createCallLogTable(callLog) {
-        let table = '<div style="overflow-x: auto;"><table class="table table-bordered table-hover table-sm" style="table-layout: fixed; width: 100%;">'; // Added 'table-sm' for smaller padding and fixed layout
+        let table = '<div style="overflow-x: auto;"><table class="table table-striped table-sm" style="table-layout: fixed; width: 100%;">'; // Added 'table-sm' for smaller padding and fixed layout
         table += `
             <tr>
                 <th style="width: 10%;">Role</th>
@@ -230,7 +230,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     function createTimesTable(times) {
-        let table = '<table class="table table-bordered table-hover table-sm">'; // Added 'table-sm' for smaller padding
+        let table = '<table class="table table-striped table-sm">'; 
         table += `
             <tr>
                 <th>Token Time</th>
@@ -260,7 +260,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     function createSWMLVarsTable(swmlVars) {
-        let table = '<table class="table table-bordered table-hover table-sm">'; // Added 'table-sm' for smaller padding
+        let table = '<table class="table table-striped table-sm">'; // Added 'table-sm' for smaller padding
         table += `
             <tr>
                 <th>Key</th>
@@ -285,7 +285,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     function createSwaigLogTable(swaigLog) {
-        let table = '<div class="table-responsive"><table class="table table-bordered table-hover table-sm">'; // Added 'table-sm' for smaller padding
+        let table = '<div class="table-responsive"><table class="table table-striped table-sm">'; // Added 'table-sm' for smaller padding
         table += `
             <tr>
                 <th>URL</th>
