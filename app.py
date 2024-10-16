@@ -446,8 +446,9 @@ def get_function_args(function_id):
     
     if function_entry.user_id != current_user.id:
         return jsonify({'message': 'Permission denied'}), 403
+    
+    args = AIFunctionArgs.query.filter_by(function_id=function_id).order_by(AIFunctionArgs.name.asc()).all()
 
-    args = AIFunctionArgs.query.filter_by(function_id=function_id).all()
     return jsonify([{
         'id': arg.id,
         'name': arg.name,

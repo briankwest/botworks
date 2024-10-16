@@ -122,9 +122,19 @@ document.addEventListener("DOMContentLoaded", function() {
             <th style="width: 5%;">Copy</th>
         </tr>
         <tr>
+            <td>Call ID</td>
+            <td>${data.call_id || ''}</td>
+            <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.call_id || ''}')"></i></td>
+        </tr>
+        <tr>
             <td>Caller ID Name</td>
             <td>${data.caller_id_name || ''}</td>
             <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.caller_id_name || ''}')"></i></td>
+        </tr>
+        <tr>
+            <td>Caller ID Number</td>
+            <td>${data.caller_id_number || ''}</td>
+            <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.caller_id_number || ''}')"></i></td>
         </tr>
         <tr>
             <td>Call Start Date</td>
@@ -145,25 +155,10 @@ document.addEventListener("DOMContentLoaded", function() {
             <td>AI End Date</td>
             <td>${data.ai_end_date ? new Date(data.ai_end_date / 1000).toISOString().replace('T', ' ').replace('Z', ' UTC') : ''}</td>
             <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.ai_end_date ? new Date(data.ai_end_date / 1000).toISOString() : ''}')"></i></td>
-        </tr>
-        <tr>
-            <td>Total Input Tokens</td>
-            <td>${data.total_input_tokens || ''}</td>
-            <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.total_input_tokens || ''}')"></i></td>
-        </tr>
-        <tr>
-            <td>Total Output Tokens</td>
-            <td>${data.total_output_tokens || ''}</td>
-            <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.total_output_tokens || ''}')"></i></td>
-        </tr>
-        <tr>
-            <td>Call ID</td>
-            <td>${data.call_id || ''}</td>
-            <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.call_id || ''}')"></i></td>
         </tr>`;
-
-        // Add additional fields if they exist
         const additionalFields = [
+            { key: 'Total Input Tokens', value: data.total_input_tokens },
+            { key: 'Total Output Tokens', value: data.total_output_tokens },
             { key: 'Total ASR Cost Factor', value: data.total_asr_cost_factor },
             { key: 'Total ASR Minutes', value: data.total_asr_minutes },
             { key: 'Total Minutes', value: data.total_minutes },
@@ -182,6 +177,7 @@ document.addEventListener("DOMContentLoaded", function() {
         </tr>`;
             }
         });
+        
 
         table += '</table>';
         return table;
