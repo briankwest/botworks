@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+
+{% block title %}Debug Logs{% endblock %}
+
+{% block content %}
+  <!-- Navbar -->
+  {% include 'navbar.html' %}
+  <!-- /.navbar -->
+
+  <!-- Main Sidebar Container -->
+  {% include 'sidebar.html' %}
+  
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1>Debug Logs</h1>
+                </div>
+            </div>
+        </div><!-- /.container-fluid -->
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-primary">
+                            <h3 class="card-title">Debug Logs</h3>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body table-responsive">
+                            <table id="debugLogsTable" class="table table-bordered table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Created</th>
+                                        <th>Request Body</th>
+                                        <th>Response</th>
+                                        <th>IP Address</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Data will be populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+        </div>
+        <!-- /.container-fluid -->
+    </section>
+    <!-- /.content -->
+  </div>
+  <!-- /.content-wrapper -->
+  <!-- Footer -->
+  {% include 'footer.html' %}
+  <!-- /.footer -->
+{% endblock %}
+
+{% block scripts %}
+  <!-- Add DataTables CSS and JS -->
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
+  <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+ <script>
+    $(document).ready(function() {
+      initializeDataTable();
+    });
+
+    function initializeDataTable() {
+      // Check if DataTables is loaded
+      if ($.fn.DataTable) {
+        // Initialize DataTable
+        $('#debugLogsTable').DataTable({
+          "ajax": {
+            "url": "{{ url_for('debuglogs') }}",
+            "dataSrc": "",
+            "headers": {
+              "Accept": "application/json"
+            }
+          },
+          "order": [[1, 'desc']],
+          "columns": [
+            { "data": "id" },
+            { "data": "created",
+              "render": function(data, type, row) {
+                return new Date(data).toLocaleString();
+              }
+            },
+            { "data": "request",
+              "render": function(data, type, row) {
+                return `
+                  <textarea readonly style="width: 500px; height: 10em;">${JSON.stringify(data, null, 2)}</textarea>
+                  <i class="fas fa-copy copy-btn" data-copy='${JSON.stringify(data)}'></i>
+                `;
+              }
+            },
+            { "data": "response",
+              "render": function(data, type, row) {
+                return `
+                  <textarea readonly style="width: 500px; height: 10em;">${JSON.stringify(data, null, 2)}</textarea>
+                  <i class="fas fa-copy copy-btn" data-copy='${JSON.stringify(data)}'></i>
+                `;
+              }
+            },
+            { "data": "ip_address" }
+          ],
+          "pageLength": 10,
+          "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+          "responsive": true,
+          "autoWidth": false
+        });
+      } else {
+        console.error('DataTables is not loaded. Make sure you have included the DataTables library.');
+      }
+
+      $(document).on('click', '.copy-btn', function() {
+        const data = $(this).data('copy');
+        copyToClipboard(data);
+      });
+
+      window.copyToClipboard = function(value) {
+        const tempInput = document.createElement('textarea');
+        tempInput.style.position = 'absolute';
+        tempInput.style.left = '-9999px';
+        tempInput.value = JSON.stringify(value, null, 2);
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempInput);
+
+        const Toast = Swal.mixin({
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 1500,
+          timerProgressBar: true,
+          didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer)
+            toast.addEventListener('mouseleave', Swal.resumeTimer)
+          }
+        });
+
+        Toast.fire({
+          icon: 'success',
+          title: 'Copied to clipboard'
+        });
+      }
+    }
+  </script>
+{% endblock %}

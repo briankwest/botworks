@@ -173,6 +173,12 @@
         $('#datasphereTable').on('click', '.edit-btn', function() {
             var docId = $(this).data('id');
             
+            // Get the row data
+            var rowData = $('#datasphereTable').DataTable().row($(this).parents('tr')).data();
+            
+            // Populate the tags in the edit modal
+            $('#editTags').val(rowData.tags.join(', '));
+            
             // Store the document ID in a hidden field or a variable
             $('#editDocumentModal').data('docId', docId);
             

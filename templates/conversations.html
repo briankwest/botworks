@@ -75,8 +75,8 @@
       // Initialize DataTable
       $('#conversationsTable').DataTable({
         "ajax": {
-          "url": "{{ url_for('get_conversations') }}",
-          "dataSrc": "data",  // Ensure this matches the structure of your JSON response
+          "url": "{{ url_for('conversations') }}",
+          "dataSrc": "",  // Set to an empty string to use the array directly
           "headers": {
             "Accept": "application/json"
           }
@@ -85,8 +85,8 @@
         "columns": [
           { "data": "id" },
           { "data": "created" },
-          { "data": "data.caller_id_name" },  // Access nested data
-          { "data": "data.caller_id_number" },  // Access nested data
+          { "data": "data.caller_id_name" },  // Access directly from data object
+          { "data": "data.caller_id_number" },  // Access directly from data object
           {
             "data": null,
             "render": function(data, type, row) {
@@ -97,7 +97,6 @@
             }
           }
         ],
-        "order": [[0, 'desc']],  // Ensure this is outside the "ajax" block
         "error": function(xhr, error, thrown) {
           console.log('DataTables error: ', error);
           console.log('DataTables error details: ', thrown);
