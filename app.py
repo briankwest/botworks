@@ -1,4 +1,4 @@
-import os  # Standard library import
+import os
 from datetime import datetime
 import requests
 from dotenv import load_dotenv
@@ -50,6 +50,7 @@ login_manager.login_view = 'login'
 
 migrate = Migrate(app, db)
 
+# AIAgent model definition
 class AIAgent(db.Model):
     __tablename__ = 'ai_agents'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -260,6 +261,7 @@ class AIUser(UserMixin, db.Model):
     def __repr__(self):
         return f'<AIUser {self.username}>'
 
+# Login manager user loader
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(AIUser, int(user_id))
@@ -327,6 +329,7 @@ def swmlrequests():
     else:
         return render_template('swmlrequests.html', user=current_user)
 
+# Delete SWML Request route
 @app.route('/swmlrequests/<int:request_id>', methods=['DELETE'])
 @login_required
 def delete_swmlrequest(request_id):
@@ -339,7 +342,7 @@ def delete_swmlrequest(request_id):
     db.session.commit()
     return jsonify({'message': 'SWML request deleted successfully'}), 200
 
-
+# Dashboard Completed route
 @app.route('/dashboard/completed', methods=['GET'])
 @login_required
 def dashboard_completed():
@@ -472,8 +475,7 @@ def get_function_args(function_id):
         'enum': arg.enum
     } for arg in args]), 200
 
-
-
+# Manage Function Arguments route
 @app.route('/functions/<int:function_id>/args/<int:arg_id>', methods=['PUT', 'DELETE'])
 @login_required
 def manage_function_arg(function_id, arg_id):
@@ -569,6 +571,7 @@ def get_or_delete_conversation(id):
         else:
             return jsonify({'message': 'Permission denied'}), 403
 
+# Manage Hints route
 @app.route('/hints', methods=['GET', 'POST'])
 @login_required
 def hints():
@@ -819,7 +822,7 @@ def generate_swml_response(user_id, request_body):
     else:
         prompt = AIPrompt.query.filter_by(user_id=user_id, prompt_type='prompt').first()
         post_prompt = AIPrompt.query.filter_by(user_id=user_id, prompt_type='post_prompt').first()
-#
+
     if not prompt:
         return jsonify({'error': 'Prompt not found'}), 404
 
@@ -1109,6 +1112,7 @@ def get_pronounce():
     } for p in pronounces]
     return jsonify(pronounce_list)
 
+# Manage Prompt route
 @app.route('/prompt', methods=['GET', 'POST'])
 @login_required
 def prompt():
@@ -1181,6 +1185,7 @@ def prompt():
             db.session.commit()
             return jsonify({'message': 'Prompt created successfully'}), 201
 
+# Delete Prompt route
 @app.route('/prompt/<int:id>', methods=['DELETE'])
 @login_required
 def delete_prompt(id):
@@ -1193,6 +1198,8 @@ def delete_prompt(id):
     db.session.commit()
     return jsonify({'message': 'Prompt deleted successfully'}), 200
 
+
+# Update Prompt route
 @app.route('/prompt/<int:id>', methods=['PUT'])
 @login_required
 def update_prompt(id):
@@ -1255,6 +1262,7 @@ def delete_language(id):
     db.session.commit()
     return jsonify({'message': 'Language entry deleted successfully'}), 200
 
+# Manage Language route
 @app.route('/language', methods=['GET', 'POST', 'PUT'])
 @login_required
 def language():
@@ -1399,6 +1407,7 @@ def update_datasphere(datasphere_id):
     else:
         return jsonify({'error': 'Failed to update datasphere'}), response.status_code
 
+# Manage Agents route
 @app.route('/agents', methods=['GET', 'POST'])
 @login_required
 def agents():
@@ -1442,6 +1451,8 @@ def get_agent(id):
     }
 
     return jsonify(agent_data), 200
+
+# Delete Agents route
 @app.route('/agents/<int:id>', methods=['DELETE'])
 @login_required
 def delete_agent(id):
@@ -1455,7 +1466,7 @@ def delete_agent(id):
 
     return jsonify({'message': 'Agent deleted successfully'}), 200
 
-# New route for updating an agent
+# Update Agents route
 @app.route('/agents/<int:id>', methods=['PUT'])
 @login_required
 def update_agent(id):
@@ -1471,6 +1482,7 @@ def update_agent(id):
 
     return jsonify({'message': 'Agent updated successfully'}), 200
 
+# Create Debug Webhook route
 @app.route('/debugwebhook/<int:user_id>', methods=['POST'])
 @auth.login_required
 def create_debuglog(user_id):
@@ -1496,9 +1508,7 @@ def debuglogs():
     else:
         return render_template('debuglog.html', user=current_user)
 
-
-
-
+# Run the app
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
