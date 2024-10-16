@@ -794,7 +794,7 @@ def generate_swml_response(user_id, request_body):
     request_body = request_body or {}
     swml = SignalWireML(version="1.0.0")
     
-        #Determine if the request is outbound
+    #Determine if the request is outbound
     outbound = request_body.get('outbound', False)
     
     # Select the appropriate prompt based on the outbound flag
@@ -814,16 +814,35 @@ def generate_swml_response(user_id, request_body):
         "top_p": prompt.top_p if prompt.top_p is not None else 0.5,
         "text": prompt.prompt_text
     }
+    if prompt.frequency_penalty is not None and prompt.frequency_penalty != 0.0:
+        aiprompt_data["frequency_penalty"] = prompt.frequency_penalty
+    if prompt.presence_penalty is not None and prompt.presence_penalty != 0.0:
+        aiprompt_data["presence_penalty"] = prompt.presence_penalty
     if prompt.max_tokens is not None:
         aiprompt_data["max_tokens"] = prompt.max_tokens
-    if prompt.confidence is not None:
+    if prompt.confidence is not None and prompt.confidence != 0.0:
         aiprompt_data["confidence"] = prompt.confidence
-    if prompt.frequency_penalty is not None:
-        aiprompt_data["frequency_penalty"] = prompt.frequency_penalty
-    if prompt.presence_penalty is not None:
-        aiprompt_data["presence_penalty"] = prompt.presence_penalty
-
+   
     swml.set_aiprompt(aiprompt_data)
+    
+    # Add post_prompt if available
+    if post_prompt:
+        post_prompt_data = {
+            "temperature": post_prompt.temperature if post_prompt.temperature is not None else 0.5,
+            "top_p": post_prompt.top_p if post_prompt.top_p is not None else 0.5,
+            "text": post_prompt.prompt_text
+        }
+        if post_prompt.frequency_penalty is not None and post_prompt.frequency_penalty != 0.0:
+            post_prompt_data["frequency_penalty"] = post_prompt.frequency_penalty
+        if post_prompt.presence_penalty is not None and post_prompt.presence_penalty != 0.0:
+            post_prompt_data["presence_penalty"] = post_prompt.presence_penalty
+        if post_prompt.max_tokens is not None:
+            post_prompt_data["max_tokens"] = post_prompt.max_tokens
+        if post_prompt.confidence is not None and post_prompt.confidence != 0.0:
+            post_prompt_data["confidence"] = post_prompt.confidence
+
+        swml.set_aipost_prompt(post_prompt_data)
+    
     # Add hints
     hints = AIHints.query.filter_by(user_id=user_id).all()
     swml.add_aihints([hint.hint for hint in hints])

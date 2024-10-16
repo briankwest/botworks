@@ -96,27 +96,31 @@
                 <!-- Add other input fields similar to the existing form -->
                 <div class="form-group">
                   <label for="newTopP">Top P</label>
-                  <input type="number" class="form-control" id="newTopP" name="top_p" step="0.01" value="0.01" required>
+                  <input type="range" class="form-control-range" id="newTopP" name="top_p" min="0" max="2" step="0.1" value="0.5" required>
+                  <span id="newTopPValue">0.5</span>
                 </div>
                 <div class="form-group">
                   <label for="newTemperature">Temperature</label>
-                  <input type="number" class="form-control" id="newTemperature" name="temperature" step="0.01" value="0.01" required>
+                  <input type="range" class="form-control-range" id="newTemperature" name="temperature" min="0" max="2" step="0.1" value="0.5" required>
+                  <span id="newTemperatureValue">0.5</span>
                 </div>
                 <div class="form-group">
                   <label for="newMaxTokens">Max Tokens</label>
-                  <input type="number" class="form-control" id="newMaxTokens" name="max_tokens" value="1000" required>
+                  <input type="number" class="form-control" id="newMaxTokens" name="max_tokens" min="0" max="1000" value="1000" required>
                 </div>
                 <div class="form-group">
                   <label for="newConfidence">Confidence</label>
-                  <input type="number" class="form-control" id="newConfidence" name="confidence" step="0.01" value="0.01" required>
+                  <input type="number" class="form-control" id="newConfidence" name="confidence" min="0" step="0.1" value="0.1" required>
                 </div>
                 <div class="form-group">
                   <label for="newFrequencyPenalty">Frequency Penalty</label>
-                  <input type="number" class="form-control" id="newFrequencyPenalty" name="frequency_penalty" step="0.01" value="0.01" required>
+                  <input type="range" class="form-control-range" id="newFrequencyPenalty" name="frequency_penalty" min="-2" max="2" step="0.1" value="0">
+                  <span id="newFrequencyPenaltyValue">0</span>
                 </div>
                 <div class="form-group">
                   <label for="newPresencePenalty">Presence Penalty</label>
-                  <input type="number" class="form-control" id="newPresencePenalty" name="presence_penalty" step="0.01" value="0.01" required>
+                  <input type="range" class="form-control-range" id="newPresencePenalty" name="presence_penalty" min="-2" max="2" step="0.1" value="0">
+                  <span id="newPresencePenaltyValue">0</span>
                 </div>
               </div>
               <div class="card-footer">
@@ -152,27 +156,31 @@
                     </div>
                     <div class="form-group">
                       <label for="editTopP">Top P</label>
-                      <input type="number" class="form-control" id="editTopP" name="top_p" step="0.01" required>
+                      <input type="range" class="form-control-range" id="editTopP" name="top_p" min="0" max="2" step="0.1" required>
+                      <span id="editTopPValue">0.5</span>
                     </div>
                     <div class="form-group">
                       <label for="editTemperature">Temperature</label>
-                      <input type="number" class="form-control" id="editTemperature" name="temperature" step="0.01" required>
+                      <input type="range" class="form-control-range" id="editTemperature" name="temperature" min="0" max="2" step="0.1" required>
+                      <span id="editTemperatureValue">0.5</span>
                     </div>
                     <div class="form-group">
                       <label for="editMaxTokens">Max Tokens</label>
-                      <input type="number" class="form-control" id="editMaxTokens" name="max_tokens" required>
+                      <input type="number" class="form-control" id="editMaxTokens" name="max_tokens" min="0" max="1000" required>
                     </div>
                     <div class="form-group">
                       <label for="editConfidence">Confidence</label>
-                      <input type="number" class="form-control" id="editConfidence" name="confidence" step="0.01" required>
+                      <input type="number" class="form-control" id="editConfidence" name="confidence" min="0" step="0.1" required>
                     </div>
                     <div class="form-group">
                       <label for="editFrequencyPenalty">Frequency Penalty</label>
-                      <input type="number" class="form-control" id="editFrequencyPenalty" name="frequency_penalty" step="0.01" required>
+                      <input type="range" class="form-control-range" id="editFrequencyPenalty" name="frequency_penalty" min="-2" max="2" step="0.1" value="0">
+                      <span id="editFrequencyPenaltyValue">0</span>
                     </div>
                     <div class="form-group">
                       <label for="editPresencePenalty">Presence Penalty</label>
-                      <input type="number" class="form-control" id="editPresencePenalty" name="presence_penalty" step="0.01" required>
+                      <input type="range" class="form-control-range" id="editPresencePenalty" name="presence_penalty" min="-2" max="2" step="0.1" value="0">
+                      <span id="editPresencePenaltyValue">0</span>
                     </div>
                     <!-- Hidden input for storing the prompt ID -->
                     <input type="hidden" id="editPromptId" name="id">
@@ -200,7 +208,11 @@
 {% block scripts %}
   <!-- jQuery -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- DataTables CSS -->
+  <!-- Bootstrap CSS -->
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap JS -->
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+  <!-- DataTables CSS -->
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
   <!-- DataTables JS -->
   <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
@@ -277,7 +289,7 @@
             $('#editConfidence').val(data.confidence);
             $('#editFrequencyPenalty').val(data.frequency_penalty);
             $('#editPresencePenalty').val(data.presence_penalty);
-            $('#editPromptModal').modal('show');
+            $('#editPromptModal').modal('show'); // Ensure Bootstrap JS is loaded
           });
 
           // Handle delete button click
@@ -384,6 +396,40 @@
             showToast('error', 'Error updating prompt: ' + xhr.responseText);
           }
         });
+      });
+
+      // Update displayed value for new prompt sliders
+      $('#newTopP').on('input', function() {
+        $('#newTopPValue').text($(this).val());
+      });
+
+      $('#newTemperature').on('input', function() {
+        $('#newTemperatureValue').text($(this).val());
+      });
+
+      $('#newFrequencyPenalty').on('input', function() {
+        $('#newFrequencyPenaltyValue').text($(this).val());
+      });
+
+      $('#newPresencePenalty').on('input', function() {
+        $('#newPresencePenaltyValue').text($(this).val());
+      });
+
+      // Update displayed value for edit prompt sliders
+      $('#editTopP').on('input', function() {
+        $('#editTopPValue').text($(this).val());
+      });
+
+      $('#editTemperature').on('input', function() {
+        $('#editTemperatureValue').text($(this).val());
+      });
+
+      $('#editFrequencyPenalty').on('input', function() {
+        $('#editFrequencyPenaltyValue').text($(this).val());
+      });
+
+      $('#editPresencePenalty').on('input', function() {
+        $('#editPresencePenaltyValue').text($(this).val());
       });
     });
   </script>
