@@ -35,7 +35,7 @@
               </div>
               <!-- /.card-header -->
               <div class="card-body">
-                <table id="conversationsTable" class="table table-bordered table-hover">
+                <table id="conversationsTable" class="table table-striped">
                   <thead>
                     <tr>
                       <th>ID</th>
@@ -85,8 +85,8 @@
         "columns": [
           { "data": "id" },
           { "data": "created" },
-          { "data": "data.caller_id_name" },  // Access directly from data object
-          { "data": "data.caller_id_number" },  // Access directly from data object
+          { "data": "data.caller_id_name" },
+          { "data": "data.caller_id_number" },
           {
             "data": null,
             "render": function(data, type, row) {
@@ -97,6 +97,12 @@
             }
           }
         ],
+        "responsive": true, // Add responsive option
+        "autoWidth": false, // Add autoWidth option
+        "paging": true,
+        "lengthChange": true,
+        "searching": true,
+        "info": true,
         "error": function(xhr, error, thrown) {
           console.log('DataTables error: ', error);
           console.log('DataTables error details: ', thrown);

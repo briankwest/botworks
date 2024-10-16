@@ -23,6 +23,13 @@
               <p>Dashboard</p>
             </a>
           </li>
+          <!-- AI Agents -->
+          <li class="nav-item">
+            <a href="{{ url_for('agents') }}" class="nav-link {{ 'active' if request.endpoint == 'agents' else '' }}">
+              <i class="nav-icon fas fa-robot"></i>
+              <p>AI Agents</p>
+            </a>
+          </li>
           <!-- Prompt -->
           <li class="nav-item">
             <a href="{{ url_for('prompt') }}" class="nav-link {{ 'active' if request.endpoint == 'prompt' else '' }}">
@@ -40,14 +47,14 @@
           <!-- SWML Requests -->
           <li class="nav-item">
             <a href="{{ url_for('swmlrequests') }}" class="nav-link {{ 'active' if request.endpoint == 'swmlrequests' else '' }}">
-              <i class="nav-icon fas fa-comments"></i>
+              <i class="nav-icon fas fa-file-alt"></i>
               <p>SWML Requests</p>
             </a>
           </li>
           <!-- Pronounce -->
           <li class="nav-item">
             <a href="{{ url_for('pronounce') }}" class="nav-link {{ 'active' if request.endpoint == 'pronounce' else '' }}">
-              <i class="nav-icon fas fa-microphone"></i>
+              <i class="nav-icon fas fa-bullhorn"></i>
               <p>Pronounce</p>
             </a>
           </li>

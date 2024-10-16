@@ -33,12 +33,12 @@
               </div>
               <!-- /.card-header -->
               <div class="card-body">
-                <table id="agentTable" class="table table-bordered table-hover">
+                <table id="agentTable" class="table table-striped">
                   <thead>
                     <tr>
                       <th>ID</th>
                       <th>Name</th>
-                      <th>Description</th>
+                      <th>Phone Number</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -69,8 +69,8 @@
                     <input type="text" class="form-control" id="agentName" name="name" required>
                   </div>
                   <div class="form-group">
-                    <label for="agentDescription">Description</label>
-                    <input type="text" class="form-control" id="agentDescription" name="description" required>
+                    <label for="agentPhoneNumber">Phone Number</label>
+                    <input type="text" class="form-control" id="agentPhoneNumber" name="number" required>
                   </div>
                   <button type="submit" class="btn btn-primary">Add AI Agent</button>
                 </form>
@@ -106,8 +106,8 @@
                 <input type="text" class="form-control" id="editAgentName" name="name" required>
               </div>
               <div class="form-group">
-                <label for="editAgentDescription">Description</label>
-                <input type="text" class="form-control" id="editAgentDescription" name="description" required>
+                <label for="editAgentPhoneNumber">Phone Number</label>
+                <input type="text" class="form-control" id="editAgentPhoneNumber" name="number" required>
               </div>
             </form>
           </div>
@@ -137,13 +137,17 @@
         "responsive": true,
         "autoWidth": false,
         "ajax": {
-          "url": "{{ url_for('get_agents') }}",
-          "dataSrc": ""
+          "url": "{{ url_for('agents') }}",
+          "dataSrc": "",
+          "headers": {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          }
         },
         "columns": [
           { "data": "id" },
           { "data": "name" },
-          { "data": "description" },
+          { "data": "number" },
           {
             "data": null,
             "render": function(data, type, row) {
@@ -161,7 +165,7 @@
         e.preventDefault();
         const formData = {
           name: $('#agentName').val(),
-          description: $('#agentDescription').val()
+          number: $('#agentPhoneNumber').val()
         };
 
         $.ajax({
@@ -211,16 +215,22 @@
       // Handle edit button click
       $('#agentTable').on('click', '.edit-agent', function() {
         const id = $(this).data('id');
+        console.log('Edit button clicked for ID:', id); // Debugging log
+
         $.ajax({
           type: 'GET',
           url: "/agents/" + id,
           success: function(response) {
+            console.log('AJAX success:', response); // Debugging log
+            // Ensure these IDs match the input fields in the modal
             $('#editId').val(response.id);
             $('#editAgentName').val(response.name);
-            $('#editAgentDescription').val(response.description);
+            $('#editAgentPhoneNumber').val(response.number);
+            // Show the modal
             $('#editAgentModal').modal('show');
           },
           error: function(error) {
+            console.error('AJAX error:', error); // Debugging log
             showToast('error', 'Error fetching AI Agent entry');
           }
         });
@@ -231,7 +241,7 @@
         const id = $('#editId').val();
         const formData = {
           name: $('#editAgentName').val(),
-          description: $('#editAgentDescription').val()
+          number: $('#editAgentPhoneNumber').val()
         };
 
         $.ajax({
@@ -250,5 +260,25 @@
         });
       });
     });
+
+    // Add the showToast function here
+    function showToast(icon, title) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+          toast.addEventListener('mouseenter', Swal.stopTimer)
+          toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+      });
+
+      Toast.fire({
+        icon: icon,
+        title: title
+      });
+    }
   </script>
 {% endblock %}

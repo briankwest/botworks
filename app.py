@@ -1338,6 +1338,78 @@ def update_datasphere(datasphere_id):
     else:
         return jsonify({'error': 'Failed to update datasphere'}), response.status_code
 
+@app.route('/agents', methods=['GET', 'POST'])
+@login_required
+def agents():
+    if request.method == 'GET':
+        if request.headers.get('Accept') == 'application/json':
+            # Serve JSON data
+            agents = AIAgent.query.filter_by(user_id=current_user.id).all()
+            agents_data = [{'id': agent.id, 'name': agent.name, 'number': agent.number, 'created': agent.created} for agent in agents]
+            return jsonify(agents_data), 200
+        else:
+            # Render HTML
+            return render_template('agents.html', user=current_user)
+
+    elif request.method == 'POST':
+        # Create a new agent
+        data = request.get_json()
+        name = data.get('name')
+        number = data.get('number')
+
+        if not name:
+            return jsonify({'error': 'Name is required'}), 400
+
+        new_agent = AIAgent(name=name, number=number, user_id=current_user.id)
+        db.session.add(new_agent)
+        db.session.commit()
+
+        return jsonify({'message': 'Agent created successfully'}), 201
+@app.route('/agents/<int:id>', methods=['GET'])
+@login_required
+def get_agent(id):
+    agent = AIAgent.query.get_or_404(id)
+
+    if agent.user_id != current_user.id:
+        return jsonify({'message': 'Permission denied'}), 403
+
+    agent_data = {
+        'id': agent.id,
+        'name': agent.name,
+        'number': agent.number,
+        'created': agent.created
+    }
+
+    return jsonify(agent_data), 200
+@app.route('/agents/<int:id>', methods=['DELETE'])
+@login_required
+def delete_agent(id):
+    agent = AIAgent.query.get_or_404(id)
+
+    if agent.user_id != current_user.id:
+        return jsonify({'message': 'Permission denied'}), 403
+
+    db.session.delete(agent)
+    db.session.commit()
+
+    return jsonify({'message': 'Agent deleted successfully'}), 200
+
+# New route for updating an agent
+@app.route('/agents/<int:id>', methods=['PUT'])
+@login_required
+def update_agent(id):
+    agent = AIAgent.query.get_or_404(id)
+
+    if agent.user_id != current_user.id:
+        return jsonify({'message': 'Permission denied'}), 403
+
+    data = request.get_json()
+    agent.name = data.get('name', agent.name)
+    agent.number = data.get('number', agent.number)
+    db.session.commit()
+
+    return jsonify({'message': 'Agent updated successfully'}), 200
+
 
 
 if __name__ == '__main__':
