@@ -2,17 +2,14 @@ import os  # Standard library import
 from datetime import datetime
 import requests
 from dotenv import load_dotenv
-
 from flask import Flask, flash, make_response, jsonify, redirect, render_template, request, url_for
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import (LoginManager, UserMixin, login_user, login_required,
-                         logout_user, current_user)
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from werkzeug.middleware.proxy_fix import ProxyFix
-
 from modules.signalwireml import SignalWireML
 
 def get_signal_wire_param(user_id, param_name):
@@ -51,16 +48,30 @@ login_manager.login_view = 'login'
 
 migrate = Migrate(app, db)
 
+class AIAgent(db.Model):
+    __tablename__ = 'ai_agents'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
+    name = db.Column(db.String(255), nullable=False)
+    number = db.Column(db.String(50), nullable=True)
+    created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    user = db.relationship('AIUser', backref=db.backref('ai_agents', lazy=True))
+
+    def __repr__(self):
+        return f'<AIAgent {self.name}>'
+
+
 # AISignalWireParams model definition
 class AISignalWireParams(db.Model):
     __tablename__ = 'ai_signalwire_params'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # Changed from user_id
     name = db.Column(db.String(100), nullable=False)
     value = db.Column(db.String(255), nullable=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
-    user = db.relationship('AIUser', backref=db.backref('ai_signalwire_params', lazy=True))
+    agent = db.relationship('AIAgent', backref=db.backref('ai_signalwire_params', lazy=True))
 
     def __repr__(self):
         return f'<AISignalWireParams {self.name}: {self.value}>'
@@ -68,28 +79,28 @@ class AISignalWireParams(db.Model):
 # AISWMLRequest model definition
 class AISWMLRequest(db.Model):
     __tablename__ = 'ai_swml_requests'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # Changed from user_id
     request = db.Column(db.JSON, nullable=False)
     response = db.Column(db.JSON, nullable=False)
     ip_address = db.Column(db.String(45), nullable=True)  # Added ip_address field
 
-    user = db.relationship('AIUser', backref=db.backref('ai_swml_requests', lazy=True))
+    agent = db.relationship('AIAgent', backref=db.backref('ai_swml_requests', lazy=True))
 
     def __repr__(self):
         return f'<AISWMLRequest {self.id}>'
 
 class AIFunctions(db.Model):
     __tablename__ = 'ai_functions'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # Changed from user_id
     name = db.Column(db.Text, nullable=True)
     purpose = db.Column(db.Text, nullable=True)
     active = db.Column(db.Boolean, nullable=False, default=True)
 
-    user = db.relationship('AIUser', backref=db.backref('ai_functions', lazy=True))
+    agent = db.relationship('AIAgent', backref=db.backref('ai_functions', lazy=True))
     ai_function_args = db.relationship(
         'AIFunctionArgs', 
         back_populates='function', 
@@ -103,10 +114,10 @@ class AIFunctions(db.Model):
 
 class AIFunctionArgs(db.Model):
     __tablename__ = 'ai_function_argument'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     function_id = db.Column(db.Integer, db.ForeignKey('ai_functions.id', ondelete='CASCADE'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # Changed from user_id
     name = db.Column(db.Text, nullable=False)
     type = db.Column(db.Text, nullable=False, default='string')
     description = db.Column(db.Text, nullable=True)
@@ -119,9 +130,9 @@ class AIFunctionArgs(db.Model):
         back_populates='ai_function_args', 
         overlaps="parent_function"
     )
-    user = db.relationship('AIUser', backref=db.backref('ai_function_argument', lazy=True))
+    agent = db.relationship('AIAgent', backref=db.backref('ai_function_argument', lazy=True))
 
-    __table_args__ = (db.UniqueConstraint('user_id', 'function_id', 'name'),)
+    __table_args__ = (db.UniqueConstraint('agent_id', 'function_id', 'name'),)
 
     def __repr__(self):
         return f'<AIFunctionArgs {self.name}>'
@@ -129,12 +140,12 @@ class AIFunctionArgs(db.Model):
 # AIHints model definition
 class AIHints(db.Model):
     __tablename__ = 'ai_hints'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     hint = db.Column(db.Text, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # Changed from user_id
 
-    user = db.relationship('AIUser', backref=db.backref('ai_hints', lazy=True))
+    agent = db.relationship('AIAgent', backref=db.backref('ai_hints', lazy=True))
 
     def __repr__(self):
         return f'<AIHints {self.hint}>'
@@ -142,14 +153,14 @@ class AIHints(db.Model):
 # AIPronounce model definition
 class AIPronounce(db.Model):
     __tablename__ = 'ai_pronounce'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     ignore_case = db.Column(db.Boolean, nullable=False, default=False)
     replace_this = db.Column(db.Text, nullable=False)
     replace_with = db.Column(db.Text, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # Changed from user_id
 
-    user = db.relationship('AIUser', backref=db.backref('ai_pronounce', lazy=True))
+    agent = db.relationship('AIAgent', backref=db.backref('ai_pronounce', lazy=True))
 
     def __repr__(self):
         return f'<AIPronounce {self.replace_this} -> {self.replace_with}>'
@@ -157,55 +168,31 @@ class AIPronounce(db.Model):
 # AIPrompt model definition
 class AIPrompt(db.Model):
     __tablename__ = 'ai_prompt'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     
-    prompt = db.Column(db.Text, nullable=True)
-    prompt_top_p = db.Column(db.Float, nullable=True)  # Changed to Float
-    prompt_temperature = db.Column(db.Float, nullable=True)  # Changed to Float
-    prompt_max_tokens = db.Column(db.Integer, nullable=True)  # Allowed to be empty or null
-    prompt_confidence = db.Column(db.Float, nullable=True)  # Changed to Float
-    prompt_frequency_penalty = db.Column(db.Float, nullable=True)  # Changed to Float
-    prompt_presence_penalty = db.Column(db.Float, nullable=True)  # Changed to Float
+    prompt_type = db.Column(db.Enum('prompt', 'post_prompt', 'outbound_prompt', 'outbound_post_prompt', name='prompt_type_enum'), nullable=False)
+    prompt_text = db.Column(db.Text, nullable=True)
+    top_p = db.Column(db.Float, nullable=True)
+    temperature = db.Column(db.Float, nullable=True)
+    max_tokens = db.Column(db.Integer, nullable=True)
+    confidence = db.Column(db.Float, nullable=True)
+    frequency_penalty = db.Column(db.Float, nullable=True)
+    presence_penalty = db.Column(db.Float, nullable=True)
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # Changed from user_id
 
-    post_prompt = db.Column(db.Text, nullable=True)
-    post_prompt_top_p = db.Column(db.Float, nullable=True)  # Changed to Float
-    post_prompt_temperature = db.Column(db.Float, nullable=True)  # Changed to Float
-    post_prompt_max_tokens = db.Column(db.Integer, nullable=True)  # Allowed to be empty or null
-    post_prompt_confidence = db.Column(db.Float, nullable=True)  # Changed to Float
-    post_prompt_frequency_penalty = db.Column(db.Float, nullable=True)  # Changed to Float
-    post_prompt_presence_penalty = db.Column(db.Float, nullable=True)  # Changed to Float
-    
-    outbound_prompt = db.Column(db.Text, nullable=True)
-    outbound_prompt_top_p = db.Column(db.Float, nullable=True)  # Changed to Float
-    outbound_prompt_temperature = db.Column(db.Float, nullable=True)  # Changed to Float
-    outbound_prompt_max_tokens = db.Column(db.Integer, nullable=True)  # Allowed to be empty or null
-    outbound_prompt_confidence = db.Column(db.Float, nullable=True)  # Changed to Float
-    outbound_prompt_frequency_penalty = db.Column(db.Float, nullable=True)  # Changed to Float
-    outbound_prompt_presence_penalty = db.Column(db.Float, nullable=True)  # Changed to Float
+    agent = db.relationship('AIAgent', backref=db.backref('ai_prompt', lazy=True))
 
-    outbound_post_prompt = db.Column(db.Text, nullable=True)
-    outbound_post_prompt_top_p = db.Column(db.Float, nullable=True)  # Changed to Float
-    outbound_post_prompt_temperature = db.Column(db.Float, nullable=True)  # Changed to Float
-    outbound_post_prompt_max_tokens = db.Column(db.Integer, nullable=True)  # Allowed to be empty or null
-    outbound_post_prompt_confidence = db.Column(db.Float, nullable=True)  # Changed to Float
-    outbound_post_prompt_frequency_penalty = db.Column(db.Float, nullable=True)  # Changed to Float
-    outbound_post_prompt_presence_penalty = db.Column(db.Float, nullable=True)  # Changed to Float
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
-
-    user = db.relationship('AIUser', backref=db.backref('ai_prompt', lazy=True))
-
-    __table_args__ = (db.UniqueConstraint('user_id'),)
+    __table_args__ = (db.UniqueConstraint('agent_id', 'prompt_type'),)
 
     def __repr__(self):
-        return f'<AIPrompt {self.prompt}>'
-
+        return f'<AIPrompt {self.prompt_type}: {self.prompt_text}>'
 # AILanguage model definition
 class AILanguage(db.Model):
     __tablename__ = 'ai_language'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # Changed from user_id
     code = db.Column(db.Text, nullable=True)
     name = db.Column(db.Text, nullable=True)
     voice = db.Column(db.Text, nullable=True)
@@ -213,7 +200,7 @@ class AILanguage(db.Model):
     function_fillers = db.Column(db.Text, nullable=True)
     language_order = db.Column(db.Integer, nullable=False, default=0)
 
-    user = db.relationship('AIUser', backref=db.backref('ai_language', lazy=True))
+    agent = db.relationship('AIAgent', backref=db.backref('ai_language', lazy=True))
 
     def __repr__(self):
         return f'<AILanguage {self.name}>'
@@ -221,25 +208,25 @@ class AILanguage(db.Model):
 # AIConversation model definition
 class AIConversation(db.Model):
     __tablename__ = 'ai_conversation'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     data = db.Column(db.JSON, nullable=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # Changed from user_id
 
-    user = db.relationship('AIUser', backref=db.backref('ai_conversation', lazy=True))
+    agent = db.relationship('AIAgent', backref=db.backref('ai_conversation', lazy=True))
 
     def __repr__(self):
         return f'<AIConversation {self.id}>'
 
 class AIParams(db.Model):
     __tablename__ = 'ai_params'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # Changed from user_id
     name = db.Column(db.String(100), nullable=False)
     value = db.Column(db.String(255), nullable=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
-    user = db.relationship('AIUser', backref=db.backref('ai_params', lazy=True))
+    agent = db.relationship('AIAgent', backref=db.backref('ai_params', lazy=True))
 
     def __repr__(self):
         return f'<AIParams {self.name}: {self.value}>'
@@ -305,7 +292,6 @@ def dashboard():
 @app.route('/swmlrequests', methods=['GET'])
 @login_required
 def swmlrequests():
-    print(request.headers.get('Accept'))
     if request.headers.get('Accept') == 'application/json':
          # Fetch all SWML requests for the current user
         swml_requests = AISWMLRequest.query.filter_by(user_id=current_user.id).all()
@@ -358,7 +344,19 @@ def dashboard_completed():
 @app.route('/functions', methods=['GET', 'POST'])
 @login_required
 def functions():
-    if request.method == 'POST':
+    if request.method == 'GET':
+        if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
+            functions = AIFunctions.query.filter_by(user_id=current_user.id).all()
+            function_list = [{
+                'id': f.id,
+                'name': f.name,
+                'purpose': f.purpose,
+                'created': f.created.isoformat()
+            } for f in functions]
+            return jsonify(function_list), 200
+        else:
+            return render_template('functions.html', user=current_user)
+    elif request.method == 'POST':
         data = request.get_json()
         new_function = AIFunctions(
             name=data['name'],
@@ -368,8 +366,6 @@ def functions():
         db.session.add(new_function)
         db.session.commit()
         return jsonify({'message': 'Function entry created successfully'}), 201
-    else:
-        return render_template('functions.html', user=current_user)
 
 # Manage SWAIG Functions route
 @app.route('/functions/<int:id>', methods=['GET', 'PUT', 'DELETE'])
@@ -400,17 +396,6 @@ def manage_function(id):
         db.session.delete(function_entry)
         db.session.commit()
         return jsonify({'message': 'Function entry deleted successfully'}), 200
-
-@app.route('/get_functions')
-@login_required
-def get_functions():
-    functions = AIFunctions.query.filter_by(user_id=current_user.id).all()
-    return jsonify([{
-        'id': func.id,
-        'name': func.name,
-        'purpose': func.purpose,
-        'created': func.created.isoformat()
-    } for func in functions])
 
 # Add SWAIG Function Arguments route
 @app.route('/functions/<int:function_id>/args', methods=['POST'])
@@ -475,22 +460,17 @@ def view_conversation(id):
 @app.route('/conversations')
 @login_required
 def conversations():
-    return render_template('conversations.html', user=current_user)
-
-# Get Conversations route
-@app.route('/get_conversations', methods=['GET'])
-@login_required
-def get_conversations():
-    conversations = AIConversation.query.filter_by(user_id=current_user.id).all()
-    data = [{
-        'id': conversation.id,
-        'created': conversation.created.strftime('%Y-%m-%d %H:%M:%S'),
-        'data': conversation.data
-    } for conversation in conversations]
-    
-    return jsonify({
-        'data': data
-    }), 200
+     if request.method == 'GET':
+        if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
+            conversations = AIConversation.query.filter_by(user_id=current_user.id).all()
+            conversation_list = [{
+                'id': conv.id,
+                'created': conv.created.isoformat(),
+                'data': conv.data
+            } for conv in conversations]
+            return jsonify(conversation_list), 200
+        else:
+            return render_template('conversations.html', user=current_user)
 
 # Get or Delete Conversation route
 @app.route('/conversations/<int:id>', methods=['GET', 'DELETE'])
