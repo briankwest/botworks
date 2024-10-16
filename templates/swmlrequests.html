@@ -76,6 +76,12 @@
  <script>
     $(document).ready(function() {
       initializeDataTable();
+
+      // Event delegation for dynamically created elements
+      $('#swmlRequestsTable').on('click', '.copy-btn', function() {
+        const dataString = $(this).prev('textarea').val();
+        copyToClipboard(dataString);
+      });
     });
 
     function initializeDataTable() {
@@ -100,17 +106,21 @@
             },
             { "data": "request",
               "render": function(data, type, row) {
+                const dataString = JSON.stringify(data, null, 2);
+                const uniqueId = `copy-btn-${row.id}`; // Assuming each row has a unique ID
                 return `
-                  <textarea readonly style="width: 500px; height: 20em;">${JSON.stringify(data, null, 2)}</textarea>
-                  <i class="fas fa-copy copy-btn" onclick="copyToClipboard(${JSON.stringify(data)})"></i>
+                  <textarea readonly style="width: 500px; height: 20em;">${dataString}</textarea>
+                  <i id="${uniqueId}" class="fas fa-copy copy-btn"></i>
                 `;
               }
             },
             { "data": "response",
               "render": function(data, type, row) {
+                const dataString = JSON.stringify(data, null, 2);
+                const uniqueId = `copy-btn-${row.id}`; // Assuming each row has a unique ID
                 return `
-                  <textarea readonly style="width: 500px; height: 20em;">${JSON.stringify(data, null, 2)}</textarea>
-                  <i class="fas fa-copy copy-btn" onclick="copyToClipboard(${JSON.stringify(data)})"></i>
+                  <textarea readonly style="width: 500px; height: 20em;">${dataString}</textarea>
+                  <i id="${uniqueId}" class="fas fa-copy copy-btn"></i>
                 `;
               }
             },
@@ -125,32 +135,28 @@
         console.error('DataTables is not loaded. Make sure you have included the DataTables library.');
       }
 
-      window.copyToClipboard = function(value) {
-        const tempInput = document.createElement('textarea');
-        tempInput.style.position = 'absolute';
-        tempInput.style.left = '-9999px';
-        tempInput.value = JSON.stringify(value, null, 2);
-        document.body.appendChild(tempInput);
-        tempInput.select();
-        document.execCommand('copy');
-        document.body.removeChild(tempInput);
+      window.copyToClipboard = async function(value) {
+        try {
+          await navigator.clipboard.writeText(JSON.stringify(value, null, 2));
+          const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 1500,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+              toast.addEventListener('mouseenter', Swal.stopTimer)
+              toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+          });
 
-        const Toast = Swal.mixin({
-          toast: true,
-          position: 'top-end',
-          showConfirmButton: false,
-          timer: 1500,
-          timerProgressBar: true,
-          didOpen: (toast) => {
-            toast.addEventListener('mouseenter', Swal.stopTimer)
-            toast.addEventListener('mouseleave', Swal.resumeTimer)
-          }
-        });
-
-        Toast.fire({
-          icon: 'success',
-          title: 'Copied to clipboard'
-        });
+          Toast.fire({
+            icon: 'success',
+            title: 'Copied to clipboard'
+          });
+        } catch (err) {
+          console.error('Failed to copy: ', err);
+        }
       }
     }
   </script>

@@ -2,14 +2,16 @@ import os  # Standard library import
 from datetime import datetime
 import requests
 from dotenv import load_dotenv
+
 from flask import Flask, flash, make_response, jsonify, redirect, render_template, request, url_for
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_login import (LoginManager, UserMixin, login_user, login_required, logout_user, current_user)
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from werkzeug.middleware.proxy_fix import ProxyFix
+
 from modules.signalwireml import SignalWireML
 
 def get_signal_wire_param(user_id, param_name):
@@ -66,12 +68,12 @@ class AIAgent(db.Model):
 class AISignalWireParams(db.Model):
     __tablename__ = 'ai_signalwire_params'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # Changed from user_id
+    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)  # Changed back to user_id
     name = db.Column(db.String(100), nullable=False)
     value = db.Column(db.String(255), nullable=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
-    agent = db.relationship('AIAgent', backref=db.backref('ai_signalwire_params', lazy=True))
+    user = db.relationship('AIUser', backref=db.backref('ai_signalwire_params', lazy=True))
 
     def __repr__(self):
         return f'<AISignalWireParams {self.name}: {self.value}>'
@@ -81,12 +83,12 @@ class AISWMLRequest(db.Model):
     __tablename__ = 'ai_swml_requests'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # Changed from user_id
+    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)  # Changed back to user_id
     request = db.Column(db.JSON, nullable=False)
     response = db.Column(db.JSON, nullable=False)
-    ip_address = db.Column(db.String(45), nullable=True)  # Added ip_address field
+    ip_address = db.Column(db.String(45), nullable=True)
 
-    agent = db.relationship('AIAgent', backref=db.backref('ai_swml_requests', lazy=True))
+    user = db.relationship('AIUser', backref=db.backref('ai_swml_requests', lazy=True))
 
     def __repr__(self):
         return f'<AISWMLRequest {self.id}>'
@@ -95,12 +97,12 @@ class AIFunctions(db.Model):
     __tablename__ = 'ai_functions'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # Changed from user_id
+    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)  # Changed back to user_id
     name = db.Column(db.Text, nullable=True)
     purpose = db.Column(db.Text, nullable=True)
     active = db.Column(db.Boolean, nullable=False, default=True)
 
-    agent = db.relationship('AIAgent', backref=db.backref('ai_functions', lazy=True))
+    user = db.relationship('AIUser', backref=db.backref('ai_functions', lazy=True))
     ai_function_args = db.relationship(
         'AIFunctionArgs', 
         back_populates='function', 
@@ -117,22 +119,22 @@ class AIFunctionArgs(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     function_id = db.Column(db.Integer, db.ForeignKey('ai_functions.id', ondelete='CASCADE'), nullable=False)
-    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # Changed from user_id
+    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)  # Changed back to user_id
     name = db.Column(db.Text, nullable=False)
     type = db.Column(db.Text, nullable=False, default='string')
     description = db.Column(db.Text, nullable=True)
     active = db.Column(db.Boolean, nullable=False, default=True)
     required = db.Column(db.Boolean, nullable=False, default=False)
-    enum = db.Column(db.Text, nullable=True)  # Add this line
+    enum = db.Column(db.Text, nullable=True)
 
     function = db.relationship(
         'AIFunctions', 
         back_populates='ai_function_args', 
         overlaps="parent_function"
     )
-    agent = db.relationship('AIAgent', backref=db.backref('ai_function_argument', lazy=True))
+    user = db.relationship('AIUser', backref=db.backref('ai_function_argument', lazy=True))
 
-    __table_args__ = (db.UniqueConstraint('agent_id', 'function_id', 'name'),)
+    __table_args__ = (db.UniqueConstraint('user_id', 'function_id', 'name'),)
 
     def __repr__(self):
         return f'<AIFunctionArgs {self.name}>'
@@ -143,9 +145,9 @@ class AIHints(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     hint = db.Column(db.Text, nullable=False)
-    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # Changed from user_id
+    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)  # Changed back to user_id
 
-    agent = db.relationship('AIAgent', backref=db.backref('ai_hints', lazy=True))
+    user = db.relationship('AIUser', backref=db.backref('ai_hints', lazy=True))
 
     def __repr__(self):
         return f'<AIHints {self.hint}>'
@@ -158,9 +160,9 @@ class AIPronounce(db.Model):
     ignore_case = db.Column(db.Boolean, nullable=False, default=False)
     replace_this = db.Column(db.Text, nullable=False)
     replace_with = db.Column(db.Text, nullable=False)
-    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # Changed from user_id
+    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)  # Changed back to user_id
 
-    agent = db.relationship('AIAgent', backref=db.backref('ai_pronounce', lazy=True))
+    user = db.relationship('AIUser', backref=db.backref('ai_pronounce', lazy=True))
 
     def __repr__(self):
         return f'<AIPronounce {self.replace_this} -> {self.replace_with}>'
@@ -179,11 +181,11 @@ class AIPrompt(db.Model):
     confidence = db.Column(db.Float, nullable=True)
     frequency_penalty = db.Column(db.Float, nullable=True)
     presence_penalty = db.Column(db.Float, nullable=True)
-    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # Changed from user_id
+    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)  # Changed back to user_id
 
-    agent = db.relationship('AIAgent', backref=db.backref('ai_prompt', lazy=True))
+    user = db.relationship('AIUser', backref=db.backref('ai_prompt', lazy=True))
 
-    __table_args__ = (db.UniqueConstraint('agent_id', 'prompt_type'),)
+    __table_args__ = (db.UniqueConstraint('user_id', 'prompt_type'),)
 
     def __repr__(self):
         return f'<AIPrompt {self.prompt_type}: {self.prompt_text}>'
@@ -192,7 +194,7 @@ class AILanguage(db.Model):
     __tablename__ = 'ai_language'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # Changed from user_id
+    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)  # Changed back to user_id
     code = db.Column(db.Text, nullable=True)
     name = db.Column(db.Text, nullable=True)
     voice = db.Column(db.Text, nullable=True)
@@ -200,7 +202,7 @@ class AILanguage(db.Model):
     function_fillers = db.Column(db.Text, nullable=True)
     language_order = db.Column(db.Integer, nullable=False, default=0)
 
-    agent = db.relationship('AIAgent', backref=db.backref('ai_language', lazy=True))
+    user = db.relationship('AIUser', backref=db.backref('ai_language', lazy=True))
 
     def __repr__(self):
         return f'<AILanguage {self.name}>'
@@ -211,9 +213,9 @@ class AIConversation(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     data = db.Column(db.JSON, nullable=True)
-    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # Changed from user_id
+    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)  # Changed back to user_id
 
-    agent = db.relationship('AIAgent', backref=db.backref('ai_conversation', lazy=True))
+    user = db.relationship('AIUser', backref=db.backref('ai_conversation', lazy=True))
 
     def __repr__(self):
         return f'<AIConversation {self.id}>'
@@ -221,12 +223,12 @@ class AIConversation(db.Model):
 class AIParams(db.Model):
     __tablename__ = 'ai_params'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # Changed from user_id
+    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)  # Changed back to user_id
     name = db.Column(db.String(100), nullable=False)
     value = db.Column(db.String(255), nullable=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
-    agent = db.relationship('AIAgent', backref=db.backref('ai_params', lazy=True))
+    user = db.relationship('AIUser', backref=db.backref('ai_params', lazy=True))
 
     def __repr__(self):
         return f'<AIParams {self.name}: {self.value}>'
@@ -292,6 +294,7 @@ def dashboard():
 @app.route('/swmlrequests', methods=['GET'])
 @login_required
 def swmlrequests():
+    print(request.headers.get('Accept'))
     if request.headers.get('Accept') == 'application/json':
          # Fetch all SWML requests for the current user
         swml_requests = AISWMLRequest.query.filter_by(user_id=current_user.id).all()
@@ -420,6 +423,27 @@ def add_function_arg(function_id):
     db.session.commit()
     return jsonify({'message': 'Function argument added successfully'}), 201
 
+# Get Function Arguments route
+@app.route('/functions/<int:function_id>/args', methods=['GET'])
+@login_required
+def get_function_args(function_id):
+    function_entry = AIFunctions.query.get_or_404(function_id)
+    
+    if function_entry.user_id != current_user.id:
+        return jsonify({'message': 'Permission denied'}), 403
+
+    args = AIFunctionArgs.query.filter_by(function_id=function_id).all()
+    return jsonify([{
+        'id': arg.id,
+        'name': arg.name,
+        'type': arg.type,
+        'description': arg.description,
+        'required': arg.required,
+        'enum': arg.enum
+    } for arg in args]), 200
+
+
+
 @app.route('/functions/<int:function_id>/args/<int:arg_id>', methods=['PUT', 'DELETE'])
 @login_required
 def manage_function_arg(function_id, arg_id):
@@ -472,6 +496,21 @@ def conversations():
         else:
             return render_template('conversations.html', user=current_user)
 
+# Get Conversations route
+@app.route('/get_conversations', methods=['GET'])
+@login_required
+def get_conversations():
+    conversations = AIConversation.query.filter_by(user_id=current_user.id).all()
+    data = [{
+        'id': conversation.id,
+        'created': conversation.created.strftime('%Y-%m-%d %H:%M:%S'),
+        'data': conversation.data
+    } for conversation in conversations]
+    
+    return jsonify({
+        'data': data
+    }), 200
+
 # Get or Delete Conversation route
 @app.route('/conversations/<int:id>', methods=['GET', 'DELETE'])
 @login_required
@@ -503,7 +542,17 @@ def get_or_delete_conversation(id):
 @app.route('/hints', methods=['GET', 'POST'])
 @login_required
 def hints():
-    if request.method == 'POST':
+    if request.method == 'GET':
+        if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
+            hints = AIHints.query.filter_by(user_id=current_user.id).all()
+            return jsonify([{
+                'id': hint.id,
+                'hint': hint.hint,
+                'created': hint.created
+            } for hint in hints]), 200
+        else:
+            return render_template('hints.html', user=current_user)
+    elif request.method == 'POST':
         data = request.get_json()
         new_hint = AIHints(
             hint=data['hint'],
@@ -512,8 +561,6 @@ def hints():
         db.session.add(new_hint)
         db.session.commit()
         return jsonify({'message': 'Hint entry created successfully'}), 201
-    else:
-        return render_template('hints.html', user=current_user)
 
 # Manage Hints route
 @app.route('/hints/<int:id>', methods=['GET', 'PUT', 'DELETE'])
@@ -732,44 +779,36 @@ def generate_swml_response(user_id, request_body):
     request_body = request_body or {}
     swml = SignalWireML(version="1.0.0")
     
-    prompt = AIPrompt.query.filter_by(user_id=user_id).first()
+        #Determine if the request is outbound
+    outbound = request_body.get('outbound', False)
+    
+    # Select the appropriate prompt based on the outbound flag
+    if outbound:
+        prompt = AIPrompt.query.filter_by(user_id=user_id, prompt_type='outbound_prompt').first()
+        post_prompt = AIPrompt.query.filter_by(user_id=user_id, prompt_type='outbound_post_prompt').first()
+    else:
+        prompt = AIPrompt.query.filter_by(user_id=user_id, prompt_type='prompt').first()
+        post_prompt = AIPrompt.query.filter_by(user_id=user_id, prompt_type='post_prompt').first()
+#
     if not prompt:
         return jsonify({'error': 'Prompt not found'}), 404
 
     # Set up the initial prompt
     aiprompt_data = {
-        "temperature": prompt.prompt_temperature if prompt.prompt_temperature is not None else 0.5,
-        "top_p": prompt.prompt_top_p if prompt.prompt_top_p is not None else 0.5,
-        "text": prompt.prompt
+        "temperature": prompt.temperature if prompt.temperature is not None else 0.5,
+        "top_p": prompt.top_p if prompt.top_p is not None else 0.5,
+        "text": prompt.prompt_text
     }
-    if prompt.prompt_max_tokens is not None:
-        aiprompt_data["max_tokens"] = prompt.prompt_max_tokens
-    if prompt.prompt_confidence is not None:
-        aiprompt_data["confidence"] = prompt.prompt_confidence
-    if prompt.prompt_frequency_penalty is not None:
-        aiprompt_data["frequency_penalty"] = prompt.prompt_frequency_penalty
-    if prompt.prompt_presence_penalty is not None:
-        aiprompt_data["presence_penalty"] = prompt.prompt_presence_penalty
+    if prompt.max_tokens is not None:
+        aiprompt_data["max_tokens"] = prompt.max_tokens
+    if prompt.confidence is not None:
+        aiprompt_data["confidence"] = prompt.confidence
+    if prompt.frequency_penalty is not None:
+        aiprompt_data["frequency_penalty"] = prompt.frequency_penalty
+    if prompt.presence_penalty is not None:
+        aiprompt_data["presence_penalty"] = prompt.presence_penalty
 
     swml.set_aiprompt(aiprompt_data)
-
-    # Set up the post prompt
-    aipost_prompt_data = {
-        "temperature": prompt.post_prompt_temperature if prompt.post_prompt_temperature is not None else 0.5,
-        "top_p": prompt.post_prompt_top_p if prompt.post_prompt_top_p is not None else 0.5,
-        "text": prompt.post_prompt
-    }
-    if prompt.post_prompt_max_tokens is not None:
-        aipost_prompt_data["max_tokens"] = prompt.post_prompt_max_tokens
-    if prompt.post_prompt_confidence is not None:
-        aipost_prompt_data["confidence"] = prompt.post_prompt_confidence
-    if prompt.post_prompt_frequency_penalty is not None:
-        aipost_prompt_data["frequency_penalty"] = prompt.post_prompt_frequency_penalty
-    if prompt.post_prompt_presence_penalty is not None:
-        aipost_prompt_data["presence_penalty"] = prompt.post_prompt_presence_penalty
-
-    swml.set_aipost_prompt(aipost_prompt_data)
-
     # Add hints
     hints = AIHints.query.filter_by(user_id=user_id).all()
     swml.add_aihints([hint.hint for hint in hints])
@@ -975,7 +1014,19 @@ def update_pronounce(id):
 @app.route('/pronounce', methods=['GET', 'POST'])
 @login_required
 def pronounce():
-    if request.method == 'POST':
+    if request.method == 'GET':
+        if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
+            pronounces = AIPronounce.query.filter_by(user_id=current_user.id).all()
+            pronounce_list = [{
+                'id': p.id,
+                'replace_this': p.replace_this,
+                'replace_with': p.replace_with,
+                'ignore_case': p.ignore_case
+            } for p in pronounces]
+            return jsonify(pronounce_list), 200
+        else:
+            return render_template('pronounce.html', user=current_user)
+    elif request.method == 'POST':
         data = request.get_json()
         new_pronounce = AIPronounce(
             replace_this=data['replace_this'],
@@ -986,8 +1037,6 @@ def pronounce():
         db.session.add(new_pronounce)
         db.session.commit()
         return jsonify({'message': 'Pronounce entry created successfully'}), 201
-    else:
-        return render_template('pronounce.html', user=current_user)
 
 # Delete Pronounce route
 @app.route('/pronounce/<int:id>', methods=['DELETE'])
@@ -1016,82 +1065,94 @@ def get_pronounce():
 def prompt():
     if request.method == 'GET':
         if request.headers.get('Accept') == 'application/json':
-            prompt_entry = AIPrompt.query.filter_by(user_id=current_user.id).first()
-            if prompt_entry:
-                prompt_fields = [
-                    'prompt', 'prompt_top_p', 'prompt_temperature', 'prompt_max_tokens', 'prompt_confidence',
-                    'prompt_frequency_penalty', 'prompt_presence_penalty', 'post_prompt', 'post_prompt_top_p',
-                    'post_prompt_temperature', 'post_prompt_max_tokens', 'post_prompt_confidence',
-                    'post_prompt_frequency_penalty', 'post_prompt_presence_penalty', 'outbound_prompt',
-                    'outbound_prompt_top_p', 'outbound_prompt_temperature', 'outbound_prompt_max_tokens',
-                    'outbound_prompt_frequency_penalty', 'outbound_prompt_presence_penalty', 'outbound_prompt_confidence',
-                    'outbound_post_prompt', 'outbound_post_prompt_top_p', 'outbound_post_prompt_temperature',
-                    'outbound_post_prompt_max_tokens', 'outbound_post_prompt_frequency_penalty',
-                    'outbound_post_prompt_presence_penalty', 'outbound_post_prompt_confidence'
+            existing_prompt_types = AIPrompt.query.with_entities(AIPrompt.prompt_type).distinct().all()
+            
+            # Fetch all prompts for the current user
+            prompt_entries = AIPrompt.query.filter_by(user_id=current_user.id).all()
+            if prompt_entries:
+                response_data = [
+                    {
+                        'id': prompt_entry.id,
+                        'prompt_type': prompt_entry.prompt_type,
+                        'prompt_text': prompt_entry.prompt_text,
+                        'top_p': prompt_entry.top_p,
+                        'temperature': prompt_entry.temperature,
+                        'max_tokens': prompt_entry.max_tokens,
+                        'confidence': prompt_entry.confidence,
+                        'frequency_penalty': prompt_entry.frequency_penalty,
+                        'presence_penalty': prompt_entry.presence_penalty
+                    } for prompt_entry in prompt_entries
                 ]
-
-                response_data = {field: getattr(prompt_entry, field) for field in prompt_fields}
-
                 return jsonify(response_data), 200
             else:
-                fields = [
-                    'prompt', 'prompt_top_p', 'prompt_temperature', 'prompt_max_tokens', 'prompt_confidence',
-                    'prompt_frequency_penalty', 'prompt_presence_penalty', 'post_prompt', 'post_prompt_top_p',
-                    'post_prompt_temperature', 'post_prompt_max_tokens', 'post_prompt_confidence',
-                    'post_prompt_frequency_penalty', 'post_prompt_presence_penalty', 'outbound_prompt',
-                    'outbound_prompt_top_p', 'outbound_prompt_temperature', 'outbound_prompt_max_tokens',
-                    'outbound_prompt_frequency_penalty', 'outbound_prompt_presence_penalty', 'outbound_prompt_confidence',
-                    'outbound_post_prompt', 'outbound_post_prompt_top_p', 'outbound_post_prompt_temperature',
-                    'outbound_post_prompt_max_tokens', 'outbound_post_prompt_frequency_penalty',
-                    'outbound_post_prompt_presence_penalty', 'outbound_post_prompt_confidence'
-                ]
-                response_data = {field: None for field in fields}
-                return jsonify(response_data), 200
+                return jsonify([]), 200
         else:
             return render_template('prompt.html', user=current_user)
+    
     elif request.method == 'POST':
         data = request.json
         user_id = current_user.id
         
         # Convert empty strings to None for Float and Integer fields
-        float_keys = [
-            'prompt_top_p', 'prompt_temperature', 'prompt_confidence', 
-            'prompt_frequency_penalty', 'prompt_presence_penalty',
-            'post_prompt_top_p', 'post_prompt_temperature', 'post_prompt_confidence',
-            'post_prompt_frequency_penalty', 'post_prompt_presence_penalty',
-            'outbound_prompt_top_p', 'outbound_prompt_temperature', 'outbound_prompt_confidence',
-            'outbound_prompt_frequency_penalty', 'outbound_prompt_presence_penalty',
-            'outbound_post_prompt_top_p', 'outbound_post_prompt_temperature', 'outbound_post_prompt_confidence',
-            'outbound_post_prompt_frequency_penalty', 'outbound_post_prompt_presence_penalty'
-        ]
-        
-        integer_keys = [
-            'prompt_max_tokens', 'post_prompt_max_tokens', 'outbound_prompt_max_tokens', 'outbound_post_prompt_max_tokens'
-        ]
+        float_keys = ['top_p', 'temperature', 'confidence', 'frequency_penalty', 'presence_penalty']
+        integer_keys = ['max_tokens']
         
         for key in float_keys + integer_keys:
             if key in data and data[key] == '':
                 data[key] = None
         
-        prompt_entry = AIPrompt.query.filter_by(user_id=user_id).first()
+        # Check if a prompt with the same type already exists for the user
+        existing_prompt = AIPrompt.query.filter_by(user_id=user_id, prompt_type=data['prompt_type']).first()
         
-        if prompt_entry:
-            # Update existing entry
-            for key, value in data.items():
-                setattr(prompt_entry, key, value)
+        if existing_prompt:
+            # Update the existing prompt
+            existing_prompt.prompt_text = data['prompt_text']
+            existing_prompt.top_p = data['top_p']
+            existing_prompt.temperature = data['temperature']
+            existing_prompt.max_tokens = data['max_tokens']
+            existing_prompt.confidence = data['confidence']
+            existing_prompt.frequency_penalty = data['frequency_penalty']
+            existing_prompt.presence_penalty = data['presence_penalty']
+            db.session.commit()
+            return jsonify({'message': 'Prompt updated successfully'}), 200
         else:
             # Create new entry
-            prompt_entry = AIPrompt(
+            new_prompt = AIPrompt(
                 user_id=user_id,
-                prompt=data['prompt'],
-                post_prompt=data['post_prompt'],
-                outbound_prompt=data['outbound_prompt'],
-                outbound_post_prompt=data['outbound_post_prompt']
+                prompt_type=data['prompt_type'],
+                prompt_text=data['prompt_text'],
+                top_p=data['top_p'],
+                temperature=data['temperature'],
+                max_tokens=data['max_tokens'],
+                confidence=data['confidence'],
+                frequency_penalty=data['frequency_penalty'],
+                presence_penalty=data['presence_penalty']
             )
-            db.session.add(prompt_entry)
-        
-        db.session.commit()
-        return jsonify({'message': 'Prompt saved successfully'}), 200
+            db.session.add(new_prompt)
+            db.session.commit()
+            return jsonify({'message': 'Prompt created successfully'}), 201
+
+
+@app.route('/prompt/<int:id>', methods=['PUT'])
+@login_required
+def update_prompt(id):
+    prompt_entry = AIPrompt.query.get_or_404(id)
+    
+    if prompt_entry.user_id != current_user.id:
+        return jsonify({'message': 'Permission denied'}), 403
+
+    data = request.get_json()
+    prompt_entry.prompt_type = data.get('prompt_type', prompt_entry.prompt_type)
+    prompt_entry.prompt_text = data.get('prompt_text', prompt_entry.prompt_text)
+    prompt_entry.top_p = data.get('top_p', prompt_entry.top_p)
+    prompt_entry.temperature = data.get('temperature', prompt_entry.temperature)
+    prompt_entry.max_tokens = data.get('max_tokens', prompt_entry.max_tokens)
+    prompt_entry.confidence = data.get('confidence', prompt_entry.confidence)
+    prompt_entry.frequency_penalty = data.get('frequency_penalty', prompt_entry.frequency_penalty)
+    prompt_entry.presence_penalty = data.get('presence_penalty', prompt_entry.presence_penalty)
+    
+    db.session.commit()
+    return jsonify({'message': 'Prompt updated successfully'}), 200
 
 # Update Language route
 @app.route('/language/<int:id>', methods=['PUT'])
@@ -1137,7 +1198,22 @@ def delete_language(id):
 @app.route('/language', methods=['GET', 'POST', 'PUT'])
 @login_required
 def language():
-    if request.method == 'POST':
+    if request.method == 'GET':
+        if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
+            languages = AILanguage.query.filter_by(user_id=current_user.id).all()
+            language_list = [{
+                'id': l.id,
+                'name': l.name,
+                'code': l.code,
+                'voice': l.voice,
+                'speech_fillers': l.speech_fillers,
+                'function_fillers': l.function_fillers,
+                'language_order': l.language_order
+            } for l in languages]
+            return jsonify(language_list), 200
+        else:
+            return render_template('language.html', user=current_user)
+    elif request.method == 'POST':
         data = request.get_json()
         new_language = AILanguage(
             name=data['name'],
@@ -1183,45 +1259,6 @@ def get_language():
     } for l in languages]
     return jsonify(language_list)
 
-# Get Function Arguments route
-@app.route('/functions/<int:function_id>/args', methods=['GET'])
-@login_required
-def get_function_args(function_id):
-    function_entry = AIFunctions.query.get_or_404(function_id)
-    
-    if function_entry.user_id != current_user.id:
-        return jsonify({'message': 'Permission denied'}), 403
-
-    args = AIFunctionArgs.query.filter_by(function_id=function_id).all()
-    return jsonify([{
-        'id': arg.id,
-        'name': arg.name,
-        'type': arg.type,
-        'description': arg.description,
-        'required': arg.required,
-        'enum': arg.enum
-    } for arg in args]), 200
-
-# Update Function Arguments route
-@app.route('/functions/<int:function_id>/args/<int:arg_id>', methods=['PUT'])
-@login_required
-def update_function_arg(function_id, arg_id):
-    function_entry = AIFunctions.query.get_or_404(function_id)
-    arg_entry = AIFunctionArgs.query.get_or_404(arg_id)
-    
-    if function_entry.user_id != current_user.id or arg_entry.function_id != function_id:
-        return jsonify({'message': 'Permission denied'}), 403
-
-    data = request.get_json()
-    arg_entry.name = data.get('name', arg_entry.name)
-    arg_entry.type = data.get('type', arg_entry.type)
-    arg_entry.description = data.get('description', arg_entry.description)
-    arg_entry.required = data.get('required', arg_entry.required)
-    arg_entry.enum = data.get('enum', arg_entry.enum)
-    db.session.commit()
-    return jsonify({'message': 'Function argument updated successfully'}), 200
-
-# Datasphere routes
 # Get Datasphere route
 @app.route('/datasphere', methods=['GET'])
 @login_required

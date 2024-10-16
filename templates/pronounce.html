@@ -131,10 +131,10 @@
     </div>
   </div>
   <!-- /.content-wrapper -->
-
   <!-- Footer -->
   {% include 'footer.html' %}
   <!-- /.footer -->
+
 {% endblock %}
 
 {% block scripts %}
@@ -149,7 +149,7 @@
         "responsive": true,  // Enable responsive design
         "autoWidth": true,   // Enable auto-width
         "ajax": {
-          "url": "{{ url_for('get_pronounce') }}",
+          "url": "{{ url_for('pronounce') }}",
           "dataSrc": ""
         },
         "order": [ 1, 'asc' ],
@@ -203,6 +203,9 @@
           type: 'POST',
           url: "{{ url_for('pronounce') }}",
           contentType: 'application/json',
+          headers: {
+            'Accept': 'application/json'
+          },
           data: JSON.stringify(formData),
           success: function(response) {
             $('#pronounceTable').DataTable().ajax.reload();
@@ -232,6 +235,9 @@
             $.ajax({
               type: 'DELETE',
               url: `/pronounce/${id}`,
+              headers: {
+                'Accept': 'application/json'
+              },
               success: function(response) {
                 $('#pronounceTable').DataTable().ajax.reload();
                 showToast('success', 'Pronounce entry deleted successfully');

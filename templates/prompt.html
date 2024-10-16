@@ -26,170 +26,165 @@
     <div class="container-fluid">
       <div class="row">
         <div class="col-md-12">
+          <!-- DataTable for existing prompts -->
+          <div class="card card-secondary">
+            <div class="card-header">
+              <h3 class="card-title">Existing Prompts</h3>
+            </div>
+            <div class="card-body">
+              <table id="promptTable" class="table table-bordered table-striped">
+                <thead>
+                  <tr>
+                    <th>ID</th> <!-- New column for ID -->
+                    <th>Type</th>
+                    <th>Text</th>
+                    <th>Top P</th>
+                    <th>Temperature</th>
+                    <th>Max Tokens</th>
+                    <th>Confidence</th>
+                    <th>Frequency Penalty</th>
+                    <th>Presence Penalty</th>
+                    <th>Actions</th> <!-- New column for actions -->
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for prompt in prompts %}
+                  <tr>
+                    <td>{{ prompt.id }}</td> <!-- Display the ID -->
+                    <td>{{ prompt.prompt_type }}</td>
+                    <td>{{ prompt.prompt_text }}</td>
+                    <td>{{ prompt.top_p }}</td>
+                    <td>{{ prompt.temperature }}</td>
+                    <td>{{ prompt.max_tokens }}</td>
+                    <td>{{ prompt.confidence }}</td>
+                    <td>{{ prompt.frequency_penalty }}</td>
+                    <td>{{ prompt.presence_penalty }}</td>
+                    <td>
+                      <button class="btn btn-sm btn-primary edit-btn" data-id="{{ prompt.id }}">Edit</button>
+                      <button class="btn btn-sm btn-danger delete-btn" data-id="{{ prompt.id }}">Delete</button>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <!-- /.card -->
+
+          <!-- Form to add new prompts -->
           <div class="card card-primary">
             <div class="card-header bg-primary">
-              <h3 class="card-title">Edit Prompt</h3>
+              <h3 class="card-title">Add New Prompt</h3>
             </div>
-            <!-- /.card-header -->
-            <!-- form start -->
-            <form id="promptForm">
+            <form id="addPromptForm">
               <div class="card-body">
-                <!-- Prompt Group -->
-                <div class="card mb-3">
-                  <div class="card-header bg-info">
-                    <h5 class="card-title">Prompt</h5>
-                  </div>
-                  <div class="card-body">
-                    <div class="form-group">
-                      <label for="prompt">Prompt</label>
-                      <textarea class="form-control" id="prompt" name="prompt" rows="3" required></textarea>
-                    </div>
-                    <div class="form-group">
-                      <label for="promptTopP">Prompt Top P</label>
-                      <input type="number" class="form-control" id="promptTopP" name="prompt_top_p" step="0.01" value="0.5">
-                    </div>
-                    <div class="form-group">
-                      <label for="promptTemperature">Prompt Temperature</label>
-                      <input type="number" class="form-control" id="promptTemperature" name="prompt_temperature" step="0.01" value="0.5">
-                    </div>
-                    <div class="form-group">
-                      <label for="promptMaxTokens">Prompt Max Tokens</label>
-                      <input type="number" class="form-control" id="promptMaxTokens" name="prompt_max_tokens">
-                    </div>
-                    <div class="form-group">
-                      <label for="promptConfidence">Prompt Confidence</label>
-                      <input type="number" class="form-control" id="promptConfidence" name="prompt_confidence" step="0.01">
-                    </div>
-                    <div class="form-group">
-                      <label for="promptFrequencyPenalty">Prompt Frequency Penalty</label>
-                      <input type="number" class="form-control" id="promptFrequencyPenalty" name="prompt_frequency_penalty" step="0.01">
-                    </div>
-                    <div class="form-group">
-                      <label for="promptPresencePenalty">Prompt Presence Penalty</label>
-                      <input type="number" class="form-control" id="promptPresencePenalty" name="prompt_presence_penalty" step="0.01">
-                    </div>
-                  </div>
+                <div class="form-group">
+                  <label for="newPromptType">Prompt Type</label>
+                  <select class="form-control" id="newPromptType" name="prompt_type" required>
+                    <option value="">Select a type</option>
+                    {% for type in ['prompt', 'post_prompt', 'outbound_prompt', 'outbound_post_prompt'] %}
+                      {% if type not in existing_prompt_types %}
+                        <option value="{{ type }}">{{ type }}</option>
+                      {% endif %}
+                    {% endfor %}
+                  </select>
                 </div>
-
-                <!-- Post Prompt Group -->
-                <div class="card mb-3">
-                  <div class="card-header bg-success">
-                    <h5 class="card-title">Post Prompt</h5>
-                  </div>
-                  <div class="card-body">
-                    <div class="form-group">
-                      <label for="postPrompt">Post Prompt</label>
-                      <textarea class="form-control" id="postPrompt" name="post_prompt" rows="3"></textarea>
-                    </div>
-                    <div class="form-group">
-                      <label for="postPromptTopP">Post Prompt Top P</label>
-                      <input type="number" class="form-control" id="postPromptTopP" name="post_prompt_top_p" step="0.01" value="0.5">
-                    </div>
-                    <div class="form-group">
-                      <label for="postPromptTemperature">Post Prompt Temperature</label>
-                      <input type="number" class="form-control" id="postPromptTemperature" name="post_prompt_temperature" step="0.01" value="0.5">
-                    </div>
-                    <div class="form-group">
-                      <label for="postPromptMaxTokens">Post Prompt Max Tokens</label>
-                      <input type="number" class="form-control" id="postPromptMaxTokens" name="post_prompt_max_tokens">
-                    </div>
-                    <div class="form-group">
-                      <label for="postPromptConfidence">Post Prompt Confidence</label>
-                      <input type="number" class="form-control" id="postPromptConfidence" name="post_prompt_confidence" step="0.01">
-                    </div>
-                    <div class="form-group">
-                      <label for="postPromptFrequencyPenalty">Post Prompt Frequency Penalty</label>
-                      <input type="number" class="form-control" id="postPromptFrequencyPenalty" name="post_prompt_frequency_penalty" step="0.01">
-                    </div>
-                    <div class="form-group">
-                      <label for="postPromptPresencePenalty">Post Prompt Presence Penalty</label>
-                      <input type="number" class="form-control" id="postPromptPresencePenalty" name="post_prompt_presence_penalty" step="0.01">
-                    </div>
-                  </div>
+                <div class="form-group">
+                  <label for="newPromptText">Prompt Text</label>
+                  <textarea class="form-control" id="newPromptText" name="prompt_text" rows="3" required>Hello, how are you today?</textarea>
                 </div>
-
-                <!-- Outbound Prompt Group -->
-                <div class="card mb-3">
-                  <div class="card-header bg-warning">
-                    <h5 class="card-title">Outbound Prompt</h5>
-                  </div>
-                  <div class="card-body">
-                    <div class="form-group">
-                      <label for="outboundPrompt">Outbound Prompt</label>
-                      <textarea class="form-control" id="outboundPrompt" name="outbound_prompt" rows="3"></textarea>
-                    </div>
-                    <div class="form-group">
-                      <label for="outboundPromptTopP">Outbound Prompt Top P</label>
-                      <input type="number" class="form-control" id="outboundPromptTopP" name="outbound_prompt_top_p" step="0.01" value="0.5">
-                    </div>
-                    <div class="form-group">
-                      <label for="outboundPromptTemperature">Outbound Prompt Temperature</label>
-                      <input type="number" class="form-control" id="outboundPromptTemperature" name="outbound_prompt_temperature" step="0.01" value="0.5">
-                    </div>
-                    <div class="form-group">
-                      <label for="outboundPromptMaxTokens">Outbound Prompt Max Tokens</label>
-                      <input type="number" class="form-control" id="outboundPromptMaxTokens" name="outbound_prompt_max_tokens">
-                    </div>
-                    <div class="form-group">
-                      <label for="outboundPromptConfidence">Outbound Prompt Confidence</label>
-                      <input type="number" class="form-control" id="outboundPromptConfidence" name="outbound_prompt_confidence" step="0.01">
-                    </div>
-                    <div class="form-group">
-                      <label for="outboundPromptFrequencyPenalty">Outbound Prompt Frequency Penalty</label>
-                      <input type="number" class="form-control" id="outboundPromptFrequencyPenalty" name="outbound_prompt_frequency_penalty" step="0.01">
-                    </div>
-                    <div class="form-group">
-                      <label for="outboundPromptPresencePenalty">Outbound Prompt Presence Penalty</label>
-                      <input type="number" class="form-control" id="outboundPromptPresencePenalty" name="outbound_prompt_presence_penalty" step="0.01">
-                    </div>
-                  </div>
+                <!-- Add other input fields similar to the existing form -->
+                <div class="form-group">
+                  <label for="newTopP">Top P</label>
+                  <input type="number" class="form-control" id="newTopP" name="top_p" step="0.01" value="0.01" required>
                 </div>
-
-                <!-- Outbound Post Prompt Group -->
-                <div class="card mb-3">
-                  <div class="card-header bg-danger">
-                    <h5 class="card-title">Outbound Post Prompt</h5>
-                  </div>
-                  <div class="card-body">
-                    <div class="form-group">
-                      <label for="outboundPostPrompt">Outbound Post Prompt</label>
-                      <textarea class="form-control" id="outboundPostPrompt" name="outbound_post_prompt" rows="3"></textarea>
-                    </div>
-                    <div class="form-group">
-                      <label for="outboundPostPromptTopP">Outbound Post Prompt Top P</label>
-                      <input type="number" class="form-control" id="outboundPostPromptTopP" name="outbound_post_prompt_top_p" step="0.01" value="0.5">
-                    </div>
-                    <div class="form-group">
-                      <label for="outboundPostPromptTemperature">Outbound Post Prompt Temperature</label>
-                      <input type="number" class="form-control" id="outboundPostPromptTemperature" name="outbound_post_prompt_temperature" step="0.01" value="0.5">
-                    </div>
-                    <div class="form-group">
-                      <label for="outboundPostPromptMaxTokens">Outbound Post Prompt Max Tokens</label>
-                      <input type="number" class="form-control" id="outboundPostPromptMaxTokens" name="outbound_post_prompt_max_tokens">
-                    </div>
-                    <div class="form-group">
-                      <label for="outboundPostPromptConfidence">Outbound Post Prompt Confidence</label>
-                      <input type="number" class="form-control" id="outboundPostPromptConfidence" name="outbound_post_prompt_confidence" step="0.01">
-                    </div>
-                    <div class="form-group">
-                      <label for="outboundPostPromptFrequencyPenalty">Outbound Post Prompt Frequency Penalty</label>
-                      <input type="number" class="form-control" id="outboundPostPromptFrequencyPenalty" name="outbound_post_prompt_frequency_penalty" step="0.01">
-                    </div>
-                    <div class="form-group">
-                      <label for="outboundPostPromptPresencePenalty">Outbound Post Prompt Presence Penalty</label>
-                      <input type="number" class="form-control" id="outboundPostPromptPresencePenalty" name="outbound_post_prompt_presence_penalty" step="0.01">
-                    </div>
-                  </div>
+                <div class="form-group">
+                  <label for="newTemperature">Temperature</label>
+                  <input type="number" class="form-control" id="newTemperature" name="temperature" step="0.01" value="0.01" required>
+                </div>
+                <div class="form-group">
+                  <label for="newMaxTokens">Max Tokens</label>
+                  <input type="number" class="form-control" id="newMaxTokens" name="max_tokens" value="1000" required>
+                </div>
+                <div class="form-group">
+                  <label for="newConfidence">Confidence</label>
+                  <input type="number" class="form-control" id="newConfidence" name="confidence" step="0.01" value="0.01" required>
+                </div>
+                <div class="form-group">
+                  <label for="newFrequencyPenalty">Frequency Penalty</label>
+                  <input type="number" class="form-control" id="newFrequencyPenalty" name="frequency_penalty" step="0.01" value="0.01" required>
+                </div>
+                <div class="form-group">
+                  <label for="newPresencePenalty">Presence Penalty</label>
+                  <input type="number" class="form-control" id="newPresencePenalty" name="presence_penalty" step="0.01" value="0.01" required>
                 </div>
               </div>
-              <!-- /.card-body -->
-
               <div class="card-footer">
-                <button type="submit" class="btn btn-primary">Save</button>
+                <button type="submit" class="btn btn-primary">Add Prompt</button>
               </div>
             </form>
           </div>
           <!-- /.card -->
+
+          <!-- Edit Modal -->
+          <div class="modal fade" id="editPromptModal" tabindex="-1" role="dialog" aria-labelledby="editPromptModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="editPromptModalLabel">Edit Prompt</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <form id="editPromptForm">
+                    <div class="form-group">
+                      <label for="editPromptType">Prompt Type</label>
+                      <select class="form-control" id="editPromptType" name="prompt_type" required>
+                        {% for type in ['prompt', 'post_prompt', 'outbound_prompt', 'outbound_post_prompt'] %}
+                          <option value="{{ type }}">{{ type }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label for="editPromptText">Prompt Text</label>
+                      <textarea class="form-control" id="editPromptText" name="prompt_text" rows="3" required></textarea>
+                    </div>
+                    <div class="form-group">
+                      <label for="editTopP">Top P</label>
+                      <input type="number" class="form-control" id="editTopP" name="top_p" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                      <label for="editTemperature">Temperature</label>
+                      <input type="number" class="form-control" id="editTemperature" name="temperature" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                      <label for="editMaxTokens">Max Tokens</label>
+                      <input type="number" class="form-control" id="editMaxTokens" name="max_tokens" required>
+                    </div>
+                    <div class="form-group">
+                      <label for="editConfidence">Confidence</label>
+                      <input type="number" class="form-control" id="editConfidence" name="confidence" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                      <label for="editFrequencyPenalty">Frequency Penalty</label>
+                      <input type="number" class="form-control" id="editFrequencyPenalty" name="frequency_penalty" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                      <label for="editPresencePenalty">Presence Penalty</label>
+                      <input type="number" class="form-control" id="editPresencePenalty" name="presence_penalty" step="0.01" required>
+                    </div>
+                    <!-- Hidden input for storing the prompt ID -->
+                    <input type="hidden" id="editPromptId" name="id">
+                  </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                  <button type="button" class="btn btn-primary" id="saveEditPrompt">Save changes</button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <!-- /.row -->
@@ -200,125 +195,200 @@
   <!-- Footer -->
   {% include 'footer.html' %}
   <!-- /.footer -->
+{% endblock %}
 
-<!-- Include SweetAlert -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- Ensure jQuery is loaded -->
-<script>
-  function showToast(type, message) {
-    // Use SweetAlert for toast notifications
-    const Toast = Swal.mixin({
-      toast: true,
-      position: 'top-end',
-      showConfirmButton: false,
-      timer: 3000,
-      timerProgressBar: true,
-      didOpen: (toast) => {
-        toast.addEventListener('mouseenter', Swal.stopTimer)
-        toast.addEventListener('mouseleave', Swal.resumeTimer)
-      }
-    });
-
-    Toast.fire({
-      icon: type,
-      title: message
-    });
-  }
-
-  $(document).ready(function() {
-    // Fetch the prompt data
-    $.ajax({
-      type: 'GET',
-      url: "{{ url_for('prompt') }}",
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-      success: function(response) {
-        $('#prompt').val(response.prompt);
-        $('#promptTopP').val(response.prompt_top_p);
-        $('#promptTemperature').val(response.prompt_temperature);
-        $('#promptMaxTokens').val(response.prompt_max_tokens);
-        $('#promptConfidence').val(response.prompt_confidence);
-        $('#promptFrequencyPenalty').val(response.prompt_frequency_penalty);
-        $('#promptPresencePenalty').val(response.prompt_presence_penalty);
-        $('#postPrompt').val(response.post_prompt);
-        $('#postPromptTopP').val(response.post_prompt_top_p);
-        $('#postPromptTemperature').val(response.post_prompt_temperature);
-        $('#postPromptMaxTokens').val(response.post_prompt_max_tokens);
-        $('#postPromptConfidence').val(response.post_prompt_confidence);
-        $('#postPromptFrequencyPenalty').val(response.post_prompt_frequency_penalty);
-        $('#postPromptPresencePenalty').val(response.post_prompt_presence_penalty);
-        $('#outboundPrompt').val(response.outbound_prompt);
-        $('#outboundPromptTopP').val(response.outbound_prompt_top_p);
-        $('#outboundPromptTemperature').val(response.outbound_prompt_temperature);
-        $('#outboundPromptMaxTokens').val(response.outbound_prompt_max_tokens);
-        $('#outboundPromptConfidence').val(response.outbound_prompt_confidence);
-        $('#outboundPromptFrequencyPenalty').val(response.outbound_prompt_frequency_penalty);
-        $('#outboundPromptPresencePenalty').val(response.outbound_prompt_presence_penalty);
-        $('#outboundPostPrompt').val(response.outbound_post_prompt);
-        $('#outboundPostPromptTopP').val(response.outbound_post_prompt_top_p);
-        $('#outboundPostPromptTemperature').val(response.outbound_post_prompt_temperature);
-        $('#outboundPostPromptMaxTokens').val(response.outbound_post_prompt_max_tokens);
-        $('#outboundPostPromptConfidence').val(response.outbound_post_prompt_confidence);
-        $('#outboundPostPromptFrequencyPenalty').val(response.outbound_post_prompt_frequency_penalty);
-        $('#outboundPostPromptPresencePenalty').val(response.outbound_post_prompt_presence_penalty);
-      },
-      error: function(error) {
-        showToast('error', 'Error fetching prompt data');
-      }
-    });
-
-    // Check if the form is being submitted correctly
-    $('#promptForm').submit(function(event) {
-      event.preventDefault();
-      const formData = {
-        prompt: $('#prompt').val(),
-        prompt_top_p: $('#promptTopP').val(),
-        prompt_temperature: $('#promptTemperature').val(),
-        prompt_max_tokens: $('#promptMaxTokens').val(),
-        prompt_confidence: $('#promptConfidence').val(),
-        prompt_frequency_penalty: $('#promptFrequencyPenalty').val(),
-        prompt_presence_penalty: $('#promptPresencePenalty').val(),
-        post_prompt: $('#postPrompt').val(),
-        post_prompt_top_p: $('#postPromptTopP').val(),
-        post_prompt_temperature: $('#postPromptTemperature').val(),
-        post_prompt_max_tokens: $('#postPromptMaxTokens').val(),
-        post_prompt_confidence: $('#postPromptConfidence').val(),
-        post_prompt_frequency_penalty: $('#postPromptFrequencyPenalty').val(),
-        post_prompt_presence_penalty: $('#postPromptPresencePenalty').val(),
-        outbound_prompt: $('#outboundPrompt').val(),
-        outbound_prompt_top_p: $('#outboundPromptTopP').val(),
-        outbound_prompt_temperature: $('#outboundPromptTemperature').val(),
-        outbound_prompt_max_tokens: $('#outboundPromptMaxTokens').val(),
-        outbound_prompt_confidence: $('#outboundPromptConfidence').val(),
-        outbound_prompt_frequency_penalty: $('#outboundPromptFrequencyPenalty').val(),
-        outbound_prompt_presence_penalty: $('#outboundPromptPresencePenalty').val(),
-        outbound_post_prompt: $('#outboundPostPrompt').val(),
-        outbound_post_prompt_top_p: $('#outboundPostPromptTopP').val(),
-        outbound_post_prompt_temperature: $('#outboundPostPromptTemperature').val(),
-        outbound_post_prompt_max_tokens: $('#outboundPostPromptMaxTokens').val(),
-        outbound_post_prompt_confidence: $('#outboundPostPromptConfidence').val(),
-        outbound_post_prompt_frequency_penalty: $('#outboundPostPromptFrequencyPenalty').val(),
-        outbound_post_prompt_presence_penalty: $('#outboundPostPromptPresencePenalty').val()
-      };
-
-      console.log('Form data to be submitted:', formData); // Debugging line
-
-      $.ajax({
-        type: 'POST',
-        url: "{{ url_for('prompt') }}",
-        contentType: 'application/json',
-        data: JSON.stringify(formData),
-        success: function(response) {
-          showToast('success', 'Prompt data saved successfully'); // Ensure toast is shown on success
-        },
-        error: function(error) {
-          showToast('error', 'Error saving prompt data');
+{% block scripts %}
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <!-- Bootstrap CSS -->
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap JS -->
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+  <!-- DataTables CSS -->
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
+  <!-- DataTables JS -->
+  <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
+  <script>
+    // Function to show toast notification
+    function showToast(icon, title) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+          toast.addEventListener('mouseenter', Swal.stopTimer)
+          toast.addEventListener('mouseleave', Swal.resumeTimer)
         }
       });
+
+      Toast.fire({
+        icon: icon,
+        title: title
+      });
+    }
+
+    $(document).ready(function() {
+      // Fetch data from /prompt endpoint
+      $.ajax({
+        type: 'GET',
+        url: "{{ url_for('prompt') }}",
+        headers: {
+          'Accept': 'application/json'
+        },
+        success: function(data) {
+          // Ensure data is an array
+          const prompts = Array.isArray(data) ? data : [data];
+
+          // Initialize DataTable with fetched data
+          $('#promptTable').DataTable({
+            data: prompts,
+            columns: [
+              { data: 'id' }, // New column for ID
+              { data: 'prompt_type' },
+              { data: 'prompt_text' },
+              { data: 'top_p' },
+              { data: 'temperature' },
+              { data: 'max_tokens' },
+              { data: 'confidence' },
+              { data: 'frequency_penalty' },
+              { data: 'presence_penalty' },
+              {
+                data: null,
+                defaultContent: '<button class="btn btn-sm btn-primary edit-btn">Edit</button> <button class="btn btn-sm btn-danger delete-btn">Delete</button>',
+                orderable: false
+              }
+            ],
+            "responsive": true,
+            "autoWidth": false,
+            "order": [0, 'asc'], // Order by ID
+            "paging": true,
+            "lengthChange": true,
+            "searching": true,
+            "info": true
+          });
+
+          // Handle edit button click
+          $('#promptTable tbody').on('click', '.edit-btn', function() {
+            const data = $('#promptTable').DataTable().row($(this).parents('tr')).data();
+            $('#editPromptId').val(data.id);
+            $('#editPromptType').val(data.prompt_type);
+            $('#editPromptText').val(data.prompt_text);
+            $('#editTopP').val(data.top_p);
+            $('#editTemperature').val(data.temperature);
+            $('#editMaxTokens').val(data.max_tokens);
+            $('#editConfidence').val(data.confidence);
+            $('#editFrequencyPenalty').val(data.frequency_penalty);
+            $('#editPresencePenalty').val(data.presence_penalty);
+            $('#editPromptModal').modal('show');
+          });
+
+          // Handle delete button click
+          $('#promptTable tbody').on('click', '.delete-btn', function() {
+            const data = $('#promptTable').DataTable().row($(this).parents('tr')).data();
+            if (confirm('Are you sure you want to delete this prompt?')) {
+              $.ajax({
+                type: 'DELETE',
+                url: "{{ url_for('prompt') }}/" + data.id,
+                success: function(response) {
+                  showToast('success', 'Prompt deleted successfully');
+                  location.reload(); // Reload the page to update the table
+                },
+                error: function(xhr, status, error) {
+                  showToast('error', 'Error deleting prompt: ' + xhr.responseText);
+                }
+              });
+            }
+          });
+        },
+        error: function(xhr, status, error) {
+          showToast('error', 'Error loading prompts: ' + xhr.responseText);
+        }
+      });
+
+      // Handle form submission for adding new prompts
+      $('#addPromptForm').submit(function(event) {
+        event.preventDefault(); // Prevent default form submission
+
+        const formData = {
+          prompt_type: $('#newPromptType').val(),
+          prompt_text: $('#newPromptText').val(),
+          top_p: parseFloat($('#newTopP').val()),
+          temperature: parseFloat($('#newTemperature').val()),
+          max_tokens: parseInt($('#newMaxTokens').val()),
+          confidence: parseFloat($('#newConfidence').val()),
+          frequency_penalty: parseFloat($('#newFrequencyPenalty').val()),
+          presence_penalty: parseFloat($('#newPresencePenalty').val())
+          // Ensure no ID is included in the formData
+        };
+
+        $.ajax({
+          type: 'POST', // Use POST instead of GET
+          url: "{{ url_for('prompt') }}", // Ensure this is the correct endpoint
+          contentType: 'application/json',
+          dataType: 'json',
+          data: JSON.stringify(formData),
+          success: function(response) {
+            showToast('success', 'New prompt added successfully');
+            
+            // Fetch the updated data and reload the DataTable
+            $.ajax({
+              type: 'GET',
+              url: "{{ url_for('prompt') }}",
+              headers: {
+                'Accept': 'application/json'
+              },
+              success: function(data) {
+                const prompts = Array.isArray(data) ? data : [data];
+                const table = $('#promptTable').DataTable();
+                table.clear().rows.add(prompts).draw();
+              },
+              error: function(xhr, status, error) {
+                showToast('error', 'Error reloading prompts: ' + xhr.responseText);
+              }
+            });
+
+            // Clear the form
+            $('#addPromptForm')[0].reset();
+          },
+          error: function(xhr, status, error) {
+            showToast('error', 'Error adding new prompt: ' + xhr.responseText);
+          }
+        });
+      });
+
+      // Handle save changes button click in edit modal
+      $('#saveEditPrompt').click(function() {
+        const formData = {
+          prompt_type: $('#editPromptType').val(),
+          prompt_text: $('#editPromptText').val(),
+          top_p: parseFloat($('#editTopP').val()),
+          temperature: parseFloat($('#editTemperature').val()),
+          max_tokens: parseInt($('#editMaxTokens').val()),
+          confidence: parseFloat($('#editConfidence').val()),
+          frequency_penalty: parseFloat($('#editFrequencyPenalty').val()),
+          presence_penalty: parseFloat($('#editPresencePenalty').val())
+        };
+
+        const promptId = $('#editPromptId').val(); // Get the prompt ID
+
+        $.ajax({
+          type: 'PUT',
+          url: "{{ url_for('prompt') }}/" + promptId, // Include the ID in the URL
+          contentType: 'application/json',
+          dataType: 'json',
+          data: JSON.stringify(formData),
+          success: function(response) {
+            showToast('success', 'Prompt updated successfully');
+            $('#editPromptModal').modal('hide');
+            location.reload(); // Reload the page to update the table
+          },
+          error: function(xhr, status, error) {
+            showToast('error', 'Error updating prompt: ' + xhr.responseText);
+          }
+        });
+      });
     });
-  });
-</script>
+  </script>
 {% endblock %}
