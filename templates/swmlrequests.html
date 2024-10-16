@@ -33,7 +33,7 @@
                         </div>
                         <!-- /.card-header -->
                         <div class="card-body">
-                            <table id="swmlRequestsTable" class="table table-striped">
+                            <table id="swmlRequestsTable" class="table table-striped w-100">
                                 <thead>
                                     <tr>
                                         <th>ID</th>
@@ -41,6 +41,7 @@
                                         <th>Request</th>
                                         <th>Response</th>
                                         <th>IP Address</th>
+                                        <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -82,6 +83,12 @@
         const dataString = $(this).prev('textarea').val();
         copyToClipboard(dataString);
       });
+
+      // Event delegation for delete button
+      $('#swmlRequestsTable').on('click', '.delete-btn', function() {
+        const requestId = $(this).data('id');
+        confirmDelete(requestId);
+      });
     });
 
     function initializeDataTable() {
@@ -109,7 +116,7 @@
                 const dataString = JSON.stringify(data, null, 2);
                 const uniqueId = `copy-btn-${row.id}`; // Assuming each row has a unique ID
                 return `
-                  <textarea readonly style="width: 500px; height: 20em;">${dataString}</textarea>
+                  <textarea readonly style="width: 500px; height: 5em;">${dataString}</textarea>
                   <i id="${uniqueId}" class="fas fa-copy copy-btn"></i>
                 `;
               }
@@ -119,12 +126,17 @@
                 const dataString = JSON.stringify(data, null, 2);
                 const uniqueId = `copy-btn-${row.id}`; // Assuming each row has a unique ID
                 return `
-                  <textarea readonly style="width: 500px; height: 20em;">${dataString}</textarea>
+                  <textarea readonly style="width: 500px; height: 5em;">${dataString}</textarea>
                   <i id="${uniqueId}" class="fas fa-copy copy-btn"></i>
                 `;
               }
             },
-            { "data": "ip_address" }
+            { "data": "ip_address" },
+            { "data": null, // New column for delete button
+              "render": function(data, type, row) {
+                return `<button class="btn btn-danger delete-btn" data-id="${row.id}">Delete</button>`;
+              }
+            }
           ],
           "pageLength": 10,
           "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
@@ -158,6 +170,37 @@
           console.error('Failed to copy: ', err);
         }
       }
+    }
+
+    function confirmDelete(id) {
+      Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          deleteRequest(id);
+        }
+      });
+    }
+
+    function deleteRequest(id) {
+      $.ajax({
+        url: `/swmlrequests/${id}`, // Adjust the URL to match your backend endpoint
+        type: 'DELETE',
+        success: function(result) {
+          // Reload the DataTable to reflect the changes
+          $('#swmlRequestsTable').DataTable().ajax.reload();
+          Swal.fire('Deleted!', 'The request has been deleted.', 'success');
+        },
+        error: function(xhr, status, error) {
+          Swal.fire('Error!', 'Failed to delete the request.', 'error');
+        }
+      });
     }
   </script>
     
