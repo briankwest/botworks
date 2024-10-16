@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block title %}Debug Logs{% endblock %}
+
+{% block content %}
+  <!-- Navbar -->
+  {% include 'navbar.html' %}
+  <!-- /.navbar -->
+
+  <!-- Main Sidebar Container -->
+  {% include 'sidebar.html' %}
+  
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-6">
+                    <h1 class="m-0">Debug Logs</h1>
+                </div>
+            </div>
+        </div><!-- /.container-fluid -->
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-primary">
+                            <h3 class="card-title">Debug Logs</h3>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <div id="debugLogWindow" style="height: 500px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px;">
+                                <!-- Real-time logs will be appended here -->
+                            </div>
+                            <!-- Move buttons to the bottom of the card body -->
+                            <div class="mt-3 text-right">
+                                <button id="connectBtn" class="btn btn-success">Connect</button>
+                                <button id="disconnectBtn" class="btn btn-danger">Disconnect</button>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+        </div>
+        <!-- /.container-fluid -->
+    </section>
+    <!-- /.content -->
+  </div>
+  <!-- /.content-wrapper -->
+  <!-- Footer -->
+  {% include 'footer.html' %}
+  <!-- /.footer -->
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const debugLogWindow = document.getElementById('debugLogWindow');
+      const connectBtn = document.getElementById('connectBtn');
+      const disconnectBtn = document.getElementById('disconnectBtn');
+      let socket;
+
+      function connectWebSocket() {
+        const userId = '{{ user_id }}';
+        const wsUrl = `https://${window.location.host}/socket.io/debug_channel/${userId}`;
+
+        try {
+          socket = io(wsUrl);
+
+          socket.on('connect', function() {
+            console.log('Connected to server');
+            Swal.fire({
+              icon: 'success',
+              title: 'Connected',
+              text: 'WebSocket connection established successfully.'
+            });
+            socket.send('Hello, server!');
+          });
+
+          socket.on('response', function(data) {
+            const logEntry = document.createElement('div');
+            logEntry.textContent = data.message;
+            debugLogWindow.appendChild(logEntry);
+            debugLogWindow.scrollTop = debugLogWindow.scrollHeight;
+          });
+
+          socket.on('disconnect', function() {
+            console.warn('Disconnected from server');
+            Swal.fire({
+              icon: 'info',
+              title: 'Disconnected',
+              text: 'The WebSocket connection has been closed.'
+            });
+          });
+
+          socket.on('error', function(error) {
+            console.error('WebSocket Error: ', error);
+            Swal.fire({
+              icon: 'error',
+              title: 'WebSocket Error',
+              text: 'An error occurred with the WebSocket connection.'
+            });
+          });
+
+        } catch (error) {
+          console.error('Failed to connect WebSocket: ', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Connection Failed',
+            text: 'Failed to establish WebSocket connection.'
+          });
+        }
+      }
+
+      function disconnectWebSocket() {
+        if (socket) {
+          socket.disconnect();
+          Swal.fire({
+            icon: 'info',
+            title: 'Disconnected',
+            text: 'WebSocket connection has been closed.'
+          });
+        }
+      }
+
+      connectBtn.addEventListener('click', connectWebSocket);
+      disconnectBtn.addEventListener('click', disconnectWebSocket);
+
+      // Connect on page load
+      connectWebSocket();
+    });
+  </script>
+{% endblock %}
