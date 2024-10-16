@@ -79,15 +79,17 @@
     });
 
     function initializeDataTable() {
-      // Check if DataTables is loaded
       if ($.fn.DataTable) {
-        // Initialize DataTable
         $('#debugLogsTable').DataTable({
           "ajax": {
             "url": "{{ url_for('debuglogs') }}",
             "dataSrc": "",
             "headers": {
               "Accept": "application/json"
+            },
+            "dataFilter": function(data) {
+              console.log("AJAX Response:", data); // Log the response for debugging
+              return data;
             }
           },
           "order": [[1, 'desc']],
@@ -98,20 +100,34 @@
                 return new Date(data).toLocaleString();
               }
             },
-            { "data": "request",
+            { "data": "data.conversation_add",
               "render": function(data, type, row) {
-                return `
-                  <textarea readonly style="width: 500px; height: 10em;">${JSON.stringify(data, null, 2)}</textarea>
-                  <i class="fas fa-copy copy-btn" data-copy='${JSON.stringify(data)}'></i>
-                `;
+                try {
+                  const dataString = JSON.stringify(data, null, 2);
+                  const uniqueId = `copy-btn-${row.id}-request`;
+                  return `
+                    <textarea readonly style="width: 400px; height: 10em;">${dataString}</textarea>
+                    <i id="${uniqueId}" class="fas fa-copy copy-btn" data-copy='${dataString}'></i>
+                  `;
+                } catch (error) {
+                  console.error(`Error rendering request data for row ID: ${row.id}`, error);
+                  return 'Error displaying data';
+                }
               }
             },
-            { "data": "response",
+            { "data": "data.conversation_add",
               "render": function(data, type, row) {
-                return `
-                  <textarea readonly style="width: 500px; height: 10em;">${JSON.stringify(data, null, 2)}</textarea>
-                  <i class="fas fa-copy copy-btn" data-copy='${JSON.stringify(data)}'></i>
-                `;
+                try {
+                  const dataString = JSON.stringify(data, null, 2);
+                  const uniqueId = `copy-btn-${row.id}-response`;
+                  return `
+                    <textarea readonly style="width: 400px; height: 10em;">${dataString}</textarea>
+                    <i id="${uniqueId}" class="fas fa-copy copy-btn" data-copy='${dataString}'></i>
+                  `;
+                } catch (error) {
+                  console.error(`Error rendering response data for row ID: ${row.id}`, error);
+                  return 'Error displaying data';
+                }
               }
             },
             { "data": "ip_address" }
@@ -126,7 +142,7 @@
       }
 
       $(document).on('click', '.copy-btn', function() {
-        const data = $(this).data('copy');
+        const data = $(this).attr('data-copy');
         copyToClipboard(data);
       });
 
@@ -134,7 +150,7 @@
         const tempInput = document.createElement('textarea');
         tempInput.style.position = 'absolute';
         tempInput.style.left = '-9999px';
-        tempInput.value = JSON.stringify(value, null, 2);
+        tempInput.value = value;
         document.body.appendChild(tempInput);
         tempInput.select();
         document.execCommand('copy');
