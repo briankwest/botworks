@@ -24,6 +24,22 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 
 from modules.signalwireml import SignalWireML
 
+def get_feature(agent_id, feature_name):
+        # Extract the full URL from the request
+    full_url = request.url
+    
+    # Parse the URL to extract the agent_id
+    from urllib.parse import urlparse
+    parsed_url = urlparse(full_url)
+    path_segments = parsed_url.path.split('/')
+    
+    # Extract the agent_id, assuming it's the last segment
+    agent_id = path_segments[-1]
+    user_id = path_segments[-2]
+  
+    feature = AIFeatures.query.filter_by(agent_id=agent_id, name=feature_name, user_id=user_id).first()
+    return feature
+
 def generate_random_password(length=16):
     characters = string.ascii_letters + string.digits
     return ''.join(random.choice(characters) for i in range(length))
@@ -109,6 +125,7 @@ class AIAgent(db.Model):
     ai_language = db.relationship('AILanguage', back_populates='agent', cascade='all, delete-orphan', lazy=True)
     ai_conversation = db.relationship('AIConversation', back_populates='agent', cascade='all, delete-orphan', lazy=True)
     ai_params = db.relationship('AIParams', back_populates='agent', cascade='all, delete-orphan', lazy=True)
+    ai_features = db.relationship('AIFeatures', back_populates='agent', cascade='all, delete-orphan', lazy=True)
 
     def __repr__(self):
         return f'<AIAgent {self.name}>'
@@ -318,6 +335,23 @@ class AIParams(db.Model):
 
     def __repr__(self):
         return f'<AIParams {self.name}: {self.value}>'
+
+# AIFeatures model definition
+class AIFeatures(db.Model):
+    __tablename__ = 'ai_features'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    value = db.Column(db.String(255), nullable=True)
+    enabled = db.Column(db.Boolean, nullable=False, default=True)
+    created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    user = db.relationship('AIUser', backref=db.backref('ai_features', lazy=True))
+    agent = db.relationship('AIAgent', back_populates='ai_features')
+
+    def __repr__(self):
+        return f'<AIFeatures {self.name}: {self.value}, Enabled: {self.enabled}>'
 
 # AIUser model definition
 class AIUser(UserMixin, db.Model):
@@ -549,7 +583,6 @@ def add_function_arg(function_id):
         agent_id=selected_agent_id,
         name=data['name'],
         type=data['type'],
-        description=data.get('description'),
         required=data.get('required', False),
         enum=data.get('enum')
     )
@@ -996,15 +1029,35 @@ def generate_swml_response(user_id, agent_id, request_body):
 
         swml.set_aipost_prompt(post_prompt_data)
     
-    # Add hints
-    hints = AIHints.query.filter_by(user_id=user_id, agent_id=agent_id).all()
-    swml.add_aihints([hint.hint for hint in hints])
-    
     # Add parameters
     ai_params = AIParams.query.filter_by(user_id=user_id, agent_id=agent_id).all()
     params_dict = {param.name: param.value for param in ai_params}
     swml.set_aiparams(params_dict)
+
+    # Set URLs with authentication if available
+    auth_user = AIUser.query.filter_by(id=user_id).first().username
+    auth_pass = get_signal_wire_param(user_id, agent_id, 'HTTP_PASSWORD')
     
+    post_prompt_url = f"https://{request.host}/postprompt/{user_id}/{agent_id}"
+    if auth_user and auth_pass:
+        post_prompt_url = f"https://{auth_user}:{auth_pass}@{request.host}/postprompt/{user_id}/{agent_id}"
+        swml.set_aipost_prompt_url({"post_prompt_url": post_prompt_url})
+
+    web_hook_url = f"https://{request.host}/swaig/{user_id}/{agent_id}"
+    if auth_user and auth_pass:
+        web_hook_url = f"https://{auth_user}:{auth_pass}@{request.host}/swaig/{user_id}/{agent_id}"
+        swml.add_aiswaigdefaults({"web_hook_url": web_hook_url})
+
+    debug_webhook_url = f"https://{request.host}/debugwebhook/{user_id}/{agent_id}"
+    if auth_user and auth_pass:
+        debug_webhook_url = f"https://{auth_user}:{auth_pass}@{request.host}/debugwebhook/{user_id}/{agent_id}"
+        swml.add_aiparams({"debug_webhook_url": debug_webhook_url})
+
+    # Add hints
+    hints = AIHints.query.filter_by(user_id=user_id, agent_id=agent_id).all()
+    swml.add_aihints([hint.hint for hint in hints])
+    
+        
     # Add languages
     languages = AILanguage.query.filter_by(user_id=user_id, agent_id=agent_id).order_by(AILanguage.language_order.asc()).all()
     for language in languages:
@@ -1060,29 +1113,217 @@ def generate_swml_response(user_id, agent_id, request_body):
         if not function.active:
             function_payload["active"] = function.active
         swml.add_aiswaigfunction(function_payload)
-    
-    # Set URLs with authentication if available
-    auth_user = AIUser.query.filter_by(id=user_id).first().username
-    auth_pass = get_signal_wire_param(user_id, agent_id, 'HTTP_PASSWORD')
-    
-    post_prompt_url = f"https://{request.host}/postprompt/{user_id}/{agent_id}"
-    if auth_user and auth_pass:
-        post_prompt_url = f"https://{auth_user}:{auth_pass}@{request.host}/postprompt/{user_id}/{agent_id}"
-    swml.set_aipost_prompt_url({"post_prompt_url": post_prompt_url})
 
-    web_hook_url = f"https://{request.host}/swaig/{user_id}/{agent_id}"
-    if auth_user and auth_pass:
-        web_hook_url = f"https://{auth_user}:{auth_pass}@{request.host}/swaig/{user_id}/{agent_id}"
-    swml.add_aiswaigdefaults({"web_hook_url": web_hook_url})
+    # Check if the ENABLE_MESSAGE feature is enabled for the agent
+    enable_message_feature = get_feature(agent_id, 'ENABLE_MESSAGE')
 
-    debug_webhook_url = f"https://{request.host}/debughook/{user_id}"
-    if auth_user and auth_pass:
-        debug_webhook_url = f"https://{auth_user}:{auth_pass}@{request.host}/debugwebhook/{user_id}/{agent_id}"
-    swml.add_aiparams({"debug_webhook_url": debug_webhook_url})
+    if enable_message_feature and enable_message_feature.enabled:
+        # Create a new SignalWireML instance
+        msg = SignalWireML(version="1.0.0")
+
+        # Add the application with the send_sms function
+        msg.add_application("main", "send_sms", {
+            "to_number": '%{args.to}',
+            "from_number": enable_message_feature.value,
+            "body": '%{args.message}'
+        })
+
+        # Check if ENABLE_MESSAGE_INACTIVE is set
+        enable_message_inactive = get_feature(agent_id, 'ENABLE_MESSAGE_INACTIVE')
+
+        swml.add_aiswaigfunction({
+            "function": "send_message",
+            **({"active": False} if enable_message_inactive and enable_message_inactive.enabled else {}),
+            "purpose": "use to send text messages to a user",
+            "argument": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "description": "the message to send to the user"
+                    },
+                    "to": {
+                        "type": "string",
+                        "description": "The user's number in e.164 format"
+                    }
+                },
+                "required": ["message", "to"]
+            },
+            "data_map": {
+                    "expressions": [{
+                        "string": '%{args.message}',
+                        "pattern": ".*",
+                        "output": {
+                            "response": "Message sent.",
+                            "action": [{"SWML": msg.render()}]
+                        }
+                }]
+            }
+        })
+    
+    # Check if the ENABLE_TRANSFER feature is enabled for the agent
+    enable_transfer_feature = get_feature(agent_id, 'ENABLE_TRANSFER')
+
+    if enable_transfer_feature and enable_transfer_feature.enabled:
+        # Create a new SignalWireML instance for transfer
+        transfer = SignalWireML(version="1.0.0")
+
+        # Add the application with the connect function
+        transfer.add_application("main", "connect", {
+            "to": '%{meta_data.table.%{lc:args.target}}',
+            "from": 'assistant'  # Replace 'assistant' with the appropriate variable
+        })
+
+        # Parse the TRANSFER_TABLE configuration
+        transfer_table = get_feature(agent_id, 'TRANSFER_TABLE')
+        transfer_hash = {}
+        for pair in transfer_table.value.split('|'):
+            key, value = pair.split(':', 1)
+            transfer_hash[key] = value
+
+        enable_transfer_inactive = get_feature(agent_id, 'ENABLE_TRANSFER_INACTIVE')
+
+        # Add the transfer function to SWML
+        swml.add_aiswaigfunction({
+            "function": "transfer",
+            **({"active": False} if enable_transfer_inactive and enable_transfer_inactive.enabled else {}),
+            "purpose": "use to transfer to a target",
+            "meta_data": {
+                "table": transfer_hash
+            },
+            "argument": {
+                "type": "object",
+                "properties": {
+                    "target": {
+                        "type": "string",
+                        "description": "the target to transfer to"
+                    }
+                },
+                "required": ["target"]
+            },
+            "data_map": {
+                "expressions": [
+                    {
+                        "string": '%{meta_data.table.%{lc:args.target}}',
+                        "pattern": '\\w+',
+                        "output": {
+                            "response": "Tell the user you are going to transfer the call to whoever they asked for. Do not change languages from the one you are currently using. Do not hangup.",
+                            "action": [{"SWML": transfer.render(), "transfer": 'true'}]
+                        }
+                    },
+                    {
+                        "string": '%{args.target}',
+                        "pattern": '.*',
+                        "output": {
+                            "response": "I'm sorry, I was unable to transfer your call to %{input.args.target}."
+                        }
+                    }
+                ]
+            }
+        })
+    
+    # Retrieve API_NINJAS_KEY using get_feature
+    api_ninjas_key_feature = get_feature(agent_id, 'API_NINJAS_KEY')
+    api_ninjas_key = api_ninjas_key_feature.value if api_ninjas_key_feature and api_ninjas_key_feature.enabled else None
+
+    if api_ninjas_key:
+        # Add weather function if enabled
+        enable_weather_feature = get_feature(agent_id, 'ENABLE_WEATHER')
+        if enable_weather_feature and enable_weather_feature.enabled:
+            swml.add_aiswaigfunction({
+                "function": "get_weather",
+                "purpose": "latest weather information for any city",
+                "argument": {
+                    "type": "object",
+                    "properties": {
+                        "city": {
+                            "type": "string",
+                            "description": "City name."
+                        },
+                        "state": {
+                            "type": "string",
+                            "description": "US state for United States cities only. Optional"
+                        }
+                    }
+                },
+                "data_map": {
+                    "webhooks": [{
+                        "url": f'https://api.api-ninjas.com/v1/weather?city=%{{enc:args.city}}&state=%{{enc:args.state}}',
+                        "method": "GET",
+                        "headers": {
+                            "X-Api-Key": api_ninjas_key
+                        },
+                        "output": {
+                            "response": 'Be sure to say the temperature in Fahrenheit. The weather in %{input.args.city} %{temp}C, Humidity: %{humidity}%, High: %{max_temp}C, Low: %{min_temp}C Wind Direction: %{wind_degrees} (say cardinal direction), Clouds: %{cloud_pct}%, Feels Like: %{feels_like}C.'
+                        }
+                    }]
+                }
+            })
+
+        # Add jokes function if enabled
+        enable_jokes_feature = get_feature(agent_id, 'ENABLE_JOKES')
+        if enable_jokes_feature and enable_jokes_feature.enabled:
+            dj = SignalWireML(version="1.0.0")
+            dj.add_application("main", "set", {"dad_joke": '%{array[0].joke}'})
+
+            swml.add_aiswaigfunction({
+                "function": "get_joke",
+                "purpose": "tell a joke",
+                "argument": {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "type": "string",
+                            "description": "must either be 'jokes' or 'dadjokes'"
+                        }
+                    }
+                },
+                "data_map": {
+                    "webhooks": [{
+                        "url": f'https://api.api-ninjas.com/v1/${{args.type}}',
+                        "method": "GET",
+                        "headers": {
+                            "X-Api-Key": api_ninjas_key
+                        },
+                        "output": {
+                            "response": 'Tell the user: %{array[0].joke}',
+                            "action": [{"SWML": dj.render()}]
+                        }
+                    }]
+                }
+            })
+
+        # Add trivia function if enabled
+        enable_trivia_feature = get_feature(agent_id, 'ENABLE_TRIVIA')
+        if enable_trivia_feature and enable_trivia_feature.enabled:
+            swml.add_aiswaigfunction({
+                "function": "get_trivia",
+                "purpose": "get a trivia question",
+                "argument": {
+                    "type": "object",
+                    "properties": {
+                        "category": {
+                            "type": "string",
+                            "description": "Valid options are artliterature, language, sciencenature, general, fooddrink, peopleplaces, geography, historyholidays, entertainment, toysgames, music, mathematics, religionmythology, sportsleisure. Pick a category at random if not asked for a specific category."
+                        }
+                    }
+                },
+                "data_map": {
+                    "webhooks": [{
+                        "url": f'https://api.api-ninjas.com/v1/trivia?category=%{{args.category}}',
+                        "method": "GET",
+                        "headers": {
+                            "X-Api-Key": api_ninjas_key
+                        },
+                        "output": {
+                            "response": 'category %{array[0].category} questions: %{array[0].question} answer: %{array[0].answer}, be sure to give the user time to answer before saying the answer.'
+                        }
+                    }]
+                }
+            })
 
     # Add application
     swml.add_aiapplication("main")
-
     # Render the SWML response (this is what you will store in the response column)
     swml_response = swml.render()
 
@@ -1660,6 +1901,73 @@ def delete_debuglog(log_id):
 @login_required
 def debuglogs():
     return render_template('debuglog.html', user=current_user)
+
+# Manage AI Feature route
+@app.route('/aifeatures/<int:agent_id>/<int:feature_id>', methods=['GET', 'PUT', 'DELETE'])
+@login_required
+def manage_aifeature(agent_id, feature_id):
+    feature = AIFeatures.query.filter_by(id=feature_id, agent_id=agent_id, user_id=current_user.id).first_or_404()
+
+    if request.method == 'GET':
+        return jsonify({
+            'id': feature.id,
+            'name': feature.name,
+            'value': feature.value,
+            'enabled': feature.enabled,
+            'created': feature.created
+        }), 200
+
+    elif request.method == 'PUT':
+        data = request.get_json()
+        feature.name = data.get('name', feature.name)
+        feature.value = data.get('value', feature.value)
+        feature.enabled = data.get('enabled', feature.enabled)
+        db.session.commit()
+        return jsonify({'message': 'Feature updated successfully'}), 200
+
+    elif request.method == 'DELETE':
+        db.session.delete(feature)
+        db.session.commit()
+        return jsonify({'message': 'Feature deleted successfully'}), 200
+
+
+# AI Features route
+@app.route('/aifeatures/<int:agent_id>', methods=['POST'])
+@login_required
+def add_aifeature(agent_id):
+    data = request.get_json()
+    new_feature = AIFeatures(
+        name=data['name'],
+        value=data['value'],
+        enabled=data['enabled'],
+        user_id=current_user.id,
+        agent_id=agent_id
+    )
+    db.session.add(new_feature)
+    db.session.commit()
+
+    return jsonify({'message': 'Feature added successfully'}), 201
+
+@app.route('/aifeatures', methods=['GET'])
+@login_required
+def aifeatures():
+    return render_template('features.html', user=current_user)
+
+# AI Features route
+@app.route('/aifeatures/<int:agent_id>', methods=['GET'])
+@login_required
+def aifeatures_agent(agent_id):
+    if request.headers.get('Accept') == 'application/json':
+        features = AIFeatures.query.filter_by(user_id=current_user.id, agent_id=agent_id).all()
+        features_data = [{
+            'id': feature.id,
+            'name': feature.name,
+            'agent_id': feature.agent_id,
+            'value': feature.value,
+            'enabled': feature.enabled,
+            'created': feature.created
+        } for feature in features]
+        return jsonify(features_data), 200
 
 # Run the app
 if __name__ == '__main__':

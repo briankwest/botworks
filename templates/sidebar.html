@@ -93,7 +93,6 @@
               <p>SWAIG Functions</p>
             </a>
           </li>
-
           <!-- DataSphere -->
           <li class="nav-item">
             <a href="{{ url_for('datasphere') }}" class="nav-link {{ 'active' if request.endpoint == 'datasphere' else '' }}">
@@ -108,6 +107,13 @@
               <p>Debug Logs</p>
             </a>
           </li>
+          <!-- AI Features -->
+          <li class="nav-item">
+            <a href="{{ url_for('aifeatures') }}" class="nav-link {{ 'active' if request.endpoint == 'aifeatures' else '' }}">
+              <i class="nav-icon fas fa-brain"></i>
+              <p>AI Features</p>
+            </a>
+          </li>
           <!-- Logout -->
           <li class="nav-item mt-auto">
             <a href="{{ url_for('logout') }}" class="nav-link">
@@ -116,10 +122,10 @@
             </a>
           </li>
           <!-- Add more menu items here -->
+
         </ul>
       </nav>
       <!-- /.sidebar-menu -->
     </div>
     <!-- /.sidebar -->
   </aside>
-
