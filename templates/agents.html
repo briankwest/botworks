@@ -152,10 +152,11 @@
           {
             "data": null,
             "render": function(data, type, row) {
-              return `
-                <button class="btn btn-primary btn-sm edit-agent" data-id="${row.id}">Edit</button>
-                <button class="btn btn-danger btn-sm delete-agent" data-id="${row.id}">Delete</button>
-              `;
+              let buttons = `<button class="btn btn-primary btn-sm edit-agent" data-id="${row.id}">Edit</button>`;
+              if (row.name !== "BotWorks") {
+                buttons += `<button class="btn btn-danger btn-sm delete-agent" data-id="${row.id}">Delete</button>`;
+              }
+              return buttons;
             }
           }
         ]
