@@ -181,6 +181,7 @@
             $('#agentTable').DataTable().ajax.reload();
             $('#addAgentForm')[0].reset();
             showToast('success', 'AI Agent entry created successfully');
+            delayedRefreshAgentsDropdown(); // Use delayed refresh
           },
           error: function(error) {
             showToast('error', 'Error creating AI Agent entry');
@@ -207,6 +208,7 @@
               success: function(response) {
                 $('#agentTable').DataTable().ajax.reload();
                 showToast('success', 'AI Agent entry deleted successfully');
+                delayedRefreshAgentsDropdown(); // Use delayed refresh
               },
               error: function(error) {
                 showToast('error', 'Error deleting AI Agent entry');
@@ -256,6 +258,7 @@
           success: function(response) {
             $('#agentTable').DataTable().ajax.reload();
             $('#editAgentModal').modal('hide');
+            delayedRefreshAgentsDropdown(); // Use delayed refresh
             showToast('success', 'AI Agent entry updated successfully');
           },
           error: function(error) {
@@ -273,12 +276,31 @@
           success: function(response) {
             $('#agentTable').DataTable().ajax.reload();
             showToast('success', 'AI Agent entry cloned successfully');
+            delayedRefreshAgentsDropdown(); // Use delayed refresh
           },
           error: function(error) {
             showToast('error', 'Error cloning AI Agent entry');
           }
         });
       });
+
+      // Function to refresh the agents dropdown
+      function refreshAgentsDropdown() {
+        $.ajax({
+          type: 'GET',
+          url: "/agents", // Adjust the URL if necessary
+          success: function(data) {
+            const dropdown = $('#agentsDropdown'); // Adjust the selector to match your dropdown
+            dropdown.empty(); // Clear existing options
+            data.forEach(agent => {
+              dropdown.append(new Option(agent.name, agent.id));
+            });
+          },
+          error: function(error) {
+            showToast('error', 'Error refreshing agents dropdown');
+          }
+        });
+      }
 
       // Add the showToast function here
       function showToast(icon, title) {
@@ -302,3 +324,4 @@
     });
   </script>
 {% endblock %}
+refreshAgentsDropdown();

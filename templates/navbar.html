@@ -104,4 +104,39 @@
     const parts = value.split(`; ${name}=`);
     if (parts.length === 2) return parts.pop().split(';').shift();
   }
+
+  function refreshAgentsDropdown() {
+    const agentSelect = document.getElementById('agent-select');
+    agentSelect.innerHTML = '<option value="">-- Select an Agent --</option>'; // Clear existing options
+
+    fetch('{{ url_for("agents") }}', {
+      headers: {
+        'Accept': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log('Fetched agents:', data); // Log the data for debugging
+      if (Array.isArray(data)) {
+        const selectedAgentId = getCookie('selectedAgentId'); // Get the selected agent ID from the cookie
+        data.forEach(agent => {
+          const option = document.createElement('option');
+          option.value = agent.id;
+          option.textContent = agent.name;
+          if (agent.id == selectedAgentId) {
+            option.selected = true; // Select the option if it matches the cookie value
+          }
+          agentSelect.appendChild(option);
+        });
+      } else {
+        console.error('Expected an array but got:', data);
+      }
+    })
+    .catch(error => console.error('Error fetching agents:', error));
+  }
+
+  // Function to delay the refresh
+  function delayedRefreshAgentsDropdown() {
+    setTimeout(refreshAgentsDropdown, 2000); // Delay by 2000 milliseconds (2 seconds)
+  }
 </script>
