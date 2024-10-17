@@ -961,7 +961,7 @@ def generate_swml_response(user_id, agent_id, request_body):
         aiprompt_data["frequency_penalty"] = prompt.frequency_penalty
     if prompt.presence_penalty is not None and prompt.presence_penalty != 0.0:
         aiprompt_data["presence_penalty"] = prompt.presence_penalty
-    if prompt.max_tokens is not None:
+    if prompt.max_tokens is not None and prompt.max_tokens != 0:
         aiprompt_data["max_tokens"] = prompt.max_tokens
     if prompt.confidence is not None and prompt.confidence != 0.0:
         aiprompt_data["confidence"] = prompt.confidence
