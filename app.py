@@ -1811,6 +1811,49 @@ def delete_datasphere(datasphere_id):
     else:
         return jsonify({'error': 'Failed to delete datasphere document'}), response.status_code
 
+# Clone Agents route
+@app.route('/agents/clone/<int:agent_id>', methods=['POST'])
+@login_required
+def clone_agent(agent_id):
+    # Retrieve the original agent
+    original_agent = AIAgent.query.get_or_404(agent_id)
+
+    # Check if the current user owns the agent
+    if original_agent.user_id != current_user.id:
+        return jsonify({'message': 'Permission denied'}), 403
+
+    random_bits = generate_random_password(4)
+
+    # Create a new agent with the same details
+    new_agent = AIAgent(
+        user_id=original_agent.user_id,
+        name=f"{original_agent.name} Copy {random_bits}",
+        number=original_agent.number
+    )
+    db.session.add(new_agent)
+    db.session.commit()
+
+    # Clone related data models
+    def clone_relationships(original, new, relationship_name):
+        related_items = getattr(original, relationship_name)
+        for item in related_items:
+            new_item = item.__class__(**{col.name: getattr(item, col.name) for col in item.__table__.columns if col.name != 'id'})
+            new_item.agent_id = new.id
+            db.session.add(new_item)
+
+    # List of relationships to clone
+    relationships = [
+        'ai_signalwire_params', 'ai_functions', 'ai_function_argument', 'ai_hints', 'ai_pronounce', 'ai_prompt', 'ai_language', 'ai_params', 'ai_features'
+    ]
+
+    for relationship in relationships:
+        clone_relationships(original_agent, new_agent, relationship)
+
+    db.session.commit()
+
+    return jsonify({'message': 'Agent cloned successfully', 'new_agent_id': new_agent.id}), 201
+
+
 # Manage Agents route
 @app.route('/agents', methods=['GET', 'POST'])
 @login_required

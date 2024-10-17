@@ -152,10 +152,12 @@
           {
             "data": null,
             "render": function(data, type, row) {
-              let buttons = `<button class="btn btn-primary btn-sm edit-agent" data-id="${row.id}">Edit</button>`;
+              let buttons = `<button class="btn btn-sm btn-primary edit-btn mr-2" data-id="${row.id}">Edit</button>`;
               if (row.name !== "BotWorks") {
-                buttons += `<button class="btn btn-danger btn-sm delete-agent" data-id="${row.id}">Delete</button>`;
+                buttons += `<button class="btn btn-sm btn-danger delete-btn mr-2" data-id="${row.id}">Delete</button>`;
               }
+              // Add Clone button with spacing
+              buttons += `<button class="btn btn-success btn-sm clone-btn" data-id="${row.id}">Clone</button>`;
               return buttons;
             }
           }
@@ -261,26 +263,42 @@
           }
         });
       });
+
+      // Handle clone button click
+      $('#agentTable').on('click', '.clone-agent', function() {
+        const id = $(this).data('id');
+        $.ajax({
+          type: 'POST',
+          url: "/agents/clone/" + id,
+          success: function(response) {
+            $('#agentTable').DataTable().ajax.reload();
+            showToast('success', 'AI Agent entry cloned successfully');
+          },
+          error: function(error) {
+            showToast('error', 'Error cloning AI Agent entry');
+          }
+        });
+      });
+
+      // Add the showToast function here
+      function showToast(icon, title) {
+        const Toast = Swal.mixin({
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+          didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer)
+            toast.addEventListener('mouseleave', Swal.resumeTimer)
+          }
+        });
+
+        Toast.fire({
+          icon: icon,
+          title: title
+        });
+      }
     });
-
-    // Add the showToast function here
-    function showToast(icon, title) {
-      const Toast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-        didOpen: (toast) => {
-          toast.addEventListener('mouseenter', Swal.stopTimer)
-          toast.addEventListener('mouseleave', Swal.resumeTimer)
-        }
-      });
-
-      Toast.fire({
-        icon: icon,
-        title: title
-      });
-    }
   </script>
 {% endblock %}
