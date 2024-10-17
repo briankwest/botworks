@@ -8,7 +8,7 @@ It also supports JSON and HTML responses for various routes, allowing for both A
 """
 
 # Importing required libraries
-import os, string, random
+import os, string, random, json
 from datetime import datetime
 import requests
 from dotenv import load_dotenv
@@ -1127,9 +1127,9 @@ def generate_swml_response(user_id, agent_id, request_body):
 
         # Add the application with the send_sms function
         msg.add_application("main", "send_sms", {
-            "to_number": '%{args.to}',
+            "to_number": '${args.to}',
             "from_number": enable_message_feature.value,
-            "body": '%{args.message}'
+            "body": '${args.message}'
         })
 
         # Check if ENABLE_MESSAGE_INACTIVE is set
@@ -1155,7 +1155,7 @@ def generate_swml_response(user_id, agent_id, request_body):
             },
             "data_map": {
                     "expressions": [{
-                        "string": '%{args.message}',
+                        "string": '${args.message}',
                         "pattern": ".*",
                         "output": {
                             "response": "Message sent.",
@@ -1174,7 +1174,7 @@ def generate_swml_response(user_id, agent_id, request_body):
 
         # Add the application with the connect function
         transfer.add_application("main", "connect", {
-            "to": '%{meta_data.table.%{lc:args.target}}',
+            "to": '${meta_data.table.${lc:args.target}}',
             "from": 'assistant'  # Replace 'assistant' with the appropriate variable
         })
 
@@ -1208,7 +1208,7 @@ def generate_swml_response(user_id, agent_id, request_body):
             "data_map": {
                 "expressions": [
                     {
-                        "string": '%{meta_data.table.%{lc:args.target}}',
+                        "string": '${meta_data.table.${lc:args.target}}',
                         "pattern": '\\w+',
                         "output": {
                             "response": "Tell the user you are going to transfer the call to whoever they asked for. Do not change languages from the one you are currently using. Do not hangup.",
@@ -1216,10 +1216,10 @@ def generate_swml_response(user_id, agent_id, request_body):
                         }
                     },
                     {
-                        "string": '%{args.target}',
+                        "string": '${args.target}',
                         "pattern": '.*',
                         "output": {
-                            "response": "I'm sorry, I was unable to transfer your call to %{input.args.target}."
+                            "response": "I'm sorry, I was unable to transfer your call to ${input.args.target}."
                         }
                     }
                 ]
@@ -1252,13 +1252,13 @@ def generate_swml_response(user_id, agent_id, request_body):
                 },
                 "data_map": {
                     "webhooks": [{
-                        "url": f'https://api.api-ninjas.com/v1/weather?city=%{{enc:args.city}}&state=%{{enc:args.state}}',
+                        "url": f'https://api.api-ninjas.com/v1/weather?city=${{enc:args.city}}&state=${{enc:args.state}}',
                         "method": "GET",
                         "headers": {
                             "X-Api-Key": api_ninjas_key
                         },
                         "output": {
-                            "response": 'Be sure to say the temperature in Fahrenheit. The weather in %{input.args.city} %{temp}C, Humidity: %{humidity}%, High: %{max_temp}C, Low: %{min_temp}C Wind Direction: %{wind_degrees} (say cardinal direction), Clouds: %{cloud_pct}%, Feels Like: %{feels_like}C.'
+                            "response": 'Be sure to say the temperature in Fahrenheit. The weather in ${input.args.city} ${temp}C, Humidity: ${humidity}%, High: ${max_temp}C, Low: ${min_temp}C Wind Direction: ${wind_degrees} (say cardinal direction), Clouds: ${cloud_pct}%, Feels Like: ${feels_like}C.'
                         }
                     }]
                 }
@@ -1268,7 +1268,7 @@ def generate_swml_response(user_id, agent_id, request_body):
         enable_jokes_feature = get_feature(agent_id, 'ENABLE_JOKES')
         if enable_jokes_feature and enable_jokes_feature.enabled:
             dj = SignalWireML(version="1.0.0")
-            dj.add_application("main", "set", {"dad_joke": '%{array[0].joke}'})
+            dj.add_application("main", "set", {"dad_joke": '${array[0].joke}'})
 
             swml.add_aiswaigfunction({
                 "function": "get_joke",
@@ -1290,7 +1290,7 @@ def generate_swml_response(user_id, agent_id, request_body):
                             "X-Api-Key": api_ninjas_key
                         },
                         "output": {
-                            "response": 'Tell the user: %{array[0].joke}',
+                            "response": 'Tell the user: ${array[0].joke}',
                             "action": [{"SWML": dj.render()}]
                         }
                     }]
@@ -1313,13 +1313,13 @@ def generate_swml_response(user_id, agent_id, request_body):
                     }                },
                 "data_map": {
                     "webhooks": [{
-                        "url": f'https://api.api-ninjas.com/v1/trivia?category=%{{args.category}}',
+                        "url": f'https://api.api-ninjas.com/v1/trivia?category=${{args.category}}',
                         "method": "GET",
                         "headers": {
                             "X-Api-Key": api_ninjas_key
                         },
                         "output": {
-                            "response": 'category %{array[0].category} questions: %{array[0].question} answer: %{array[0].answer}, be sure to give the user time to answer before saying the answer.'
+                            "response": 'category ${array[0].category} questions: ${array[0].question} answer: ${array[0].answer}, be sure to give the user time to answer before saying the answer.'
                         }
                     }]
                 }
@@ -1355,12 +1355,12 @@ def generate_swml_response(user_id, agent_id, request_body):
                             "Authorization": authorization
                         },
                         "params": {
-                            "query_string": "%{args.user_question}",
+                            "query_string": "${args.user_question}",
                             "document_id": document_id,
                             "count": 1
                         },
                         "output": {
-                            "response": 'Use this information to answer the user\'s query, only provide answers from this information and do not make up anything: %{chunks[0].text} and %{chunks[0].document_id}'
+                            "response": 'Use this information to answer the user\'s query, only provide answers from this information and do not make up anything: ${chunks[0].text} and ${chunks[0].document_id}'
                         }
                     }
                 ]
@@ -1958,9 +1958,9 @@ def update_agent(id):
 @app.route('/debugwebhook/<int:user_id>/<int:agent_id>', methods=['POST'])
 @auth.login_required
 def create_debuglog(user_id, agent_id):
-    data = request.get_json()
+    data = json.loads(request.get_data().decode('utf-8'))
     ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
-
+    
     new_log = AIDebugLogs(
         user_id=user_id,
         agent_id=agent_id,
