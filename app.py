@@ -1460,6 +1460,8 @@ def datasphere():
 
             if response.status_code == 200:
                 return jsonify(response.json()), 200
+            elif response.status_code == 401:  # Unauthorized
+                return jsonify({'error': 'SignalWire credentials missing'}), 401
         else:   
             return render_template('datasphere.html', user=current_user)
 
@@ -1485,6 +1487,8 @@ def create_datasphere():
     
     if response.status_code == 201:
         return jsonify(response.json()), 201
+    elif response.status_code == 401:  # Unauthorized
+        return jsonify({'error': 'SignalWire credentials missing'}), 401
     else:
         return jsonify({'error': 'Failed to create datasphere'}), response.status_code
 

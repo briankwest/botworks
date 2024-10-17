@@ -130,6 +130,21 @@
                 "headers": {
                     "Accept": "application/json",
                     "Content-Type": "application/json"
+                },
+                "error": function(xhr, error, thrown) {
+                    if (xhr.status === 401 && xhr.responseJSON && xhr.responseJSON.error === 'SignalWire credentials missing') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'SignalWire Error',
+                            text: 'SignalWire credentials are not set up. Please configure them in the SignalWire tab.',
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'An error occurred while fetching data.',
+                        });
+                    }
                 }
             },
             "columns": [
