@@ -1,9 +1,9 @@
-import os
+import os, string, random
 from datetime import datetime
 import requests
 from dotenv import load_dotenv
 
-from flask import Flask, flash, make_response, jsonify, redirect, render_template, request, url_for
+from flask import Flask, flash, make_response, jsonify, redirect, render_template, request, url_for, g
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import (LoginManager, UserMixin, login_user, login_required, logout_user, current_user)
 from flask_httpauth import HTTPBasicAuth
@@ -14,17 +14,32 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 
 from modules.signalwireml import SignalWireML
 
-def get_signal_wire_param(user_id, param_name):
-    param = AISignalWireParams.query.filter_by(user_id=user_id, name=param_name).first()
+def generate_random_password(length=16):
+    characters = string.ascii_letters + string.digits
+    return ''.join(random.choice(characters) for i in range(length))
+
+def get_signal_wire_param(user_id, agent_id, param_name):
+    param = AISignalWireParams.query.filter_by(user_id=user_id, agent_id=agent_id, name=param_name).first()
     return param.value if param else None
 
 auth = HTTPBasicAuth()
 
+# Custom decorator to extract agent_id and set it in the global context
+def extract_agent_id(f):
+    def decorated_function(*args, **kwargs):
+        g.agent_id = kwargs.get('agent_id')
+        return f(*args, **kwargs)
+    return decorated_function
+
 @auth.verify_password
 def verify_password(username, password):
+    agent_id = getattr(g, 'agent_id', None)
+    if not agent_id:
+        return None
+
     user = AIUser.query.filter_by(username=username).first()
     if user:
-        http_password = get_signal_wire_param(user.id, 'HTTP_PASSWORD')
+        http_password = get_signal_wire_param(user.id, agent_id, 'HTTP_PASSWORD')
         if user.username == username and http_password == password:
             return user
     return None
@@ -60,6 +75,19 @@ class AIAgent(db.Model):
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     user = db.relationship('AIUser', backref=db.backref('ai_agents', lazy=True))
+    
+    # Add cascade delete to all related models with unique backref names
+    ai_debug_logs = db.relationship('AIDebugLogs', back_populates='agent', cascade='all, delete-orphan', lazy=True)
+    ai_signalwire_params = db.relationship('AISignalWireParams', back_populates='agent', cascade='all, delete-orphan', lazy=True)
+    ai_swml_requests = db.relationship('AISWMLRequest', back_populates='agent', cascade='all, delete-orphan', lazy=True)
+    ai_functions = db.relationship('AIFunctions', back_populates='agent', cascade='all, delete-orphan', lazy=True)
+    ai_function_argument = db.relationship('AIFunctionArgs', back_populates='agent', cascade='all, delete-orphan', lazy=True)
+    ai_hints = db.relationship('AIHints', back_populates='agent', cascade='all, delete-orphan', lazy=True)
+    ai_pronounce = db.relationship('AIPronounce', back_populates='agent', cascade='all, delete-orphan', lazy=True)
+    ai_prompt = db.relationship('AIPrompt', back_populates='agent', cascade='all, delete-orphan', lazy=True)
+    ai_language = db.relationship('AILanguage', back_populates='agent', cascade='all, delete-orphan', lazy=True)
+    ai_conversation = db.relationship('AIConversation', back_populates='agent', cascade='all, delete-orphan', lazy=True)
+    ai_params = db.relationship('AIParams', back_populates='agent', cascade='all, delete-orphan', lazy=True)
 
     def __repr__(self):
         return f'<AIAgent {self.name}>'
@@ -70,10 +98,12 @@ class AIDebugLogs(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
-    data = db.Column(db.JSON, nullable=False)  # Assuming JSONB is represented as JSON in SQLAlchemy
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # New reference
+    data = db.Column(db.JSON, nullable=False)
     ip_address = db.Column(db.String(45), nullable=True)
 
     user = db.relationship('AIUser', backref=db.backref('ai_debug_logs', lazy=True))
+    agent = db.relationship('AIAgent', back_populates='ai_debug_logs')
 
     def __repr__(self):
         return f'<AIDebugLogs {self.id}>'
@@ -82,12 +112,14 @@ class AIDebugLogs(db.Model):
 class AISignalWireParams(db.Model):
     __tablename__ = 'ai_signalwire_params'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)  # Changed back to user_id
+    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # New reference
     name = db.Column(db.String(100), nullable=False)
     value = db.Column(db.String(255), nullable=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     user = db.relationship('AIUser', backref=db.backref('ai_signalwire_params', lazy=True))
+    agent = db.relationship('AIAgent', back_populates='ai_signalwire_params')
 
     def __repr__(self):
         return f'<AISignalWireParams {self.name}: {self.value}>'
@@ -97,43 +129,49 @@ class AISWMLRequest(db.Model):
     __tablename__ = 'ai_swml_requests'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)  # Changed back to user_id
+    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # New reference
     request = db.Column(db.JSON, nullable=False)
     response = db.Column(db.JSON, nullable=False)
     ip_address = db.Column(db.String(45), nullable=True)
 
     user = db.relationship('AIUser', backref=db.backref('ai_swml_requests', lazy=True))
+    agent = db.relationship('AIAgent', back_populates='ai_swml_requests')
 
     def __repr__(self):
         return f'<AISWMLRequest {self.id}>'
 
+# AIFunctions model definition
 class AIFunctions(db.Model):
     __tablename__ = 'ai_functions'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)  # Changed back to user_id
+    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # New reference
     name = db.Column(db.Text, nullable=True)
     purpose = db.Column(db.Text, nullable=True)
     active = db.Column(db.Boolean, nullable=False, default=True)
 
     user = db.relationship('AIUser', backref=db.backref('ai_functions', lazy=True))
+    agent = db.relationship('AIAgent', back_populates='ai_functions')
     ai_function_args = db.relationship(
         'AIFunctionArgs', 
         back_populates='function', 
         cascade='all, delete-orphan', 
-        lazy=True,
-        overlaps="ai_function_argument, parent_function"
+        lazy=True
     )
 
     def __repr__(self):
         return f'<AIFunctions {self.name}>'
 
+# AIFunctionArgs model definition
 class AIFunctionArgs(db.Model):
     __tablename__ = 'ai_function_argument'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     function_id = db.Column(db.Integer, db.ForeignKey('ai_functions.id', ondelete='CASCADE'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)  # Changed back to user_id
+    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # New reference
     name = db.Column(db.Text, nullable=False)
     type = db.Column(db.Text, nullable=False, default='string')
     description = db.Column(db.Text, nullable=True)
@@ -143,10 +181,10 @@ class AIFunctionArgs(db.Model):
 
     function = db.relationship(
         'AIFunctions', 
-        back_populates='ai_function_args', 
-        overlaps="parent_function"
+        back_populates='ai_function_args'
     )
     user = db.relationship('AIUser', backref=db.backref('ai_function_argument', lazy=True))
+    agent = db.relationship('AIAgent', back_populates='ai_function_argument')
 
     __table_args__ = (db.UniqueConstraint('user_id', 'function_id', 'name'),)
 
@@ -159,9 +197,11 @@ class AIHints(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     hint = db.Column(db.Text, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)  # Changed back to user_id
+    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # New reference
 
     user = db.relationship('AIUser', backref=db.backref('ai_hints', lazy=True))
+    agent = db.relationship('AIAgent', back_populates='ai_hints')
 
     def __repr__(self):
         return f'<AIHints {self.hint}>'
@@ -174,9 +214,11 @@ class AIPronounce(db.Model):
     ignore_case = db.Column(db.Boolean, nullable=False, default=False)
     replace_this = db.Column(db.Text, nullable=False)
     replace_with = db.Column(db.Text, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)  # Changed back to user_id
+    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # New reference
 
     user = db.relationship('AIUser', backref=db.backref('ai_pronounce', lazy=True))
+    agent = db.relationship('AIAgent', back_populates='ai_pronounce')
 
     def __repr__(self):
         return f'<AIPronounce {self.replace_this} -> {self.replace_with}>'
@@ -186,7 +228,6 @@ class AIPrompt(db.Model):
     __tablename__ = 'ai_prompt'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    
     prompt_type = db.Column(db.Enum('prompt', 'post_prompt', 'outbound_prompt', 'outbound_post_prompt', name='prompt_type_enum'), nullable=False)
     prompt_text = db.Column(db.Text, nullable=True)
     top_p = db.Column(db.Float, nullable=True)
@@ -195,20 +236,24 @@ class AIPrompt(db.Model):
     confidence = db.Column(db.Float, nullable=True)
     frequency_penalty = db.Column(db.Float, nullable=True)
     presence_penalty = db.Column(db.Float, nullable=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)  # Changed back to user_id
+    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # New reference
 
     user = db.relationship('AIUser', backref=db.backref('ai_prompt', lazy=True))
+    agent = db.relationship('AIAgent', back_populates='ai_prompt')
 
-    __table_args__ = (db.UniqueConstraint('user_id', 'prompt_type'),)
+    #__table_args__ = (db.UniqueConstraint('user_id', 'prompt_type'),)
 
     def __repr__(self):
         return f'<AIPrompt {self.prompt_type}: {self.prompt_text}>'
+
 # AILanguage model definition
 class AILanguage(db.Model):
     __tablename__ = 'ai_language'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)  # Changed back to user_id
+    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # New reference
     code = db.Column(db.Text, nullable=True)
     name = db.Column(db.Text, nullable=True)
     voice = db.Column(db.Text, nullable=True)
@@ -217,6 +262,7 @@ class AILanguage(db.Model):
     language_order = db.Column(db.Integer, nullable=False, default=0)
 
     user = db.relationship('AIUser', backref=db.backref('ai_language', lazy=True))
+    agent = db.relationship('AIAgent', back_populates='ai_language')
 
     def __repr__(self):
         return f'<AILanguage {self.name}>'
@@ -227,9 +273,11 @@ class AIConversation(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     data = db.Column(db.JSON, nullable=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)  # Changed back to user_id
+    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # New reference
 
     user = db.relationship('AIUser', backref=db.backref('ai_conversation', lazy=True))
+    agent = db.relationship('AIAgent', back_populates='ai_conversation')
 
     def __repr__(self):
         return f'<AIConversation {self.id}>'
@@ -238,12 +286,14 @@ class AIConversation(db.Model):
 class AIParams(db.Model):
     __tablename__ = 'ai_params'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)  # Changed back to user_id
+    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # New reference
     name = db.Column(db.String(100), nullable=False)
     value = db.Column(db.String(255), nullable=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     user = db.relationship('AIUser', backref=db.backref('ai_params', lazy=True))
+    agent = db.relationship('AIAgent', back_populates='ai_params')
 
     def __repr__(self):
         return f'<AIParams {self.name}: {self.value}>'
@@ -288,24 +338,31 @@ def create_admin_user():
             db.session.commit()
             print("Admin user created successfully.")
         except IntegrityError:
-            db.session.rollback()
+            db.session.rollback() 
             print("Integrity error while creating admin user.")
     else:
         print("Admin user already exists.")
+
+
 
 # Dashboard route
 @app.route('/')
 @login_required
 def dashboard():
+    agent_id = request.cookies.get('selectedAgentId')
+    if not agent_id:
+        # Fix: Ensure the query is fetching the first agent for the current user
+        first_agent = AIAgent.query.filter_by(user_id=current_user.id).first()
+        agent_id = first_agent.id if first_agent else None
     auth_user = current_user.username
-    auth_pass = get_signal_wire_param(current_user.id, 'HTTP_PASSWORD')
+    auth_pass = get_signal_wire_param(current_user.id, agent_id, 'HTTP_PASSWORD')
 
-    swml_url = f"https://{auth_user}:{auth_pass}@{request.host}/swml/{current_user.id}"
-    yaml_url = f"https://{auth_user}:{auth_pass}@{request.host}/yaml/{current_user.id}"
-    debugwebhook_url = f"https://{auth_user}:{auth_pass}@{request.host}/debugwebhook/{current_user.id}"
+    swml_url = f"https://{auth_user}:{auth_pass}@{request.host}/swml/{current_user.id}/{agent_id}"
+    yaml_url = f"https://{auth_user}:{auth_pass}@{request.host}/yaml/{current_user.id}/{agent_id}"
+    debugwebhook_url = f"https://{auth_user}:{auth_pass}@{request.host}/debugwebhook/{current_user.id}/{agent_id}"
 
-    number_of_requests = AISWMLRequest.query.filter_by(user_id=current_user.id).count()
-    number_of_conversations = AIConversation.query.filter_by(user_id=current_user.id).count()
+    number_of_requests = AISWMLRequest.query.filter_by(user_id=current_user.id, agent_id=agent_id).count()
+    number_of_conversations = AIConversation.query.filter_by(user_id=current_user.id, agent_id=agent_id).count()
 
     return render_template('dashboard.html', user=current_user, swml_url=swml_url, yaml_url=yaml_url, debugwebhook_url=debugwebhook_url, number_of_requests=number_of_requests, number_of_conversations=number_of_conversations)
 
@@ -313,9 +370,13 @@ def dashboard():
 @app.route('/swmlrequests', methods=['GET'])
 @login_required
 def swmlrequests():
+    selected_agent_id = request.cookies.get('selectedAgentId')
+    if not selected_agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
     if request.headers.get('Accept') == 'application/json':
-        # Fetch all SWML requests for the current user
-        swml_requests = AISWMLRequest.query.filter_by(user_id=current_user.id).all()
+        # Fetch all SWML requests for the current user and selected agent
+        swml_requests = AISWMLRequest.query.filter_by(user_id=current_user.id, agent_id=selected_agent_id).all()
 
         swml_requests_data = [{
             'id': req.id,
@@ -355,6 +416,11 @@ def dashboard_completed():
     # Initialize a dictionary to store the counts for each hour (default 0)
     hourly_counts = {start_time + timedelta(hours=i): 0 for i in range(24)}
 
+    # Get the selected agent ID from cookies
+    selected_agent_id = request.cookies.get('selectedAgentId')
+    if not selected_agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
     # Query to get the count of completed conversations grouped by hour
     completed_conversations = db.session.query(
         db.func.date_trunc('hour', AIConversation.created).label('hour'),
@@ -362,7 +428,8 @@ def dashboard_completed():
     ).filter(
         AIConversation.created >= start_time,
         AIConversation.created <= end_time,
-        AIConversation.user_id == current_user.id
+        AIConversation.user_id == current_user.id,
+        AIConversation.agent_id == selected_agent_id  # Filter by agent_id
     ).group_by('hour').order_by('hour').all()
 
     # Update the dictionary with actual counts
@@ -379,9 +446,13 @@ def dashboard_completed():
 @app.route('/functions', methods=['GET', 'POST'])
 @login_required
 def functions():
+    selected_agent_id = request.cookies.get('selectedAgentId')
+    if not selected_agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
     if request.method == 'GET':
         if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
-            functions = AIFunctions.query.filter_by(user_id=current_user.id).all()
+            functions = AIFunctions.query.filter_by(user_id=current_user.id, agent_id=selected_agent_id).all()
             function_list = [{
                 'id': f.id,
                 'name': f.name,
@@ -396,7 +467,8 @@ def functions():
         new_function = AIFunctions(
             name=data['name'],
             purpose=data['purpose'],
-            user_id=current_user.id
+            user_id=current_user.id,
+            agent_id=selected_agent_id
         )
         db.session.add(new_function)
         db.session.commit()
@@ -406,7 +478,11 @@ def functions():
 @app.route('/functions/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 @login_required
 def manage_function(id):
-    function_entry = AIFunctions.query.get_or_404(id)
+    selected_agent_id = request.cookies.get('selectedAgentId')
+    if not selected_agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
+    function_entry = AIFunctions.query.filter_by(id=id, agent_id=selected_agent_id).first_or_404()
     
     if function_entry.user_id != current_user.id:
         return jsonify({'message': 'Permission denied'}), 403
@@ -436,7 +512,11 @@ def manage_function(id):
 @app.route('/functions/<int:function_id>/args', methods=['POST'])
 @login_required
 def add_function_arg(function_id):
-    function_entry = AIFunctions.query.get_or_404(function_id)
+    selected_agent_id = request.cookies.get('selectedAgentId')
+    if not selected_agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
+    function_entry = AIFunctions.query.filter_by(id=function_id, agent_id=selected_agent_id).first_or_404()
     
     if function_entry.user_id != current_user.id:
         return jsonify({'message': 'Permission denied'}), 403
@@ -445,6 +525,7 @@ def add_function_arg(function_id):
     new_arg = AIFunctionArgs(
         function_id=function_id,
         user_id=current_user.id,
+        agent_id=selected_agent_id,
         name=data['name'],
         type=data['type'],
         description=data.get('description'),
@@ -459,12 +540,16 @@ def add_function_arg(function_id):
 @app.route('/functions/<int:function_id>/args', methods=['GET'])
 @login_required
 def get_function_args(function_id):
-    function_entry = AIFunctions.query.get_or_404(function_id)
+    selected_agent_id = request.cookies.get('selectedAgentId')
+    if not selected_agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
+    function_entry = AIFunctions.query.filter_by(id=function_id, agent_id=selected_agent_id).first_or_404()
     
     if function_entry.user_id != current_user.id:
         return jsonify({'message': 'Permission denied'}), 403
     
-    args = AIFunctionArgs.query.filter_by(function_id=function_id).order_by(AIFunctionArgs.name.asc()).all()
+    args = AIFunctionArgs.query.filter_by(function_id=function_id, agent_id=selected_agent_id).order_by(AIFunctionArgs.name.asc()).all()
 
     return jsonify([{
         'id': arg.id,
@@ -479,8 +564,12 @@ def get_function_args(function_id):
 @app.route('/functions/<int:function_id>/args/<int:arg_id>', methods=['PUT', 'DELETE'])
 @login_required
 def manage_function_arg(function_id, arg_id):
-    function_entry = AIFunctions.query.get_or_404(function_id)
-    arg_entry = AIFunctionArgs.query.get_or_404(arg_id)
+    selected_agent_id = request.cookies.get('selectedAgentId')
+    if not selected_agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
+    function_entry = AIFunctions.query.filter_by(id=function_id, agent_id=selected_agent_id).first_or_404()
+    arg_entry = AIFunctionArgs.query.filter_by(id=arg_id, agent_id=selected_agent_id).first_or_404()
     
     if function_entry.user_id != current_user.id or arg_entry.function_id != function_id:
         return jsonify({'message': 'Permission denied'}), 403
@@ -516,9 +605,13 @@ def view_conversation(id):
 @app.route('/conversations')
 @login_required
 def conversations():
-     if request.method == 'GET':
+    selected_agent_id = request.cookies.get('selectedAgentId')
+    if not selected_agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
+    if request.method == 'GET':
         if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
-            conversations = AIConversation.query.filter_by(user_id=current_user.id).all()
+            conversations = AIConversation.query.filter_by(user_id=current_user.id, agent_id=selected_agent_id).all()
             conversation_list = [{
                 'id': conv.id,
                 'created': conv.created.isoformat(),
@@ -527,21 +620,6 @@ def conversations():
             return jsonify(conversation_list), 200
         else:
             return render_template('conversations.html', user=current_user)
-
-# Get Conversations route
-@app.route('/get_conversations', methods=['GET'])
-@login_required
-def get_conversations():
-    conversations = AIConversation.query.filter_by(user_id=current_user.id).all()
-    data = [{
-        'id': conversation.id,
-        'created': conversation.created.strftime('%Y-%m-%d %H:%M:%S'),
-        'data': conversation.data
-    } for conversation in conversations]
-    
-    return jsonify({
-        'data': data
-    }), 200
 
 # Get or Delete Conversation route
 @app.route('/conversations/<int:id>', methods=['GET', 'DELETE'])
@@ -575,9 +653,13 @@ def get_or_delete_conversation(id):
 @app.route('/hints', methods=['GET', 'POST'])
 @login_required
 def hints():
+    selected_agent_id = request.cookies.get('selectedAgentId')
+    if not selected_agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
     if request.method == 'GET':
         if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
-            hints = AIHints.query.filter_by(user_id=current_user.id).all()
+            hints = AIHints.query.filter_by(user_id=current_user.id, agent_id=selected_agent_id).all()
             return jsonify([{
                 'id': hint.id,
                 'hint': hint.hint,
@@ -589,7 +671,8 @@ def hints():
         data = request.get_json()
         new_hint = AIHints(
             hint=data['hint'],
-            user_id=current_user.id
+            user_id=current_user.id,
+            agent_id=selected_agent_id
         )
         db.session.add(new_hint)
         db.session.commit()
@@ -599,7 +682,11 @@ def hints():
 @app.route('/hints/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 @login_required
 def hint(id):
-    hint_entry = AIHints.query.get_or_404(id)
+    selected_agent_id = request.cookies.get('selectedAgentId')
+    if not selected_agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
+    hint_entry = AIHints.query.filter_by(id=id, agent_id=selected_agent_id).first_or_404()
     
     if hint_entry.user_id != current_user.id:
         return jsonify({'message': 'Permission denied'}), 403
@@ -619,22 +706,16 @@ def hint(id):
         db.session.commit()
         return jsonify({'message': 'Hint entry deleted successfully'}), 200
 
-# Get Hints route
-@app.route('/get_hints', methods=['GET'])
-@login_required
-def get_hints():
-    hints = AIHints.query.filter_by(user_id=current_user.id).all()
-    return jsonify([{
-        'id': hint.id,
-        'hint': hint.hint,
-        'created': hint.created
-    } for hint in hints]), 200
 
 # Manage SignalWire Parameters route
 @app.route('/signalwire/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 @login_required
 def manage_signalwire(id):
-    signalwire_entry = AISignalWireParams.query.get_or_404(id)
+    selected_agent_id = request.cookies.get('selectedAgentId')
+    if not selected_agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
+    signalwire_entry = AISignalWireParams.query.filter_by(id=id, agent_id=selected_agent_id).first_or_404()
     
     if signalwire_entry.user_id != current_user.id:
         return jsonify({'message': 'Permission denied'}), 403
@@ -661,9 +742,13 @@ def manage_signalwire(id):
 @app.route('/signalwire', methods=['GET', 'POST'])
 @login_required
 def signalwire():
+    selected_agent_id = request.cookies.get('selectedAgentId')
+    if not selected_agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
     if request.method == 'GET':
         if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
-            params = AISignalWireParams.query.filter_by(user_id=current_user.id).all()
+            params = AISignalWireParams.query.filter_by(user_id=current_user.id, agent_id=selected_agent_id).all()
             return jsonify([{
                 'id': param.id,
                 'name': param.name,
@@ -677,7 +762,8 @@ def signalwire():
         new_params = AISignalWireParams(
             name=data['name'],
             value=data['value'],
-            user_id=current_user.id
+            user_id=current_user.id,
+            agent_id=selected_agent_id  # Use the selected agent_id from cookies
         )
         db.session.add(new_params)
         db.session.commit()
@@ -687,7 +773,11 @@ def signalwire():
 @app.route('/params/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 @login_required
 def manage_params(id):
-    params_entry = AIParams.query.get_or_404(id)
+    selected_agent_id = request.cookies.get('selectedAgentId')
+    if not selected_agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
+    params_entry = AIParams.query.filter_by(id=id, agent_id=selected_agent_id).first_or_404()
     
     if params_entry.user_id != current_user.id:
         return jsonify({'message': 'Permission denied'}), 403
@@ -714,9 +804,13 @@ def manage_params(id):
 @app.route('/params', methods=['GET', 'POST'])
 @login_required
 def params():
+    selected_agent_id = request.cookies.get('selectedAgentId')
+    if not selected_agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
     if request.method == 'GET':
         if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
-            params = AIParams.query.filter_by(user_id=current_user.id).all()
+            params = AIParams.query.filter_by(user_id=current_user.id, agent_id=selected_agent_id).all()
             return jsonify([{
                 'id': param.id,
                 'name': param.name,
@@ -730,7 +824,8 @@ def params():
         new_params = AIParams(
             name=data['name'],
             value=data['value'],
-            user_id=current_user.id
+            user_id=current_user.id,
+            agent_id=selected_agent_id
         )
         db.session.add(new_params)
         db.session.commit()
@@ -753,49 +848,68 @@ def login():
         user = AIUser.query.filter_by(username=username).first()
         if user and check_password_hash(user.password, password):
             login_user(user)
-            import random
-            import string
 
-            # Generate a random alphanumeric string for HTTP_PASSWORD
-            def generate_random_password(length=16):
-                characters = string.ascii_letters + string.digits
-                return ''.join(random.choice(characters) for i in range(length))
+            # Create default agent "BotWorks" if it doesn't exist
+            default_agent_name = "BotWorks"
+            default_agent = AIAgent.query.filter_by(name=default_agent_name, user_id=user.id).first()
+            if default_agent is None:
+                new_agent = AIAgent(
+                    name=default_agent_name,
+                    user_id=user.id
+                )
+                db.session.add(new_agent)
+                db.session.commit()
+                agent_id = new_agent.id
+                print("Default agent 'BotWorks' created successfully.")
+            else:
+                agent_id = default_agent.id
+                print("Default agent 'BotWorks' already exists.")
+
+            # Set the selectedAgentId cookie if not set
+            if not request.cookies.get('selectedAgentId'):
+                response = make_response(redirect(url_for('dashboard')))
+                response.set_cookie('selectedAgentId', str(agent_id))
+                return response
 
             # Check if HTTP_PASSWORD exists for the user, if not, create it
-            http_password = get_signal_wire_param(user.id, 'HTTP_PASSWORD')
+            http_password = get_signal_wire_param(user.id, agent_id, 'HTTP_PASSWORD')
             if not http_password:
                 random_password = generate_random_password()
                 # Check and add HTTP_PASSWORD if it doesn't exist
-                if not get_signal_wire_param(user.id, 'HTTP_PASSWORD'):
+                if not get_signal_wire_param(user.id, agent_id, 'HTTP_PASSWORD'):
                     new_param = AISignalWireParams(
                         user_id=user.id,
+                        agent_id=agent_id,  # Use the new agent_id
                         name='HTTP_PASSWORD',
                         value=random_password
                     )
                     db.session.add(new_param)
 
             # Check and add SPACE_NAME if it doesn't exist
-            if not get_signal_wire_param(user.id, 'SPACE_NAME'):
+            if not get_signal_wire_param(user.id, agent_id, 'SPACE_NAME'):
                     new_param = AISignalWireParams(
                         user_id=user.id,
+                        agent_id=agent_id,  # Use the new agent_id
                         name='SPACE_NAME',
                         value='subdomain.signalwire.com'  # Add appropriate default value if needed
                     )
                     db.session.add(new_param)
 
             # Check and add AUTH_TOKEN if it doesn't exist
-            if not get_signal_wire_param(user.id, 'AUTH_TOKEN'):
+            if not get_signal_wire_param(user.id, agent_id, 'AUTH_TOKEN'):
                 new_param = AISignalWireParams(
                     user_id=user.id,
+                    agent_id=agent_id,  # Use the new agent_id
                     name='AUTH_TOKEN',
                     value='PTb4d1.....'  # Add appropriate default value if needed
                 )
                 db.session.add(new_param)
 
             # Check and add PROJECT_ID if it doesn't exist
-            if not get_signal_wire_param(user.id, 'PROJECT_ID'):
+            if not get_signal_wire_param(user.id, agent_id, 'PROJECT_ID'):
                 new_param = AISignalWireParams(
                     user_id=user.id,
+                    agent_id=agent_id,  # Use the new agent_id
                     name='PROJECT_ID',
                     value='5f1c4418-.....'  # Add appropriate default value if needed
                 )
@@ -808,20 +922,20 @@ def login():
     return render_template('login.html')
 
 # Generate SWML Response route
-def generate_swml_response(user_id, request_body):
+def generate_swml_response(user_id, agent_id, request_body):
     request_body = request_body or {}
     swml = SignalWireML(version="1.0.0")
     
-    #Determine if the request is outbound
+    # Determine if the request is outbound
     outbound = request_body.get('outbound', False)
     
     # Select the appropriate prompt based on the outbound flag
     if outbound:
-        prompt = AIPrompt.query.filter_by(user_id=user_id, prompt_type='outbound_prompt').first()
-        post_prompt = AIPrompt.query.filter_by(user_id=user_id, prompt_type='outbound_post_prompt').first()
+        prompt = AIPrompt.query.filter_by(user_id=user_id, agent_id=agent_id, prompt_type='outbound_prompt').first()
+        post_prompt = AIPrompt.query.filter_by(user_id=user_id, agent_id=agent_id, prompt_type='outbound_post_prompt').first()
     else:
-        prompt = AIPrompt.query.filter_by(user_id=user_id, prompt_type='prompt').first()
-        post_prompt = AIPrompt.query.filter_by(user_id=user_id, prompt_type='post_prompt').first()
+        prompt = AIPrompt.query.filter_by(user_id=user_id, agent_id=agent_id, prompt_type='prompt').first()
+        post_prompt = AIPrompt.query.filter_by(user_id=user_id, agent_id=agent_id, prompt_type='post_prompt').first()
 
     if not prompt:
         return jsonify({'error': 'Prompt not found'}), 404
@@ -862,16 +976,16 @@ def generate_swml_response(user_id, request_body):
         swml.set_aipost_prompt(post_prompt_data)
     
     # Add hints
-    hints = AIHints.query.filter_by(user_id=user_id).all()
+    hints = AIHints.query.filter_by(user_id=user_id, agent_id=agent_id).all()
     swml.add_aihints([hint.hint for hint in hints])
     
     # Add parameters
-    ai_params = AIParams.query.filter_by(user_id=user_id).all()
+    ai_params = AIParams.query.filter_by(user_id=user_id, agent_id=agent_id).all()
     params_dict = {param.name: param.value for param in ai_params}
     swml.set_aiparams(params_dict)
     
     # Add languages
-    languages = AILanguage.query.filter_by(user_id=user_id).order_by(AILanguage.language_order.asc()).all()
+    languages = AILanguage.query.filter_by(user_id=user_id, agent_id=agent_id).order_by(AILanguage.language_order.asc()).all()
     for language in languages:
         language_data = {
             "language": language.name,
@@ -887,7 +1001,7 @@ def generate_swml_response(user_id, request_body):
         swml.add_ailanguage(language_data)
 
     # Add pronounces
-    pronounces = AIPronounce.query.filter_by(user_id=user_id).all()
+    pronounces = AIPronounce.query.filter_by(user_id=user_id, agent_id=agent_id).all()
     for pronounce in pronounces:
         swml.add_aipronounce({
             "replace_this": pronounce.replace_this,
@@ -896,7 +1010,7 @@ def generate_swml_response(user_id, request_body):
         })
 
     # Add functions
-    functions = AIFunctions.query.filter_by(user_id=user_id).all()
+    functions = AIFunctions.query.filter_by(user_id=user_id, agent_id=agent_id).all()
     for function in functions:
         function_data = {
             "function": function.name,
@@ -905,7 +1019,7 @@ def generate_swml_response(user_id, request_body):
                 "properties": {}
             }
         }
-        function_args = AIFunctionArgs.query.filter_by(function_id=function.id).all()
+        function_args = AIFunctionArgs.query.filter_by(function_id=function.id, agent_id=agent_id).all()
         for arg in function_args:
             function_data["argument"]["properties"][arg.name] = {
                 "type": arg.type,
@@ -928,7 +1042,7 @@ def generate_swml_response(user_id, request_body):
     
     # Set URLs with authentication if available
     auth_user = AIUser.query.filter_by(id=user_id).first().username
-    auth_pass = get_signal_wire_param(user_id, 'HTTP_PASSWORD')
+    auth_pass = get_signal_wire_param(user_id, agent_id, 'HTTP_PASSWORD')
     
     post_prompt_url = f"https://{request.host}/postprompt/{user_id}"
     if auth_user and auth_pass:
@@ -957,6 +1071,7 @@ def generate_swml_response(user_id, request_body):
     # Log the SWML request (as a JSONB object) and the response in the AISWMLRequest table
     new_swml_request = AISWMLRequest(
         user_id=user_id,
+        agent_id=agent_id,  # Include agent_id in the request log
         request=jsonify(request_body).json,    # Log the incoming request JSON data as JSONB
         response=jsonify(swml_response).json,   # Log the SWML response data as JSONB
         ip_address=ip_address
@@ -997,9 +1112,9 @@ def signup():
     return render_template('signup.html')
 
 # Get YAML route
-@app.route('/yaml/<int:id>', methods=['POST', 'GET'])
+@app.route('/yaml/<int:id>/<int:agent_id>', methods=['POST', 'GET'])
 @auth.login_required
-def get_yaml(id):
+def get_yaml(id, agent_id):
     if request.method == 'POST':
         data = request.get_json()
     else:
@@ -1007,7 +1122,7 @@ def get_yaml(id):
         data = request.args.to_dict()  # Get query parameters
 
     # Generate response in YAML format
-    response_data = generate_swml_response(id, request_body=data)
+    response_data = generate_swml_response(id, agent_id, request_body=data)
     # Import the yaml module
     import yaml
     # Create the response with the correct Content-Type
@@ -1017,17 +1132,17 @@ def get_yaml(id):
     return response
 
 # Generate SWML Response route
-@app.route('/swml/<int:id>', methods=['POST', 'GET'])
+@app.route('/swml/<int:user_id>/<int:agent_id>', methods=['POST', 'GET'])
 @auth.login_required
-def swml(id):
+@extract_agent_id
+def swml(user_id, agent_id):
     if request.method == 'POST':
         data = request.get_json()
     else:
-        # For GET requests, you could handle query parameters or defaults
         data = request.args.to_dict()  # Get query parameters
 
     # Generate response in JSON format
-    response_data = generate_swml_response(id, request_body=data)
+    response_data = generate_swml_response(user_id, agent_id, request_body=data)
     
     # Create the response with the correct Content-Type
     response = make_response(jsonify(response_data))
@@ -1036,12 +1151,13 @@ def swml(id):
     return response
 
 # Post Prompt route
-@app.route('/postprompt/<int:id>', methods=['POST'])
+@app.route('/postprompt/<int:id>/<int:agent_id>', methods=['POST'])
 @auth.login_required
-def postprompt(id):
+def postprompt(id, agent_id):
     data = request.get_json()
     new_conversation = AIConversation(
         user_id=id,
+        agent_id=agent_id,
         data=data
     )
     db.session.add(new_conversation)
@@ -1066,9 +1182,13 @@ def update_pronounce(id):
 @app.route('/pronounce', methods=['GET', 'POST'])
 @login_required
 def pronounce():
+    selected_agent_id = request.cookies.get('selectedAgentId')
+    if not selected_agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
     if request.method == 'GET':
         if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
-            pronounces = AIPronounce.query.filter_by(user_id=current_user.id).all()
+            pronounces = AIPronounce.query.filter_by(user_id=current_user.id, agent_id=selected_agent_id).all()
             pronounce_list = [{
                 'id': p.id,
                 'replace_this': p.replace_this,
@@ -1084,7 +1204,8 @@ def pronounce():
             replace_this=data['replace_this'],
             replace_with=data['replace_with'],
             ignore_case=data.get('ignore_case', False),
-            user_id=current_user.id
+            user_id=current_user.id,
+            agent_id=selected_agent_id
         )
         db.session.add(new_pronounce)
         db.session.commit()
@@ -1099,46 +1220,31 @@ def delete_pronounce(id):
     db.session.commit()
     return jsonify({'message': 'Pronounce entry deleted successfully'}), 200
 
-# Get Pronounce route
-@app.route('/get_pronounce', methods=['GET'])
-@login_required
-def get_pronounce():
-    pronounces = AIPronounce.query.filter_by(user_id=current_user.id).all()
-    pronounce_list = [{
-        'id': p.id,
-        'replace_this': p.replace_this,
-        'replace_with': p.replace_with,
-        'ignore_case': p.ignore_case
-    } for p in pronounces]
-    return jsonify(pronounce_list)
-
 # Manage Prompt route
 @app.route('/prompt', methods=['GET', 'POST'])
 @login_required
 def prompt():
+    selected_agent_id = request.cookies.get('selectedAgentId')
+    if not selected_agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
     if request.method == 'GET':
         if request.headers.get('Accept') == 'application/json':
-            existing_prompt_types = AIPrompt.query.with_entities(AIPrompt.prompt_type).distinct().all()
-            
-            # Fetch all prompts for the current user
-            prompt_entries = AIPrompt.query.filter_by(user_id=current_user.id).all()
-            if prompt_entries:
-                response_data = [
-                    {
-                        'id': prompt_entry.id,
-                        'prompt_type': prompt_entry.prompt_type,
-                        'prompt_text': prompt_entry.prompt_text,
-                        'top_p': prompt_entry.top_p,
-                        'temperature': prompt_entry.temperature,
-                        'max_tokens': prompt_entry.max_tokens,
-                        'confidence': prompt_entry.confidence,
-                        'frequency_penalty': prompt_entry.frequency_penalty,
-                        'presence_penalty': prompt_entry.presence_penalty
-                    } for prompt_entry in prompt_entries
-                ]
-                return jsonify(response_data), 200
-            else:
-                return jsonify([]), 200
+            prompt_entries = AIPrompt.query.filter_by(user_id=current_user.id, agent_id=selected_agent_id).all()
+            response_data = [
+                {
+                    'id': prompt_entry.id,
+                    'prompt_type': prompt_entry.prompt_type,
+                    'prompt_text': prompt_entry.prompt_text,
+                    'top_p': prompt_entry.top_p,
+                    'temperature': prompt_entry.temperature,
+                    'max_tokens': prompt_entry.max_tokens,
+                    'confidence': prompt_entry.confidence,
+                    'frequency_penalty': prompt_entry.frequency_penalty,
+                    'presence_penalty': prompt_entry.presence_penalty
+                } for prompt_entry in prompt_entries
+            ]
+            return jsonify(response_data), 200
         else:
             return render_template('prompt.html', user=current_user)
     
@@ -1146,7 +1252,6 @@ def prompt():
         data = request.json
         user_id = current_user.id
         
-        # Convert empty strings to None for Float and Integer fields
         float_keys = ['top_p', 'temperature', 'confidence', 'frequency_penalty', 'presence_penalty']
         integer_keys = ['max_tokens']
         
@@ -1154,11 +1259,9 @@ def prompt():
             if key in data and data[key] == '':
                 data[key] = None
         
-        # Check if a prompt with the same type already exists for the user
-        existing_prompt = AIPrompt.query.filter_by(user_id=user_id, prompt_type=data['prompt_type']).first()
+        existing_prompt = AIPrompt.query.filter_by(user_id=user_id, agent_id=selected_agent_id, prompt_type=data['prompt_type']).first()
         
         if existing_prompt:
-            # Update the existing prompt
             existing_prompt.prompt_text = data['prompt_text']
             existing_prompt.top_p = data['top_p']
             existing_prompt.temperature = data['temperature']
@@ -1169,9 +1272,9 @@ def prompt():
             db.session.commit()
             return jsonify({'message': 'Prompt updated successfully'}), 200
         else:
-            # Create new entry
             new_prompt = AIPrompt(
                 user_id=user_id,
+                agent_id=selected_agent_id,  # Ensure agent_id is set
                 prompt_type=data['prompt_type'],
                 prompt_text=data['prompt_text'],
                 top_p=data['top_p'],
@@ -1266,9 +1369,13 @@ def delete_language(id):
 @app.route('/language', methods=['GET', 'POST', 'PUT'])
 @login_required
 def language():
+    selected_agent_id = request.cookies.get('selectedAgentId')
+    if not selected_agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
     if request.method == 'GET':
         if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
-            languages = AILanguage.query.filter_by(user_id=current_user.id).all()
+            languages = AILanguage.query.filter_by(user_id=current_user.id, agent_id=selected_agent_id).all()
             language_list = [{
                 'id': l.id,
                 'name': l.name,
@@ -1290,14 +1397,15 @@ def language():
             speech_fillers=data['speech_fillers'],
             function_fillers=data['function_fillers'],
             language_order=data.get('language_order', 0),
-            user_id=current_user.id
+            user_id=current_user.id,
+            agent_id=selected_agent_id
         )
         db.session.add(new_language)
         db.session.commit()
         return jsonify({'message': 'Language entry created successfully'}), 201
     elif request.method == 'PUT':
         data = request.get_json()
-        language_entry = AILanguage.query.filter_by(id=data['id'], user_id=current_user.id).first_or_404()
+        language_entry = AILanguage.query.filter_by(id=data['id'], user_id=current_user.id, agent_id=selected_agent_id).first_or_404()
         
         language_entry.name = data.get('name', language_entry.name)
         language_entry.code = data.get('code', language_entry.code)
@@ -1311,31 +1419,19 @@ def language():
     else:
         return render_template('language.html', user=current_user)
 
-# Get Language route
-@app.route('/get_language', methods=['GET'])
-@login_required
-def get_language():
-    languages = AILanguage.query.filter_by(user_id=current_user.id).all()
-    language_list = [{
-        'id': l.id,
-        'name': l.name,
-        'code': l.code,
-        'voice': l.voice,
-        'speech_fillers': l.speech_fillers,
-        'function_fillers': l.function_fillers,
-        'language_order': l.language_order
-    } for l in languages]
-    return jsonify(language_list)
-
-# Get Datasphere route
+# Update Datasphere route to use selected agent ID
 @app.route('/datasphere', methods=['GET'])
 @login_required
 def datasphere():
+    selected_agent_id = request.cookies.get('selectedAgentId')
+    if not selected_agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
     if request.method == 'GET':
         if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
-            space_name = get_signal_wire_param(current_user.id, 'SPACE_NAME')
-            project_id = get_signal_wire_param(current_user.id, 'PROJECT_ID')
-            auth_token = get_signal_wire_param(current_user.id, 'AUTH_TOKEN')
+            space_name = get_signal_wire_param(current_user.id, selected_agent_id, 'SPACE_NAME')
+            project_id = get_signal_wire_param(current_user.id, selected_agent_id, 'PROJECT_ID')
+            auth_token = get_signal_wire_param(current_user.id, selected_agent_id, 'AUTH_TOKEN')
             
             url = f'https://{space_name}/api/datasphere/documents'
             headers = {'Accept': 'application/json'}
@@ -1346,14 +1442,18 @@ def datasphere():
         else:   
             return render_template('datasphere.html', user=current_user)
 
-# Create Datasphere route
+# Create Datasphere route to use selected agent ID
 @app.route('/datasphere', methods=['POST'])
 @login_required
 def create_datasphere():
+    selected_agent_id = request.cookies.get('selectedAgentId')
+    if not selected_agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
     data = request.get_json()
-    space_name = get_signal_wire_param(current_user.id, 'SPACE_NAME')
-    project_id = get_signal_wire_param(current_user.id, 'PROJECT_ID')
-    auth_token = get_signal_wire_param(current_user.id, 'AUTH_TOKEN')
+    space_name = get_signal_wire_param(current_user.id, selected_agent_id, 'SPACE_NAME')
+    project_id = get_signal_wire_param(current_user.id, selected_agent_id, 'PROJECT_ID')
+    auth_token = get_signal_wire_param(current_user.id, selected_agent_id, 'AUTH_TOKEN')
     
     url = f'https://{space_name}/api/datasphere/documents'
     headers = {
@@ -1367,13 +1467,17 @@ def create_datasphere():
     else:
         return jsonify({'error': 'Failed to create datasphere'}), response.status_code
 
-# Delete Datasphere route
+# Delete Datasphere route to use selected agent ID
 @app.route('/datasphere/documents/<uuid:datasphere_id>', methods=['DELETE'])
 @login_required
 def delete_datasphere(datasphere_id):
-    space_name = get_signal_wire_param(current_user.id, 'SPACE_NAME')
-    project_id = get_signal_wire_param(current_user.id, 'PROJECT_ID')
-    auth_token = get_signal_wire_param(current_user.id, 'AUTH_TOKEN')
+    selected_agent_id = request.cookies.get('selectedAgentId')
+    if not selected_agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
+    space_name = get_signal_wire_param(current_user.id, selected_agent_id, 'SPACE_NAME')
+    project_id = get_signal_wire_param(current_user.id, selected_agent_id, 'PROJECT_ID')
+    auth_token = get_signal_wire_param(current_user.id, selected_agent_id, 'AUTH_TOKEN')
     
     url = f'https://{space_name}/api/datasphere/documents/{datasphere_id}'
     headers = {
@@ -1381,31 +1485,10 @@ def delete_datasphere(datasphere_id):
     }
     response = requests.delete(url, headers=headers, auth=(project_id, auth_token))
     
-    if response.status_code == 200:
-        return jsonify({'message': 'Datasphere document deleted successfully'}), 200
+    if response.status_code == 204:
+        return jsonify({'message': 'Datasphere document deleted successfully'}), 204
     else:
         return jsonify({'error': 'Failed to delete datasphere document'}), response.status_code
-
-# Update Datasphere route
-@app.route('/datasphere/documents/<uuid:datasphere_id>', methods=['PATCH'])
-@login_required
-def update_datasphere(datasphere_id):
-    data = request.get_json()
-    space_name = get_signal_wire_param(current_user.id, 'SPACE_NAME')
-    project_id = get_signal_wire_param(current_user.id, 'PROJECT_ID')
-    auth_token = get_signal_wire_param(current_user.id, 'AUTH_TOKEN')
-    
-    url = f'https://{space_name}/api/datasphere/documents/{datasphere_id}'
-    headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-    }
-    response = requests.patch(url, headers=headers, json=data, auth=(project_id, auth_token))
-    
-    if response.status_code == 200:
-        return jsonify(response.json()), 200
-    else:
-        return jsonify({'error': 'Failed to update datasphere'}), response.status_code
 
 # Manage Agents route
 @app.route('/agents', methods=['GET', 'POST'])
@@ -1434,7 +1517,27 @@ def agents():
         db.session.add(new_agent)
         db.session.commit()
 
+        # Set default SignalWire parameters for the new agent
+        default_params = [
+            {'name': 'HTTP_PASSWORD', 'value': generate_random_password()},
+            {'name': 'SPACE_NAME', 'value': 'subdomain.signalwire.com'},
+            {'name': 'AUTH_TOKEN', 'value': 'PTb4d1.....'},
+            {'name': 'PROJECT_ID', 'value': '5f1c4418-.....'}
+        ]
+
+        for param in default_params:
+            new_param = AISignalWireParams(
+                user_id=current_user.id,
+                agent_id=new_agent.id,
+                name=param['name'],
+                value=param['value']
+            )
+            db.session.add(new_param)
+
+        db.session.commit()
+
         return jsonify({'message': 'Agent created successfully'}), 201
+    
 @app.route('/agents/<int:id>', methods=['GET'])
 @login_required
 def get_agent(id):
@@ -1457,6 +1560,10 @@ def get_agent(id):
 @login_required
 def delete_agent(id):
     agent = AIAgent.query.get_or_404(id)
+
+    # Prevent deletion of the "BotWorks" agent
+    if agent.name == "BotWorks":
+        return jsonify({'message': 'Cannot delete the default agent "BotWorks".'}), 403
 
     if agent.user_id != current_user.id:
         return jsonify({'message': 'Permission denied'}), 403
@@ -1483,14 +1590,15 @@ def update_agent(id):
     return jsonify({'message': 'Agent updated successfully'}), 200
 
 # Create Debug Webhook route
-@app.route('/debugwebhook/<int:user_id>', methods=['POST'])
+@app.route('/debugwebhook/<int:user_id>/<int:agent_id>', methods=['POST'])
 @auth.login_required
-def create_debuglog(user_id):
+def create_debuglog(user_id, agent_id):
     data = request.get_json()
     ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
 
     new_log = AIDebugLogs(
         user_id=user_id,
+        agent_id=agent_id,
         data=data,
         ip_address=ip_address
     )
@@ -1498,15 +1606,16 @@ def create_debuglog(user_id):
     db.session.commit()
 
     return jsonify({'message': 'Debug log created successfully'}), 201
-@app.route('/debuglogs', methods=['GET'])
+
+@app.route('/debuglogs/<int:agent_id>', methods=['GET'])
 @login_required
-def debuglogs():
+def debuglogs(agent_id):
     if request.headers.get('Accept') == 'application/json':
-        logs = AIDebugLogs.query.filter_by(user_id=current_user.id).all()
+        logs = AIDebugLogs.query.filter_by(user_id=current_user.id, agent_id=agent_id).all()
         logs_data = [{'id': log.id, 'created': log.created, 'data': log.data, 'ip_address': log.ip_address} for log in logs]
         return jsonify(logs_data), 200
     else:
-        return render_template('debuglog.html', user=current_user)
+        return render_template('debuglog.html', user=current_user, agent_id=agent_id)
 
 # Run the app
 if __name__ == '__main__':

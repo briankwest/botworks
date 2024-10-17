@@ -43,5 +43,65 @@
           <i class="fas fa-expand-arrows-alt"></i>
         </a>
       </li>
+      <!-- AI Agent Selector -->
+      <select id="agent-select" class="form-control" style="display: inline-block; width: auto; margin-left: 10px;" onchange="handleAgentChange(event)">
+        <option value="">-- Select an Agent --</option>
+        <!-- JavaScript will populate this list -->
+      </select>
     </ul>
-  </nav>
+</nav>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const agentSelect = document.getElementById('agent-select');
+
+    fetch('{{ url_for("agents") }}', {
+      headers: {
+        'Accept': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      const selectedAgentId = getCookie('selectedAgentId');
+
+      data.forEach(agent => {
+        const option = document.createElement('option');
+        option.value = agent.id;
+        option.textContent = agent.name;
+        if (agent.id == selectedAgentId) {
+          option.selected = true;
+        }
+        agentSelect.appendChild(option);
+      });
+
+      // Automatically select the first agent if no agent is selected
+      if (!selectedAgentId && agentSelect.options.length > 1) {
+        agentSelect.selectedIndex = 1; // Select the first agent (index 1, as index 0 is the placeholder)
+        handleAgentChange({ target: agentSelect });
+      }
+
+      agentSelect.addEventListener('change', function() {
+        const agentId = this.value;
+        if (agentId) {
+          document.cookie = `selectedAgentId=${agentId}; path=/;`;
+          location.reload();
+        }
+      });
+    })
+    .catch(error => console.error('Error fetching agents:', error));
+  });
+
+  function handleAgentChange(event) {
+    const selectedAgent = event.target.value;
+    if (selectedAgent) {
+      console.log(`Selected agent: ${selectedAgent}`);
+      document.cookie = `selectedAgent=${selectedAgent}; path=/;`;
+    }
+  }
+
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+  }
+</script>

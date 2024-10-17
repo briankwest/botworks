@@ -82,7 +82,7 @@
       if ($.fn.DataTable) {
         $('#debugLogsTable').DataTable({
           "ajax": {
-            "url": "{{ url_for('debuglogs') }}",
+            "url": "{{ url_for('debuglogs') }}/${selectedAgentId}",
             "dataSrc": "",
             "headers": {
               "Accept": "application/json"
