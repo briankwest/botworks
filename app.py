@@ -1052,7 +1052,7 @@ def generate_swml_response(user_id, agent_id, request_body):
         swml.add_aiswaigfunction(function_payload)
     
     # Set URLs with authentication if available
-    auth_user = AIUser.query.filter_by(id=user_id, agent_id=agent_id).first().username
+    auth_user = AIUser.query.filter_by(id=user_id).first().username
     auth_pass = get_signal_wire_param(user_id, agent_id, 'HTTP_PASSWORD')
     
     post_prompt_url = f"https://{request.host}/postprompt/{user_id}/{agent_id}"
