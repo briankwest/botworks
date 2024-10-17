@@ -1,3 +1,13 @@
+
+"""
+This Flask application serves as a backend for managing AI agents and their interactions
+with users. 
+
+The application uses SQLAlchemy for database interactions and Flask-Login for user session management.
+It also supports JSON and HTML responses for various routes, allowing for both API and web-based interactions.
+"""
+
+# Importing required libraries
 import os, string, random
 from datetime import datetime
 import requests
@@ -1447,7 +1457,7 @@ def datasphere():
             url = f'https://{space_name}/api/datasphere/documents'
             headers = {'Accept': 'application/json'}
             response = requests.get(url, headers=headers, auth=(project_id, auth_token))
-            print(response)
+
             if response.status_code == 200:
                 return jsonify(response.json()), 200
         else:   
@@ -1549,6 +1559,7 @@ def agents():
 
         return jsonify({'message': 'Agent created successfully'}), 201
     
+# Get Agent route
 @app.route('/agents/<int:id>', methods=['GET'])
 @login_required
 def get_agent(id):
@@ -1618,6 +1629,7 @@ def create_debuglog(user_id, agent_id):
 
     return jsonify({'message': 'Debug log created successfully'}), 201
 
+# Debug Logs route for specific agent
 @app.route('/debuglogs/<int:agent_id>', methods=['GET'])
 @login_required
 def get_debuglogs(agent_id):
@@ -1625,6 +1637,7 @@ def get_debuglogs(agent_id):
     logs_data = [{'id': log.id, 'created': log.created, 'data': log.data, 'ip_address': log.ip_address} for log in logs]
     return jsonify(logs_data), 200
 
+# Debug Logs route
 @app.route('/debuglogs', methods=['GET'])
 @login_required
 def debuglogs():
