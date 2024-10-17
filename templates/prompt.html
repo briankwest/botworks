@@ -37,7 +37,7 @@
                   <tr>
                     <th>ID</th> <!-- New column for ID -->
                     <th>Type</th>
-                    <th>Text</th>
+                    <!-- Removed Text column -->
                     <th>Top P</th>
                     <th>Temperature</th>
                     <th>Max Tokens</th>
@@ -52,7 +52,7 @@
                   <tr>
                     <td>{{ prompt.id }}</td> <!-- Display the ID -->
                     <td>{{ prompt.prompt_type }}</td>
-                    <td>{{ prompt.prompt_text }}</td>
+                    <!-- Removed Text column -->
                     <td>{{ prompt.top_p }}</td>
                     <td>{{ prompt.temperature }}</td>
                     <td>{{ prompt.max_tokens }}</td>
@@ -249,7 +249,6 @@
             columns: [
               { data: 'id' }, // New column for ID
               { data: 'prompt_type' },
-              { data: 'prompt_text' },
               { data: 'top_p' },
               { data: 'temperature' },
               { data: 'max_tokens' },
