@@ -1310,8 +1310,7 @@ def generate_swml_response(user_id, agent_id, request_body):
                             "type": "string",
                             "description": "Valid options are artliterature, language, sciencenature, general, fooddrink, peopleplaces, geography, historyholidays, entertainment, toysgames, music, mathematics, religionmythology, sportsleisure. Pick a category at random if not asked for a specific category."
                         }
-                    }
-                },
+                    }                },
                 "data_map": {
                     "webhooks": [{
                         "url": f'https://api.api-ninjas.com/v1/trivia?category=%{{args.category}}',
@@ -1325,6 +1324,58 @@ def generate_swml_response(user_id, agent_id, request_body):
                     }]
                 }
             })
+
+    # Check if the ENABLE_DATASPHERE feature is enabled for the agent
+    enable_datasphere_feature = get_feature(agent_id, 'ENABLE_DATASPHERE')
+    if enable_datasphere_feature and enable_datasphere_feature.enabled:
+        # Retrieve the document ID from the feature's value
+        document_id = enable_datasphere_feature.value
+
+        # Retrieve SIGNALWIRE details
+        space_name = get_signal_wire_param(user_id, agent_id, 'SPACE_NAME')
+        project_id = get_signal_wire_param(user_id, agent_id, 'PROJECT_ID')
+        auth_token = get_signal_wire_param(user_id, agent_id, 'AUTH_TOKEN')
+
+        # Construct the URL and authorization header
+        import base64
+        encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
+        url = f"https://{space_name}/api/datasphere/documents/search"
+        authorization = f"Basic {encoded_credentials}"
+
+        # Add the get_vector_data function
+        swml.add_aiswaigfunction({
+            "function": "get_vector_data",
+            "data_map": {
+                "webhooks": [
+                    {
+                        "method": "POST",
+                        "url": url,
+                        "headers": {
+                            "Content-Type": "application/json",
+                            "Authorization": authorization
+                        },
+                        "params": {
+                            "query_string": "%{args.user_question}",
+                            "document_id": document_id,
+                            "count": 1
+                        },
+                        "output": {
+                            "response": 'Use this information to answer the user\'s query, only provide answers from this information and do not make up anything: %{chunks[0].text} and %{chunks[0].document_id}'
+                        }
+                    }
+                ]
+            },
+            "purpose": "The question the user will ask",
+            "argument": {
+                "properties": {
+                    "user_question": {
+                        "type": "string",
+                        "description": "The question the user will ask."
+                    }
+                },
+                "type": "object"
+            }
+        })
 
     # Add application
     swml.add_aiapplication("main")
