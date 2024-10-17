@@ -908,13 +908,13 @@ def login():
 
             # Check and add SPACE_NAME if it doesn't exist
             if not get_signal_wire_param(user.id, agent_id, 'SPACE_NAME'):
-                    new_param = AISignalWireParams(
-                        user_id=user.id,
-                        agent_id=agent_id,  # Use the new agent_id
-                        name='SPACE_NAME',
-                        value='subdomain.signalwire.com'  # Add appropriate default value if needed
-                    )
-                    db.session.add(new_param)
+                new_param = AISignalWireParams(
+                    user_id=user.id,
+                    agent_id=agent_id,  # Use the new agent_id
+                    name='SPACE_NAME',
+                    value='subdomain.signalwire.com'  # Add appropriate default value if needed
+                )
+                db.session.add(new_param)
 
             # Check and add AUTH_TOKEN if it doesn't exist
             if not get_signal_wire_param(user.id, agent_id, 'AUTH_TOKEN'):
@@ -936,7 +936,7 @@ def login():
                 )
                 db.session.add(new_param)
 
-                db.session.commit()
+            db.session.commit()
             return redirect(url_for('dashboard'))
         else:
             flash('Invalid username or password')
