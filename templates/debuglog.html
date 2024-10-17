@@ -39,8 +39,8 @@
                                         <th>ID</th>
                                         <th>Created</th>
                                         <th>Request Body</th>
-                                        <th>Response</th>
                                         <th>IP Address</th>
+                                        <th>Delete</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -113,7 +113,7 @@
                   const dataString = JSON.stringify(data, null, 2);
                   const uniqueId = `copy-btn-${row.id}-request`;
                   return `
-                    <textarea readonly style="width: 400px; height: 10em;">${dataString}</textarea>
+                    <textarea readonly style="width: 600px; height: 5em;">${dataString}</textarea>
                     <i id="${uniqueId}" class="fas fa-copy copy-btn" data-copy='${dataString}'></i>
                   `;
                 } catch (error) {
@@ -122,22 +122,12 @@
                 }
               }
             },
-            { "data": "data.conversation_add",
+            { "data": "ip_address" },
+            { "data": null, // Add a new column for the delete button
               "render": function(data, type, row) {
-                try {
-                  const dataString = JSON.stringify(data, null, 2);
-                  const uniqueId = `copy-btn-${row.id}-response`;
-                  return `
-                    <textarea readonly style="width: 400px; height: 10em;">${dataString}</textarea>
-                    <i id="${uniqueId}" class="fas fa-copy copy-btn" data-copy='${dataString}'></i>
-                  `;
-                } catch (error) {
-                  console.error(`Error rendering response data for row ID: ${row.id}`, error);
-                  return 'Error displaying data';
-                }
+                return `<button class="btn btn-danger delete-btn" data-id="${row.id}">Delete</button>`;
               }
-            },
-            { "data": "ip_address" }
+            }
           ],
           "pageLength": 10,
           "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
@@ -151,6 +141,41 @@
       $(document).on('click', '.copy-btn', function() {
         const data = $(this).attr('data-copy');
         copyToClipboard(data);
+      });
+
+      $(document).on('click', '.delete-btn', function() {
+        const logId = $(this).data('id');
+        Swal.fire({
+          title: 'Are you sure?',
+          text: "You won't be able to revert this!",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            $.ajax({
+              url: `/debuglogs/${logId}`,
+              type: 'DELETE',
+              success: function() {
+                $('#debugLogsTable').DataTable().ajax.reload();
+                Swal.fire(
+                  'Deleted!',
+                  'Your log has been deleted.',
+                  'success'
+                );
+              },
+              error: function() {
+                Swal.fire(
+                  'Error!',
+                  'There was an error deleting the log.',
+                  'error'
+                );
+              }
+            });
+          }
+        });
       });
 
       window.copyToClipboard = function(value) {

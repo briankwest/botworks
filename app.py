@@ -1641,6 +1641,20 @@ def get_debuglogs(agent_id):
     logs_data = [{'id': log.id, 'created': log.created, 'data': log.data, 'ip_address': log.ip_address} for log in logs]
     return jsonify(logs_data), 200
 
+# Delete Debug Logs route
+@app.route('/debuglogs/<int:log_id>', methods=['DELETE'])
+@login_required
+def delete_debuglog(log_id):
+    log = AIDebugLogs.query.get_or_404(log_id)
+
+    if log.user_id != current_user.id:
+        return jsonify({'message': 'Permission denied'}), 403
+
+    db.session.delete(log)
+    db.session.commit()
+
+    return jsonify({'message': 'Debug log deleted successfully'}), 200
+
 # Debug Logs route
 @app.route('/debuglogs', methods=['GET'])
 @login_required
