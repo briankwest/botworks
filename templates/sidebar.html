@@ -44,13 +44,6 @@
               <p>Conversations</p>
             </a>
           </li>
-          <!-- SWML Requests -->
-          <li class="nav-item">
-            <a href="{{ url_for('swmlrequests') }}" class="nav-link {{ 'active' if request.endpoint == 'swmlrequests' else '' }}">
-              <i class="nav-icon fas fa-file-alt"></i>
-              <p>SWML Requests</p>
-            </a>
-          </li>
           <!-- Pronounce -->
           <li class="nav-item">
             <a href="{{ url_for('pronounce') }}" class="nav-link {{ 'active' if request.endpoint == 'pronounce' else '' }}">
@@ -98,6 +91,13 @@
             <a href="{{ url_for('datasphere') }}" class="nav-link {{ 'active' if request.endpoint == 'datasphere' else '' }}">
               <i class="nav-icon fas fa-database"></i>
               <p>DataSphere</p>
+            </a>
+          </li>
+          <!-- SWML Requests -->
+          <li class="nav-item">
+            <a href="{{ url_for('swmlrequests') }}" class="nav-link {{ 'active' if request.endpoint == 'swmlrequests' else '' }}">
+              <i class="nav-icon fas fa-file-alt"></i>
+              <p>SWML Requests</p>
             </a>
           </li>
           <!-- Debug Logs -->
