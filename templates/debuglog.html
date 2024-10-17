@@ -74,15 +74,22 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
  <script>
+    var selectedAgentId = 1; // Example value
+
+    function getSelectedAgentId() {
+      return selectedAgentId;
+    }
+
     $(document).ready(function() {
-      initializeDataTable();
+      // Ensure selectedAgentId is defined and accessible
+      initializeDataTable(selectedAgentId);
     });
 
-    function initializeDataTable() {
+    function initializeDataTable(agentId) {
       if ($.fn.DataTable) {
         $('#debugLogsTable').DataTable({
           "ajax": {
-            "url": "{{ url_for('debuglogs') }}/${selectedAgentId}",
+            "url": "{{ url_for('debuglogs') }}/" + agentId, // Use the passed agentId
             "dataSrc": "",
             "headers": {
               "Accept": "application/json"

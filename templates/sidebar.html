@@ -101,6 +101,13 @@
               <p>DataSphere</p>
             </a>
           </li>
+          <!-- Debug Logs -->
+          <li class="nav-item">
+            <a href="{{ url_for('debuglogs') }}" class="nav-link {{ 'active' if request.endpoint == 'debuglogs' else '' }}">
+              <i class="nav-icon fas fa-bug"></i>
+              <p>Debug Logs</p>
+            </a>
+          </li>
           <!-- Logout -->
           <li class="nav-item mt-auto">
             <a href="{{ url_for('logout') }}" class="nav-link">

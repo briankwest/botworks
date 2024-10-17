@@ -1052,22 +1052,22 @@ def generate_swml_response(user_id, agent_id, request_body):
         swml.add_aiswaigfunction(function_payload)
     
     # Set URLs with authentication if available
-    auth_user = AIUser.query.filter_by(id=user_id).first().username
+    auth_user = AIUser.query.filter_by(id=user_id, agent_id=agent_id).first().username
     auth_pass = get_signal_wire_param(user_id, agent_id, 'HTTP_PASSWORD')
     
-    post_prompt_url = f"https://{request.host}/postprompt/{user_id}"
+    post_prompt_url = f"https://{request.host}/postprompt/{user_id}/{agent_id}"
     if auth_user and auth_pass:
-        post_prompt_url = f"https://{auth_user}:{auth_pass}@{request.host}/postprompt/{user_id}"
+        post_prompt_url = f"https://{auth_user}:{auth_pass}@{request.host}/postprompt/{user_id}/{agent_id}"
     swml.set_aipost_prompt_url({"post_prompt_url": post_prompt_url})
 
-    web_hook_url = f"https://{request.host}/swaig/{user_id}"
+    web_hook_url = f"https://{request.host}/swaig/{user_id}/{agent_id}"
     if auth_user and auth_pass:
-        web_hook_url = f"https://{auth_user}:{auth_pass}@{request.host}/swaig/{user_id}"
+        web_hook_url = f"https://{auth_user}:{auth_pass}@{request.host}/swaig/{user_id}/{agent_id}"
     swml.add_aiswaigdefaults({"web_hook_url": web_hook_url})
 
     debug_webhook_url = f"https://{request.host}/debughook/{user_id}"
     if auth_user and auth_pass:
-        debug_webhook_url = f"https://{auth_user}:{auth_pass}@{request.host}/debugwebhook/{user_id}"
+        debug_webhook_url = f"https://{auth_user}:{auth_pass}@{request.host}/debugwebhook/{user_id}/{agent_id}"
     swml.add_aiparams({"debug_webhook_url": debug_webhook_url})
 
     # Add application
@@ -1620,13 +1620,15 @@ def create_debuglog(user_id, agent_id):
 
 @app.route('/debuglogs/<int:agent_id>', methods=['GET'])
 @login_required
-def debuglogs(agent_id):
-    if request.headers.get('Accept') == 'application/json':
-        logs = AIDebugLogs.query.filter_by(user_id=current_user.id, agent_id=agent_id).all()
-        logs_data = [{'id': log.id, 'created': log.created, 'data': log.data, 'ip_address': log.ip_address} for log in logs]
-        return jsonify(logs_data), 200
-    else:
-        return render_template('debuglog.html', user=current_user, agent_id=agent_id)
+def get_debuglogs(agent_id):
+    logs = AIDebugLogs.query.filter_by(user_id=current_user.id, agent_id=agent_id).all()
+    logs_data = [{'id': log.id, 'created': log.created, 'data': log.data, 'ip_address': log.ip_address} for log in logs]
+    return jsonify(logs_data), 200
+
+@app.route('/debuglogs', methods=['GET'])
+@login_required
+def debuglogs():
+    return render_template('debuglog.html', user=current_user)
 
 # Run the app
 if __name__ == '__main__':
