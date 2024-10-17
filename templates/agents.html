@@ -152,12 +152,12 @@
           {
             "data": null,
             "render": function(data, type, row) {
-              let buttons = `<button class="btn btn-sm btn-primary edit-btn mr-2" data-id="${row.id}">Edit</button>`;
+              let buttons = `<button class="btn btn-sm btn-primary edit-agent mr-2" data-id="${row.id}">Edit</button>`;
               if (row.name !== "BotWorks") {
-                buttons += `<button class="btn btn-sm btn-danger delete-btn mr-2" data-id="${row.id}">Delete</button>`;
+                buttons += `<button class="btn btn-sm btn-danger delete-agent mr-2" data-id="${row.id}">Delete</button>`;
               }
               // Add Clone button with spacing
-              buttons += `<button class="btn btn-success btn-sm clone-btn" data-id="${row.id}">Clone</button>`;
+              buttons += `<button class="btn btn-success btn-sm clone-agent" data-id="${row.id}">Clone</button>`;
               return buttons;
             }
           }
