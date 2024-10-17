@@ -33,10 +33,21 @@ def extract_agent_id(f):
 
 @auth.verify_password
 def verify_password(username, password):
-    agent_id = getattr(g, 'agent_id', None)
-    if not agent_id:
-        return None
+    # Extract the full URL from the request
+    full_url = request.url
+    
+    # Parse the URL to extract the agent_id
+    from urllib.parse import urlparse
+    parsed_url = urlparse(full_url)
+    path_segments = parsed_url.path.split('/')
+    
+    # Extract the agent_id, assuming it's the last segment
+    agent_id = path_segments[-1]
+    
+    # Set the agent_id in the global context
+    g.agent_id = agent_id
 
+    # Proceed with the existing logic
     user = AIUser.query.filter_by(username=username).first()
     if user:
         http_password = get_signal_wire_param(user.id, agent_id, 'HTTP_PASSWORD')
