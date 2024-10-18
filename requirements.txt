@@ -1,5 +1,6 @@
 alembic==1.13.3
 asttokens==2.4.1
+async-timeout==4.0.3
 attrs==24.2.0
 backcall==0.2.0
 beautifulsoup4==4.12.3
@@ -53,6 +54,7 @@ python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 PyYAML==6.0.2
 pyzmq==26.2.0
+redis==5.1.1
 referencing==0.35.1
 requests==2.32.3
 rpds-py==0.20.0

@@ -8,7 +8,7 @@ It also supports JSON and HTML responses for various routes, allowing for both A
 """
 
 # Importing required libraries
-import os, string, random, json
+import os, string, random, json, redis
 from datetime import datetime
 import requests
 from dotenv import load_dotenv
