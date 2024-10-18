@@ -2513,6 +2513,33 @@ def list_phone_numbers():
             'Authorization': authorization,
             'Accept': 'application/json'
         }
+        # Collect query parameters from the request
+        params = {}
+
+        # Validate and set the starts_with, contains, and ends_with parameters
+        starts_with = request.args.get('starts_with')
+        contains = request.args.get('contains')
+        ends_with = request.args.get('ends_with')
+
+        if starts_with:
+            params['starts_with'] = starts_with
+        elif contains:
+            params['contains'] = contains
+        elif ends_with:
+            params['ends_with'] = ends_with
+
+        # Set the max_results parameter with a default of 50 and a maximum of 100
+        max_results = request.args.get('max_results', 50, type=int)
+        params['max_results'] = min(max_results, 100)
+
+        # Validate and set the region and city parameters
+        region = request.args.get('region')
+        city = request.args.get('city')
+
+        if region:
+            params['region'] = region
+        if city:
+            params['city'] = city
 
         # Optional: Add query parameters for filtering
         params = {}
@@ -2558,16 +2585,23 @@ def search_phone_numbers():
     }
 
     # Collect query parameters from the request
-    params = {
-        'areacode': request.args.get('areacode'),
-        'number_type': request.args.get('number_type', 'local'),
-        'starts_with': request.args.get('starts_with'),
-        'contains': request.args.get('contains'),
-        'ends_with': request.args.get('ends_with'),
-        'max_results': request.args.get('max_results', 50),
-        'region': request.args.get('region'),
-        'city': request.args.get('city')
-    }
+    params = {}
+    if request.args.get('areacode'):
+        params['areacode'] = request.args.get('areacode')
+    if request.args.get('number_type'):
+        params['number_type'] = request.args.get('number_type', 'local')
+    if request.args.get('starts_with'):
+        params['starts_with'] = request.args.get('starts_with')
+    if request.args.get('contains'):
+        params['contains'] = request.args.get('contains')
+    if request.args.get('ends_with'):
+        params['ends_with'] = request.args.get('ends_with')
+    if request.args.get('max_results'):
+        params['max_results'] = request.args.get('max_results', 50)
+    if request.args.get('region'):
+        params['region'] = request.args.get('region')
+    if request.args.get('city'):
+        params['city'] = request.args.get('city')
 
     # Make the GET request to the SignalWire API
     response = requests.get(url, headers=headers, params=params)
