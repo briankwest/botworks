@@ -1058,13 +1058,11 @@ def login():
 
             access_token = jwt.encode({
                 'user_id': user.id,
-                'expires_in': 3600,
                 'exp': datetime.utcnow() + timedelta(minutes=60)
             }, app.config['ACCESS_SECRET_KEY'], algorithm='HS256')
 
             refresh_token = jwt.encode({
                 'user_id': user.id,
-                'expires_in': 86400,
                 'exp': datetime.utcnow() + timedelta(days=7)
             }, app.config['REFRESH_SECRET_KEY'], algorithm='HS256')
             
