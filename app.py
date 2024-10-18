@@ -462,9 +462,9 @@ def setup_default_agent_and_params(user_id):
     }
 
     for param_name, default_value in params_to_check.items():
-        if not get_signal_wire_param(user.id, agent_id, param_name):
+        if not get_signal_wire_param(user_id, agent_id, param_name):
             new_param = AISignalWireParams(
-                user_id=user.id,
+                user_id=user_id,
                 agent_id=agent_id,
                 name=param_name,
                 value=default_value
