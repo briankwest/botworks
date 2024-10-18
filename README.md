@@ -54,6 +54,11 @@ The `AIFeatures` model is used to manage feature flags for AI agents. These flag
 - **Value**: The document ID used to identify and access specific data within the Data Sphere.
 - **Enabled**: When set to `true`, the `data_sphere` function is active.
 
+### 11. ENABLE_RECORD
+- **Description**: Enables the functionality to record audio.
+- **Value**: The format of the recording, which can be either `wav` or `mp3`.
+- **Enabled**: When set to `true`, the recording function is active. By default, recordings are made in stereo.
+
 ## Usage
 
 Each feature flag can be managed through the application's interface or API. The flags are stored in the database and can be queried or updated as needed. The `enabled` attribute determines whether the feature is active, while the `value` attribute provides additional configuration details when necessary.

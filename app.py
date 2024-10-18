@@ -1088,6 +1088,14 @@ def generate_swml_response(user_id, agent_id, request_body):
     # Determine if the request is outbound
     outbound = request_body.get('outbound', False)
     
+    enable_record_feature = get_feature(agent_id, 'ENABLE_RECORD')
+    if enable_record_feature and enable_record_feature.enabled:
+        swml.add_application("main", "answer")
+        swml.add_application("main", "record_call", {
+            "stereo": True,
+            "format": enable_record_feature.value
+        })  
+    
     # Select the appropriate prompt based on the outbound flag
     if outbound:
         prompt = AIPrompt.query.filter_by(user_id=user_id, agent_id=agent_id, prompt_type='outbound_prompt').first()
