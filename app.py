@@ -1838,6 +1838,42 @@ def language():
     else:
         return render_template('language.html', user=current_user)
 
+@app.route('/datasphere/search/<uuid:document_id>', methods=['POST'])
+@login_required
+def search_datasphere(document_id):
+    selected_agent_id = request.cookies.get('selectedAgentId')
+    if not selected_agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
+    data = request.get_json()
+    query_string = data.get('query_string', '')
+
+    if not query_string:
+        return jsonify({'message': 'Query string is required'}), 400
+
+    space_name = get_signal_wire_param(current_user.id, selected_agent_id, 'SPACE_NAME')
+    project_id = get_signal_wire_param(current_user.id, selected_agent_id, 'PROJECT_ID')
+    auth_token = get_signal_wire_param(current_user.id, selected_agent_id, 'AUTH_TOKEN')
+
+    url = f'https://{space_name}/api/datasphere/documents/search'
+    headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    }
+    payload = {
+        'document_id': str(document_id),
+        'query_string': query_string
+    }
+
+    response = requests.post(url, headers=headers, json=payload, auth=(project_id, auth_token))
+
+    if response.status_code == 200:
+        return jsonify(response.json()), 200
+    elif response.status_code == 401:  # Unauthorized
+        return jsonify({'error': 'SignalWire credentials missing'}), 401
+    else:
+        return jsonify({'error': 'An error occurred while searching the document'}), response.status_code
+
 # Update Datasphere route to use selected agent ID
 @app.route('/datasphere', methods=['GET'])
 @login_required

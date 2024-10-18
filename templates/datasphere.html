@@ -161,7 +161,8 @@
                         return `
                             <div class="btn-group" role="group">
                                 <button class="btn btn-primary btn-sm edit-btn" data-id="${row.id}" style="margin-right: 5px;">Edit</button>
-                                <button class="btn btn-danger btn-sm delete-btn" data-id="${row.id}">Delete</button>
+                                <button class="btn btn-danger btn-sm delete-btn" data-id="${row.id}" style="margin-right: 5px;">Delete</button>
+                                <button class="btn btn-success btn-sm query-btn" data-id="${row.id}" data-chunks="${row.number_of_chunks}">Query</button>
                             </div>
                         `;
                     }
@@ -327,6 +328,62 @@
                 }
             });
         });
+
+        // Query button click event
+        $('#datasphereTable').on('click', '.query-btn', function() {
+            var docId = $(this).data('id');
+            var numberOfChunks = $(this).data('chunks');
+
+            // Set the number of chunks in the modal
+            $('#queryNumberOfChunks').text(numberOfChunks);
+
+            // Store the document ID in a hidden field or a variable
+            $('#queryDocumentModal').data('docId', docId);
+
+            // Show the modal
+            $('#queryDocumentModal').modal('show');
+        });
+
+        // Live search in the query input
+        $('#queryInput').on('input', function() {
+            var query = $(this).val();
+            var docId = $('#queryDocumentModal').data('docId');
+
+            // Collect additional query parameters
+            var tags = $('#queryTags').val();
+            var distance = $('#queryDistance').val();
+            var count = $('#queryCount').val();
+            var language = $('#queryLanguage').val();
+            var posToExpand = $('#queryPosToExpand').val();
+            var maxSynonyms = $('#queryMaxSynonyms').val();
+
+            // Prepare the data object
+            var data = { query_string: query };
+            if (tags) data.tags = tags.split(',').map(tag => tag.trim());
+            if (distance) data.distance = parseFloat(distance);
+            if (count) data.count = parseInt(count);
+            if (language) data.language = language;
+            if (posToExpand) data.pos_to_expand = posToExpand.split(',').map(pos => pos.trim());
+            if (maxSynonyms) data.max_synonyms = parseInt(maxSynonyms);
+
+            if (query.length > 0) {
+                $.ajax({
+                    url: "/datasphere/search/" + docId,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(response) {
+                        var results = response.chunks.map(chunk => `<div class="chunk-result"><p>${chunk.text}</p></div>`).join('');
+                        $('#queryResults').html(results);
+                    },
+                    error: function(err) {
+                        $('#queryResults').html('<p class="text-danger">Failed to fetch results.</p>');
+                    }
+                });
+            } else {
+                $('#queryResults').empty();
+            }
+        });
     });
 </script>
 
@@ -347,6 +404,63 @@
                         <input type="text" class="form-control" id="editTags" placeholder="Enter tags">
                     </div>
                     <button type="submit" class="btn btn-primary">Save changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Query Document Modal -->
+<div class="modal fade" id="queryDocumentModal" tabindex="-1" role="dialog" aria-labelledby="queryDocumentModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="queryDocumentModalLabel">Query Document</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="queryDocumentForm">
+                    <div class="form-group">
+                        <label for="queryInput">Query</label>
+                        <input type="text" class="form-control" id="queryInput" placeholder="Enter your query">
+                    </div>
+                    <div class="form-group">
+                        <label for="queryTags">Tags</label>
+                        <input type="text" class="form-control" id="queryTags" placeholder="Only documents tagged with 'Drinks' and 'Bar' will be searched.">
+                    </div>
+                    <div class="form-group">
+                        <label for="queryDistance">Distance</label>
+                        <input type="number" class="form-control" id="queryDistance" placeholder="A distance of 15.0 will allow moderate flexibility in matching search results.">
+                    </div>
+                    <div class="form-group">
+                        <label for="queryCount">Count</label>
+                        <input type="number" class="form-control" id="queryCount" value="3" placeholder="The search will return a maximum of 3 results.">
+                    </div>
+                    <div class="form-group">
+                        <label for="queryLanguage">Language</label>
+                        <input type="text" class="form-control" id="queryLanguage" value="en" placeholder="The search is limited to documents in English ('en').">
+                    </div>
+                    <div class="form-group">
+                        <label for="queryPosToExpand">POS to Expand</label>
+                        <input type="text" class="form-control" id="queryPosToExpand" placeholder="Synonym expansion will only happen for nouns and verbs.">
+                    </div>
+                    <div class="form-group">
+                        <label for="queryMaxSynonyms">Max Synonyms</label>
+                        <input type="number" class="form-control" id="queryMaxSynonyms" placeholder="A maximum of 5 synonyms will be used for each word in the query.">
+                    </div>
+                    <div class="form-group">
+                        <label>Number of Chunks</label>
+                        <p id="queryNumberOfChunks"></p>
+                    </div>
+                    <div id="queryResults" class="form-group">
+                        <!-- Results will be displayed here -->
+                    </div>
+                    <!-- Center the close button and apply bg-secondary color -->
+                    <div class="text-center">
+                        <button type="button" class="btn bg-secondary" data-dismiss="modal">Close</button>
+                    </div>
                 </form>
             </div>
         </div>
