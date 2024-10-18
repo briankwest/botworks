@@ -2439,6 +2439,231 @@ def aifeatures_agent(agent_id):
             'created': feature.created
         } for feature in features]
         return jsonify(features_data), 200
+    
+# Phone numbers route
+@app.route('/phone_numbers', methods=['GET'])
+@login_required
+def list_phone_numbers():
+    selected_agent_id = request.cookies.get('selectedAgentId')
+    if not selected_agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
+    if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
+        # Retrieve SIGNALWIRE details
+        space_name = get_signal_wire_param(current_user.id, selected_agent_id, 'SPACE_NAME')
+        project_id = get_signal_wire_param(current_user.id, selected_agent_id, 'PROJECT_ID')
+        auth_token = get_signal_wire_param(current_user.id, selected_agent_id, 'AUTH_TOKEN')
+
+        # Construct the API URL
+        encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
+        url = f'https://{space_name}/api/relay/rest/phone_numbers'
+        authorization = f'Basic {encoded_credentials}'
+
+        # Set up the headers with the API token
+        headers = {
+            'Authorization': authorization,
+            'Accept': 'application/json'
+        }
+
+        # Optional: Add query parameters for filtering
+        params = {}
+        filter_name = request.args.get('filter_name')
+        filter_number = request.args.get('filter_number')
+        if filter_name:
+            params['filter_name'] = filter_name
+        if filter_number:
+            params['filter_number'] = filter_number
+
+        # Make the GET request to the SignalWire API
+        response = requests.get(url, headers=headers, params=params)
+
+        # Check if the request was successful
+        if response.status_code == 200:
+            return jsonify(response.json()), 200
+        else:
+            return jsonify({'error': 'Failed to retrieve phone numbers'}), response.status_code
+    else:
+        return render_template('phone_numbers.html', user=current_user)
+    
+@app.route('/phone_numbers/search', methods=['GET'])
+@login_required
+def search_phone_numbers():
+    selected_agent_id = request.cookies.get('selectedAgentId')
+    if not selected_agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
+    # Retrieve SIGNALWIRE details
+    space_name = get_signal_wire_param(current_user.id, selected_agent_id, 'SPACE_NAME')
+    project_id = get_signal_wire_param(current_user.id, selected_agent_id, 'PROJECT_ID')
+    auth_token = get_signal_wire_param(current_user.id, selected_agent_id, 'AUTH_TOKEN')
+
+    # Construct the API URL
+    encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
+    url = f'https://{space_name}/api/relay/rest/phone_numbers/search'
+    authorization = f'Basic {encoded_credentials}'
+
+    # Set up the headers with the API token
+    headers = {
+        'Authorization': authorization,
+        'Accept': 'application/json'
+    }
+
+    # Collect query parameters from the request
+    params = {
+        'areacode': request.args.get('areacode'),
+        'number_type': request.args.get('number_type', 'local'),
+        'starts_with': request.args.get('starts_with'),
+        'contains': request.args.get('contains'),
+        'ends_with': request.args.get('ends_with'),
+        'max_results': request.args.get('max_results', 50),
+        'region': request.args.get('region'),
+        'city': request.args.get('city')
+    }
+
+    # Make the GET request to the SignalWire API
+    response = requests.get(url, headers=headers, params=params)
+
+    # Check if the request was successful
+    if response.status_code == 200:
+        return jsonify(response.json()), 200
+    else:
+        return jsonify({'error': 'Failed to search available phone numbers'}), response.status_code
+    
+
+@app.route('/phone_numbers', methods=['POST'])
+@login_required
+def purchase_phone_number():
+    selected_agent_id = request.cookies.get('selectedAgentId')
+    if not selected_agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
+    # Retrieve SIGNALWIRE details
+    space_name = get_signal_wire_param(current_user.id, selected_agent_id, 'SPACE_NAME')
+    project_id = get_signal_wire_param(current_user.id, selected_agent_id, 'PROJECT_ID')
+    auth_token = get_signal_wire_param(current_user.id, selected_agent_id, 'AUTH_TOKEN')
+
+    # Construct the API URL
+    encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
+    url = f'https://{space_name}/api/relay/rest/phone_numbers'
+    authorization = f'Basic {encoded_credentials}'
+
+    # Get the phone number from the request body
+    data = request.get_json()
+    phone_number = data.get('number')
+
+    if not phone_number:
+        return jsonify({'error': 'Phone number is required'}), 400
+
+    # Set up the headers with the API token
+    headers = {
+        'Authorization': authorization,
+        'Content-Type': 'application/json'
+    }
+
+    # Prepare the payload
+    payload = {
+        'number': phone_number
+    }
+
+    # Make the POST request to the SignalWire API
+    response = requests.post(url, headers=headers, json=payload)
+
+    # Check if the request was successful
+    if response.status_code == 200:
+        return jsonify(response.json()), 200
+    else:
+        return jsonify({'error': 'Failed to purchase phone number'}), response.status_code
+    
+@app.route('/phone_numbers/<uuid:phone_number_id>', methods=['PUT'])
+@login_required
+def update_phone_number(phone_number_id):
+    selected_agent_id = request.cookies.get('selectedAgentId')
+    if not selected_agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
+    data = request.get_json()
+    phone_number = data.get('phone_number')
+    agent_id = data.get('agent_id')
+
+    # Retrieve SIGNALWIRE details
+    auth_pass = get_signal_wire_param(current_user.id, agent_id, 'HTTP_PASSWORD')
+    space_name = get_signal_wire_param(current_user.id, agent_id, 'SPACE_NAME')
+    project_id = get_signal_wire_param(current_user.id, agent_id, 'PROJECT_ID')
+    auth_token = get_signal_wire_param(current_user.id, agent_id, 'AUTH_TOKEN')
+    auth_user = current_user.username
+    swml_url = f"https://{auth_user}:{auth_pass}@{request.host}/swml/{current_user.id}/{agent_id}"  
+    
+    # Construct the API URL
+    encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
+    url = f'https://{space_name}/api/relay/rest/phone_numbers/{phone_number_id}'
+    authorization = f'Basic {encoded_credentials}'
+
+    # Get the AI Agent Name
+    agent_name = AIAgent.query.filter_by(id=selected_agent_id, user_id=current_user.id).first().name
+
+   
+
+    # Update AIAgent number to the number we're mapping
+    AIAgent.query.filter_by(id=selected_agent_id, user_id=current_user.id).update({'number': phone_number})
+    db.session.commit()
+
+    # Prepare the update data
+    data = {
+        "name": agent_name,
+        "call_handler": "relay_script",
+        "call_receive_mode": "voice",
+        "call_request_method": "POST",
+        "call_relay_script_url": swml_url
+    }
+
+    # Set up the headers with the API token
+    headers = {
+        'Authorization': authorization,
+        'Content-Type': 'application/json'
+    }
+
+    # Make the PUT request to the SignalWire API
+    response = requests.put(url, headers=headers, json=data)
+
+    # Check if the request was successful
+    if response.status_code == 200:
+        return jsonify(response.json()), 200
+    else:
+        return jsonify({'error': 'Failed to update phone number'}), response.status_code
+    
+@app.route('/phone_numbers/<uuid:phone_number_id>', methods=['DELETE'])
+@login_required
+def release_phone_number(phone_number_id):
+    selected_agent_id = request.cookies.get('selectedAgentId')
+    if not selected_agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
+    # Retrieve SIGNALWIRE details
+    space_name = get_signal_wire_param(current_user.id, selected_agent_id, 'SPACE_NAME')
+    project_id = get_signal_wire_param(current_user.id, selected_agent_id, 'PROJECT_ID')
+    auth_token = get_signal_wire_param(current_user.id, selected_agent_id, 'AUTH_TOKEN')
+
+    
+
+    # Construct the API URL
+    encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
+    url = f'https://{space_name}/api/relay/rest/phone_numbers/{phone_number_id}'
+    authorization = f'Basic {encoded_credentials}'
+
+    # Set up the headers with the API token
+    headers = {
+        'Authorization': authorization,
+        'Accept': 'application/json'
+    }
+
+    # Make the DELETE request to the SignalWire API
+    response = requests.delete(url, headers=headers)
+
+    # Check if the request was successful
+    if response.status_code == 204:
+        return jsonify({'message': 'Phone number released successfully'}), 204
+    else:
+        return jsonify({'error': 'Failed to release phone number'}), response.status_code
 
 # Run the app
 if __name__ == '__main__':

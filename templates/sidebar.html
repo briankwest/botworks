@@ -121,6 +121,13 @@
               <p>AI Features</p>
             </a>
           </li>
+          <!-- Phone Numbers -->
+          <li class="nav-item">
+            <a href="{{ url_for('list_phone_numbers') }}" class="nav-link {{ 'active' if request.endpoint == 'list_phone_numbers' else '' }}">
+              <i class="nav-icon fas fa-phone"></i>
+              <p>Phone Numbers</p>
+            </a>
+          </li>
           <!-- Logout -->
           <li class="nav-item mt-auto">
             <a href="{{ url_for('logout') }}" class="nav-link">

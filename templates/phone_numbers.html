@@ -1,0 +1,426 @@
+{% extends 'base.html' %}
+
+{% block title %}Phone Numbers{% endblock %}
+
+{% block content %}
+  <!-- Navbar -->
+  {% include 'navbar.html' %}
+  <!-- /.navbar -->
+
+  <!-- Main Sidebar Container -->
+  {% include 'sidebar.html' %}
+
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-6">
+                    <h1 class="m-0">Phone Numbers</h1>
+                </div>
+            </div>
+        </div><!-- /.container-fluid -->
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="card">
+                <div class="card-header bg-primary">
+                    <h3 class="card-title">Phone Numbers List</h3>
+                </div>
+                <div class="card-body">
+                    <table id="phoneNumbersTable" class="table table-striped w-100">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Number</th>
+                                <th>Number Type</th>
+                                <th>Capabilities</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data will be populated here via AJAX -->
+                        </tbody>
+                    </table>
+                </div>
+                <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+
+            <!-- Add Phone Number Form Card -->
+            <div class="card mt-5">
+                <div class="card-header bg-success">
+                    <h3 class="card-title">Search and Purchase Phone Number</h3>
+                </div>
+                <div class="card-body">
+                    <form id="searchPhoneNumberForm">
+                        <div class="form-group">
+                            <label for="areacode">Area Code</label>
+                            <input type="text" class="form-control" id="areacode" placeholder="Enter area code">
+                        </div>
+                        <div class="form-group">
+                            <label for="numberType">Number Type</label>
+                            <select class="form-control" id="numberType">
+                                <option value="local" selected>Local</option>
+                                <option value="tollfree">Toll-Free</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-success">Search Numbers</button>
+                    </form>
+                </div>
+                <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+
+            <!-- New Card for Search Results -->
+            <div class="card mt-3">
+                <div class="card-header bg-info">
+                    <h3 class="card-title">Search Results</h3>
+                </div>
+                <div class="card-body">
+                    <table id="searchResultsTable" class="table table-striped w-100">
+                        <thead>
+                            <tr>
+                                <th>Number</th>
+                                <th>Region</th>
+                                <th>Rate Center</th>
+                                <th>Capabilities</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data will be populated here via AJAX -->
+                        </tbody>
+                    </table>
+                </div>
+                <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+        </div>
+        <!-- /.container-fluid -->
+    </section>
+    <!-- /.content -->
+</div>
+<!-- /.content-wrapper -->
+
+<!-- Include AdminLTE footer -->
+{% include 'footer.html' %}
+<!-- /.footer -->
+{% endblock %}
+
+{% block scripts %}
+<!-- Include DataTables CSS and JS -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.min.css">
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        // Initialize DataTable
+        $('#phoneNumbersTable').DataTable({
+            "ajax": {
+                "url": "{{ url_for('list_phone_numbers') }}",
+                "dataSrc": "data", // Assuming the data is in a 'data' array
+                "headers": {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                "error": function(xhr, error, thrown) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'An error occurred while fetching phone numbers.',
+                    });
+                }
+            },
+            "columns": [
+                { "data": "id" },
+                { "data": "number" },
+                { "data": "number_type" }, // Adjusted to use 'number_type' instead of 'region'
+                { "data": "capabilities", "render": function(data) { return data.join(', '); } }, // Display capabilities
+                {
+                    "data": null,
+                    "render": function(data, type, row) {
+                        return `
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-sm btn-primary edit-btn mr-2" data-id="${row.id}">Edit</button>
+                                <button class="btn btn-sm btn-danger release-btn mr-2" data-id="${row.id}">Release</button>
+                            </div>
+                        `;
+                    }
+                }
+            ],
+            "responsive": true,
+            "autoWidth": false
+        });
+
+        // Configure SweetAlert2 Toast
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+
+        // Release button click event
+        $('#phoneNumbersTable').on('click', '.release-btn', function() {
+            var phoneNumberId = $(this).data('id');
+
+            // Ask for confirmation before releasing
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, release it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "/phone_numbers/" + phoneNumberId,
+                        type: 'DELETE',
+                        success: function(result) {
+                            Toast.fire({
+                                icon: 'success',
+                                title: 'Phone number released successfully!'
+                            });
+                            $('#phoneNumbersTable').DataTable().ajax.reload();
+                        },
+                        error: function(err) {
+                            Toast.fire({
+                                icon: 'error',
+                                title: 'Failed to release phone number.'
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
+        // Initialize DataTable for search results
+        var searchResultsTable = $('#searchResultsTable').DataTable({
+            "responsive": true,
+            "autoWidth": false,
+            "columns": [
+                { "data": "international_number_formatted" },
+                { "data": "region" },
+                { "data": "rate_center" },
+                { 
+                    "data": "capabilities",
+                    "render": function(data) {
+                        return data.join(', ');
+                    }
+                },
+                {
+                    "data": null,
+                    "render": function(data, type, row) {
+                        return `<button class="btn btn-primary btn-sm purchase-btn" data-number="${row.e164}">Purchase</button>`;
+                    }
+                }
+            ]
+        });
+
+        // Search Phone Number Form submission
+        $('#searchPhoneNumberForm').on('submit', function(event) {
+            event.preventDefault();
+            
+            var areacode = $('#areacode').val();
+            var numberType = $('#numberType').val();
+
+            $.ajax({
+                url: "{{ url_for('search_phone_numbers') }}",
+                type: 'GET',
+                data: {
+                    areacode: areacode,
+                    number_type: numberType
+                },
+                success: function(response) {
+                    // Clear previous search results
+                    searchResultsTable.clear().rows.add(response.data).draw();
+                },
+                error: function(err) {
+                    Toast.fire({
+                        icon: 'error',
+                        title: 'Failed to search numbers.'
+                    });
+                }
+            });
+        });
+
+        // Purchase button click event
+        $('#searchResultsTable').on('click', '.purchase-btn', function() {
+            var phoneNumber = $(this).data('number');
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "Do you want to purchase this number?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, purchase it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "{{ url_for('purchase_phone_number') }}",
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ number: phoneNumber }),
+                        success: function(response) {
+                            Toast.fire({
+                                icon: 'success',
+                                title: 'Phone number purchased successfully!'
+                            });
+                            $('#phoneNumbersTable').DataTable().ajax.reload();
+                        },
+                        error: function(err) {
+                            Toast.fire({
+                                icon: 'error',
+                                title: 'Failed to purchase phone number.'
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
+        // Fetch agents and populate the dropdown
+        function fetchAgents() {
+            $.ajax({
+                url: "{{ url_for('agents') }}", // Adjusted the URL to your endpoint
+                type: 'GET',
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                success: function(response) {
+                    console.log(response); // Debug: Log the response to inspect its structure
+                    if (Array.isArray(response)) {
+                        var agentSelect = $('#agentSelect');
+                        agentSelect.empty();
+                        agentSelect.append('<option value="">Select Agent</option>'); // Option to unmap
+                        response.forEach(function(agent) {
+                            agentSelect.append(`<option value="${agent.id}">${agent.name}</option>`);
+                        });
+                    } else {
+                        console.error('Unexpected response structure:', response);
+                        Toast.fire({
+                            icon: 'error',
+                            title: 'Failed to fetch agents. Unexpected response structure.'
+                        });
+                    }
+                },
+                error: function(err) {
+                    console.error('AJAX error:', err); // Debug: Log the error
+                    Toast.fire({
+                        icon: 'error',
+                        title: 'Failed to fetch agents.'
+                    });
+                }
+            });
+        }
+
+        // Open edit modal and fetch agents
+        $('#phoneNumbersTable').on('click', '.edit-btn', function() {
+            var phoneNumberId = $(this).data('id');
+            var phoneNumber = $(this).closest('tr').find('td:eq(1)').text(); // Assuming the number is in the second column
+            $('#editPhoneNumberModal').modal('show');
+            fetchAgents();
+            $('#editPhoneNumberForm').data('phoneNumberId', phoneNumberId);
+            $('#editPhoneNumberForm').data('phoneNumber', phoneNumber); // Store the phone number
+        });
+
+        // Handle form submission for editing phone number
+        $('#editPhoneNumberForm').on('submit', function(event) {
+            event.preventDefault();
+            var phoneNumberId = $(this).data('phoneNumberId');
+            var phoneNumber = $(this).data('phoneNumber'); // Retrieve the phone number
+            var agentId = $('#agentSelect').val();
+
+            $.ajax({
+                url: "/phone_numbers/" + phoneNumberId, // Correctly append the ID
+                type: 'PUT',
+                contentType: 'application/json',
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                data: JSON.stringify({ 
+                    agent_id: agentId, 
+                    phone_number_id: phoneNumberId,
+                    phone_number: phoneNumber // Include the phone number in the data
+                }),
+                success: function(response) {
+                    Toast.fire({
+                        icon: 'success',
+                        title: 'Phone number updated successfully!'
+                    });
+                    $('#editPhoneNumberModal').modal('hide');
+                    $('#phoneNumbersTable').DataTable().ajax.reload();
+                },
+                error: function(err) {
+                    Toast.fire({
+                        icon: 'error',
+                        title: 'Failed to update phone number.'
+                    });
+                }
+            });
+        });
+    });
+</script>
+
+<!-- Search Results Modal -->
+<div class="modal fade" id="searchResultsModal" tabindex="-1" role="dialog" aria-labelledby="searchResultsModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="searchResultsModalLabel">Search Results</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="searchResults">
+                    <!-- Search results will be displayed here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Phone Number Modal -->
+<div class="modal fade" id="editPhoneNumberModal" tabindex="-1" role="dialog" aria-labelledby="editPhoneNumberModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editPhoneNumberModalLabel">Edit Phone Number</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editPhoneNumberForm">
+                    <div class="form-group">
+                        <label for="agentSelect">Assign to Agent</label>
+                        <select class="form-control" id="agentSelect">
+                            <!-- Options will be populated via AJAX -->
+                        </select>
+                    </div>
+                    <div class="d-flex justify-content-center mt-3">
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
