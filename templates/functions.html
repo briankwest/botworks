@@ -72,6 +72,10 @@
                     <label for="functionPurpose">Function Purpose</label>
                     <input type="text" class="form-control" id="functionPurpose" name="purpose" required>
                   </div>
+                  <div class="form-group">
+                    <label for="functionWebhookUrl">Function Webhook URL</label>
+                    <input type="url" class="form-control" id="functionWebhookUrl" name="webhook_url" required>
+                  </div>
                   <button type="submit" class="btn btn-success">Add Function</button>
                 </form>
               </div>
@@ -103,6 +107,10 @@
                   <div class="form-group">
                     <label for="editFunctionPurpose">Function Purpose</label>
                     <input type="text" class="form-control" id="editFunctionPurpose" name="purpose" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="editFunctionWebhookUrl">Function Webhook URL</label>
+                    <input type="url" class="form-control" id="editFunctionWebhookUrl" name="webhook_url" required>
                   </div>
                 </form>
                 <hr>
@@ -222,6 +230,7 @@
             $('#editFunctionId').val(data.id);
             $('#editFunctionName').val(data.name);
             $('#editFunctionPurpose').val(data.purpose);
+            $('#editFunctionWebhookUrl').val(data.webhook_url); // Add this line
 
             loadFunctionArgs(functionId);
 
@@ -339,7 +348,8 @@
         const functionId = $('#editFunctionId').val();
         const functionData = {
           name: $('#editFunctionName').val(),
-          purpose: $('#editFunctionPurpose').val()
+          purpose: $('#editFunctionPurpose').val(),
+          webhook_url: $('#editFunctionWebhookUrl').val() // Add this line
         };
 
         // Update function

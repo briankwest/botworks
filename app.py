@@ -251,6 +251,7 @@ class AIFunctions(db.Model):
     name = db.Column(db.Text, nullable=True)
     purpose = db.Column(db.Text, nullable=True)
     active = db.Column(db.Boolean, nullable=False, default=True)
+    webhook_url = db.Column(db.String(255), nullable=True)  # New field
 
     user = db.relationship('AIUser', backref=db.backref('ai_functions', lazy=True))
     agent = db.relationship('AIAgent', back_populates='ai_functions')
@@ -583,7 +584,8 @@ def functions():
             name=data['name'],
             purpose=data['purpose'],
             user_id=current_user.id,
-            agent_id=selected_agent_id
+            agent_id=selected_agent_id,
+            webhook_url=data.get('webhook_url')  # Include webhook_url
         )
         db.session.add(new_function)
         db.session.commit()
@@ -607,7 +609,8 @@ def manage_function(id):
             'id': function_entry.id,
             'name': function_entry.name,
             'purpose': function_entry.purpose,
-            'active': function_entry.active
+            'active': function_entry.active,
+            'webhook_url': function_entry.webhook_url  # Include webhook_url
         }), 200
 
     elif request.method == 'PUT':
@@ -615,6 +618,7 @@ def manage_function(id):
         function_entry.name = data.get('name', function_entry.name)
         function_entry.purpose = data.get('purpose', function_entry.purpose)
         function_entry.active = data.get('active', function_entry.active)
+        function_entry.webhook_url = data.get('webhook_url', function_entry.webhook_url)  # Update webhook_url
         db.session.commit()
         return jsonify({'message': 'Function entry updated successfully'}), 200
 
