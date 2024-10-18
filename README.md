@@ -49,6 +49,11 @@ The `AIFeatures` model is used to manage feature flags for AI agents. These flag
 - **Value**: Not applicable.
 - **Enabled**: When set to `true`, the `get_trivia` function is active.
 
+### 10. DATA_SPHERE
+- **Description**: Enables the functionality to access and manage data within the Data Sphere environment.
+- **Value**: The document ID used to identify and access specific data within the Data Sphere.
+- **Enabled**: When set to `true`, the `data_sphere` function is active.
+
 ## Usage
 
 Each feature flag can be managed through the application's interface or API. The flags are stored in the database and can be queried or updated as needed. The `enabled` attribute determines whether the feature is active, while the `value` attribute provides additional configuration details when necessary.
