@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Debug Logs{% endblock %}
+{% block title %}Dynamic WebSocket Channels{% endblock %}
 
 {% block content %}
   <!-- Navbar -->
@@ -16,7 +16,7 @@
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-6">
-                    <h1 class="m-0">Debug Logs</h1>
+                    <h1 class="m-0">Live Debug</h1>
                 </div>
             </div>
         </div><!-- /.container-fluid -->
@@ -29,18 +29,20 @@
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header bg-primary">
-                            <h3 class="card-title">Debug Logs</h3>
+                            <h3 class="card-title">Live Debug</h3>
                         </div>
                         <!-- /.card-header -->
                         <div class="card-body">
-                            <div id="debugLogWindow" style="height: 500px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px;">
-                                <!-- Real-time logs will be appended here -->
-                            </div>
-                            <!-- Move buttons to the bottom of the card body -->
-                            <div class="mt-3 text-right">
-                                <button id="connectBtn" class="btn btn-success">Connect</button>
-                                <button id="disconnectBtn" class="btn btn-danger">Disconnect</button>
-                            </div>
+                            <label for="channel">Channel:</label>
+                            <input id="channel" type="text" placeholder="Enter channel name">
+                            <button onclick="joinChannel()">Join Channel</button>
+                            <button onclick="leaveChannel()">Leave Channel</button>
+
+                            <h2>Messages:</h2>
+                            <ul id="messages"></ul>
+
+                            <input id="message" type="text" placeholder="Enter message">
+                            <button onclick="sendMessage()">Send Message</button>
                         </div>
                         <!-- /.card-body -->
                     </div>
@@ -63,81 +65,84 @@
 {% block scripts %}
 <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const debugLogWindow = document.getElementById('debugLogWindow');
-      const connectBtn = document.getElementById('connectBtn');
-      const disconnectBtn = document.getElementById('disconnectBtn');
-      let socket;
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Get access_token from cookies
+    const accessToken = getCookie('access_token');
 
-      function connectWebSocket() {
-        const userId = '{{ user_id }}';
-        const wsUrl = `https://${window.location.host}/socket.io/debug_channel/${userId}`;
-
-        try {
-          socket = io(wsUrl);
-
-          socket.on('connect', function() {
-            console.log('Connected to server');
-            Swal.fire({
-              icon: 'success',
-              title: 'Connected',
-              text: 'WebSocket connection established successfully.'
-            });
-            socket.send('Hello, server!');
-          });
-
-          socket.on('response', function(data) {
-            const logEntry = document.createElement('div');
-            logEntry.textContent = data.message;
-            debugLogWindow.appendChild(logEntry);
-            debugLogWindow.scrollTop = debugLogWindow.scrollHeight;
-          });
-
-          socket.on('disconnect', function() {
-            console.warn('Disconnected from server');
-            Swal.fire({
-              icon: 'info',
-              title: 'Disconnected',
-              text: 'The WebSocket connection has been closed.'
-            });
-          });
-
-          socket.on('error', function(error) {
-            console.error('WebSocket Error: ', error);
-            Swal.fire({
-              icon: 'error',
-              title: 'WebSocket Error',
-              text: 'An error occurred with the WebSocket connection.'
-            });
-          });
-
-        } catch (error) {
-          console.error('Failed to connect WebSocket: ', error);
-          Swal.fire({
-            icon: 'error',
-            title: 'Connection Failed',
-            text: 'Failed to establish WebSocket connection.'
-          });
-        }
+    // Initialize socket with access_token
+    const socket = io({
+      transports: ['websocket'],
+      auth: {
+        token: accessToken
       }
-
-      function disconnectWebSocket() {
-        if (socket) {
-          socket.disconnect();
-          Swal.fire({
-            icon: 'info',
-            title: 'Disconnected',
-            text: 'WebSocket connection has been closed.'
-          });
-        }
-      }
-
-      connectBtn.addEventListener('click', connectWebSocket);
-      disconnectBtn.addEventListener('click', disconnectWebSocket);
-
-      // Connect on page load
-      connectWebSocket();
     });
-  </script>
+
+    let currentChannel = '{{ channel}}';
+    document.getElementById('channel').value = currentChannel;
+
+    function updateMessagesList(message) {
+      const li = document.createElement("li");
+      li.textContent = message;
+      document.getElementById('messages').appendChild(li);
+    }
+
+    function joinChannel() {
+      currentChannel = document.getElementById('channel').value;
+      if (currentChannel) {
+        socket.emit('join', { channel: currentChannel });
+        // Removed alert for joining channel
+      }
+    }
+
+    function leaveChannel() {
+      if (currentChannel) {
+        socket.emit('leave', { channel: currentChannel });
+        currentChannel = '';
+      }
+    }
+
+    function sendMessage() {
+      const message = document.getElementById('message').value;
+      if (currentChannel && message) {
+        const messageData = {
+          channel: currentChannel,
+          message: message
+        };
+        socket.emit('send_message', messageData);
+      }
+    }
+
+    socket.on('send_message', function(data) {
+      updateMessagesList(`Sent: [${data.channel}] ${data.message}`);
+    });
+
+    socket.on('response', function(data) {
+      if (data instanceof ArrayBuffer) {
+        const decoder = new TextDecoder('utf-8');
+        const decodedMessage = decoder.decode(data);
+        updateMessagesList(`[${data.channel}] ${decodedMessage}`);
+      } else {
+        updateMessagesList(`[${data.channel}] ${data.data}`);
+      }
+    });
+
+    socket.on('status', function(data) {
+      // Use Swal toast instead of alert
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: data.message,
+        showConfirmButton: false,
+        timer: 3000
+      });
+    });
+
+    // Expose functions to global scope
+    window.joinChannel = joinChannel;
+    window.leaveChannel = leaveChannel;
+    window.sendMessage = sendMessage;
+  });
+</script>
 {% endblock %}

@@ -150,23 +150,23 @@ document.addEventListener("DOMContentLoaded", function() {
         </tr>
         <tr>
             <td>Call Start Date</td>
-            <td>${data.call_start_date ? new Date(data.call_start_date / 1000).toISOString().replace('T', ' ').replace('Z', ' UTC') : ''}</td>
-            <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.call_start_date ? new Date(data.call_start_date / 1000).toISOString() : ''}')"></i></td>
+            <td>${data.call_start_date ? new Date(data.call_start_date / 1000).toLocaleString() : ''}</td>
+            <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.call_start_date ? new Date(data.call_start_date / 1000).toLocaleString() : ''}')"></i></td>
         </tr>
         <tr>
             <td>Call End Date</td>
-            <td>${data.call_end_date ? new Date(data.call_end_date / 1000).toISOString().replace('T', ' ').replace('Z', ' UTC') : ''}</td>
-            <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.call_end_date ? new Date(data.call_end_date / 1000).toISOString() : ''}')"></i></td>
+            <td>${data.call_end_date ? new Date(data.call_end_date / 1000).toLocaleString() : ''}</td>
+            <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.call_end_date ? new Date(data.call_end_date / 1000).toLocaleString() : ''}')"></i></td>
         </tr>
         <tr>
             <td>AI Start Date</td>
-            <td>${data.ai_start_date ? new Date(data.ai_start_date / 1000).toISOString().replace('T', ' ').replace('Z', ' UTC') : ''}</td>
-            <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.ai_start_date ? new Date(data.ai_start_date / 1000).toISOString() : ''}')"></i></td>
+            <td>${data.ai_start_date ? new Date(data.ai_start_date / 1000).toLocaleString() : ''}</td>
+            <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.ai_start_date ? new Date(data.ai_start_date / 1000).toLocaleString() : ''}')"></i></td>
         </tr>
         <tr>
             <td>AI End Date</td>
-            <td>${data.ai_end_date ? new Date(data.ai_end_date / 1000).toISOString().replace('T', ' ').replace('Z', ' UTC') : ''}</td>
-            <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.ai_end_date ? new Date(data.ai_end_date / 1000).toISOString() : ''}')"></i></td>
+            <td>${data.ai_end_date ? new Date(data.ai_end_date / 1000).toLocaleString() : ''}</td>
+            <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.ai_end_date ? new Date(data.ai_end_date / 1000).toLocaleString() : ''}')"></i></td>
         </tr>`;
         const additionalFields = [
             { key: 'Total Input Tokens', value: data.total_input_tokens },

@@ -1,4 +1,5 @@
 
+
 """
 This Flask application serves as a backend for managing AI agents and their interactions
 with users. 
@@ -6,30 +7,46 @@ with users.
 The application uses SQLAlchemy for database interactions and Flask-Login for user session management.
 It also supports JSON and HTML responses for various routes, allowing for both API and web-based interactions.
 """
-
+# Monkey patching for eventlet to make IO non-blocking
+import eventlet
+eventlet.monkey_patch()
 # Importing required libraries
-import os, string, random, json, redis
-from datetime import datetime
+import os
+import jwt
+import base64
+import string
+import random
+import json
+import redis
+import yaml
 import requests
-from dotenv import load_dotenv
-
+import logging
+from datetime import datetime, timedelta
 from flask import Flask, flash, make_response, jsonify, redirect, render_template, request, url_for, g
+from flask_socketio import SocketIO, join_room, leave_room, emit, disconnect
+from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import (LoginManager, UserMixin, login_user, login_required, logout_user, current_user)
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_migrate import Migrate
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from werkzeug.middleware.proxy_fix import ProxyFix
-
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from flask_migrate import Migrate
+from dotenv import load_dotenv
+from urllib.parse import urlparse
 from modules.signalwireml import SignalWireML
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logging.getLogger('werkzeug').setLevel(logging.WARNING)
+
+
 
 def get_feature(agent_id, feature_name):
         # Extract the full URL from the request
     full_url = request.url
     
     # Parse the URL to extract the agent_id
-    from urllib.parse import urlparse
     parsed_url = urlparse(full_url)
     path_segments = parsed_url.path.split('/')
     
@@ -63,7 +80,6 @@ def verify_password(username, password):
     full_url = request.url
     
     # Parse the URL to extract the agent_id
-    from urllib.parse import urlparse
     parsed_url = urlparse(full_url)
     path_segments = parsed_url.path.split('/')
     
@@ -83,6 +99,10 @@ def verify_password(username, password):
 
 app = Flask(__name__)
 
+# Apply CORS to the entire app
+CORS(app, resources={r"/*": {"origins": "*"}})
+socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")  # Allow all origins
+
 # Apply ProxyFix middleware
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
 
@@ -97,6 +117,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = os.environ.get('SQLALCHEMY_TRACK_MODIFICATIONS')
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 app.config['REDIS_URL'] = os.environ.get('REDIS_URL')
+app.config['ACCESS_SECRET_KEY'] = os.environ.get('ACCESS_SECRET_KEY')
+app.config['REFRESH_SECRET_KEY'] = os.environ.get('REFRESH_SECRET_KEY')
 
 # Initialize the Redis client
 redis_client = redis.from_url(app.config['REDIS_URL'])
@@ -109,6 +131,38 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
 migrate = Migrate(app, db)
+
+with app.app_context():
+    # Perform operations that require the app context here
+    # e.g., db operations, accessing current_user, etc.
+    pass
+
+# Dictionary to keep track of Redis pubsub threads and subscribers for each room
+pubsub_threads = {}
+active_clients = {}
+
+def redis_listener(channel):
+    """Subscribe to a Redis channel once and emit messages to WebSocket clients."""
+    pubsub = redis_client.pubsub()
+    print(f"Subscribing to channel: {channel}")
+    print(f"Pubsub: {pubsub}")
+    print(f"Channel: {channel}")
+    pubsub.subscribe(channel)
+    if channel not in pubsub_threads:
+        pubsub.subscribe(channel)
+
+    while True:
+        message = pubsub.get_message()
+        if message and message['type'] == 'message':
+            # Emit the message to clients in the WebSocket room (same as Redis channel)
+            socketio.emit('response', {'data': message['data'].decode('utf-8'), 'channel': channel}, room=channel)
+        # If no clients are left in the channel, stop the listener
+        if active_clients[channel] == 0:
+            pubsub.unsubscribe(channel)
+            break  # Exit the loop, ending the thread
+
+        # Sleep briefly to prevent high CPU usage
+        eventlet.sleep(0.1)
 
 # AIAgent model definition
 class AIAgent(db.Model):
@@ -406,8 +460,6 @@ def create_admin_user():
     else:
         print("Admin user already exists.")
 
-
-
 # Dashboard route
 @app.route('/')
 @login_required
@@ -470,7 +522,7 @@ def delete_swmlrequest(request_id):
 @app.route('/dashboard/completed', methods=['GET'])
 @login_required
 def dashboard_completed():
-    from datetime import datetime, timedelta
+
 
     # Calculate the time range for the past 24 hours
     end_time = datetime.utcnow()
@@ -893,6 +945,30 @@ def params():
         db.session.commit()
         return jsonify({'message': 'Params entry created successfully'}), 201
     
+@app.route('/refresh', methods=['POST'])
+def refresh():
+    refresh_token = request.json.get('refresh_token')
+    if not refresh_token:
+        return jsonify({'message': 'Refresh token is missing'}), 400
+
+    try:
+        # Decode the refresh token
+        data = jwt.decode(refresh_token, app.config['REFRESH_SECRET_KEY'], algorithms=['HS256'])
+        user_id = data['user_id']
+
+        # Generate a new access token
+        new_access_token = jwt.encode({
+            'user_id': user_id,
+            'exp': datetime.utcnow() + timedelta(minutes=60)  # Token expires in 15 minutes
+        }, app.config['ACCESS_SECRET_KEY'], algorithm='HS256')
+
+        return jsonify({'access_token': new_access_token, 'expires_in': 3600}), 200
+
+    except jwt.ExpiredSignatureError:
+        return jsonify({'message': 'Refresh token expired'}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({'message': 'Invalid refresh token'}), 401
+    
 # Logout route
 @app.route('/logout')
 @login_required
@@ -910,6 +986,7 @@ def login():
         user = AIUser.query.filter_by(username=username).first()
         if user and check_password_hash(user.password, password):
             login_user(user)
+
 
             # Create default agent "BotWorks" if it doesn't exist
             default_agent_name = "BotWorks"
@@ -930,7 +1007,7 @@ def login():
             # Set the selectedAgentId cookie if not set
             if not request.cookies.get('selectedAgentId'):
                 response = make_response(redirect(url_for('dashboard')))
-                response.set_cookie('selectedAgentId', str(agent_id))
+                response.set_cookie('selectedAgentId', str(agent_id), samesite='Strict')
                 return response
 
             # Check if HTTP_PASSWORD exists for the user, if not, create it
@@ -978,7 +1055,24 @@ def login():
                 db.session.add(new_param)
 
             db.session.commit()
-            return redirect(url_for('dashboard'))
+
+            access_token = jwt.encode({
+                'user_id': user.id,
+                'expires_in': 3600,
+                'exp': datetime.utcnow() + timedelta(minutes=60)
+            }, app.config['ACCESS_SECRET_KEY'], algorithm='HS256')
+
+            refresh_token = jwt.encode({
+                'user_id': user.id,
+                'expires_in': 86400,
+                'exp': datetime.utcnow() + timedelta(days=7)
+            }, app.config['REFRESH_SECRET_KEY'], algorithm='HS256')
+            
+            response = make_response(redirect(url_for('dashboard')))
+            response.set_cookie('access_token', access_token, samesite='Strict')
+            response.set_cookie('refresh_token', refresh_token, samesite='Strict')
+            return response
+
         else:
             flash('Invalid username or password')
     return render_template('login.html')
@@ -1000,7 +1094,16 @@ def generate_swml_response(user_id, agent_id, request_body):
         post_prompt = AIPrompt.query.filter_by(user_id=user_id, agent_id=agent_id, prompt_type='post_prompt').first()
 
     if not prompt:
-        return jsonify({'error': 'Prompt not found'}), 404
+        prompt = AIPrompt(
+            user_id=user_id,
+            agent_id=agent_id,
+            prompt_type='outbound_prompt' if outbound else 'prompt',
+            prompt_text="You are a helpful assistant.",
+            top_p=0.5,
+            temperature=0.5
+        )
+        db.session.add(prompt)
+        db.session.commit()
 
     # Set up the initial prompt
     aiprompt_data = {
@@ -1064,8 +1167,7 @@ def generate_swml_response(user_id, agent_id, request_body):
     # Add hints
     hints = AIHints.query.filter_by(user_id=user_id, agent_id=agent_id).all()
     swml.add_aihints([hint.hint for hint in hints])
-    
-        
+            
     # Add languages
     languages = AILanguage.query.filter_by(user_id=user_id, agent_id=agent_id).order_by(AILanguage.language_order.asc()).all()
     for language in languages:
@@ -1341,7 +1443,6 @@ def generate_swml_response(user_id, agent_id, request_body):
         auth_token = get_signal_wire_param(user_id, agent_id, 'AUTH_TOKEN')
 
         # Construct the URL and authorization header
-        import base64
         encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
         url = f"https://{space_name}/api/datasphere/documents/search"
         authorization = f"Basic {encoded_credentials}"
@@ -1444,8 +1545,7 @@ def get_yaml(id, agent_id):
 
     # Generate response in YAML format
     response_data = generate_swml_response(id, agent_id, request_body=data)
-    # Import the yaml module
-    import yaml
+
     # Create the response with the correct Content-Type
     response = make_response(yaml.dump(response_data))
     response.headers['Content-Type'] = 'text/x-yaml'
@@ -1464,7 +1564,7 @@ def swml(user_id, agent_id):
 
     # Generate response in JSON format
     response_data = generate_swml_response(user_id, agent_id, request_body=data)
-    
+
     # Create the response with the correct Content-Type
     response = make_response(jsonify(response_data))
     response.headers['Content-Type'] = 'application/json'
@@ -1958,7 +2058,221 @@ def update_agent(id):
 
     return jsonify({'message': 'Agent updated successfully'}), 200
 
-# Create Debug Webhook route
+#live debug route
+@app.route('/livedebug', methods=['GET'])
+@login_required
+def livedebug():
+    selected_agent_id = request.cookies.get('selectedAgentId')
+    user_id = current_user.id
+
+    if not selected_agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
+    # Check if the current user owns the agent
+    agent = AIAgent.query.filter_by(id=selected_agent_id, user_id=current_user.id).first_or_404()
+
+    channel = f'debug_channel_{user_id}_{selected_agent_id}'
+
+    # Render the live debug template and pass the user_id and agent_id
+    return render_template('livedebug.html', channel=channel)
+
+# WebSocket connection and authentication
+@socketio.on('connect')
+def on_connect():
+    """Handle client connection and authenticate using JWT from cookies."""
+    access_token = request.cookies.get('access_token')
+    if not access_token:
+        emit('error', {'message': 'Access token is missing'}, namespace='/')
+        disconnect()
+        return
+
+    try:
+        # Decode the access token
+        data = jwt.decode(access_token, app.config['ACCESS_SECRET_KEY'], algorithms=['HS256'])
+        user_id = data['user_id']
+
+        # Verify the user exists
+        user = db.session.get(AIUser, user_id)
+        if not user:
+            emit('error', {'message': 'User not found'}, namespace='/')
+            disconnect()
+            return
+
+        # Authentication successful
+        emit('status', {'message': 'Authentication successful'}, namespace='/')
+
+    except jwt.ExpiredSignatureError:
+        emit('error', {'message': 'Access token expired'}, namespace='/')
+        disconnect()
+    except jwt.InvalidTokenError:
+        emit('error', {'message': 'Invalid access token'}, namespace='/')
+        disconnect()
+
+@socketio.on('join')
+def on_join(data):
+    """Handle client joining a specific channel with authentication."""
+    access_token = request.cookies.get('access_token')
+    if not access_token:
+        emit('error', {'message': 'Access token is missing'}, namespace='/')
+        disconnect()
+        return
+
+    try:
+        # Decode the access token
+        token_data = jwt.decode(access_token, app.config['ACCESS_SECRET_KEY'], algorithms=['HS256'])
+        user_id = token_data['user_id']
+
+        user = db.session.get(AIUser, user_id)
+
+        if not user:
+            emit('error', {'message': 'User not found'}, namespace='/')
+            disconnect()
+            return
+
+        # Authentication successful, proceed to join the channel
+        channel = data['channel']
+        join_room(channel)  # Join the WebSocket room
+
+        # Track number of active clients per channel
+        if channel not in active_clients:
+            print(f"Client joined channel {channel}")
+            active_clients[channel] = 0
+        active_clients[channel] += 1
+
+        # If no listener exists for this channel, create one
+        if channel not in pubsub_threads:
+            print(f"Creating listener for channel {channel}")
+            pubsub_threads[channel] = eventlet.spawn(redis_listener, channel)
+
+        emit('status', {'message': f'Joined channel {channel}'}, room=channel)
+
+    except jwt.ExpiredSignatureError:
+        emit('error', {'message': 'Access token expired'}, namespace='/')
+        disconnect()
+    except jwt.InvalidTokenError:
+        emit('error', {'message': 'Invalid access token'}, namespace='/')
+        disconnect()
+
+@socketio.on('leave')
+def on_leave(data):
+    """Handle client leaving a specific channel with authentication."""
+    access_token = request.cookies.get('access_token')
+    if not access_token:
+        emit('error', {'message': 'Access token is missing'}, namespace='/')
+        disconnect()
+        return
+
+    try:
+        # Decode the access token
+        token_data = jwt.decode(access_token, app.config['ACCESS_SECRET_KEY'], algorithms=['HS256'])
+        user_id = token_data['user_id']
+
+        # Verify the user exists
+        user = db.session.get(AIUser, user_id)
+        if not user:
+            emit('error', {'message': 'User not found'}, namespace='/')
+            disconnect()
+            return
+
+        # Authentication successful, proceed to leave the channel
+        channel = data['channel']
+        leave_room(channel)  # Leave the WebSocket room
+
+        # Decrease the count of active clients in the channel
+        if channel in active_clients:
+            print(f"Client left channel {channel}")
+            active_clients[channel] -= 1
+
+            # If no clients are left, allow the Redis listener to terminate
+            if active_clients[channel] == 0:
+                print(f"No clients remain in channel {channel}, stopping listener.")
+                del pubsub_threads[channel]  # Remove the thread from tracking
+                emit('status', {'message': f'No more clients in {channel}. Channel listener stopping.'}, room=channel)
+
+    except jwt.ExpiredSignatureError:
+        emit('error', {'message': 'Access token expired'}, namespace='/')
+        disconnect()
+    except jwt.InvalidTokenError:
+        emit('error', {'message': 'Invalid access token'}, namespace='/')
+        disconnect()
+
+@socketio.on('disconnect')
+def on_disconnect():
+    """Handle client disconnection with authentication."""
+    access_token = request.cookies.get('access_token')
+    if not access_token:
+        emit('error', {'message': 'Access token is missing'}, namespace='/')
+        disconnect()
+        return
+
+    try:
+        # Decode the access token
+        token_data = jwt.decode(access_token, app.config['ACCESS_SECRET_KEY'], algorithms=['HS256'])
+        user_id = token_data['user_id']
+
+        # Verify the user exists
+        user = db.session.get(AIUser, user_id)
+        if not user:
+            emit('error', {'message': 'User not found'}, namespace='/')
+            disconnect()
+            return
+
+        # Authentication successful, proceed with disconnection
+        for channel in list(active_clients.keys()):
+            if channel in active_clients:
+                active_clients[channel] -= 1
+                print(f"Client disconnected from channel {channel}")
+
+                # If no clients are left, allow the Redis listener to terminate
+                if active_clients[channel] == 0:
+                    pubsub_threads[channel].kill()  # Terminate the listener thread
+                    del pubsub_threads[channel]  # Remove the thread from the dictionary
+                    del active_clients[channel]  # Remove the channel from active clients
+                    print(f"Listener for channel {channel} terminated")
+
+    except jwt.ExpiredSignatureError:
+        emit('error', {'message': 'Access token expired'}, namespace='/')
+        disconnect()
+    except jwt.InvalidTokenError:
+        emit('error', {'message': 'Invalid access token'}, namespace='/')
+        disconnect()
+
+@socketio.on('send_message')
+def handle_message(data):
+    """Handle message sent by client to a specific channel with authentication."""
+    access_token = request.cookies.get('access_token')
+    if not access_token:
+        emit('error', {'message': 'Access token is missing'}, namespace='/')
+        disconnect()
+        return
+
+    try:
+        # Decode the access token
+        token_data = jwt.decode(access_token, app.config['ACCESS_SECRET_KEY'], algorithms=['HS256'])
+        user_id = token_data['user_id']
+
+        # Verify the user exists
+        user = db.session.get(AIUser, user_id)
+        if not user:
+            emit('error', {'message': 'User not found'}, namespace='/')
+            disconnect()
+            return
+
+        # Authentication successful, proceed to handle the message
+        message = data['message']
+        channel = data['channel']
+        redis_client.publish(channel, message)
+        # Dump the pubsub_threads and active_clients for debugging
+        print("Current pubsub_threads:", pubsub_threads)
+        print("Current active_clients:", active_clients)  # Publish the message to the corresponding Redis channel
+
+    except jwt.ExpiredSignatureError:
+        emit('error', {'message': 'Access token expired'}, namespace='/')
+        disconnect()
+    except jwt.InvalidTokenError:
+        emit('error', {'message': 'Invalid access token'}, namespace='/')
+        disconnect()
+
 @app.route('/debugwebhook/<int:user_id>/<int:agent_id>', methods=['POST'])
 @auth.login_required
 def create_debuglog(user_id, agent_id):
@@ -2076,4 +2390,4 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
         create_admin_user()
-    app.run(host='0.0.0.0', port=5000, debug=os.getenv('DEBUG'))
+    socketio.run(app, host='0.0.0.0', port=5000, debug=os.getenv('DEBUG'))

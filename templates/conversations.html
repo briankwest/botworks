@@ -84,7 +84,16 @@
         "order": [[0, 'desc']],  // Order by ID column descending
         "columns": [
           { "data": "id" },
-          { "data": "created" },
+          {
+            "data": "created",
+            "render": function(data, type, row) {
+              if (type === 'display' || type === 'filter') {
+                const date = new Date(data);
+                return date.toLocaleString(); // Convert to local time string
+              }
+              return data; // Return raw data for other types
+            }
+          },
           { "data": "data.caller_id_name" },
           { "data": "data.caller_id_number" },
           {

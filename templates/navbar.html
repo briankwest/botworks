@@ -74,16 +74,15 @@
         agentSelect.appendChild(option);
       });
 
-      // Automatically select the first agent if no agent is selected
       if (!selectedAgentId && agentSelect.options.length > 1) {
-        agentSelect.selectedIndex = 1; // Select the first agent (index 1, as index 0 is the placeholder)
+        agentSelect.selectedIndex = 1;
         handleAgentChange({ target: agentSelect });
       }
 
       agentSelect.addEventListener('change', function() {
         const agentId = this.value;
         if (agentId) {
-          document.cookie = `selectedAgentId=${agentId}; path=/;`;
+          document.cookie = `selectedAgentId=${agentId}; path=/; samesite=Strict`;
           location.reload();
         }
       });
@@ -92,10 +91,10 @@
   });
 
   function handleAgentChange(event) {
-    const selectedAgent = event.target.value;
-    if (selectedAgent) {
-      console.log(`Selected agent: ${selectedAgent}`);
-      document.cookie = `selectedAgent=${selectedAgent}; path=/;`;
+    const selectedAgentId = event.target.value;
+    if (selectedAgentId) {
+      console.log(`Selected agent: ${selectedAgentId}`);
+      document.cookie = `selectedAgentId=${selectedAgentId}; path=/; samesite=Strict`;
     }
   }
 
@@ -128,6 +127,12 @@
           }
           agentSelect.appendChild(option);
         });
+
+        if (!agentSelect.querySelector('option[selected]') && agentSelect.options.length > 1) {
+          agentSelect.options[1].selected = true;
+          handleAgentChange({ target: agentSelect });
+          document.cookie = `selectedAgentId=${agentSelect.value}; path=/; samesite=Strict`;
+        }
       } else {
         console.error('Expected an array but got:', data);
       }
@@ -135,8 +140,46 @@
     .catch(error => console.error('Error fetching agents:', error));
   }
 
-  // Function to delay the refresh
   function delayedRefreshAgentsDropdown() {
-    setTimeout(refreshAgentsDropdown, 1000);
+    console.log('Delayed refresh agents dropdown');
+    setTimeout(refreshAgentsDropdown, 500);
   }
+
+  let refreshTimerId; 
+
+  async function refreshToken() {
+    const refreshToken = getCookie('refresh_token');
+    if (!refreshToken) {
+      console.error('Refresh token is missing');
+      return;
+    }
+
+    const refreshResponse = await fetch('/refresh', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ refresh_token: refreshToken })
+    });
+
+    if (refreshResponse.ok) {
+      const refreshData = await refreshResponse.json();
+      document.cookie = `access_token=${refreshData.access_token}; path=/; samesite=Strict`;
+      setRefreshTimer(refreshData.expires_in); 
+    } else {
+      console.error('Failed to refresh token');
+    }
+  }
+
+function setRefreshTimer(expiresIn) {
+  if (refreshTimerId) {
+      clearTimeout(refreshTimerId); 
+    }
+
+    const refreshInterval = (expiresIn / 2) * 1000; 
+    refreshTimerId = setTimeout(refreshToken, refreshInterval); 
+  }
+
+  const tokenExpiresIn = 30; 
+  setRefreshTimer(tokenExpiresIn);
 </script>

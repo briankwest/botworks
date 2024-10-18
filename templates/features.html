@@ -119,7 +119,7 @@
         const enabled = $('#featureEnabled').is(':checked');
                 
         $.ajax({
-          url: `/aifeatures/${selectedAgentId}`, // Use selectedAgentId
+          url: `/aifeatures/${selectedAgentId}`, // Use selectedAgentId   
           type: 'POST',
           contentType: 'application/json',
           data: JSON.stringify({ name, value, enabled }),
@@ -253,12 +253,6 @@
           }
         });
       });
-    }
-
-    function getCookie(name) {
-      const value = `; ${document.cookie}`;
-      const parts = value.split(`; ${name}=`);
-      if (parts.length === 2) return parts.pop().split(';').shift();
     }
   </script>
 
