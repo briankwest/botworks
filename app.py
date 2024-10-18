@@ -1860,10 +1860,25 @@ def search_datasphere(document_id):
         'Content-Type': 'application/json',
         'Accept': 'application/json'
     }
+    
     payload = {
         'document_id': str(document_id),
-        'query_string': query_string
+        'query_string': data.get('query_string', '')
     }
+        
+    if 'tags' in data:
+        payload['tags'] = data['tags']
+    if 'distance' in data:
+        payload['distance'] = data['distance']
+    if 'count' in data:
+        payload['count'] = data['count']
+    if 'language' in data:
+        payload['language'] = data['language']
+    if 'pos_to_expand' in data:
+        payload['pos_to_expand'] = data['pos_to_expand']
+    if 'max_synonyms' in data:
+        payload['max_synonyms'] = data['max_synonyms']
+
 
     response = requests.post(url, headers=headers, json=payload, auth=(project_id, auth_token))
 
