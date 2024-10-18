@@ -232,6 +232,14 @@
             $('#editId').val(response.id);
             $('#editAgentName').val(response.name);
             $('#editAgentPhoneNumber').val(response.number);
+
+            // Disable the name input if the agent's name is "BotWorks"
+            if (response.name === "BotWorks") {
+              $('#editAgentName').prop('disabled', true);
+            } else {
+              $('#editAgentName').prop('disabled', false);
+            }
+
             // Show the modal
             $('#editAgentModal').modal('show');
           },
