@@ -344,6 +344,16 @@
             $('#queryDocumentModal').modal('show');
         });
 
+        // Debounce function
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                const context = this;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), wait);
+            };
+        }
+
         // Function to perform the query
         function performQuery() {
             var query = $('#queryInput').val();
@@ -385,11 +395,14 @@
             }
         }
 
+        // Debounced version of performQuery
+        const debouncedPerformQuery = debounce(performQuery, 300);
+
         // Live search in the query input
-        $('#queryInput').on('input', performQuery);
+        $('#queryInput').on('input', debouncedPerformQuery);
 
         // Re-run query when additional parameters change
-        $('#queryTags, #queryDistance, #queryCount, #queryLanguage, #queryPosToExpand, #queryMaxSynonyms').on('input change', performQuery);
+        $('#queryTags, #queryDistance, #queryCount, #queryLanguage, #queryPosToExpand, #queryMaxSynonyms').on('input change', debouncedPerformQuery);
     });
 </script>
 
