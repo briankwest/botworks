@@ -1996,6 +1996,23 @@ def clone_agent(agent_id):
     def clone_relationships(original, new, relationship_name):
         related_items = getattr(original, relationship_name)
         for item in related_items:
+            # Check if the item has the necessary attributes
+            if not hasattr(item, 'function_id') or not hasattr(item, 'name'):
+                print(f"Skipping item due to missing attributes: {item}")
+                continue
+
+            # Check for existing entry with the same unique constraint
+            existing_item = item.__class__.query.filter_by(
+                user_id=item.user_id,
+                function_id=item.function_id,
+                name=item.name
+            ).first()
+
+            if existing_item:
+                # Handle the duplicate, e.g., by skipping or modifying the name
+                print(f"Duplicate found for {item.name}, skipping or modifying...")
+                continue  # or modify the name to ensure uniqueness
+
             new_item = item.__class__(**{col.name: getattr(item, col.name) for col in item.__table__.columns if col.name != 'id'})
             new_item.agent_id = new.id
             db.session.add(new_item)
