@@ -1961,6 +1961,12 @@ def create_debuglog(user_id, agent_id):
     data = json.loads(request.get_data().decode('utf-8'))
     ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
     
+    # Create a dynamic channel name
+    channel_name = f'debug_channel_{user_id}_{agent_id}'
+
+    # Publish the data to the dynamic Redis channel
+    redis_client.publish(channel_name, data)
+
     new_log = AIDebugLogs(
         user_id=user_id,
         agent_id=agent_id,
@@ -2039,6 +2045,7 @@ def add_aifeature(agent_id):
 
     return jsonify({'message': 'Feature added successfully'}), 201
 
+# AI Features route
 @app.route('/aifeatures', methods=['GET'])
 @login_required
 def aifeatures():
