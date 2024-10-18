@@ -373,7 +373,6 @@
                 type: $row.find('[name="arg_type"]').val(),
                 description: $row.find('[name="arg_description"]').val(),
                 required: $row.find('[name="arg_required"]').is(':checked'),
-                // Add enum if type is array
                 enum: $row.find('[name="arg_type"]').val() === 'array' ? $row.find('[name="arg_enum"]').val() : undefined
               };
 

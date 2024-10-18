@@ -429,6 +429,50 @@ class AIUser(UserMixin, db.Model):
     def __repr__(self):
         return f'<AIUser {self.username}>'
 
+def setup_default_agent_and_params(user_id):
+    """Set up a default agent and necessary parameters for a user."""
+    # Create default agent "BotWorks" if it doesn't exist
+    default_agent_name = "BotWorks"
+    default_agent = AIAgent.query.filter_by(name=default_agent_name, user_id=user_id).first()
+    if default_agent is None:
+        new_agent = AIAgent(
+            name=default_agent_name,
+            user_id=user_id
+        )
+        db.session.add(new_agent)
+        db.session.commit()
+        agent_id = new_agent.id
+        print("Default agent 'BotWorks' created successfully.")
+    else:
+        agent_id = default_agent.id
+        print("Default agent 'BotWorks' already exists.")
+
+    # Set the selectedAgentId cookie if not set
+    if not request.cookies.get('selectedAgentId'):
+        response = make_response(redirect(url_for('dashboard')))
+        response.set_cookie('selectedAgentId', str(agent_id), samesite='Strict')
+        return response
+
+    # Check and add necessary parameters if they don't exist
+    params_to_check = {
+        'HTTP_PASSWORD': generate_random_password(),
+        'SPACE_NAME': 'subdomain.signalwire.com',
+        'AUTH_TOKEN': 'PTb4d1.....',
+        'PROJECT_ID': '5f1c4418-.....'
+    }
+
+    for param_name, default_value in params_to_check.items():
+        if not get_signal_wire_param(user.id, agent_id, param_name):
+            new_param = AISignalWireParams(
+                user_id=user.id,
+                agent_id=agent_id,
+                name=param_name,
+                value=default_value
+            )
+            db.session.add(new_param)
+
+    db.session.commit()
+
 # Login manager user loader
 @login_manager.user_loader
 def load_user(user_id):
@@ -1013,52 +1057,9 @@ def login():
                 response = make_response(redirect(url_for('dashboard')))
                 response.set_cookie('selectedAgentId', str(agent_id), samesite='Strict')
                 return response
+            
+            setup_default_agent_and_params(user_id=user.id)
 
-            # Check if HTTP_PASSWORD exists for the user, if not, create it
-            http_password = get_signal_wire_param(user.id, agent_id, 'HTTP_PASSWORD')
-            if not http_password:
-                random_password = generate_random_password()
-                # Check and add HTTP_PASSWORD if it doesn't exist
-                if not get_signal_wire_param(user.id, agent_id, 'HTTP_PASSWORD'):
-                    new_param = AISignalWireParams(
-                        user_id=user.id,
-                        agent_id=agent_id,  # Use the new agent_id
-                        name='HTTP_PASSWORD',
-                        value=random_password
-                    )
-                    db.session.add(new_param)
-
-            # Check and add SPACE_NAME if it doesn't exist
-            if not get_signal_wire_param(user.id, agent_id, 'SPACE_NAME'):
-                new_param = AISignalWireParams(
-                    user_id=user.id,
-                    agent_id=agent_id,  # Use the new agent_id
-                    name='SPACE_NAME',
-                    value='subdomain.signalwire.com'  # Add appropriate default value if needed
-                )
-                db.session.add(new_param)
-
-            # Check and add AUTH_TOKEN if it doesn't exist
-            if not get_signal_wire_param(user.id, agent_id, 'AUTH_TOKEN'):
-                new_param = AISignalWireParams(
-                    user_id=user.id,
-                    agent_id=agent_id,  # Use the new agent_id
-                    name='AUTH_TOKEN',
-                    value='PTb4d1.....'  # Add appropriate default value if needed
-                )
-                db.session.add(new_param)
-
-            # Check and add PROJECT_ID if it doesn't exist
-            if not get_signal_wire_param(user.id, agent_id, 'PROJECT_ID'):
-                new_param = AISignalWireParams(
-                    user_id=user.id,
-                    agent_id=agent_id,  # Use the new agent_id
-                    name='PROJECT_ID',
-                    value='5f1c4418-.....'  # Add appropriate default value if needed
-                )
-                db.session.add(new_param)
-
-            db.session.commit()
 
             access_token = jwt.encode({
                 'user_id': user.id,
