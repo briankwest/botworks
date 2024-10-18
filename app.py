@@ -1903,6 +1903,30 @@ def search_datasphere(document_id):
     else:
         return jsonify({'error': 'An error occurred while searching the document'}), response.status_code
 
+@app.route('/datasphere/documents/<uuid:datasphere_id>', methods=['PATCH'])
+@login_required
+def update_datasphere(datasphere_id):
+    selected_agent_id = request.cookies.get('selectedAgentId')  
+    if not selected_agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
+    data = request.get_json()
+    space_name = get_signal_wire_param(current_user.id, selected_agent_id, 'SPACE_NAME')
+    project_id = get_signal_wire_param(current_user.id, selected_agent_id, 'PROJECT_ID')
+    auth_token = get_signal_wire_param(current_user.id, selected_agent_id, 'AUTH_TOKEN')
+    
+    url = f'https://{space_name}/api/datasphere/documents/{datasphere_id}'
+    headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    }
+    response = requests.patch(url, headers=headers, json=data, auth=(project_id, auth_token))
+    
+    if response.status_code == 200:
+        return jsonify(response.json()), 200
+    else:
+        return jsonify({'error': 'Failed to update datasphere'}), response.status_code
+
 # Update Datasphere route to use selected agent ID
 @app.route('/datasphere', methods=['GET'])
 @login_required
