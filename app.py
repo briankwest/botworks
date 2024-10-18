@@ -1138,13 +1138,13 @@ def generate_swml_response(user_id, agent_id, request_body):
         swml.add_aiswaigfunction({
             "function": "send_message",
             **({"active": False} if enable_message_inactive and enable_message_inactive.enabled else {}),
-            "purpose": "use to send text messages to a user",
+            "purpose": "use to send text a message to the user",
             "argument": {
                 "type": "object",
                 "properties": {
                     "message": {
                         "type": "string",
-                        "description": "the message to send to the user"
+                        "description": "the message to send via text message to the user"
                     },
                     "to": {
                         "type": "string",
