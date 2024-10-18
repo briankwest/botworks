@@ -96,6 +96,10 @@ if database_url and database_url.startswith('postgres://'):
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = os.environ.get('SQLALCHEMY_TRACK_MODIFICATIONS')
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
+app.config['REDIS_URL'] = os.environ.get('REDIS_URL')
+
+# Initialize the Redis client
+redis_client = redis.from_url(app.config['REDIS_URL'])
 
 # Explicitly set the static folder path (optional)
 app.static_folder = os.path.abspath('static')
@@ -1965,7 +1969,7 @@ def create_debuglog(user_id, agent_id):
     channel_name = f'debug_channel_{user_id}_{agent_id}'
 
     # Publish the data to the dynamic Redis channel
-    redis_client.publish(channel_name, data)
+    redis_client.publish(channel_name, json.dumps(data).encode('utf-8'))
 
     new_log = AIDebugLogs(
         user_id=user_id,
