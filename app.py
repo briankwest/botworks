@@ -1221,6 +1221,7 @@ def generate_swml_response(user_id, agent_id, request_body):
             "name": function.name,
             "purpose": function.purpose,
             "arguments": function_data["argument"],
+            **({"webhook_url": function.webhook_url} if function.webhook_url else {}),
             "required": [arg.name for arg in function_args if arg.required]
         }
         if not function.active:
