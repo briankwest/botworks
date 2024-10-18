@@ -344,9 +344,9 @@
             $('#queryDocumentModal').modal('show');
         });
 
-        // Live search in the query input
-        $('#queryInput').on('input', function() {
-            var query = $(this).val();
+        // Function to perform the query
+        function performQuery() {
+            var query = $('#queryInput').val();
             var docId = $('#queryDocumentModal').data('docId');
 
             // Collect additional query parameters
@@ -383,7 +383,13 @@
             } else {
                 $('#queryResults').empty();
             }
-        });
+        }
+
+        // Live search in the query input
+        $('#queryInput').on('input', performQuery);
+
+        // Re-run query when additional parameters change
+        $('#queryTags, #queryDistance, #queryCount, #queryLanguage, #queryPosToExpand, #queryMaxSynonyms').on('input change', performQuery);
     });
 </script>
 
