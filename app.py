@@ -1282,7 +1282,16 @@ def generate_swml_response(user_id, agent_id, request_body):
                 }]
             }
         })
-    
+
+    enable_tmdb_feature = get_feature(agent_id, 'ENABLE_TMDB')
+    if enable_tmdb_feature and enable_tmdb_feature.enabled:
+        swml.add_aiinclude({"url": enable_tmdb_feature.value,
+                            "functions": ["search_movie", "get_movie_details", "discover_movies",
+                                          "get_trending_movies", "get_movie_recommendations",
+                                          "get_genre_list", "get_upcoming_movies", "get_similar_movies",
+                                          "get_now_playing_movies", "multi_search"]
+                            })
+
     # Check if the ENABLE_TRANSFER feature is enabled for the agent
     enable_transfer_feature = get_feature(agent_id, 'ENABLE_TRANSFER')
 
