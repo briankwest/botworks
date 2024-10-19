@@ -1289,7 +1289,7 @@ def generate_swml_response(user_id, agent_id, request_body):
                             "functions": ["search_movie", "get_movie_details", "discover_movies",
                                           "get_trending_movies", "get_movie_recommendations",
                                           "get_genre_list", "get_upcoming_movies", "get_similar_movies",
-                                          "get_now_playing_movies", "multi_search"]
+                                          "get_now_playing_movies", "multi_search", "get_person_detail", "get_movie_credits"]
                             })
 
     # Check if the ENABLE_TRANSFER feature is enabled for the agent
