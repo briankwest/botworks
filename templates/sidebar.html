@@ -23,54 +23,108 @@
               <p>Dashboard</p>
             </a>
           </li>
+          <!-- Phone Numbers -->
+          <li class="nav-item">
+            <a href="{{ url_for('list_phone_numbers') }}" class="nav-link {{ 'active' if request.endpoint == 'list_phone_numbers' else '' }}">
+              <i class="nav-icon fas fa-phone"></i>
+              <p>Numbers</p>
+            </a>
+          </li>
           <!-- AI Agents -->
-          <li class="nav-item">
-            <a href="{{ url_for('agents') }}" class="nav-link {{ 'active' if request.endpoint == 'agents' else '' }}">
+          <li class="nav-item has-treeview {{ 'menu-open' if request.endpoint in ['agents', 'prompt', 'conversations', 'pronounce', 'language', 'hints', 'params', 'aifeatures', 'functions', 'swmlrequests', 'livedebug', 'debuglogs'] else '' }}">
+            <a href="#" class="nav-link {{ 'active' if request.endpoint in ['agents', 'prompt', 'conversations', 'pronounce', 'language', 'hints', 'params', 'aifeatures', 'functions', 'swmlrequests', 'livedebug', 'debuglogs'] else '' }}">
               <i class="nav-icon fas fa-robot"></i>
-              <p>AI Agents</p>
+              <p>
+                AI Agents
+                <i class="right fas fa-angle-left"></i>
+              </p>
             </a>
-          </li>
-          <!-- Prompt -->
-          <li class="nav-item">
-            <a href="{{ url_for('prompt') }}" class="nav-link {{ 'active' if request.endpoint == 'prompt' else '' }}">
-              <i class="nav-icon fas fa-edit"></i>
-              <p>Prompt</p>
-            </a>
-          </li>
-          <!-- Conversations -->
-          <li class="nav-item">
-            <a href="{{ url_for('conversations') }}" class="nav-link {{ 'active' if request.endpoint == 'conversations' else '' }}">
-              <i class="nav-icon fas fa-comments"></i>
-              <p>Conversations</p>
-            </a>
-          </li>
-          <!-- Pronounce -->
-          <li class="nav-item">
-            <a href="{{ url_for('pronounce') }}" class="nav-link {{ 'active' if request.endpoint == 'pronounce' else '' }}">
-              <i class="nav-icon fas fa-bullhorn"></i>
-              <p>Pronounce</p>
-            </a>
-          </li>
-          <!-- Language -->
-          <li class="nav-item">
-            <a href="{{ url_for('language') }}" class="nav-link {{ 'active' if request.endpoint == 'language' else '' }}">
-              <i class="nav-icon fas fa-language"></i>
-              <p>Language</p>
-            </a>
-          </li>
-          <!-- Hints -->
-          <li class="nav-item">
-            <a href="{{ url_for('hints') }}" class="nav-link {{ 'active' if request.endpoint == 'hints' else '' }}">
-              <i class="nav-icon fas fa-lightbulb"></i>
-              <p>Hints</p>
-            </a>
-          </li>
-          <!-- Parameters -->
-          <li class="nav-item">
-            <a href="{{ url_for('params') }}" class="nav-link {{ 'active' if request.endpoint == 'params' else '' }}">
-              <i class="nav-icon fas fa-sliders-h"></i>
-              <p>AI Parameters</p>
-            </a>
+            <ul class="nav nav-treeview ai-agents-indent">
+              <!-- AI Agents -->
+              <li class="nav-item">
+                <a href="{{ url_for('agents') }}" class="nav-link {{ 'active' if request.endpoint == 'agents' else '' }}">
+                  <i class="nav-icon fas fa-robot"></i>
+                  <p>Agents</p>
+                </a>
+              </li>
+              <!-- Prompt -->
+              <li class="nav-item">
+                <a href="{{ url_for('prompt') }}" class="nav-link {{ 'active' if request.endpoint == 'prompt' else '' }}">
+                  <i class="nav-icon fas fa-edit"></i>
+                  <p>Prompt</p>
+                </a>
+              </li>
+              <!-- Conversations -->
+              <li class="nav-item">
+                <a href="{{ url_for('conversations') }}" class="nav-link {{ 'active' if request.endpoint == 'conversations' else '' }}">
+                  <i class="nav-icon fas fa-comments"></i>
+                  <p>Conversations</p>
+                </a>
+              </li>
+              <!-- Pronounce -->
+              <li class="nav-item">
+                <a href="{{ url_for('pronounce') }}" class="nav-link {{ 'active' if request.endpoint == 'pronounce' else '' }}">
+                  <i class="nav-icon fas fa-bullhorn"></i>
+                  <p>Pronounce</p>
+                </a>
+              </li>
+              <!-- Language -->
+              <li class="nav-item">
+                <a href="{{ url_for('language') }}" class="nav-link {{ 'active' if request.endpoint == 'language' else '' }}">
+                  <i class="nav-icon fas fa-language"></i>
+                  <p>Language</p>
+                </a>
+              </li>
+              <!-- Hints -->
+              <li class="nav-item">
+                <a href="{{ url_for('hints') }}" class="nav-link {{ 'active' if request.endpoint == 'hints' else '' }}">
+                  <i class="nav-icon fas fa-lightbulb"></i>
+                  <p>Hints</p>
+                </a>
+              </li>
+              <!-- AI Parameters -->
+              <li class="nav-item">
+                <a href="{{ url_for('params') }}" class="nav-link {{ 'active' if request.endpoint == 'params' else '' }}">
+                  <i class="nav-icon fas fa-sliders-h"></i>
+                  <p>Parameters</p>
+                </a>
+              </li>
+              <!-- AI Features -->
+              <li class="nav-item">
+                <a href="{{ url_for('aifeatures') }}" class="nav-link {{ 'active' if request.endpoint == 'aifeatures' else '' }}">
+                  <i class="nav-icon fas fa-brain"></i>
+                  <p>Features</p>
+                </a>
+              </li>
+              <!-- SWAIG Functions -->
+              <li class="nav-item">
+                <a href="{{ url_for('functions') }}" class="nav-link {{ 'active' if request.endpoint == 'functions' else '' }}">
+                  <i class="nav-icon fas fa-code"></i>
+                  <p>SWAIG Functions</p>
+                </a>
+              </li>
+              <!-- SWML Requests -->
+              <li class="nav-item">
+                <a href="{{ url_for('swmlrequests') }}" class="nav-link {{ 'active' if request.endpoint == 'swmlrequests' else '' }}">
+                  <i class="nav-icon fas fa-file-alt"></i>
+                  <p>SWML Requests</p>
+                </a>
+              </li>
+              <!-- Live Debug -->
+              <li class="nav-item">
+                <a href="{{ url_for('livedebug') }}" class="nav-link {{ 'active' if request.endpoint == 'livedebug' else '' }}">
+                  <i class="nav-icon fas fa-bug"></i>
+                  <p>Live Debug</p>
+                </a>
+              </li>
+              <!-- Debug Logs -->
+              <li class="nav-item">
+                <a href="{{ url_for('debuglogs') }}" class="nav-link {{ 'active' if request.endpoint == 'debuglogs' else '' }}">
+                  <i class="nav-icon fas fa-bug"></i>
+                  <p>Debug Logs</p>
+                </a>
+              </li>
+            </ul>
           </li>
           <!-- SignalWire -->
           <li class="nav-item">
@@ -79,53 +133,11 @@
               <p>SignalWire</p>
             </a>
           </li>
-          <!-- Functions -->
-          <li class="nav-item">
-            <a href="{{ url_for('functions') }}" class="nav-link {{ 'active' if request.endpoint == 'functions' else '' }}">
-              <i class="nav-icon fas fa-code"></i>
-              <p>SWAIG Functions</p>
-            </a>
-          </li>
           <!-- DataSphere -->
           <li class="nav-item">
             <a href="{{ url_for('datasphere') }}" class="nav-link {{ 'active' if request.endpoint == 'datasphere' else '' }}">
               <i class="nav-icon fas fa-database"></i>
               <p>DataSphere</p>
-            </a>
-          </li>
-          <!-- SWML Requests -->
-          <li class="nav-item">
-            <a href="{{ url_for('swmlrequests') }}" class="nav-link {{ 'active' if request.endpoint == 'swmlrequests' else '' }}">
-              <i class="nav-icon fas fa-file-alt"></i>
-              <p>SWML Requests</p>
-            </a>
-          </li>
-          <!-- live debug -->
-          <li class="nav-item">
-            <a href="{{ url_for('livedebug') }}" class="nav-link {{ 'active' if request.endpoint == 'livedebug' else '' }}">
-              <i class="nav-icon fas fa-bug"></i>
-              <p>Live Debug</p>
-            </a>
-          </li>
-          <!-- Debug Logs -->
-          <li class="nav-item">
-            <a href="{{ url_for('debuglogs') }}" class="nav-link {{ 'active' if request.endpoint == 'debuglogs' else '' }}">
-              <i class="nav-icon fas fa-bug"></i>
-              <p>Debug Logs</p>
-            </a>
-          </li>
-          <!-- AI Features -->
-          <li class="nav-item">
-            <a href="{{ url_for('aifeatures') }}" class="nav-link {{ 'active' if request.endpoint == 'aifeatures' else '' }}">
-              <i class="nav-icon fas fa-brain"></i>
-              <p>AI Features</p>
-            </a>
-          </li>
-          <!-- Phone Numbers -->
-          <li class="nav-item">
-            <a href="{{ url_for('list_phone_numbers') }}" class="nav-link {{ 'active' if request.endpoint == 'list_phone_numbers' else '' }}">
-              <i class="nav-icon fas fa-phone"></i>
-              <p>Phone Numbers</p>
             </a>
           </li>
           <!-- Logout -->
