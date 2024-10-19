@@ -74,6 +74,10 @@ The `AIFeatures` model is used to manage feature flags for AI agents. These flag
 - **Value**: The format of the recording, which can be either `wav` or `mp3`.
 - **Enabled**: When set to `true`, the recording function is active. By default, recordings are made in stereo.
 
+### 15. ENABLE_TMDB
+- **Description**: Specifies the path to the SWAIG server running MovieBot.
+- **Value**: The URL path, e.g., `https://path/swaig`.
+- **Enabled**: When set to `true`, the TMDB functions are active.
 
 ## Usage
 
