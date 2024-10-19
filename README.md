@@ -34,30 +34,46 @@ The `AIFeatures` model is used to manage feature flags for AI agents. These flag
 - **Value**: The API key string.
 - **Enabled**: When set to `true`, the API key is considered valid and usable.
 
-### 7. ENABLE_WEATHER
+### 7. API_NINJAS_WEATHER
 - **Description**: Enables the functionality to fetch weather information for a specified city.
 - **Value**: Not applicable.
 - **Enabled**: When set to `true`, the `get_weather` function is active.
 
-### 8. ENABLE_JOKES
+### 8. API_NINJAS_JOKES
 - **Description**: Enables the functionality to fetch and tell jokes.
 - **Value**: Not applicable.
 - **Enabled**: When set to `true`, the `get_joke` function is active.
 
-### 9. ENABLE_TRIVIA
+### 9. API_NINJAS_TRIVIA
 - **Description**: Enables the functionality to fetch trivia questions.
 - **Value**: Not applicable.
 - **Enabled**: When set to `true`, the `get_trivia` function is active.
 
-### 10. DATA_SPHERE
+### 10. API_NINJAS_FACTS
+- **Description**: Enables the functionality to fetch random facts.
+- **Value**: Not applicable.
+- **Enabled**: When set to `true`, the `get_fact` function is active.
+
+### 11. API_NINJAS_QUOTES
+- **Description**: Enables the functionality to fetch and display quotes.
+- **Value**: Not applicable.
+- **Enabled**: When set to `true`, the `get_quote` function is active.
+
+### 12. API_NINJAS_COCKTAILS
+- **Description**: Enables the functionality to fetch cocktail recipes.
+- **Value**: Not applicable.
+- **Enabled**: When set to `true`, the `get_cocktail` function is active.
+
+### 13. DATA_SPHERE
 - **Description**: Enables the functionality to access and manage data within the Data Sphere environment.
 - **Value**: The document ID used to identify and access specific data within the Data Sphere.
 - **Enabled**: When set to `true`, the `data_sphere` function is active.
 
-### 11. ENABLE_RECORD
+### 14. ENABLE_RECORD
 - **Description**: Enables the functionality to record audio.
 - **Value**: The format of the recording, which can be either `wav` or `mp3`.
 - **Enabled**: When set to `true`, the recording function is active. By default, recordings are made in stereo.
+
 
 ## Usage
 

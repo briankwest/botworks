@@ -1350,8 +1350,8 @@ def generate_swml_response(user_id, agent_id, request_body):
 
     if api_ninjas_key:
         # Add weather function if enabled
-        enable_weather_feature = get_feature(agent_id, 'ENABLE_WEATHER')
-        if enable_weather_feature and enable_weather_feature.enabled:
+        api_ninjas_weather_feature = get_feature(agent_id, 'API_NINJAS_WEATHER')
+        if api_ninjas_weather_feature and api_ninjas_weather_feature.enabled:
             swml.add_aiswaigfunction({
                 "function": "get_weather",
                 "purpose": "latest weather information for any city",
@@ -1365,26 +1365,31 @@ def generate_swml_response(user_id, agent_id, request_body):
                         "state": {
                             "type": "string",
                             "description": "US state for United States cities only. Optional"
-                        }
-                    }
+                        },
+                        "country": {
+                            "type": "string",
+                            "description": "Country name. Optional"
+                        },
+                    },
                 },
                 "data_map": {
                     "webhooks": [{
-                        "url": f'https://api.api-ninjas.com/v1/weather?city=${{enc:args.city}}&state=${{enc:args.state}}',
+                        "url": f'https://api.api-ninjas.com/v1/weather?city=${{enc:args.city}}&state=${{enc:args.state}}&country=${{enc:args.country}}',
                         "method": "GET",
+                        "error_keys": "error",
                         "headers": {
                             "X-Api-Key": api_ninjas_key
                         },
                         "output": {
-                            "response": 'Be sure to say the temperature in Fahrenheit. The weather in ${input.args.city} ${temp}C, Humidity: ${humidity}%, High: ${max_temp}C, Low: ${min_temp}C Wind Direction: ${wind_degrees} (say cardinal direction), Clouds: ${cloud_pct}%, Feels Like: ${feels_like}C.'
+                            "response": 'Say the temperature in Fahrenheit. The weather in ${input.args.city} ${temp}C, Humidity: ${humidity}%, High: ${max_temp}C, Low: ${min_temp}C Wind Direction: ${wind_degrees} (say cardinal direction), Clouds: ${cloud_pct}%, Feels Like: ${feels_like}C.'
                         }
                     }]
                 }
             })
 
         # Add jokes function if enabled
-        enable_jokes_feature = get_feature(agent_id, 'ENABLE_JOKES')
-        if enable_jokes_feature and enable_jokes_feature.enabled:
+        api_ninjas_jokes_feature = get_feature(agent_id, 'API_NINJAS_JOKES')
+        if api_ninjas_jokes_feature and api_ninjas_jokes_feature.enabled:
             dj = SignalWireML(version="1.0.0")
             dj.add_application("main", "set", {"dad_joke": '${array[0].joke}'})
 
@@ -1404,6 +1409,7 @@ def generate_swml_response(user_id, agent_id, request_body):
                     "webhooks": [{
                         "url": f'https://api.api-ninjas.com/v1/${{args.type}}',
                         "method": "GET",
+                        "error_keys": "error",
                         "headers": {
                             "X-Api-Key": api_ninjas_key
                         },
@@ -1416,8 +1422,8 @@ def generate_swml_response(user_id, agent_id, request_body):
             })
 
         # Add trivia function if enabled
-        enable_trivia_feature = get_feature(agent_id, 'ENABLE_TRIVIA')
-        if enable_trivia_feature and enable_trivia_feature.enabled:
+        api_ninjas_trivia_feature = get_feature(agent_id, 'API_NINJAS_TRIVIA')
+        if api_ninjas_trivia_feature and api_ninjas_trivia_feature.enabled:
             swml.add_aiswaigfunction({
                 "function": "get_trivia",
                 "purpose": "get a trivia question",
@@ -1433,6 +1439,7 @@ def generate_swml_response(user_id, agent_id, request_body):
                     "webhooks": [{
                         "url": f'https://api.api-ninjas.com/v1/trivia?category=${{args.category}}',
                         "method": "GET",
+                        "error_keys": "error",
                         "headers": {
                             "X-Api-Key": api_ninjas_key
                         },
@@ -1442,6 +1449,103 @@ def generate_swml_response(user_id, agent_id, request_body):
                     }]
                 }
             })
+
+        # Add facts function if enabled
+        api_ninjas_facts_feature = get_feature(agent_id, 'API_NINJAS_FACTS')
+        if api_ninjas_facts_feature and api_ninjas_facts_feature.enabled:
+            swml.add_aiswaigfunction({
+                "function": "get_fact",
+                "purpose": "provide a random interesting fact",
+                "data_map": {
+                    "webhooks": [{
+                        "url": f'https://api.api-ninjas.com/v1/facts',
+                        "method": "GET",
+                        "error_keys": "error",
+                        "headers": {
+                            "X-Api-Key": api_ninjas_key
+                        },
+                        "output": {
+                            "response": 'Here is a fact for you: ${array[0].fact}'
+                        }
+                    }]
+                }
+            })
+
+        # Add quotes function if enabled
+        api_ninjas_quotes_feature = get_feature(agent_id, 'API_NINJAS_QUOTES')
+        if api_ninjas_quotes_feature and api_ninjas_quotes_feature.enabled:
+            swml.add_aiswaigfunction({
+                "function": "get_quote",
+                "purpose": "provide a random quote",
+                "argument": {
+                    "type": "object",
+                    "properties": {
+                        "category": {
+                            "type": "string",
+                            "description": (
+                                "Category of the quote. Optional. "
+                                "Possible values include: age, alone, amazing, anger, architecture, art, attitude, "
+                                "beauty, best, birthday, business, car, change, communications, computers, cool, courage, "
+                                "dad, dating, death, design, dreams, education, environmental, equality, experience, "
+                                "failure, faith, family, famous, fear, fitness, food, forgiveness, freedom, friendship, "
+                                "funny, future, god, good, government, graduation, great, happiness, health, history, "
+                                "home, hope, humor, imagination, inspirational, intelligence, jealousy, knowledge, "
+                                "leadership, learning, legal, life, love, marriage, medical, men, mom, money, morning, "
+                                "movies, success, motivational, music, nature, parenting, patience, peace, pet, poetry, "
+                                "politics, power, relationship, religion, respect, science, smile, society, sports, "
+                                "strength, success, technology, time, travel, trust, truth, war, wisdom, work."
+                            )
+                        }
+                    }
+                },
+                "data_map": {
+                    "webhooks": [{
+                        "url": f'https://api.api-ninjas.com/v1/quotes?category=${{args.category}}',
+                        "method": "GET",
+                        "error_keys": "error",
+                        "headers": {
+                            "X-Api-Key": api_ninjas_key
+                        },
+                        "output": {
+                            "response": 'Here is a quote for you: "${array[0].quote}" - ${array[0].author}'
+                        }
+                    }]
+                }
+            })
+            
+        # Check if the API_NINJAS_COCKTAILS feature is enabled for the agent
+        api_ninjas_cocktails_feature = get_feature(agent_id, 'API_NINJAS_COCKTAILS')
+        if api_ninjas_cocktails_feature and api_ninjas_cocktails_feature.enabled:
+            swml.add_aiswaigfunction({
+                "function": "get_cocktail",
+                "purpose": "fetch cocktail recipes by name or ingredients",
+                "argument": {
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "description": "Name of the cocktail. Optional."
+                        },
+                        "ingredients": {
+                            "type": "string",
+                            "description": "Ingredients to search for in cocktails. Optional."
+                        }
+                    }
+                },
+                "data_map": {
+                    "webhooks": [{
+                        "url": f'https://api.api-ninjas.com/v1/cocktail?name=${{enc:args.name}}&ingredients=${{enc:args.ingredients}}',
+                        "method": "GET",
+                        "headers": {
+                            "X-Api-Key": api_ninjas_key
+                        },
+                        "output": {
+                            "response": 'Here is a cocktail recipe for you: ${array[0].name}. Ingredients: ${array[0].ingredients[0]}, ${array[0].ingredients[1]}, ${array[0].ingredients[2]}, ${array[0].ingredients[3]}, ${array[0].ingredients[4]}, ${array[0].ingredients[5]}, ${array[0].ingredients[6]}, ${array[0].ingredients[7]}, ${array[0].ingredients[8]}, ${array[0].ingredients[9]}, ${array[0].ingredients[10]}. Instructions: ${array[0].instructions}.'
+                        }
+                    }]
+                }
+            })
+
 
     # Check if the ENABLE_DATASPHERE feature is enabled for the agent
     enable_datasphere_feature = get_feature(agent_id, 'ENABLE_DATASPHERE')
