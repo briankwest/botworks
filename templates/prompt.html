@@ -82,9 +82,9 @@
                   <label for="newPromptType">Prompt Type</label>
                   <select class="form-control" id="newPromptType" name="prompt_type" required>
                     <option value="">Select a type</option>
-                    {% for type in ['prompt', 'post_prompt', 'outbound_prompt', 'outbound_post_prompt'] %}
-                      {% if type not in existing_prompt_types %}
-                        <option value="{{ type }}">{{ type }}</option>
+                    {% for display, value in [('Prompt', 'prompt'), ('Post Prompt', 'post_prompt'), ('Outbound Prompt', 'outbound_prompt'), ('Outbound Post Prompt', 'outbound_post_prompt')] %}
+                      {% if value not in existing_prompt_types %}
+                        <option value="{{ value }}">{{ display }}</option> <!-- Display capitalized text -->
                       {% endif %}
                     {% endfor %}
                   </select>
@@ -145,8 +145,8 @@
                     <div class="form-group">
                       <label for="editPromptType">Prompt Type</label>
                       <select class="form-control" id="editPromptType" name="prompt_type" required>
-                        {% for type in ['prompt', 'post_prompt', 'outbound_prompt', 'outbound_post_prompt'] %}
-                          <option value="{{ type }}">{{ type }}</option>
+                        {% for display, value in [('Prompt', 'prompt'), ('Post Prompt', 'post_prompt'), ('Outbound Prompt', 'outbound_prompt'), ('Outbound Post Prompt', 'outbound_post_prompt')] %}
+                          <option value="{{ value }}">{{ display }}</option> <!-- Display capitalized text -->
                         {% endfor %}
                       </select>
                     </div>
@@ -240,15 +240,28 @@
           'Accept': 'application/json'
         },
         success: function(data) {
-          // Ensure data is an array
           const prompts = Array.isArray(data) ? data : [data];
+
+          // Extract existing prompt types
+          const existingPromptTypes = prompts.map(prompt => prompt.prompt_type);
 
           // Initialize DataTable with fetched data
           $('#promptTable').DataTable({
             data: prompts,
             columns: [
               { data: 'id' }, // New column for ID
-              { data: 'prompt_type' },
+              {
+                data: 'prompt_type',
+                render: function(data, type, row) {
+                  const typeMap = {
+                    'prompt': 'Prompt',
+                    'post_prompt': 'Post Prompt',
+                    'outbound_prompt': 'Outbound Prompt',
+                    'outbound_post_prompt': 'Outbound Post Prompt'
+                  };
+                  return typeMap[data] || data; // Default to original value if not found
+                }
+              },
               { data: 'top_p' },
               { data: 'temperature' },
               { data: 'max_tokens' },
@@ -268,6 +281,22 @@
             "lengthChange": true,
             "searching": true,
             "info": true
+          });
+
+          // Update the options in the "Add New Prompt" form
+          const promptTypeSelect = $('#newPromptType');
+          promptTypeSelect.empty(); // Clear existing options
+          const allPromptTypes = [
+            { display: 'Prompt', value: 'prompt' },
+            { display: 'Post Prompt', value: 'post_prompt' },
+            { display: 'Outbound Prompt', value: 'outbound_prompt' },
+            { display: 'Outbound Post Prompt', value: 'outbound_post_prompt' }
+          ];
+
+          allPromptTypes.forEach(type => {
+            if (!existingPromptTypes.includes(type.value)) {
+              promptTypeSelect.append(new Option(type.display, type.value));
+            }
           });
 
           // Handle edit button click
