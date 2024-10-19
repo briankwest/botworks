@@ -119,6 +119,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 app.config['REDIS_URL'] = os.environ.get('REDIS_URL')
 app.config['ACCESS_SECRET_KEY'] = os.environ.get('ACCESS_SECRET_KEY')
 app.config['REFRESH_SECRET_KEY'] = os.environ.get('REFRESH_SECRET_KEY')
+app.config['MAX_CONTENT_LENGTH'] = 128 * 1024 * 1024  # 128 MB
 
 # Initialize the Redis client
 redis_client = redis.from_url(app.config['REDIS_URL'])
