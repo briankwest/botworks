@@ -149,7 +149,11 @@
 
       window.copyToClipboard = async function(value) {
         try {
-          await navigator.clipboard.writeText(JSON.stringify(value, null, 2));
+          // Parse the JSON string to ensure it's not escaped
+          const parsedValue = JSON.parse(value);
+          const formattedValue = JSON.stringify(parsedValue, null, 2);
+
+          await navigator.clipboard.writeText(formattedValue);
           const Toast = Swal.mixin({
             toast: true,
             position: 'top-end',
