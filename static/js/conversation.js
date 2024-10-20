@@ -174,11 +174,13 @@ document.addEventListener("DOMContentLoaded", function() {
             { key: 'Total ASR Cost Factor', value: data.total_asr_cost_factor },
             { key: 'Total ASR Minutes', value: data.total_asr_minutes },
             { key: 'Total Minutes', value: data.total_minutes },
+            { key: 'Total TTS Chars', value: data.total_tts_chars },
             { key: 'Total TTS Chars Per Minute', value: data.total_tts_chars_per_min },
             { key: 'Total Wire Input Tokens', value: data.total_wire_input_tokens },
-            { key: 'Total Wire Output Tokens', value: data.total_wire_output_tokens },
             { key: 'Total Wire Input Tokens Per Minute', value: data.total_wire_input_tokens_per_minute },
+            { key: 'Total Wire Output Tokens', value: data.total_wire_output_tokens },
             { key: 'Total Wire Output Tokens Per Minute', value: data.total_wire_output_tokens_per_minute },
+            { key: 'Version', value: data.version }
         ];
 
         additionalFields.forEach(field => {
