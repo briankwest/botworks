@@ -1,0 +1,304 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Includes{% endblock %}
+
+{% block content %}
+  <!-- Navbar -->
+  {% include 'navbar.html' %}
+  <!-- /.navbar -->
+
+  <!-- Main Sidebar Container -->
+  {% include 'sidebar.html' %}
+  
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-6">
+                    <h1 class="m-0">AI Includes</h1>
+                </div>
+            </div>
+        </div><!-- /.container-fluid -->
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-primary">
+                            <h3 class="card-title">Includes</h3>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body table-responsive">
+                            <table id="includesTable" class="table table-striped w-100">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th>Enabled</th>
+                                        <th>Created At</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Data will be populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+
+            <!-- Add Include Card -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-success">
+                            <h3 class="card-title">Add New Include</h3>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <form id="addIncludeForm">
+                                <div class="form-group">
+                                    <label for="includeUrl">URL</label>
+                                    <input type="text" class="form-control" id="includeUrl" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="includeFunctions">Functions</label>
+                                    <textarea class="form-control" id="includeFunctions"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-success">Add Include</button>
+                            </form>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+        </div>
+        <!-- /.container-fluid -->
+    </section>
+    <!-- /.content -->
+  </div>
+  <!-- /.content-wrapper -->
+  <!-- Footer -->
+  {% include 'footer.html' %}
+  <!-- /.footer -->
+{% endblock %}
+
+{% block scripts %}
+  <!-- Add DataTables CSS and JS -->
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
+  <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
+
+  <script>
+    $(document).ready(function() {
+      var selectedAgentId = getCookie('selectedAgentId'); // Retrieve the selected agent ID from cookies
+
+      initializeIncludesTable(selectedAgentId);
+
+      // Add Include Form Submission
+      $('#addIncludeForm').on('submit', function(e) {
+        e.preventDefault();
+        const url = $('#includeUrl').val(); // Only URL field
+        const functions = $('#includeFunctions').val(); // Only Functions field
+
+        $.ajax({
+          url: `/includes/${selectedAgentId}`,
+          type: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify({ url, functions }), // Only include these fields
+          success: function() {
+            $('#includesTable').DataTable().ajax.reload();
+            $('#addIncludeForm')[0].reset();
+            Swal.fire('Success!', 'Include added successfully.', 'success');
+          },
+          error: function() {
+            Swal.fire('Error!', 'There was an error adding the include.', 'error');
+          }
+        });
+      });
+
+      // Edit Include Modal
+      $(document).on('click', '.edit-btn', function() {
+        const includeId = $(this).data('id');
+        // Fetch include data and populate modal fields
+        $.get(`/includes/${selectedAgentId}/${includeId}`, function(data) { // Use selectedAgentId
+          $('#editIncludeId').val(data.id);
+          $('#editIncludeUrl').val(data.url);
+          $('#editIncludeFunctions').val(data.functions);
+          $('#editIncludeModal').modal('show');
+        });
+      });
+
+      // Edit Include Form Submission
+      $('#editIncludeForm').on('submit', function(e) {
+        e.preventDefault();
+        const id = $('#editIncludeId').val();
+        const url = $('#editIncludeUrl').val();
+        const functions = $('#editIncludeFunctions').val();
+
+        $.ajax({
+          url: `/includes/${selectedAgentId}/${id}`, // Use selectedAgentId
+          type: 'PUT',
+          contentType: 'application/json',
+          data: JSON.stringify({ name, type, enabled }),
+          success: function() {
+            $('#includesTable').DataTable().ajax.reload();
+            $('#editIncludeModal').modal('hide');
+            Swal.fire('Success!', 'Include updated successfully.', 'success');
+          },
+          error: function() {
+            Swal.fire('Error!', 'There was an error updating the include.', 'error');
+          }
+        });
+      });
+    });
+    $('#editIncludeForm').on('submit', function(e) {
+        e.preventDefault();
+        const id = $('#editIncludeId').val();
+        const url = $('#editIncludeUrl').val();
+        const functions = $('#editIncludeFunctions').val();
+
+        $.ajax({
+          url: `/includes/${selectedAgentId}/${id}`, // Use selectedAgentId
+          type: 'PUT',
+          contentType: 'application/json',
+          data: JSON.stringify({ url, functions }), // Only include these fields
+          success: function() {
+            $('#includesTable').DataTable().ajax.reload();
+            $('#editIncludeModal').modal('hide');
+            Swal.fire('Success!', 'Include updated successfully.', 'success');
+          },
+          error: function() {
+            Swal.fire('Error!', 'There was an error updating the include.', 'error');
+          }
+        });
+      });
+
+    function initializeIncludesTable(agentId) {
+      if ($.fn.DataTable) {
+        $('#includesTable').DataTable({
+          "ajax": {
+            "url": `/includes/${agentId}`, // Use agentId
+            "dataSrc": "",
+            "headers": {
+              "Accept": "application/json"
+            },
+            "dataFilter": function(data) {
+              console.log("AJAX Response:", data); // Log the response for debugging
+              return data;
+            }
+          },
+          "order": [[3, 'desc']], // Order by 'created_at' field
+          "columns": [
+            { "data": "id" },
+            { "data": "name" },
+            { "data": "type" },
+            { "data": "enabled",
+              "render": function(data, type, row) {
+                return data ? 'Yes' : 'No';
+              }
+            },
+            { "data": "created",
+              "render": function(data, type, row) {
+                return new Date(data).toLocaleString();
+              }
+            },
+            { "data": null,
+              "render": function(data, type, row) {
+                return `
+                  <button class="btn btn-primary edit-btn" data-id="${row.id}">Edit</button>
+                  <button class="btn btn-danger delete-btn" data-id="${row.id}">Delete</button>
+                `;
+              }
+            }
+          ],
+          "pageLength": 10,
+          "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+          "responsive": true,
+          "autoWidth": false
+        });
+      } else {
+        console.error('DataTables is not loaded. Make sure you have included the DataTables library.');
+      }
+
+      $(document).on('click', '.delete-btn', function() {
+        const includeId = $(this).data('id');
+        Swal.fire({
+          title: 'Are you sure?',
+          text: "You won't be able to revert this!",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            $.ajax({
+              url: `/includes/${agentId}/${includeId}`, // Use agentId
+              type: 'DELETE',
+              success: function() {
+                $('#includesTable').DataTable().ajax.reload();
+                Swal.fire(
+                  'Deleted!',
+                  'The include has been deleted.',
+                  'success'
+                );
+              },
+              error: function() {
+                Swal.fire(
+                  'Error!',
+                  'There was an error deleting the include.',
+                  'error'
+                );
+              }
+            });
+          }
+        });
+      });
+    }
+  </script>
+
+  <!-- Edit Include Modal -->
+  <div class="modal fade" id="editIncludeModal" tabindex="-1" role="dialog" aria-labelledby="editIncludeModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editIncludeModalLabel">Edit Include</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="editIncludeForm">
+            <input type="hidden" id="editIncludeId">
+            <div class="form-group">
+              <label for="editIncludeName">Name</label>
+              <input type="text" class="form-control" id="editIncludeName" required disabled>
+            </div>
+            <div class="form-group">
+              <label for="editIncludeType">Type</label>
+              <input type="text" class="form-control" id="editIncludeType">
+            </div>
+            <div class="form-group">
+              <label for="editIncludeEnabled">Enabled</label>
+              <input type="checkbox" id="editIncludeEnabled">
+            </div>
+            <button type="submit" class="btn btn-primary">Save changes</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

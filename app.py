@@ -429,6 +429,20 @@ class AIUser(UserMixin, db.Model):
 
     def __repr__(self):
         return f'<AIUser {self.username}>'
+    
+class AIIncludes(db.Model):
+    __tablename__ = 'ai_includes'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
+    url = db.Column(db.String(255), nullable=False)
+    functions = db.Column(db.JSON, nullable=True)
+
+    user = db.relationship('AIUser', backref=db.backref('ai_includes', lazy=True))
+    agent = db.relationship('AIAgent', backref=db.backref('ai_includes', lazy=True))
+
+    def __repr__(self):
+        return f'<AIIncludes {self.url}>'
 
 def setup_default_agent_and_params(user_id):
     """Set up a default agent and necessary parameters for a user."""
@@ -2893,6 +2907,83 @@ def release_phone_number(phone_number_id):
         return jsonify({'message': 'Phone number released successfully'}), 204
     else:
         return jsonify({'error': 'Failed to release phone number'}), response.status_code
+
+# Create or update an include
+@app.route('/includes/<int:agent_id>', methods=['POST'])
+@login_required
+def create_or_update_include(agent_id):
+    data = request.get_json()
+    name = data.get('name')
+    type = data.get('type')
+    enabled = data.get('enabled', False)
+
+    # Check if an entry already exists for this user and name
+    include_entry = AIIncludes.query.filter_by(user_id=current_user.id, name=name, agent_id=agent_id).first()
+
+    if include_entry:
+        # Update existing entry
+        include_entry.type = type
+        include_entry.enabled = enabled
+    else:
+        # Create new entry
+        include_entry = AIIncludes(user_id=current_user.id, name=name, type=type, enabled=enabled, agent_id=agent_id)
+        db.session.add(include_entry)
+
+    db.session.commit()
+    return jsonify({'message': 'Include entry saved successfully'}), 200
+
+# Get all includes for an agent
+@app.route('/includes/<int:agent_id>', methods=['GET'])
+@login_required
+def get_includes_agent(agent_id):
+    includes_entries = AIIncludes.query.filter_by(user_id=current_user.id, agent_id=agent_id).all()
+    return jsonify([{
+        'id': entry.id,
+        'name': entry.name,
+        'type': entry.type,
+        'enabled': entry.enabled,
+        'created': entry.created
+    } for entry in includes_entries]), 200
+
+# Get a specific include by ID
+@app.route('/includes/<int:agent_id>/<int:include_id>', methods=['GET'])
+@login_required
+def get_include_agent(agent_id, include_id):
+    include_entry = AIIncludes.query.filter_by(id=include_id, user_id=current_user.id, agent_id=agent_id).first_or_404()
+    return jsonify({
+        'id': include_entry.id,
+        'name': include_entry.name,
+        'type': include_entry.type,
+        'enabled': include_entry.enabled,
+        'created': include_entry.created
+    }), 200
+
+# Update an include
+@app.route('/includes/<int:agent_id>/<int:include_id>', methods=['PUT'])
+@login_required
+def update_include(agent_id, include_id):
+    include_entry = AIIncludes.query.filter_by(id=include_id, user_id=current_user.id, agent_id=agent_id).first_or_404()
+    data = request.get_json()
+    include_entry.name = data.get('name', include_entry.name)
+    include_entry.type = data.get('type', include_entry.type)
+    include_entry.enabled = data.get('enabled', include_entry.enabled)
+    db.session.commit()
+    return jsonify({'message': 'Include updated successfully'}), 200
+
+# Delete an include
+@app.route('/includes/<int:agent_id>/<int:include_id>', methods=['DELETE'])
+@login_required
+def delete_include(agent_id, include_id):
+    include_entry = AIIncludes.query.filter_by(id=include_id, user_id=current_user.id, agent_id=agent_id).first_or_404()
+    db.session.delete(include_entry)
+    db.session.commit()
+    return jsonify({'message': 'Include deleted successfully'}), 200
+
+@app.route('/includes', methods=['GET'])
+@login_required
+def get_includes():
+    return render_template('includes.html')
+
 
 # Run the app
 if __name__ == '__main__':
