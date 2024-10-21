@@ -1304,7 +1304,7 @@ def generate_swml_response(user_id, agent_id, request_body):
     for ai_include in ai_includes:
         swml.add_aiinclude({
             "url": ai_include.url,
-            "function": json.loads(ai_include.functions)
+            "functions": json.loads(ai_include.functions)
         })
 
     # Check if the ENABLE_TRANSFER feature is enabled for the agent
