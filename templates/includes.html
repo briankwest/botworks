@@ -270,7 +270,16 @@
           success: function() {
             $('#includesTable').DataTable().ajax.reload();
             $('#addIncludeForm')[0].reset();
-            Swal.fire('Success!', 'Include added successfully.', 'success');
+            Swal.fire({
+              title: 'Success!',
+              text: 'Include added successfully.',
+              icon: 'success',
+              toast: true, // Enable toast
+              position: 'top-end', // Position in the upper right
+              showConfirmButton: false, // Hide the confirm button
+              timer: 3000, // Auto close after 3 seconds
+              timerProgressBar: true // Show a progress bar
+            });
             swaigTable.clear().draw(); 
 
             $('#addIncludeForm button[type="submit"]').text('Add Include');
@@ -484,6 +493,9 @@
 
   
 {% endblock %}
+
+
+
 
 
 
