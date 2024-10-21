@@ -1295,7 +1295,8 @@ def generate_swml_response(user_id, agent_id, request_body):
                 "process_payment", 
                 "handle_multi_city_itinerary", 
                 "save_search", 
-                "send_notification"
+                "send_notification",
+                "list_user_tickets"
             ]
         })
 
