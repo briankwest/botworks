@@ -1298,6 +1298,8 @@ def generate_swml_response(user_id, agent_id, request_body):
             }
         })
 
+    # Fetch all includes from the AIIncludes model
+    ai_includes = AIIncludes.query.filter_by(user_id=user_id, agent_id=agent_id).all()
     # Iterate over each function and add it to the SWML
     for ai_include in ai_includes:
         swml.add_aiinclude({
