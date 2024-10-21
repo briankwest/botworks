@@ -1302,10 +1302,25 @@ def generate_swml_response(user_id, agent_id, request_body):
     ai_includes = AIIncludes.query.filter_by(user_id=user_id, agent_id=agent_id).all()
     # Iterate over each function and add it to the SWML
     for ai_include in ai_includes:
-        swml.add_aiinclude({
+        from urllib.parse import urlparse
+
+        # Parse the URL to extract username and password
+        parsed_url = urlparse(ai_include.url)
+        username = parsed_url.username
+        password = parsed_url.password
+
+        # Prepare the function dictionary
+        function_dict = {
             "url": ai_include.url,
             "functions": json.loads(ai_include.functions)
-        })
+        }
+
+        # Add user and pass args if they exist
+        if username and password:
+            function_dict["user"] = username
+            function_dict["pass"] = password
+
+        swml.add_aiinclude(function_dict)
 
     # Check if the ENABLE_TRANSFER feature is enabled for the agent
     enable_transfer_feature = get_feature(agent_id, 'ENABLE_TRANSFER')
