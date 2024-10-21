@@ -31,8 +31,8 @@
             </a>
           </li>
           <!-- AI Agents -->
-          <li class="nav-item has-treeview {{ 'menu-open' if request.endpoint in ['agents', 'prompt', 'conversations', 'conversation', 'pronounce', 'language', 'hints', 'params', 'aifeatures', 'functions', 'swmlrequests', 'livedebug', 'debuglogs'] else '' }}">
-            <a href="#" class="nav-link {{ 'active' if request.endpoint in ['agents', 'prompt', 'conversations', 'conversation', 'pronounce', 'language', 'hints', 'params', 'aifeatures', 'functions', 'swmlrequests', 'livedebug', 'debuglogs'] else '' }}">
+          <li class="nav-item has-treeview {{ 'menu-open' if request.endpoint in ['agents', 'prompt', 'conversations', 'conversation', 'pronounce', 'language', 'hints', 'params', 'includes', 'aifeatures', 'functions', 'swmlrequests', 'livedebug', 'debuglogs'] else '' }}">
+            <a href="#" class="nav-link {{ 'active' if request.endpoint in ['agents', 'prompt', 'conversations', 'conversation', 'pronounce', 'language', 'hints', 'params', 'includes', 'aifeatures', 'functions', 'swmlrequests', 'livedebug', 'debuglogs'] else '' }}">
               <i class="nav-icon fas fa-robot"></i>
               <p>
                 AI Agents
@@ -91,7 +91,7 @@
               </li>
               <!-- AI Includes -->
               <li class="nav-item">
-                <a href="{{ url_for('get_includes') }}" class="nav-link {{ 'active' if request.endpoint == 'includes' else '' }}">
+                <a href="{{ url_for('includes') }}" class="nav-link {{ 'active' if request.endpoint == 'includes' else '' }}">
                   <i class="nav-icon fas fa-code"></i>
                   <p>Includes</p>
                 </a>

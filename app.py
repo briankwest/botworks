@@ -2953,7 +2953,7 @@ def get_includes_post():
 
 @app.route('/includes', methods=['GET'])
 @login_required
-def get_includes():
+def includes():
     return render_template('includes.html', user=current_user)
 
 
