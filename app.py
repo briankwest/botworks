@@ -1313,31 +1313,15 @@ def generate_swml_response(user_id, agent_id, request_body):
                 "list_user_tickets"
             ]
         })
+    # Fetch all functions from the AIFunctions model
+    ai_includes = AIIncludes.query.filter_by(user_id=user_id, agent_id=agent_id).all()
 
-    # Check if the ENABLE_ZENDESK feature is enabled for the agent
-    enable_zendesk_feature = get_feature(agent_id, 'ENABLE_ZENDESK')
-    if enable_zendesk_feature and enable_zendesk_feature.enabled:
-        swml.add_aiinclude({
-            "url": enable_zendesk_feature.value,
-            "functions": [
-                "create_ticket",
-                "update_ticket",
-                "close_ticket",
-                "add_comment",
-                "get_ticket",
-                "verify_support_pin"
-            ]
+    # Iterate over each function and add it to the SWML
+    for ai_include in ai_includes:
+        swml.add_aiswaigfunction({
+            "url": ai_include.url,
+            "function": json.loads(ai_include.functions)
         })
-
-    # Check if the ENABLE_TMDB feature is enabled for the agent 
-    enable_tmdb_feature = get_feature(agent_id, 'ENABLE_TMDB')
-    if enable_tmdb_feature and enable_tmdb_feature.enabled:
-        swml.add_aiinclude({"url": enable_tmdb_feature.value,
-                            "functions": ["search_movie", "get_movie_details", "discover_movies",
-                                          "get_trending_movies", "get_movie_recommendations",
-                                          "get_genre_list", "get_upcoming_movies", "get_similar_movies",
-                                          "get_now_playing_movies", "multi_search", "get_person_details", "get_movie_credits"]
-                            })
 
     # Check if the ENABLE_TRANSFER feature is enabled for the agent
     enable_transfer_feature = get_feature(agent_id, 'ENABLE_TRANSFER')
@@ -2886,8 +2870,6 @@ def release_phone_number(phone_number_id):
     project_id = get_signal_wire_param(current_user.id, selected_agent_id, 'PROJECT_ID')
     auth_token = get_signal_wire_param(current_user.id, selected_agent_id, 'AUTH_TOKEN')
 
-    
-
     # Construct the API URL
     encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
     url = f'https://{space_name}/api/relay/rest/phone_numbers/{phone_number_id}'
@@ -2913,24 +2895,23 @@ def release_phone_number(phone_number_id):
 @login_required
 def create_or_update_include(agent_id):
     data = request.get_json()
-    name = data.get('name')
-    type = data.get('type')
-    enabled = data.get('enabled', False)
+    url = data.get('url')
+    functions = data.get('functions', [])
 
-    # Check if an entry already exists for this user and name
-    include_entry = AIIncludes.query.filter_by(user_id=current_user.id, name=name, agent_id=agent_id).first()
+    # Check if an entry already exists for this user and URL
+    include_entry = AIIncludes.query.filter_by(user_id=current_user.id, url=url, agent_id=agent_id).first()
 
     if include_entry:
         # Update existing entry
-        include_entry.type = type
-        include_entry.enabled = enabled
+        include_entry.functions = functions
     else:
         # Create new entry
-        include_entry = AIIncludes(user_id=current_user.id, name=name, type=type, enabled=enabled, agent_id=agent_id)
+        include_entry = AIIncludes(user_id=current_user.id, url=url, functions=functions, agent_id=agent_id)
         db.session.add(include_entry)
 
     db.session.commit()
     return jsonify({'message': 'Include entry saved successfully'}), 200
+
 
 # Get all includes for an agent
 @app.route('/includes/<int:agent_id>', methods=['GET'])
@@ -2939,10 +2920,8 @@ def get_includes_agent(agent_id):
     includes_entries = AIIncludes.query.filter_by(user_id=current_user.id, agent_id=agent_id).all()
     return jsonify([{
         'id': entry.id,
-        'name': entry.name,
-        'type': entry.type,
-        'enabled': entry.enabled,
-        'created': entry.created
+        'url': entry.url,
+        'functions': entry.functions
     } for entry in includes_entries]), 200
 
 # Get a specific include by ID
@@ -2952,10 +2931,8 @@ def get_include_agent(agent_id, include_id):
     include_entry = AIIncludes.query.filter_by(id=include_id, user_id=current_user.id, agent_id=agent_id).first_or_404()
     return jsonify({
         'id': include_entry.id,
-        'name': include_entry.name,
-        'type': include_entry.type,
-        'enabled': include_entry.enabled,
-        'created': include_entry.created
+        'url': include_entry.url,
+        'functions': include_entry.functions
     }), 200
 
 # Update an include
@@ -2964,9 +2941,8 @@ def get_include_agent(agent_id, include_id):
 def update_include(agent_id, include_id):
     include_entry = AIIncludes.query.filter_by(id=include_id, user_id=current_user.id, agent_id=agent_id).first_or_404()
     data = request.get_json()
-    include_entry.name = data.get('name', include_entry.name)
-    include_entry.type = data.get('type', include_entry.type)
-    include_entry.enabled = data.get('enabled', include_entry.enabled)
+    include_entry.url = data.get('url', include_entry.url)
+    include_entry.functions = data.get('functions', include_entry.functions)
     db.session.commit()
     return jsonify({'message': 'Include updated successfully'}), 200
 
@@ -2979,10 +2955,44 @@ def delete_include(agent_id, include_id):
     db.session.commit()
     return jsonify({'message': 'Include deleted successfully'}), 200
 
+@app.route('/includes', methods=['POST'])
+@login_required
+def get_includes_post():
+    if request.headers.get('Accept') == 'application/json':
+        url = request.get_json().get('url')
+        if not url:
+            return jsonify({'error': 'URL parameter is required'}), 400
+        swaig_response = get_swaig_includes(url)
+        return jsonify(swaig_response), 200
+    else:
+        return jsonify({'error': 'Accept header must be application/json'}), 400
+
 @app.route('/includes', methods=['GET'])
 @login_required
 def get_includes():
-    return render_template('includes.html')
+    return render_template('includes.html', user=current_user)
+
+
+def get_swaig_includes(url):
+    parsed_url = urlparse(url)
+    username = parsed_url.username
+    password = parsed_url.password
+
+    headers = {
+        'Accept': 'application/json'
+    }
+    if username and password:
+        headers['Authorization'] = f'Basic {base64.b64encode(f"{username}:{password}".encode()).decode()}'
+
+    payload = {
+        "functions": [],
+        "action": "get_signature",
+        "version": "2.0",
+        "content_type": "text/swaig"
+    }
+    response = requests.post(url, json=payload, headers=headers)
+    print(response.json())  
+    return response.json()
 
 
 # Run the app
