@@ -1298,27 +1298,9 @@ def generate_swml_response(user_id, agent_id, request_body):
             }
         })
 
-    # Check if the ENABLE_AMEDAUS feature is enabled for the agent
-    enable_amedaous_feature = get_feature(agent_id, 'ENABLE_AMEDAUS')
-    if enable_amedaous_feature and enable_amedaous_feature.enabled:
-        swml.add_aiinclude({
-            "url": enable_amedaous_feature.value,
-            "functions": [
-                "search_flights", 
-                "book_flight", 
-                "process_payment", 
-                "handle_multi_city_itinerary", 
-                "save_search", 
-                "send_notification",
-                "list_user_tickets"
-            ]
-        })
-    # Fetch all functions from the AIFunctions model
-    ai_includes = AIIncludes.query.filter_by(user_id=user_id, agent_id=agent_id).all()
-
     # Iterate over each function and add it to the SWML
     for ai_include in ai_includes:
-        swml.add_aiswaigfunction({
+        swml.add_aiinclude({
             "url": ai_include.url,
             "function": json.loads(ai_include.functions)
         })
