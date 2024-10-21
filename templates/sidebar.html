@@ -89,6 +89,13 @@
                   <p>Parameters</p>
                 </a>
               </li>
+              <!-- AI Includes -->
+              <li class="nav-item">
+                <a href="{{ url_for('get_includes') }}" class="nav-link {{ 'active' if request.endpoint == 'includes' else '' }}">
+                  <i class="nav-icon fas fa-code"></i>
+                  <p>Includes</p>
+                </a>
+              </li>
               <!-- AI Features -->
               <li class="nav-item">
                 <a href="{{ url_for('aifeatures') }}" class="nav-link {{ 'active' if request.endpoint == 'aifeatures' else '' }}">

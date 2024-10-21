@@ -1,0 +1,487 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Includes{% endblock %}
+
+{% block content %}
+  <!-- Navbar -->
+  {% include 'navbar.html' %}
+  <!-- /.navbar -->
+
+  <!-- Main Sidebar Container -->
+  {% include 'sidebar.html' %}
+  
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-6">
+                    <h1 class="m-0">AI Includes</h1>
+                </div>
+            </div>
+        </div><!-- /.container-fluid -->
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-primary">
+                            <h3 class="card-title">Includes</h3>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body table-responsive">
+                            <table id="includesTable" class="table table-striped w-100">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>URL</th>
+                                        <th>Functions</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Data will be populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+
+            <!-- Add/Edit Include Card -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-success">
+                            <h3 class="card-title">Add New Include</h3>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body">
+                            <form id="addIncludeForm">
+                                <div class="form-group">
+                                    <label for="includeUrl">URL</label>
+                                    <input type="text" class="form-control" id="includeUrl" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="includeFunctions">Functions</label>
+                                    <textarea class="form-control" id="includeFunctions"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-success">Add Include</button>
+                            </form>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+
+            <!-- SWAIG Table -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-info">
+                            <h3 class="card-title">SWAIG Data</h3>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body table-responsive">
+                            <table id="swaigTable" class="table table-striped w-100">
+                                <thead>
+                                    <tr>
+                                        <th>Use</th>
+                                        <th>Function</th>
+                                        <th>Arguments</th>
+                                        <th>Purpose</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Data will be populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- /.card -->
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+        </div>
+        <!-- /.container-fluid -->
+    </section>
+    <!-- /.content -->
+  </div>
+  <!-- /.content-wrapper -->
+  <!-- Footer -->
+  {% include 'footer.html' %}
+  <!-- /.footer -->
+{% endblock %}
+
+{% block scripts %}
+  <!-- Add DataTables CSS and JS -->
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
+  <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
+
+  <script>
+    $(document).ready(function() {
+      var selectedAgentId = getCookie('selectedAgentId'); // Retrieve the selected agent ID from cookies
+
+      initializeIncludesTable(selectedAgentId);
+
+      // Fetch includes without debounce
+      function fetchIncludes(url) {
+        $.ajax({
+          url: `/includes/${selectedAgentId}`,
+          type: 'GET',
+          data: { url: url },
+          success: function(data) {
+            console.log('Includes fetched:', data);
+          },
+          error: function() {
+            console.error('Error fetching includes');
+          }
+        });
+      }
+
+      // Add event listener to URL input field
+      $('#includeUrl').on('input', function() {
+        const url = $(this).val();
+        fetchIncludes(url);
+      });
+
+      // Debounce function
+      function debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+          const context = this;
+          clearTimeout(timeout);
+          timeout = setTimeout(() => func.apply(context, args), wait);
+        };
+      }
+
+      // Debounced function to fetch SWAIG data
+      const debouncedFetchSwaigData = debounce(fetchSwaigData, 1000); // 1 second debounce
+
+      // Function to fetch SWAIG data
+      function fetchSwaigData(url) {
+        console.log('Attempting to fetch SWAIG data for URL:', url);
+        $.ajax({
+          url: '/includes',
+          type: 'POST',
+          headers: {
+            'Accept': 'application/json'
+          },
+          data: JSON.stringify({ url: url }),
+          contentType: 'application/json',
+          success: function(data) {
+            console.log('SWAIG data fetched successfully:', data);
+            populateSwaigTable(data);
+          },
+          error: function(xhr, status, error) {
+            console.error('Error fetching SWAIG data:', error);
+          }
+        });
+      }
+
+      // Add event listener to URL input field for SWAIG data
+      $('#includeUrl').on('input', function() {
+        const url = $(this).val().trim();
+        console.log('URL input changed:', url);
+
+        if (isValidUrl(url)) {
+          console.log('URL is valid, debouncing fetch.');
+          debouncedFetchSwaigData(url);
+        } else {
+          console.warn('Invalid URL entered:', url);
+        }
+      });
+
+      // Function to validate URL
+      function isValidUrl(url) {
+        const urlPattern = new RegExp('^(https?:\\/\\/)?' +
+          '((([a-zA-Z\\d]([a-zA-Z\\d-]*[a-zA-Z\\d])*)\\.)+[a-zA-Z]{2,}|' +
+          '((\\d{1,3}\\.){3}\\d{1,3}))' +
+          '(\\:\\d+)?(\\/[-a-zA-Z\\d%_.~+]*)*' +
+          '(\\?[;&a-zA-Z\\d%_.~+=-]*)?' +
+          '(\\#[-a-zA-Z\\d_]*)?$', 'i');
+        return !!urlPattern.test(url);
+      }
+
+      let swaigTable = $('#swaigTable').DataTable({
+        "columns": [
+          {
+            "data": null,
+            "render": function(data, type, row) {
+              return `<input type="checkbox" class="swaig-checkbox" data-function="${row.function}">`;
+            },
+            "orderable": false
+          },
+          { "data": "function" },
+          { "data": "arguments", "defaultContent": "" },
+          { "data": "purpose", "defaultContent": "" }
+        ],
+        "pageLength": 10,
+        "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+        "responsive": true,
+        "autoWidth": false
+      });
+
+      // Function to populate the table with SWAIG data
+      function populateSwaigTable(data) {
+        console.log('Populating SWAIG table with data:', data);
+        if ($.fn.DataTable.isDataTable('#swaigTable')) {
+          swaigTable.clear().draw();
+          data.forEach(item => {
+            swaigTable.row.add({
+              "function": item.function,
+              "arguments": JSON.stringify(item.argument || ""),
+              "purpose": item.purpose || ""
+            }).draw();
+          });
+        } else {
+          console.error('SWAIG DataTable is not initialized.');
+        }
+      }
+
+      // Add Include Form Submission
+      $('#addIncludeForm').on('submit', function(e) {
+        e.preventDefault();
+        const url = $('#includeUrl').val();
+        const functions = $('#includeFunctions').val();
+
+        $.ajax({
+          url: `/includes/${selectedAgentId}`,
+          type: 'POST',
+          contentType: 'application/json',
+          headers: {
+            'Accept': 'application/json'
+          },
+          data: JSON.stringify({ url, functions }),
+          success: function() {
+            $('#includesTable').DataTable().ajax.reload();
+            $('#addIncludeForm')[0].reset();
+            Swal.fire('Success!', 'Include added successfully.', 'success');
+            swaigTable.clear().draw(); 
+
+            $('#addIncludeForm button[type="submit"]').text('Add');
+            $('.card-title').text('Add New Include');
+          },
+          error: function() {
+            Swal.fire('Error!', 'There was an error adding the include.', 'error');
+          }
+        });
+      });
+
+      // Edit Include Form Submission
+      $('#editIncludeForm').on('submit', function(e) {
+        e.preventDefault();
+        const id = $('#editIncludeId').val();
+        const url = $('#editIncludeUrl').val();
+        const functions = $('#editIncludeFunctions').val();
+
+        $.ajax({
+          url: `/includes/${selectedAgentId}/${id}`,
+          type: 'PUT',
+          contentType: 'application/json',
+          data: JSON.stringify({ url, functions }),
+          success: function() {
+            $('#includesTable').DataTable().ajax.reload();
+            $('#editIncludeModal').modal('hide');
+            Swal.fire('Success!', 'Include updated successfully.', 'success');
+          },
+          error: function() {
+            Swal.fire('Error!', 'There was an error updating the include.', 'error');
+          }
+        });
+      });
+
+      // Add event listener for the add button click
+      $('#addIncludeForm').on('click', function() {
+        const swaigTable = $('#swaigTable').DataTable();
+        swaigTable.draw();
+      });
+
+      // Initialize Includes Table
+      function initializeIncludesTable(agentId) {
+        if ($.fn.DataTable) {
+          const includesTable = $('#includesTable').DataTable({
+            "ajax": {
+              "url": `/includes/${agentId}`,
+              "dataSrc": "",
+              "headers": {
+                "Accept": "application/json"
+              },
+              "dataFilter": function(data) {
+                console.log("AJAX Response:", data);
+                return data;
+              }
+            },
+            "order": [[0, 'desc']],
+            "columns": [
+              { "data": "id" },
+              { "data": "url" },
+              { "data": "functions" },
+              { "data": null,
+                "render": function(data, type, row) {
+                  return `
+                    <button class="btn btn-primary edit-btn" data-id="${row.id}">Edit</button>
+                    <button class="btn btn-danger delete-btn" data-id="${row.id}">Delete</button>
+                  `;
+                }
+              }
+            ],
+            "pageLength": 10,
+            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            "responsive": true,
+            "autoWidth": false
+          });
+        } else {
+          console.error('DataTables is not loaded. Make sure you have included the DataTables library.');
+        }
+
+        $(document).on('click', '.delete-btn', function() {
+          const includeId = $(this).data('id');
+          Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              $.ajax({
+                url: `/includes/${agentId}/${includeId}`,
+                type: 'DELETE',
+                success: function() {
+                  $('#includesTable').DataTable().ajax.reload();
+                  Swal.fire(
+                    'Deleted!',
+                    'The include has been deleted.',
+                    'success'
+                  );
+                },
+                error: function() {
+                  Swal.fire(
+                    'Error!',
+                    'There was an error deleting the include.',
+                    'error'
+                  );
+                }
+              });
+            }
+          });
+        });
+      }
+
+      // Update Functions textarea with selected functions
+      $(document).on('change', '.swaig-checkbox', function() {
+        const selectedFunctions = [];
+        $('.swaig-checkbox:checked').each(function() {
+          selectedFunctions.push($(this).data('function'));
+        });
+        $('#includeFunctions').val(JSON.stringify(selectedFunctions));
+      });
+
+      // Function to initialize and populate the SWAIG table
+      function initializeSwaigTable() {
+        if (!$.fn.DataTable.isDataTable('#swaigTable')) {
+          $('#swaigTable').DataTable({
+            "columns": [
+              {
+                "data": null,
+                "render": function(data, type, row) {
+                  return `<input type="checkbox" class="swaig-checkbox" data-function="${row.function}">`;
+                },
+                "orderable": false
+              },
+              { "data": "function" },
+              { "data": "arguments", "defaultContent": "" },
+              { "data": "purpose", "defaultContent": "" }
+            ],
+            "pageLength": 10,
+            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            "responsive": true,
+            "autoWidth": false
+          });
+        }
+      }
+
+      // Call this function when the document is ready
+      $(document).ready(function() {
+        initializeSwaigTable();
+
+        // Attach the event listener for the edit button
+        $(document).on('click', '.edit-btn', function() {
+          const includeId = $(this).data('id');
+          $.get(`/includes/${selectedAgentId}/${includeId}`, function(data) {
+            $('#includeUrl').val(data.url);
+            $('#includeFunctions').val(data.functions);
+
+            // Change the button text to "Save"
+            $('#addIncludeForm button[type="submit"]').text('Save');
+            $('.card-title').text('Save Include');
+
+
+            // Fetch SWAIG data and populate the table
+            fetchSwaigData(data.url).then(() => {
+              // Parse the functions from the data
+              const enabledFunctions = JSON.parse(data.functions || '[]');
+              console.log('Enabled functions:', enabledFunctions);
+
+              // Iterate over each enabled function and find the corresponding row in the SWAIG table
+              enabledFunctions.forEach(functionName => {
+                console.log('Checking function:', functionName);
+                const row = $('#swaigTable tbody tr').filter(function() {
+                  const checkboxFunction = $(this).find('.swaig-checkbox').data('function');
+                  return checkboxFunction === functionName;
+                });
+                if (row.length) {
+                  row.find('.swaig-checkbox').prop('checked', true);
+                }
+              });
+            });
+          });
+        });
+      });
+
+      // Modify fetchSwaigData to return a promise
+      function fetchSwaigData(url) {
+        return new Promise((resolve, reject) => {
+          $.ajax({
+            url: '/includes',
+            type: 'POST',
+            headers: {
+              'Accept': 'application/json'
+            },
+            data: JSON.stringify({ url: url }),
+            contentType: 'application/json',
+            success: function(data) {
+              console.log('SWAIG data fetched successfully:', data);
+              populateSwaigTable(data);
+              resolve();
+            },
+            error: function(xhr, status, error) {
+              console.error('Error fetching SWAIG data:', error);
+              reject(error);
+            }
+          });
+        });
+      }
+    });
+  </script>
+
+  
+{% endblock %}
+
+
+
