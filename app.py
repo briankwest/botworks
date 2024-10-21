@@ -1284,6 +1284,37 @@ def generate_swml_response(user_id, agent_id, request_body):
             }
         })
 
+    # Check if the ENABLE_AMEDAUS feature is enabled for the agent
+    enable_amedaous_feature = get_feature(agent_id, 'ENABLE_AMEDAUS')
+    if enable_amedaous_feature and enable_amedaous_feature.enabled:
+        swml.add_aiinclude({
+            "url": enable_amedaous_feature.value,
+            "functions": [
+                "search_flights", 
+                "book_flight", 
+                "process_payment", 
+                "handle_multi_city_itinerary", 
+                "save_search", 
+                "send_notification"
+            ]
+        })
+
+    # Check if the ENABLE_ZENDESK feature is enabled for the agent
+    enable_zendesk_feature = get_feature(agent_id, 'ENABLE_ZENDESK')
+    if enable_zendesk_feature and enable_zendesk_feature.enabled:
+        swml.add_aiinclude({
+            "url": enable_zendesk_feature.value,
+            "functions": [
+                "create_ticket",
+                "update_ticket",
+                "close_ticket",
+                "add_comment",
+                "get_ticket",
+                "verify_support_pin"
+            ]
+        })
+
+    # Check if the ENABLE_TMDB feature is enabled for the agent 
     enable_tmdb_feature = get_feature(agent_id, 'ENABLE_TMDB')
     if enable_tmdb_feature and enable_tmdb_feature.enabled:
         swml.add_aiinclude({"url": enable_tmdb_feature.value,
