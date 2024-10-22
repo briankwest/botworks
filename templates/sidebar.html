@@ -117,13 +117,6 @@
                   <p>SWML Requests</p>
                 </a>
               </li>
-              <!-- Live Debug -->
-              <li class="nav-item">
-                <a href="{{ url_for('livedebug') }}" class="nav-link {{ 'active' if request.endpoint == 'livedebug' else '' }}">
-                  <i class="nav-icon fas fa-bug"></i>
-                  <p>Live Debug</p>
-                </a>
-              </li>
               <!-- Debug Logs -->
               <li class="nav-item">
                 <a href="{{ url_for('debuglogs') }}" class="nav-link {{ 'active' if request.endpoint == 'debuglogs' else '' }}">
@@ -132,6 +125,13 @@
                 </a>
               </li>
             </ul>
+          </li>
+          <!-- Live Debug -->
+          <li class="nav-item">
+            <a href="{{ url_for('livedebug') }}" class="nav-link {{ 'active' if request.endpoint == 'livedebug' else '' }}">
+              <i class="nav-icon fas fa-bug"></i>
+              <p>Live Debug</p>
+            </a>
           </li>
           <!-- SignalWire -->
           <li class="nav-item">

@@ -75,7 +75,8 @@
                                     <label for="includeFunctions">Functions</label>
                                     <textarea class="form-control" id="includeFunctions"></textarea>
                                 </div>
-                                <button type="submit" class="btn btn-success">Add Include</button>
+                                <button type="submit" class="btn btn-success" id="saveButton">Add Include</button>
+                                <button type="button" class="btn btn-info" id="reloadButton" style="display: none;">Reload SWAIG Data</button>
                             </form>
                         </div>
                         <!-- /.card-body -->
@@ -293,8 +294,10 @@
             });
             swaigTable.clear().draw(); 
 
+            // Reset form to "Add" state
             $('#addIncludeForm button[type="submit"]').text('Add Include');
             $('.card-title').text('Add New Include');
+            $('#reloadButton').hide(); // Hide the reload button
           },
           error: function() {
             Swal.fire('Error!', 'There was an error adding the include.', 'error');
@@ -449,10 +452,10 @@
             $('#includeUrl').val(data.url);
             $('#includeFunctions').val(data.functions);
 
-            // Change the button text to "Save"
-            $('#addIncludeForm button[type="submit"]').text('Save');
-            $('.card-title').text('Save Include');
-
+            // Change to "Edit" state
+            $('#saveButton').text('Save');
+            $('.card-title').text('Edit Include');
+            $('#reloadButton').show();
 
             // Fetch SWAIG data and populate the table
             fetchSwaigData(data.url).then(() => {
@@ -499,11 +502,43 @@
           });
         });
       }
+
+      // Add this new function to handle SWAIG data reloading
+      function reloadSwaigData() {
+        const url = $('#includeUrl').val().trim();
+        if (isValidUrl(url)) {
+          fetchSwaigData(url).then(() => {
+            updateCheckboxes();
+          });
+        } else {
+          Swal.fire('Error', 'Please enter a valid URL', 'error');
+        }
+      }
+
+      function updateCheckboxes() {
+        const enabledFunctions = JSON.parse($('#includeFunctions').val() || '[]');
+        console.log('Enabled functions:', enabledFunctions);
+
+        $('#swaigTable tbody tr').each(function() {
+          const checkbox = $(this).find('.swaig-checkbox');
+          const functionName = checkbox.data('function');
+          checkbox.prop('checked', enabledFunctions.includes(functionName));
+        });
+      }
+
+      // Add click event listener for the reload button
+      $('#reloadButton').on('click', function(e) {
+        e.preventDefault();
+        reloadSwaigData();
+      });
     });
   </script>
 
   
 {% endblock %}
+
+
+
 
 
 
