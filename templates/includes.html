@@ -76,7 +76,8 @@
                                     <textarea class="form-control" id="includeFunctions"></textarea>
                                 </div>
                                 <button type="submit" class="btn btn-success" id="saveButton">Add Include</button>
-                                <button type="button" class="btn btn-info" id="reloadButton" style="display: none;">Reload SWAIG Data</button>
+                                <button type="button" class="btn btn-info" id="reloadButton" style="display: none;">Reload</button>
+                                <button type="button" class="btn btn-secondary" id="cancelButton" style="display: none;">Cancel</button>
                             </form>
                         </div>
                         <!-- /.card-body -->
@@ -242,8 +243,8 @@
           { "data": "arguments", "defaultContent": "" },
           { "data": "purpose", "defaultContent": "" }
         ],
-        "pageLength": 10,
-        "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+        "pageLength": -1, // Show all entries
+        "lengthMenu": [[-1], ["All"]], // Only offer "All" as an option
         "responsive": true,
         "autoWidth": false
       });
@@ -265,7 +266,57 @@
         }
       }
 
-      // Add Include Form Submission
+      // Add this new function to reset the form and SWAIG table
+      function resetForm() {
+        $('#addIncludeForm')[0].reset();
+        $('#saveButton').text('Add Include');
+        $('.card-title').text('Add New Include');
+        $('#reloadButton').hide();
+        $('#cancelButton').hide();
+        swaigTable.clear().draw();
+      }
+
+      // Add click event listener for the cancel button
+      $('#cancelButton').on('click', function(e) {
+        e.preventDefault();
+        resetForm();
+      });
+
+      // Modify the edit button click handler
+      $(document).on('click', '.edit-btn', function() {
+        const includeId = $(this).data('id');
+        $.get(`/includes/${selectedAgentId}/${includeId}`, function(data) {
+          $('#includeUrl').val(data.url);
+          $('#includeFunctions').val(data.functions);
+
+          // Change to "Edit" state
+          $('#saveButton').text('Save');
+          $('.card-title').text('Edit Include');
+          $('#reloadButton').show();
+          $('#cancelButton').show(); // Show the cancel button
+
+          // Fetch SWAIG data and populate the table
+          fetchSwaigData(data.url).then(() => {
+            // Parse the functions from the data
+            const enabledFunctions = JSON.parse(data.functions || '[]');
+            console.log('Enabled functions:', enabledFunctions);
+
+            // Iterate over each enabled function and find the corresponding row in the SWAIG table
+            enabledFunctions.forEach(functionName => {
+              console.log('Checking function:', functionName);
+              const row = $('#swaigTable tbody tr').filter(function() {
+                const checkboxFunction = $(this).find('.swaig-checkbox').data('function');
+                return checkboxFunction === functionName;
+              });
+              if (row.length) {
+                row.find('.swaig-checkbox').prop('checked', true);
+              }
+            });
+          });
+        });
+      });
+
+      // Modify the form submission handler
       $('#addIncludeForm').on('submit', function(e) {
         e.preventDefault();
         const url = $('#includeUrl').val();
@@ -281,23 +332,17 @@
           data: JSON.stringify({ url, functions }),
           success: function() {
             $('#includesTable').DataTable().ajax.reload();
-            $('#addIncludeForm')[0].reset();
+            resetForm(); // Use the new resetForm function
             Swal.fire({
               title: 'Success!',
               text: 'Include added successfully.',
               icon: 'success',
-              toast: true, // Enable toast
-              position: 'top-end', // Position in the upper right
-              showConfirmButton: false, // Hide the confirm button
-              timer: 3000, // Auto close after 3 seconds
-              timerProgressBar: true // Show a progress bar
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 3000,
+              timerProgressBar: true
             });
-            swaigTable.clear().draw(); 
-
-            // Reset form to "Add" state
-            $('#addIncludeForm button[type="submit"]').text('Add Include');
-            $('.card-title').text('Add New Include');
-            $('#reloadButton').hide(); // Hide the reload button
           },
           error: function() {
             Swal.fire('Error!', 'There was an error adding the include.', 'error');
@@ -433,8 +478,8 @@
               { "data": "arguments", "defaultContent": "" },
               { "data": "purpose", "defaultContent": "" }
             ],
-            "pageLength": 10,
-            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            "pageLength": -1,
+            "lengthMenu": [[-1], ["All"]],
             "responsive": true,
             "autoWidth": false
           });
@@ -456,6 +501,7 @@
             $('#saveButton').text('Save');
             $('.card-title').text('Edit Include');
             $('#reloadButton').show();
+            $('#cancelButton').show(); // Show the cancel button
 
             // Fetch SWAIG data and populate the table
             fetchSwaigData(data.url).then(() => {
@@ -536,6 +582,8 @@
 
   
 {% endblock %}
+
+
 
 
 
