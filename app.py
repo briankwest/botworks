@@ -2688,11 +2688,13 @@ def list_phone_numbers():
         # Make the GET request to the SignalWire API
         response = requests.get(url, headers=headers, params=params)
 
-        # Check if the request was successful
         if response.status_code == 200:
             return jsonify(response.json()), 200
+        elif response.status_code == 401:  # Unauthorized
+            return jsonify({'error': 'SignalWire credentials missing'}), 401
         else:
             return jsonify({'error': 'Failed to retrieve phone numbers'}), response.status_code
+
     else:
         return render_template('phone_numbers.html', user=current_user)
     

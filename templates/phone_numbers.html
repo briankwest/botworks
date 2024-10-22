@@ -219,11 +219,19 @@
                     "Content-Type": "application/json"
                 },
                 "error": function(xhr, error, thrown) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'An error occurred while fetching phone numbers.',
-                    });
+                    if (xhr.status === 401 && xhr.responseJSON && xhr.responseJSON.error === 'SignalWire credentials missing') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'SignalWire Error',
+                            html: 'SignalWire credentials are not set up.<br> Please configure them on the SignalWire tab.',
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'An error occurred while fetching phone numbers.',
+                        });
+                    }
                 }
             },
             "columns": [
