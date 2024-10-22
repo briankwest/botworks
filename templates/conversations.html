@@ -46,15 +46,15 @@
       </div>
     </section>
 
-    <div id="fullScreenModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.8); z-index:1050;">
-      <div class="modal-content" style="position:relative; width:100%; height:100%; overflow:auto;">
+    <div id="fullScreenModal" class="modal" role="dialog" aria-labelledby="modalTitle" aria-hidden="true" tabindex="-1" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.8); z-index:1050;">
+      <div class="modal-content" tabindex="0" style="position:relative; width:100%; height:100%; overflow:auto;">
         <span class="close" style="position:fixed; top:10px; right:20px; font-size:30px; color:black; cursor:pointer; z-index:1100;">&times;</span>
         <div class="p-3">
           <section class="content-header">
             <div class="container-fluid">
               <div class="row mb-2">
                 <div class="col-6">
-                  <h1 class="m-0">Conversation Details</h1>
+                  <h1 id="modalTitle" class="m-0">Conversation Details</h1>
                 </div>
               </div>
             </div>
@@ -84,9 +84,12 @@
 {% block scripts %}
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
   <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
- <script>
+  <script>
     $(document).ready(function() {
+      console.log('Document is ready'); // Global debug statement
+
       $('#conversationsTable').DataTable({
         "ajax": {
           "url": "{{ url_for('conversations') }}",
@@ -181,29 +184,64 @@
 
       $('#conversationsTable').on('click', '.view-conversation', function() {
         const id = $(this).data('id');
+        const triggerElement = this;
+
         $('#fullScreenModal').show();
+        $('#fullScreenModal').attr('aria-hidden', 'false');
         $('#fullScreenModal .modal-content').scrollTop(0);
-        fetchData(id);
-      });
 
-      $('#conversationsTable').on('click', '.view-conversation', function() {
-        const id = $(this).data('id');
-        $('#fullScreenModal').show();
-        fetchData(id);
-      });
+        setTimeout(() => {
+          $('#fullScreenModal').focus();
+        }, 200);
 
-      $('.close').on('click', function() {
-        $('#fullScreenModal').hide();
+        fetchData(id);
+
+        $(document).on('focusin', function(e) {
+          if ($('#fullScreenModal').is(':visible') && !$('#fullScreenModal').has(e.target).length) {
+            $('#fullScreenModal').focus();
+          }
+        });
+
+        $('.close').on('click', function() {
+          $('#fullScreenModal').hide();
+          $('#fullScreenModal').attr('aria-hidden', 'true');
+          $(document).off('focusin');
+        });
       });
 
       $(document).on('keydown', function(event) {
         if ($('#fullScreenModal').is(':visible')) {
+          const modalContent = $('#fullScreenModal .modal-content');
           switch (event.key) {
             case 'ArrowLeft':
               $('#navContainer button:contains("Previous")').click();
+              modalContent.scrollTop(0);
+              setTimeout(() => {
+                modalContent.focus();
+              }, 100);
               break;
             case 'ArrowRight':
               $('#navContainer button:contains("Next")').click();
+              modalContent.scrollTop(0);
+              setTimeout(() => {
+                modalContent.focus();
+              }, 100);
+              break;
+            case 'ArrowUp':
+              event.preventDefault();
+              modalContent.scrollTop(modalContent.scrollTop() - 50);
+              break;
+            case 'ArrowDown':
+              event.preventDefault();
+              modalContent.scrollTop(modalContent.scrollTop() + 50);
+              break;
+            case 'PageUp':
+              event.preventDefault();
+              modalContent.scrollTop(modalContent.scrollTop() - modalContent.height());
+              break;
+            case 'PageDown':
+              event.preventDefault();
+              modalContent.scrollTop(modalContent.scrollTop() + modalContent.height());
               break;
             case 'Escape':
               $('#fullScreenModal').hide();
@@ -479,7 +517,7 @@
                     <td>${key}</td>
                     <td>
                         ${value}
-                        ${key === 'record_call_url' ? `<audio controls src="${value}" style="margin-left: 10px;" style="height: 10px;"></audio>` : ''}
+                        ${key === 'record_call_url' ? `<audio controls preload="none" src="${value}" style="margin-left: 10px;"></audio>` : ''}
                     </td>
                     <td class="copy-btn"><i class="fas fa-copy" data-copy="${value}" onclick="copyToClipboard('${value}')"></i></td>
                 </tr>
@@ -610,3 +648,10 @@
   </script>
 
 {% endblock %}
+
+
+
+
+
+
+
