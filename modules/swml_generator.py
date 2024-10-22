@@ -137,6 +137,12 @@ def generate_swml_response(user_id, agent_id, request_body):
         function_data = {
             "function": function.name,
             "purpose": function.purpose,
+            **({"web_hook_url": function.web_hook_url} if function.web_hook_url else {}),
+            **({"wait_file": function.wait_file} if function.wait_file else {}),
+            **({"wait_file_loops": function.wait_file_loops} if function.wait_file_loops else {}),
+            **({"fillers": function.fillers} if function.fillers else {}),
+            **({"meta_data": function.meta_data} if function.meta_data else {}),
+            **({"meta_data_token": function.meta_data_token} if function.meta_data_token else {}),
             "argument": {
                 "properties": {}
             }
@@ -156,7 +162,6 @@ def generate_swml_response(user_id, agent_id, request_body):
             "name": function.name,
             "purpose": function.purpose,
             "arguments": function_data["argument"],
-            **({"webhook_url": function.webhook_url} if function.webhook_url else {}),
             "required": [arg.name for arg in function_args if arg.required]
         }
         if not function.active:
