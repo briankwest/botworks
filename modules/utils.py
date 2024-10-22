@@ -95,15 +95,24 @@ def create_admin_user():
     else:
         print("Admin user already exists.")
 
-def generate_tokens(user_id, app_config):
-    access_token = jwt.encode({
-        'user_id': user_id,
-        'exp': datetime.utcnow() + timedelta(minutes=60)
-    }, app_config['ACCESS_SECRET_KEY'], algorithm='HS256')
+# Get SWAIG includes function
+def get_swaig_includes(url):
+    parsed_url = urlparse(url)
+    username = parsed_url.username
+    password = parsed_url.password
 
-    refresh_token = jwt.encode({
-        'user_id': user_id,
-        'exp': datetime.utcnow() + timedelta(days=7)
-    }, app_config['REFRESH_SECRET_KEY'], algorithm='HS256')
+    headers = {
+        'Accept': 'application/json'
+    }
+    if username and password:
+        headers['Authorization'] = f'Basic {base64.b64encode(f"{username}:{password}".encode()).decode()}'
 
-    return access_token, refresh_token
+    payload = {
+        "functions": [],
+        "action": "get_signature",
+        "version": "2.0",
+        "content_type": "text/swaig"
+    }
+    response = requests.post(url, json=payload, headers=headers)
+    print(response.json())  
+    return response.json()

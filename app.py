@@ -32,7 +32,7 @@ from modules.swml_generator import generate_swml_response
 from modules.utils import (
     generate_random_password, get_feature, get_signal_wire_param, 
     extract_agent_id, setup_default_agent_and_params, create_admin_user,
-    generate_tokens
+    get_swaig_includes
 )
 
 # Configure logging
@@ -100,8 +100,6 @@ def verify_password(username, password):
         if user.username == username and http_password == password:
             return user
     return None
-
-
 
 with app.app_context():
     # Perform operations that require the app context here
@@ -198,8 +196,6 @@ def swmlrequests():
 @app.route('/dashboard/completed', methods=['GET'])
 @login_required
 def dashboard_completed():
-
-
     # Calculate the time range for the past 24 hours
     end_time = datetime.utcnow()
     start_time = end_time - timedelta(hours=24)
@@ -499,7 +495,6 @@ def hint(id):
         db.session.commit()
         return jsonify({'message': 'Hint entry deleted successfully'}), 200
 
-
 # Manage SignalWire Parameters route
 @app.route('/signalwire/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 @login_required
@@ -623,7 +618,8 @@ def params():
         db.session.add(new_params)
         db.session.commit()
         return jsonify({'message': 'Params entry created successfully'}), 201
-    
+
+# Refresh JWT token route
 @app.route('/refresh', methods=['POST'])
 def refresh():
     refresh_token = request.json.get('refresh_token')
@@ -710,8 +706,6 @@ def login():
         else:
             flash('Invalid username or password')
     return render_template('login.html')
-
-
 
 # Signup route
 @app.route('/signup', methods=['POST', 'GET'])
@@ -932,7 +926,6 @@ def delete_prompt(id):
     db.session.commit()
     return jsonify({'message': 'Prompt deleted successfully'}), 200
 
-
 # Update Prompt route
 @app.route('/prompt/<int:id>', methods=['PUT'])
 @login_required
@@ -1090,7 +1083,6 @@ def search_datasphere(document_id):
         payload['pos_to_expand'] = data['pos_to_expand']
     if 'max_synonyms' in data:
         payload['max_synonyms'] = data['max_synonyms']
-
 
     response = requests.post(url, headers=headers, json=payload, auth=(project_id, auth_token))
 
@@ -1258,7 +1250,6 @@ def clone_agent(agent_id):
     db.session.commit()
 
     return jsonify({'message': 'Agent cloned successfully', 'new_agent_id': new_agent.id}), 201
-
 
 # Manage Agents route
 @app.route('/agents', methods=['GET', 'POST'])
@@ -1656,7 +1647,6 @@ def manage_aifeature(agent_id, feature_id):
         db.session.commit()
         return jsonify({'message': 'Feature deleted successfully'}), 200
 
-
 # AI Features route
 @app.route('/aifeatures/<int:agent_id>', methods=['POST'])
 @login_required
@@ -1821,7 +1811,7 @@ def search_phone_numbers():
     else:
         return jsonify({'error': 'Failed to search available phone numbers'}), response.status_code
     
-
+# Purchase a phone number route
 @app.route('/phone_numbers', methods=['POST'])
 @login_required
 def purchase_phone_number():
@@ -1865,7 +1855,8 @@ def purchase_phone_number():
         return jsonify(response.json()), 200
     else:
         return jsonify({'error': 'Failed to purchase phone number'}), response.status_code
-    
+
+# Update a phone number route
 @app.route('/phone_numbers/<uuid:phone_number_id>', methods=['PUT'])
 @login_required
 def update_phone_number(phone_number_id):
@@ -1923,6 +1914,7 @@ def update_phone_number(phone_number_id):
     else:
         return jsonify({'error': 'Failed to update phone number'}), response.status_code
     
+# Release a phone number route
 @app.route('/phone_numbers/<uuid:phone_number_id>', methods=['DELETE'])
 @login_required
 def release_phone_number(phone_number_id):
@@ -1977,7 +1969,6 @@ def create_or_update_include(agent_id):
     db.session.commit()
     return jsonify({'message': 'Include entry saved successfully'}), 200
 
-
 # Get all includes for an agent
 @app.route('/includes/<int:agent_id>', methods=['GET'])
 @login_required
@@ -2020,6 +2011,7 @@ def delete_include(agent_id, include_id):
     db.session.commit()
     return jsonify({'message': 'Include deleted successfully'}), 200
 
+# Get SWAIG includes route
 @app.route('/includes', methods=['POST'])
 @login_required
 def get_includes_post():
@@ -2032,32 +2024,13 @@ def get_includes_post():
     else:
         return jsonify({'error': 'Accept header must be application/json'}), 400
 
+# Get SWAIG includes route
 @app.route('/includes', methods=['GET'])
 @login_required
 def includes():
     return render_template('includes.html', user=current_user)
 
 
-def get_swaig_includes(url):
-    parsed_url = urlparse(url)
-    username = parsed_url.username
-    password = parsed_url.password
-
-    headers = {
-        'Accept': 'application/json'
-    }
-    if username and password:
-        headers['Authorization'] = f'Basic {base64.b64encode(f"{username}:{password}".encode()).decode()}'
-
-    payload = {
-        "functions": [],
-        "action": "get_signature",
-        "version": "2.0",
-        "content_type": "text/swaig"
-    }
-    response = requests.post(url, json=payload, headers=headers)
-    print(response.json())  
-    return response.json()
 
 
 # Run the app
