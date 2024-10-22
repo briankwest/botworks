@@ -265,7 +265,7 @@ def functions():
             agent_id=selected_agent_id,
             web_hook_url=data.get('web_hook_url'),
             wait_file=data.get('wait_file'),
-            wait_file_loops=data.get('wait_file_loops', -1),
+            wait_file_loops=data.get('wait_file_loops', 0) or 0,  # Set to 0 if empty
             fillers=data.get('fillers'),
             meta_data=data.get('meta_data'),
             meta_data_token=data.get('meta_data_token'),
@@ -309,7 +309,7 @@ def manage_function(id):
         function_entry.active = data.get('active', function_entry.active)
         function_entry.web_hook_url = data.get('web_hook_url', function_entry.web_hook_url)
         function_entry.wait_file = data.get('wait_file', function_entry.wait_file)
-        function_entry.wait_file_loops = data.get('wait_file_loops', function_entry.wait_file_loops)
+        function_entry.wait_file_loops = data.get('wait_file_loops', function_entry.wait_file_loops) or 0  # Set to 0 if empty
         function_entry.fillers = data.get('fillers', function_entry.fillers)
         function_entry.meta_data = data.get('meta_data', function_entry.meta_data)
         function_entry.meta_data_token = data.get('meta_data_token', function_entry.meta_data_token)
