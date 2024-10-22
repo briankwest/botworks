@@ -1,4 +1,5 @@
-import string, base64
+import string
+import base64
 import random
 import requests
 import os
@@ -32,7 +33,6 @@ def extract_agent_id(f):
     return decorated_function
 
 def setup_default_agent_and_params(user_id):
-    # Create default agent "BotWorks" if it doesn't exist
     default_agent_name = "BotWorks"
     default_agent = AIAgent.query.filter_by(name=default_agent_name, user_id=user_id).first()
     if default_agent is None:
@@ -48,7 +48,6 @@ def setup_default_agent_and_params(user_id):
         agent_id = default_agent.id
         print("Default agent 'BotWorks' already exists.")
 
-    # Check and add necessary parameters if they don't exist
     params_to_check = {
         'HTTP_PASSWORD': generate_random_password(),
         'SPACE_NAME': 'subdomain.signalwire.com',
@@ -74,7 +73,6 @@ def create_admin_user():
     admin_email = os.environ.get('ADMIN_EMAIL', 'admin@example.com')
     full_name = os.environ.get('ADMIN_FULL_NAME', 'Admin User')
 
-    # Check if admin user already exists
     admin_user = AIUser.query.filter_by(username=admin_username).first()
     if admin_user is None:
         try:
@@ -94,7 +92,6 @@ def create_admin_user():
     else:
         print("Admin user already exists.")
 
-# Get SWAIG includes function
 def get_swaig_includes(url):
     parsed_url = urlparse(url)
     username = parsed_url.username

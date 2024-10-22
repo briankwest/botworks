@@ -3,28 +3,20 @@
 {% block title %}SignalWire{% endblock %}
 
 {% block content %}
-  <!-- Navbar -->
   {% include 'navbar.html' %}
-  <!-- /.navbar -->
-
-  <!-- Main Sidebar Container -->
   {% include 'sidebar.html' %}
 
-  <!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
-    <!-- Content Header (Page header) -->
     <div class="content-header">
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-6">
             <h1 class="m-0">SignalWire</h1>
-          </div><!-- /.col -->
-        </div><!-- /.row -->
-      </div><!-- /.container-fluid -->
+          </div>
+        </div>
+      </div>
     </div>
-    <!-- /.content-header -->
 
-    <!-- Main content -->
     <section class="content">
       <div class="container-fluid">
         <div class="row">
@@ -33,7 +25,6 @@
               <div class="card-header bg-primary">
                 <h3 class="card-title">SignalWire List</h3>
               </div>
-              <!-- /.card-header -->
               <div class="card-body">
                 <table id="paramsTable" class="table table-striped w-100">
                   <thead>
@@ -48,11 +39,8 @@
                   </tbody>
                 </table>
               </div>
-              <!-- /.card-body -->
             </div>
-            <!-- /.card -->
 
-            <!-- Add Parameter Form -->
             <div class="card">
               <div class="card-header bg-success">
                 <h3 class="card-title">Add New Parameter</h3>
@@ -71,16 +59,12 @@
                 </form>
               </div>
             </div>
-            <!-- /.card -->
           </div>
         </div>
       </div>
     </section>
-    <!-- /.content -->
   </div>
-  <!-- /.content-wrapper -->
 
-  <!-- Edit Parameter Modal -->
   <div class="modal fade" id="editParamModal" tabindex="-1" role="dialog" aria-labelledby="editParamModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -110,24 +94,19 @@
       </div>
     </div>
   </div>
-  <!-- /.modal -->
 
-  <!-- Footer -->
   {% include 'footer.html' %}
-  <!-- /.footer -->
 {% endblock %}
 
 {% block scripts %}
-  <!-- Add DataTables CSS and JS -->
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
   <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
 
   <script>
     $(document).ready(function() {
-      // Initialize DataTable
       $('#paramsTable').DataTable({
-        "responsive": true,  // Enable responsive design
-        "autoWidth": false,  // Disable auto-width to allow responsive adjustments
+        "responsive": true,
+        "autoWidth": false,
         "ajax": {
           "url": "{{ url_for('signalwire') }}",
           "dataSrc": "",
@@ -152,7 +131,6 @@
         ]
       });
 
-      // Function to show toast notification using SweetAlert2
       function showToast(icon, title) {
         const Toast = Swal.mixin({
           toast: true,
@@ -172,7 +150,6 @@
         });
       }
 
-      // Handle form submission for creating new parameter entry
       $('#addParamForm').submit(function(e) {
         e.preventDefault();
         const formData = {
@@ -196,7 +173,6 @@
         });
       });
 
-      // Handle delete button click
       $('#paramsTable').on('click', '.delete-param', function() {
         const id = $(this).data('id');
         Swal.fire({
@@ -224,7 +200,6 @@
         });
       });
 
-      // Handle edit button click
       $('#paramsTable').on('click', '.edit-param', function() {
         const id = $(this).data('id');
         $.ajax({
@@ -242,7 +217,6 @@
         });
       });
 
-      // Handle save changes button click in edit modal
       $('#saveEditButton').click(function() {
         const formData = {
           id: $('#editId').val(),

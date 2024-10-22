@@ -1,16 +1,11 @@
 {% extends 'base.html' %}
 
-{% block title %}Prompts{% endblock %}
+{% block title %}Prompt{% endblock %}
 
 {% block content %}
-  <!-- Navbar -->
   {% include 'navbar.html' %}
-  <!-- /.navbar -->
-
-  <!-- Main Sidebar Container -->
   {% include 'sidebar.html' %}
 <div class="content-wrapper">
-  <!-- Content Header (Page header) -->
   <section class="content-header">
     <div class="container-fluid">
       <div class="row mb-2">
@@ -18,15 +13,13 @@
           <h1 class="m-0">Prompt Editor</h1>
         </div>
       </div>
-    </div><!-- /.container-fluid -->
+    </div>
   </section>
 
-  <!-- Main content -->
   <section class="content">
     <div class="container-fluid">
       <div class="row">
         <div class="col-12">
-          <!-- DataTable for existing prompts -->
           <div class="card card-primary">
             <div class="card-header">
               <h3 class="card-title">Existing Prompts</h3>
@@ -35,24 +28,22 @@
               <table id="promptTable" class="table table-striped w-100">
                 <thead>
                   <tr>
-                    <th>ID</th> <!-- New column for ID -->
+                    <th>ID</th>
                     <th>Type</th>
-                    <!-- Removed Text column -->
                     <th>Top P</th>
                     <th>Temperature</th>
                     <th>Max Tokens</th>
                     <th>Confidence</th>
                     <th>Frequency Penalty</th>
                     <th>Presence Penalty</th>
-                    <th>Actions</th> <!-- New column for actions -->
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {% for prompt in prompts %}
                   <tr>
-                    <td>{{ prompt.id }}</td> <!-- Display the ID -->
+                    <td>{{ prompt.id }}</td>
                     <td>{{ prompt.prompt_type }}</td>
-                    <!-- Removed Text column -->
                     <td>{{ prompt.top_p }}</td>
                     <td>{{ prompt.temperature }}</td>
                     <td>{{ prompt.max_tokens }}</td>
@@ -69,9 +60,7 @@
               </table>
             </div>
           </div>
-          <!-- /.card -->
 
-          <!-- Form to add new prompts -->
           <div class="card card-primary">
             <div class="card-header bg-success">
               <h3 class="card-title">Add New Prompt</h3>
@@ -84,7 +73,7 @@
                     <option value="">Select a type</option>
                     {% for display, value in [('Prompt', 'prompt'), ('Post Prompt', 'post_prompt'), ('Outbound Prompt', 'outbound_prompt'), ('Outbound Post Prompt', 'outbound_post_prompt')] %}
                       {% if value not in existing_prompt_types %}
-                        <option value="{{ value }}">{{ display }}</option> <!-- Display capitalized text -->
+                        <option value="{{ value }}">{{ display }}</option>
                       {% endif %}
                     {% endfor %}
                   </select>
@@ -93,7 +82,6 @@
                   <label for="newPromptText">Prompt Text</label>
                   <textarea class="form-control" id="newPromptText" name="prompt_text" rows="3" required></textarea>
                 </div>
-                <!-- Add other input fields similar to the existing form -->
                 <div class="form-group">
                   <label for="newTopP">Top P</label>
                   <input type="range" class="form-control-range" id="newTopP" name="top_p" min="0" max="2" step="0.1" value="0.5" required>
@@ -128,9 +116,7 @@
               </div>
             </form>
           </div>
-         <!-- /.card -->
 
-          <!-- Edit Modal -->
           <div class="modal fade" id="editPromptModal" tabindex="-1" role="dialog" aria-labelledby="editPromptModalLabel" aria-hidden="true">
             <div class="modal-dialog" role="document">
               <div class="modal-content">
@@ -146,7 +132,7 @@
                       <label for="editPromptType">Prompt Type</label>
                       <select class="form-control" id="editPromptType" name="prompt_type" required>
                         {% for display, value in [('Prompt', 'prompt'), ('Post Prompt', 'post_prompt'), ('Outbound Prompt', 'outbound_prompt'), ('Outbound Post Prompt', 'outbound_post_prompt')] %}
-                          <option value="{{ value }}">{{ display }}</option> <!-- Display capitalized text -->
+                          <option value="{{ value }}">{{ display }}</option>
                         {% endfor %}
                       </select>
                     </div>
@@ -182,7 +168,6 @@
                       <input type="range" class="form-control-range" id="editPresencePenalty" name="presence_penalty" min="-2" max="2" step="0.1" value="0">
                       <span id="editPresencePenaltyValue">0</span>
                     </div>
-                    <!-- Hidden input for storing the prompt ID -->
                     <input type="hidden" id="editPromptId" name="id">
                   </form>
                 </div>
@@ -195,23 +180,17 @@
           </div>
         </div>
       </div>
-      <!-- /.row -->
-    </div><!-- /.container-fluid -->
+    </div>
   </section>
-  <!-- /.content -->
 </div>
-  <!-- Footer -->
   {% include 'footer.html' %}
-  <!-- /.footer -->
 {% endblock %}
 
 {% block scripts %}
-  <!-- DataTables CSS -->
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
   <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
 
   <script>
-    // Function to show toast notification
     function showToast(icon, title) {
       const Toast = Swal.mixin({
         toast: true,
@@ -232,7 +211,6 @@
     }
 
     $(document).ready(function() {
-      // Fetch data from /prompt endpoint
       $.ajax({
         type: 'GET',
         url: "{{ url_for('prompt') }}",
@@ -242,14 +220,12 @@
         success: function(data) {
           const prompts = Array.isArray(data) ? data : [data];
 
-          // Extract existing prompt types
           const existingPromptTypes = prompts.map(prompt => prompt.prompt_type);
 
-          // Initialize DataTable with fetched data
           $('#promptTable').DataTable({
             data: prompts,
             columns: [
-              { data: 'id' }, // New column for ID
+              { data: 'id' },
               {
                 data: 'prompt_type',
                 render: function(data, type, row) {
@@ -259,7 +235,7 @@
                     'outbound_prompt': 'Outbound Prompt',
                     'outbound_post_prompt': 'Outbound Post Prompt'
                   };
-                  return typeMap[data] || data; // Default to original value if not found
+                  return typeMap[data] || data;
                 }
               },
               { data: 'top_p' },
@@ -276,16 +252,15 @@
             ],
             "responsive": true,
             "autoWidth": false,
-            "order": [0, 'asc'], // Order by ID
+            "order": [0, 'asc'],
             "paging": true,
             "lengthChange": true,
             "searching": true,
             "info": true
           });
 
-          // Update the options in the "Add New Prompt" form
           const promptTypeSelect = $('#newPromptType');
-          promptTypeSelect.empty(); // Clear existing options
+          promptTypeSelect.empty();
           const allPromptTypes = [
             { display: 'Prompt', value: 'prompt' },
             { display: 'Post Prompt', value: 'post_prompt' },
@@ -299,7 +274,6 @@
             }
           });
 
-          // Handle edit button click
           $('#promptTable tbody').on('click', '.edit-btn', function() {
             const data = $('#promptTable').DataTable().row($(this).parents('tr')).data();
             $('#editPromptId').val(data.id);
@@ -312,16 +286,14 @@
             $('#editFrequencyPenalty').val(data.frequency_penalty);
             $('#editPresencePenalty').val(data.presence_penalty);
 
-            // Update the displayed values for the sliders
             $('#editTopPValue').text(data.top_p);
             $('#editTemperatureValue').text(data.temperature);
             $('#editFrequencyPenaltyValue').text(data.frequency_penalty);
             $('#editPresencePenaltyValue').text(data.presence_penalty);
 
-            $('#editPromptModal').modal('show'); // Ensure Bootstrap JS is loaded
+            $('#editPromptModal').modal('show');
           });
 
-          // Handle delete button click
           $('#promptTable tbody').on('click', '.delete-btn', function() {
             const data = $('#promptTable').DataTable().row($(this).parents('tr')).data();
             Swal.fire({
@@ -339,7 +311,7 @@
                   url: "{{ url_for('prompt') }}/" + data.id,
                   success: function(response) {
                     showToast('success', 'Prompt deleted successfully');
-                    location.reload(); // Reload the page to update the table
+                    location.reload();
                   },
                   error: function(xhr, status, error) {
                     showToast('error', 'Error deleting prompt: ' + xhr.responseText);
@@ -354,9 +326,8 @@
         }
       });
 
-      // Handle form submission for adding new prompts
       $('#addPromptForm').submit(function(event) {
-        event.preventDefault(); // Prevent default form submission
+        event.preventDefault();
 
         const formData = {
           prompt_type: $('#newPromptType').val(),
@@ -367,19 +338,17 @@
           confidence: parseFloat($('#newConfidence').val()),
           frequency_penalty: parseFloat($('#newFrequencyPenalty').val()),
           presence_penalty: parseFloat($('#newPresencePenalty').val())
-          // Ensure no ID is included in the formData
         };
 
         $.ajax({
-          type: 'POST', // Use POST instead of GET
-          url: "{{ url_for('prompt') }}", // Ensure this is the correct endpoint
+          type: 'POST',
+          url: "{{ url_for('prompt') }}",
           contentType: 'application/json',
           dataType: 'json',
           data: JSON.stringify(formData),
           success: function(response) {
             showToast('success', 'New prompt added successfully');
             
-            // Fetch the updated data and reload the DataTable
             $.ajax({
               type: 'GET',
               url: "{{ url_for('prompt') }}",
@@ -396,7 +365,6 @@
               }
             });
 
-            // Clear the form
             $('#addPromptForm')[0].reset();
           },
           error: function(xhr, status, error) {
@@ -405,7 +373,6 @@
         });
       });
 
-      // Handle save changes button click in edit modal
       $('#saveEditPrompt').click(function() {
         const formData = {
           prompt_type: $('#editPromptType').val(),
@@ -418,18 +385,18 @@
           presence_penalty: parseFloat($('#editPresencePenalty').val())
         };
 
-        const promptId = $('#editPromptId').val(); // Get the prompt ID
+        const promptId = $('#editPromptId').val();
 
         $.ajax({
           type: 'PUT',
-          url: "{{ url_for('prompt') }}/" + promptId, // Include the ID in the URL
+          url: "{{ url_for('prompt') }}/" + promptId,
           contentType: 'application/json',
           dataType: 'json',
           data: JSON.stringify(formData),
           success: function(response) {
             showToast('success', 'Prompt updated successfully');
             $('#editPromptModal').modal('hide');
-            location.reload(); // Reload the page to update the table
+            location.reload();
           },
           error: function(xhr, status, error) {
             showToast('error', 'Error updating prompt: ' + xhr.responseText);
@@ -437,7 +404,6 @@
         });
       });
 
-      // Update displayed value for new prompt sliders
       $('#newTopP').on('input', function() {
         $('#newTopPValue').text($(this).val());
       });
@@ -454,7 +420,6 @@
         $('#newPresencePenaltyValue').text($(this).val());
       });
 
-      // Update displayed value for edit prompt sliders
       $('#editTopP').on('input', function() {
         $('#editTopPValue').text($(this).val());
       });

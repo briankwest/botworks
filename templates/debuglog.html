@@ -3,15 +3,10 @@
 {% block title %}Debug Logs{% endblock %}
 
 {% block content %}
-  <!-- Navbar -->
   {% include 'navbar.html' %}
-  <!-- /.navbar -->
-
-  <!-- Main Sidebar Container -->
   {% include 'sidebar.html' %}
   
   <div class="content-wrapper">
-    <!-- Content Header (Page header) -->
     <section class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
@@ -19,10 +14,9 @@
                     <h1 class="m-0">Debug Logs</h1>
                 </div>
             </div>
-        </div><!-- /.container-fluid -->
+        </div>
     </section>
 
-    <!-- Main content -->
     <section class="content">
         <div class="container-fluid">
             <div class="row">
@@ -31,7 +25,6 @@
                         <div class="card-header bg-primary">
                             <h3 class="card-title">Debug Logs</h3>
                         </div>
-                        <!-- /.card-header -->
                         <div class="card-body table-responsive">
                             <table id="debugLogsTable" class="table table-striped w-100">
                                 <thead>
@@ -43,19 +36,13 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <!-- Data will be populated by JavaScript -->
                                 </tbody>
                             </table>
                         </div>
-                        <!-- /.card-body -->
                     </div>
-                    <!-- /.card -->
                 </div>
-                <!-- /.col -->
             </div>
-            <!-- /.row -->
             
-            <!-- Actions Card -->
             <div class="row mt-4">
                 <div class="col-12">
                     <div class="card">
@@ -68,20 +55,14 @@
                     </div>
                 </div>
             </div>
-            <!-- /.row -->
         </div>
-        <!-- /.container-fluid -->
     </section>
   </div>
   
-  <!-- /.content-wrapper -->
-  <!-- Footer -->
   {% include 'footer.html' %}
-  <!-- /.footer -->
 {% endblock %}
 
 {% block scripts %}
-  <!-- Add DataTables CSS and JS -->
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
   <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
 
@@ -89,17 +70,13 @@
 
   <script>
     $(document).ready(function() {
-      // Get the selected agent ID from the dropdown
       var selectedAgentId = getCookie('selectedAgentId');
 
-      // Update the selectedAgentId whenever the dropdown changes
       $('#agentSelector').change(function() {
         selectedAgentId = $(this).val();
-        // Re-initialize the DataTable with the new agentId
         $('#debugLogsTable').DataTable().ajax.url("{{ url_for('debuglogs') }}/" + selectedAgentId).load();
       });
 
-      // Initialize the DataTable with the initial selected agent ID
       initializeDataTable(selectedAgentId);
     });
 
@@ -107,13 +84,13 @@
       if ($.fn.DataTable) {
         $('#debugLogsTable').DataTable({
           "ajax": {
-            "url": "{{ url_for('debuglogs') }}/" + agentId, // Use the passed agentId
+            "url": "{{ url_for('debuglogs') }}/" + agentId,
             "dataSrc": "",
             "headers": {
               "Accept": "application/json"
             },
             "dataFilter": function(data) {
-              console.log("AJAX Response:", data); // Log the response for debugging
+              console.log("AJAX Response:", data);
               return data;
             }
           },
@@ -211,7 +188,6 @@
                   timer: 2000,
                   showConfirmButton: false
                 });
-                // Refresh the DataTable to reflect the deletion
                 $('#debugLogsTable').DataTable().ajax.reload();
             })
             .catch(error => {

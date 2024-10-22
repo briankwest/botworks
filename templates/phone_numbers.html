@@ -3,16 +3,10 @@
 {% block title %}Phone Numbers{% endblock %}
 
 {% block content %}
-  <!-- Navbar -->
   {% include 'navbar.html' %}
-  <!-- /.navbar -->
-
-  <!-- Main Sidebar Container -->
   {% include 'sidebar.html' %}
 
-<!-- Content Wrapper. Contains page content -->
 <div class="content-wrapper">
-    <!-- Content Header (Page header) -->
     <section class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
@@ -20,10 +14,9 @@
                     <h1 class="m-0">Phone Numbers</h1>
                 </div>
             </div>
-        </div><!-- /.container-fluid -->
+        </div>
     </section>
 
-    <!-- Main content -->
     <section class="content">
         <div class="container-fluid">
             <div class="card">
@@ -42,15 +35,11 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <!-- Data will be populated here via AJAX -->
                         </tbody>
                     </table>
                 </div>
-                <!-- /.card-body -->
             </div>
-            <!-- /.card -->
 
-            <!-- Add Phone Number Form Card -->
             <div class="card mt-3">
                 <div class="card-header bg-success">
                     <h3 class="card-title">Search and Purchase Phone Number</h3>
@@ -88,7 +77,6 @@
                             <label for="region">Region</label>
                             <select class="form-control" id="region">
                                 <option value="">Select Region</option>
-                                <!-- United States -->
                                 <option value="AL">Alabama</option>
                                 <option value="AK">Alaska</option>
                                 <option value="AZ">Arizona</option>
@@ -139,7 +127,6 @@
                                 <option value="WV">West Virginia</option>
                                 <option value="WI">Wisconsin</option>
                                 <option value="WY">Wyoming</option>
-                                <!-- Canada -->
                                 <option value="AB">Alberta</option>
                                 <option value="BC">British Columbia</option>
                                 <option value="MB">Manitoba</option>
@@ -162,11 +149,8 @@
                         <button type="submit" class="btn btn-success">Search Numbers</button>
                     </form>
                 </div>
-                <!-- /.card-body -->
             </div>
-            <!-- /.card -->
 
-            <!-- New Card for Search Results -->
             <div class="card mt-3">
                 <div class="card-header bg-info">
                     <h3 class="card-title">Search Results</h3>
@@ -183,37 +167,27 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <!-- Data will be populated here via AJAX -->
                         </tbody>
                     </table>
                 </div>
-                <!-- /.card-body -->
             </div>
-            <!-- /.card -->
         </div>
-        <!-- /.container-fluid -->
     </section>
-    <!-- /.content -->
 </div>
-<!-- /.content-wrapper -->
 
-<!-- Include AdminLTE footer -->
 {% include 'footer.html' %}
-<!-- /.footer -->
 {% endblock %}
 
 {% block scripts %}
-<!-- Include DataTables CSS and JS -->
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.min.css">
 <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
 
 <script>
     $(document).ready(function() {
-        // Initialize DataTable
         $('#phoneNumbersTable').DataTable({
             "ajax": {
                 "url": "{{ url_for('list_phone_numbers') }}",
-                "dataSrc": "data", // Assuming the data is in a 'data' array
+                "dataSrc": "data",
                 "headers": {
                     "Accept": "application/json",
                     "Content-Type": "application/json"
@@ -237,8 +211,8 @@
             "columns": [
                 { "data": "id" },
                 { "data": "number" },
-                { "data": "number_type" }, // Adjusted to use 'number_type' instead of 'region'
-                { "data": "capabilities", "render": function(data) { return data.join(', '); } }, // Display capabilities
+                { "data": "number_type" },
+                { "data": "capabilities", "render": function(data) { return data.join(', '); } },
                 {
                     "data": null,
                     "render": function(data, type, row) {
@@ -255,7 +229,6 @@
             "autoWidth": false
         });
 
-        // Configure SweetAlert2 Toast
         const Toast = Swal.mixin({
             toast: true,
             position: 'top-end',
@@ -268,11 +241,9 @@
             }
         });
 
-        // Release button click event
         $('#phoneNumbersTable').on('click', '.release-btn', function() {
             var phoneNumberId = $(this).data('id');
 
-            // Ask for confirmation before releasing
             Swal.fire({
                 title: 'Are you sure?',
                 text: "You won't be able to revert this!",
@@ -304,7 +275,6 @@
             });
         });
 
-        // Initialize DataTable for search results
         var searchResultsTable = $('#searchResultsTable').DataTable({
             "responsive": true,
             "autoWidth": false,
@@ -327,7 +297,6 @@
             ]
         });
 
-        // Search Phone Number Form submission
         $('#searchPhoneNumberForm').on('submit', function(event) {
             event.preventDefault();
             
@@ -340,7 +309,6 @@
             var region = $('#region').val();
             var city = $('#city').val();
 
-            // Ensure mutually exclusive fields are not used together
             if ((startsWith && (contains || endsWith)) || (contains && endsWith)) {
                 Toast.fire({
                     icon: 'error',
@@ -379,7 +347,6 @@
                     city: city
                 },
                 success: function(response) {
-                    // Clear previous search results
                     searchResultsTable.clear().rows.add(response.data).draw();
                 },
                 error: function(err) {
@@ -391,7 +358,6 @@
             });
         });
 
-        // Purchase button click event
         $('#searchResultsTable').on('click', '.purchase-btn', function() {
             var phoneNumber = $(this).data('number');
 
@@ -428,26 +394,23 @@
             });
         });
 
-        // Fetch agents and populate the dropdown
         function fetchAgents() {
             $.ajax({
-                url: "{{ url_for('agents') }}", // Adjusted the URL to your endpoint
+                url: "{{ url_for('agents') }}",
                 type: 'GET',
                 headers: {
                     "Accept": "application/json",
                     "Content-Type": "application/json"
                 },
                 success: function(response) {
-                    console.log(response); // Debug: Log the response to inspect its structure
                     if (Array.isArray(response)) {
                         var agentSelect = $('#agentSelect');
                         agentSelect.empty();
-                        agentSelect.append('<option value="">Select Agent</option>'); // Option to unmap
+                        agentSelect.append('<option value="">Select Agent</option>');
                         response.forEach(function(agent) {
                             agentSelect.append(`<option value="${agent.id}">${agent.name}</option>`);
                         });
                     } else {
-                        console.error('Unexpected response structure:', response);
                         Toast.fire({
                             icon: 'error',
                             title: 'Failed to fetch agents. Unexpected response structure.'
@@ -455,7 +418,6 @@
                     }
                 },
                 error: function(err) {
-                    console.error('AJAX error:', err); // Debug: Log the error
                     Toast.fire({
                         icon: 'error',
                         title: 'Failed to fetch agents.'
@@ -464,25 +426,23 @@
             });
         }
 
-        // Open edit modal and fetch agents
         $('#phoneNumbersTable').on('click', '.edit-btn', function() {
             var phoneNumberId = $(this).data('id');
-            var phoneNumber = $(this).closest('tr').find('td:eq(1)').text(); // Assuming the number is in the second column
+            var phoneNumber = $(this).closest('tr').find('td:eq(1)').text();
             $('#editPhoneNumberModal').modal('show');
             fetchAgents();
             $('#editPhoneNumberForm').data('phoneNumberId', phoneNumberId);
-            $('#editPhoneNumberForm').data('phoneNumber', phoneNumber); // Store the phone number
+            $('#editPhoneNumberForm').data('phoneNumber', phoneNumber);
         });
 
-        // Handle form submission for editing phone number
         $('#editPhoneNumberForm').on('submit', function(event) {
             event.preventDefault();
             var phoneNumberId = $(this).data('phoneNumberId');
-            var phoneNumber = $(this).data('phoneNumber'); // Retrieve the phone number
+            var phoneNumber = $(this).data('phoneNumber');
             var agentId = $('#agentSelect').val();
 
             $.ajax({
-                url: "/phone_numbers/" + phoneNumberId, // Correctly append the ID
+                url: "/phone_numbers/" + phoneNumberId,
                 type: 'PUT',
                 contentType: 'application/json',
                 headers: {
@@ -492,7 +452,7 @@
                 data: JSON.stringify({ 
                     agent_id: agentId, 
                     phone_number_id: phoneNumberId,
-                    phone_number: phoneNumber // Include the phone number in the data
+                    phone_number: phoneNumber
                 }),
                 success: function(response) {
                     Toast.fire({
@@ -513,7 +473,6 @@
     });
 </script>
 
-<!-- Search Results Modal -->
 <div class="modal fade" id="searchResultsModal" tabindex="-1" role="dialog" aria-labelledby="searchResultsModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -525,14 +484,12 @@
             </div>
             <div class="modal-body">
                 <div id="searchResults">
-                    <!-- Search results will be displayed here -->
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Edit Phone Number Modal -->
 <div class="modal fade" id="editPhoneNumberModal" tabindex="-1" role="dialog" aria-labelledby="editPhoneNumberModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -547,7 +504,6 @@
                     <div class="form-group">
                         <label for="agentSelect">Assign to Agent</label>
                         <select class="form-control" id="agentSelect">
-                            <!-- Options will be populated via AJAX -->
                         </select>
                     </div>
                     <div class="d-flex justify-content-center mt-3">

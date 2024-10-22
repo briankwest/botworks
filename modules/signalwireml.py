@@ -1,10 +1,8 @@
 import json
 import yaml
 
-
 class SignalWireML:
     VERSION = '1.22'
-
 
     def __init__(self, version='1.0.0'):
         self._content = {

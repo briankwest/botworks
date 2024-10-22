@@ -3,15 +3,11 @@
 {% block title %}AI Agents{% endblock %}
 
 {% block content %}
-  <!-- Navbar -->
   {% include 'navbar.html' %}
-  <!-- /.navbar -->
 
-  <!-- Main Sidebar Container -->
   {% include 'sidebar.html' %}
 
   <div class="content-wrapper">
-    <!-- Content Header (Page header) -->
     <section class="content-header">
       <div class="container-fluid">
         <div class="row mb-2">
@@ -19,10 +15,9 @@
             <h1 class="m-0">AI Agents</h1>
           </div>
         </div>
-      </div><!-- /.container-fluid -->
+      </div>
     </section>
 
-    <!-- Main content -->
     <section class="content">
       <div class="container-fluid">
         <div class="row">
@@ -31,7 +26,6 @@
               <div class="card-header bg-primary">
                 <h3 class="card-title">AI Agents List</h3>
               </div>
-              <!-- /.card-header -->
               <div class="card-body">
                 <table id="agentTable" class="table table-striped">
                   <thead>
@@ -46,22 +40,16 @@
                   </tbody>
                 </table>
               </div>
-              <!-- /.card-body -->
             </div>
-            <!-- /.card -->
           </div>
-          <!-- /.col -->
         </div>
-        <!-- /.row -->
 
-        <!-- Add AI Agent Form -->
         <div class="row">
           <div class="col-12">
             <div class="card">
               <div class="card-header bg-success">
-                <h3 class="card-title">Add AI Agent Entry</h3>
+                <h3 class="card-title">Add AI Agent</h3>
               </div>
-              <!-- /.card-header -->
               <div class="card-body">
                 <form id="addAgentForm">
                   <div class="form-group">
@@ -75,20 +63,13 @@
                   <button type="submit" class="btn btn-success">Add AI Agent</button>
                 </form>
               </div>
-              <!-- /.card-body -->
             </div>
-            <!-- /.card -->
           </div>
-          <!-- /.col -->
         </div>
-        <!-- /.row -->
 
       </div>
-      <!-- /.container-fluid -->
     </section>
-    <!-- /.content -->
 
-    <!-- Add this modal at the end of the content block -->
     <div class="modal fade" id="editAgentModal" tabindex="-1" role="dialog" aria-labelledby="editAgentModalLabel" aria-hidden="true">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -113,17 +94,14 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" id="saveEditButton">Save changes</button>
+            <button type="button" class="btn btn-primary" id="saveEditButton">Save</button>
           </div>
         </div>
       </div>
     </div>
   </div>
-  <!-- /.content-wrapper -->
 
-  <!-- Footer -->
   {% include 'footer.html' %}
-  <!-- /.footer -->
 
 {% endblock %}
 
@@ -133,7 +111,6 @@
 
   <script>
     $(document).ready(function() {
-      // Initialize DataTable with responsive and autoWidth options
       $('#agentTable').DataTable({
         "responsive": true,
         "autoWidth": false,
@@ -156,7 +133,6 @@
               if (row.name !== "BotWorks") {
                 buttons += `<button class="btn btn-sm btn-danger delete-agent mr-2" data-id="${row.id}">Delete</button>`;
               }
-              // Add Clone button with spacing
               buttons += `<button class="btn btn-success btn-sm clone-agent" data-id="${row.id}">Clone</button>`;
               return buttons;
             }
@@ -164,7 +140,6 @@
         ]
       });
 
-      // Handle form submission for creating new AI agent entry
       $('#addAgentForm').submit(function(e) {
         e.preventDefault();
         const formData = {
@@ -181,7 +156,7 @@
             $('#agentTable').DataTable().ajax.reload();
             $('#addAgentForm')[0].reset();
             showToast('success', 'AI Agent entry created successfully');
-            delayedRefreshAgentsDropdown(); // Use delayed refresh
+            delayedRefreshAgentsDropdown();
           },
           error: function(error) {
             showToast('error', 'Error creating AI Agent entry');
@@ -189,7 +164,6 @@
         });
       });
 
-      // Handle delete button click
       $('#agentTable').on('click', '.delete-agent', function() {
         const id = $(this).data('id');
         Swal.fire({
@@ -208,7 +182,7 @@
               success: function(response) {
                 $('#agentTable').DataTable().ajax.reload();
                 showToast('success', 'AI Agent entry deleted successfully');
-                delayedRefreshAgentsDropdown(); // Use delayed refresh
+                delayedRefreshAgentsDropdown();
               },
               error: function(error) {
                 showToast('error', 'Error deleting AI Agent entry');
@@ -218,39 +192,34 @@
         });
       });
 
-      // Handle edit button click
       $('#agentTable').on('click', '.edit-agent', function() {
         const id = $(this).data('id');
-        console.log('Edit button clicked for ID:', id); // Debugging log
+        console.log('Edit button clicked for ID:', id);
 
         $.ajax({
           type: 'GET',
           url: "/agents/" + id,
           success: function(response) {
-            console.log('AJAX success:', response); // Debugging log
-            // Ensure these IDs match the input fields in the modal
+            console.log('AJAX success:', response);
             $('#editId').val(response.id);
             $('#editAgentName').val(response.name);
             $('#editAgentPhoneNumber').val(response.number);
 
-            // Disable the name input if the agent's name is "BotWorks"
             if (response.name === "BotWorks") {
               $('#editAgentName').prop('disabled', true);
             } else {
               $('#editAgentName').prop('disabled', false);
             }
 
-            // Show the modal
             $('#editAgentModal').modal('show');
           },
           error: function(error) {
-            console.error('AJAX error:', error); // Debugging log
+            console.error('AJAX error:', error);
             showToast('error', 'Error fetching AI Agent entry');
           }
         });
       });
 
-      // Handle save changes button click in edit modal
       $('#saveEditButton').click(function() {
         const id = $('#editId').val();
         const formData = {
@@ -266,7 +235,7 @@
           success: function(response) {
             $('#agentTable').DataTable().ajax.reload();
             $('#editAgentModal').modal('hide');
-            delayedRefreshAgentsDropdown(); // Use delayed refresh
+            delayedRefreshAgentsDropdown();
             showToast('success', 'AI Agent entry updated successfully');
           },
           error: function(error) {
@@ -275,7 +244,6 @@
         });
       });
 
-      // Handle clone button click
       $('#agentTable').on('click', '.clone-agent', function() {
         const id = $(this).data('id');
         $.ajax({
@@ -284,7 +252,7 @@
           success: function(response) {
             $('#agentTable').DataTable().ajax.reload();
             showToast('success', 'AI Agent entry cloned successfully');
-            delayedRefreshAgentsDropdown(); // Use delayed refresh
+            delayedRefreshAgentsDropdown();
           },
           error: function(error) {
             showToast('error', 'Error cloning AI Agent entry');
@@ -292,14 +260,13 @@
         });
       });
 
-      // Function to refresh the agents dropdown
       function refreshAgentsDropdown() {
         $.ajax({
           type: 'GET',
-          url: "/agents", // Adjust the URL if necessary
+          url: "/agents",
           success: function(data) {
-            const dropdown = $('#agentsDropdown'); // Adjust the selector to match your dropdown
-            dropdown.empty(); // Clear existing options
+            const dropdown = $('#agentsDropdown');
+            dropdown.empty();
             data.forEach(agent => {
               dropdown.append(new Option(agent.name, agent.id));
             });
@@ -310,7 +277,6 @@
         });
       }
 
-      // Add the showToast function here
       function showToast(icon, title) {
         const Toast = Swal.mixin({
           toast: true,
@@ -332,4 +298,3 @@
     });
   </script>
 {% endblock %}
-refreshAgentsDropdown();

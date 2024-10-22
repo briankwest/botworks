@@ -1,30 +1,22 @@
 {% extends 'base.html' %}
 
-{% block title %}Languages{% endblock %}
+{% block title %}Language{% endblock %}
 
 {% block content %}
-  <!-- Navbar -->
   {% include 'navbar.html' %}
-  <!-- /.navbar -->
-
-  <!-- Main Sidebar Container -->
   {% include 'sidebar.html' %}
 
-  <!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
-    <!-- Content Header (Page header) -->
     <div class="content-header">
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-6">
             <h1 class="m-0">Languages</h1>
-          </div><!-- /.col -->
-        </div><!-- /.row -->
-      </div><!-- /.container-fluid -->
+          </div>
+        </div>
+      </div>
     </div>
-    <!-- /.content-header -->
 
-    <!-- Main content -->
     <section class="content">
       <div class="container-fluid">
         <div class="row">
@@ -33,7 +25,6 @@
               <div class="card-header bg-primary">
                 <h3 class="card-title">Language Entries</h3>
               </div>
-              <!-- /.card-header -->
               <div class="card-body">
                 <table id="languageTable" class="table table-striped w-100">
                   <thead>
@@ -52,40 +43,31 @@
                   </tbody>
                 </table>
               </div>
-              <!-- /.card-body -->
             </div>
-            <!-- /.card -->
           </div>
-          <!-- /.col -->
         </div>
-        <!-- /.row -->
 
-        <!-- Add Language Form -->
         <div class="row">
           <div class="col-12">
             <div class="card">
               <div class="card-header bg-success">
                 <h3 class="card-title">Add Language Entry</h3>
               </div>
-              <!-- /.card-header -->
               <div class="card-body">
                 <form id="addLanguageForm">
                   <div class="form-group">
                     <label for="name">Name</label>
                     <select class="form-control" id="name" name="name" required>
-                      <!-- Options will be populated dynamically -->
                     </select>
                   </div>
                   <div class="form-group">
                     <label for="code">Code</label>
                     <select class="form-control" id="code" name="code" required>
-                      <!-- Options will be populated dynamically -->
                     </select>
                   </div>
                   <div class="form-group">
                     <label for="voice">Voice</label>
                     <select class="form-control" id="voice" name="voice">
-                      <!-- Options will be dynamically populated here -->
                     </select>
                   </div>
                   <div class="form-group">
@@ -103,20 +85,12 @@
                   <button type="submit" class="btn btn-success">Add Language</button>
                 </form>
               </div>
-              <!-- /.card-body -->
             </div>
-            <!-- /.card -->
           </div>
-          <!-- /.col -->
         </div>
-        <!-- /.row -->
-
       </div>
-      <!-- /.container-fluid -->
     </section>
-    <!-- /.content -->
 
-    <!-- Add this modal at the end of the content block -->
     <div class="modal fade" id="editLanguageModal" tabindex="-1" role="dialog" aria-labelledby="editLanguageModalLabel" aria-hidden="true">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -132,19 +106,16 @@
               <div class="form-group">
                 <label for="editName">Name</label>
                 <select class="form-control" id="editName" name="name" required>
-                  <!-- Options will be populated dynamically -->
                 </select>
               </div>
               <div class="form-group">
                 <label for="editCode">Code</label>
                 <select class="form-control" id="editCode" name="code" required>
-                  <!-- Options will be populated dynamically -->
                 </select>
               </div>
               <div class="form-group">
                 <label for="editVoice">Edit Voice</label>
                 <select class="form-control" id="editVoice" name="editVoice">
-                  <!-- Options will be dynamically populated here -->
                 </select>
               </div>
               <div class="form-group">
@@ -169,24 +140,17 @@
       </div>
     </div>
   </div>
-  <!-- /.content-wrapper -->
 
-  <!-- Footer -->
   {% include 'footer.html' %}
-  <!-- /.footer -->
 {% endblock %}
 
 {% block scripts %}
-  <!-- Add DataTables CSS and JS -->
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
   <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
-
-  <!-- Load the voiceLoader script -->
   <script src="/static/js/voiceLoader.js"></script>
 
   <script>
     $(document).ready(function() {
-      // Function to populate language dropdowns
       function populateLanguageDropdowns() {
         $.getJSON('/static/js/language.json', function(data) {
           const languages = data.languages;
@@ -204,16 +168,13 @@
             codeDropdowns.append(codeOption);
           });
 
-          // Set default selection
           nameDropdowns.val('English (United States)');
           codeDropdowns.val('en-US');
         });
       }
 
-      // Call the function to populate language dropdowns
       populateLanguageDropdowns();
 
-      // Update name dropdown when code is selected
       $('#code, #editCode').change(function() {
         const selectedCode = $(this).val();
         const nameDropdown = $(this).attr('id') === 'code' ? $('#name') : $('#editName');
@@ -226,7 +187,6 @@
         });
       });
 
-      // Update code dropdown when name is selected
       $('#name, #editName').change(function() {
         const selectedName = $(this).val();
         const codeDropdown = $(this).attr('id') === 'name' ? $('#code') : $('#editCode');
@@ -239,10 +199,9 @@
         });
       });
 
-      // Initialize DataTable
       $('#languageTable').DataTable({
-        "responsive": true,  // Enable responsive feature
-        "autoWidth": false,  // Disable auto width calculation
+        "responsive": true,
+        "autoWidth": false,
         "ajax": {
           "url": "{{ url_for('language') }}",
           "dataSrc": ""
@@ -267,7 +226,6 @@
         ]
       });
 
-      // Function to show toast notification
       function showToast(icon, title) {
         const Toast = Swal.mixin({
           toast: true,
@@ -287,7 +245,6 @@
         });
       }
 
-      // Handle form submission for creating new language entry
       $('#addLanguageForm').submit(function(e) {
         e.preventDefault();
         const formData = {
@@ -315,7 +272,6 @@
         });
       });
 
-      // Handle delete button click
       $('#languageTable').on('click', '.delete-language', function() {
         const id = $(this).data('id');
         Swal.fire({
@@ -343,7 +299,6 @@
         });
       });
 
-      // Handle edit button click
       $('#languageTable').on('click', '.edit-language', function() {
         const id = $(this).data('id');
         $.ajax({
@@ -365,7 +320,6 @@
         });
       });
 
-      // Handle save changes button click in edit modal
       $('#saveEditButton').click(function() {
         const id = $('#editId').val();
         const formData = {

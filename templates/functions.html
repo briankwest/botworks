@@ -3,15 +3,10 @@
 {% block title %}SWAIG Functions{% endblock %}
 
 {% block content %}
-  <!-- Navbar -->
   {% include 'navbar.html' %}
-  <!-- /.navbar -->
-
-  <!-- Main Sidebar Container -->
   {% include 'sidebar.html' %}
 
   <div class="content-wrapper">
-    <!-- Content Header (Page header) -->
     <section class="content-header">
       <div class="container-fluid">
         <div class="row mb-2">
@@ -19,10 +14,9 @@
             <h1 class="m-0">SWAIG Functions</h1>
           </div>
         </div>
-      </div><!-- /.container-fluid -->
+      </div>
     </section>
 
-    <!-- Main content -->
     <section class="content">
       <div class="container-fluid">
         <div class="row">
@@ -31,7 +25,6 @@
               <div class="card-header bg-primary">
                 <h3 class="card-title">Functions List</h3>
               </div>
-              <!-- /.card-header -->
               <div class="card-body">
                 <table id="functionTable" class="table table-striped w-100">
                   <thead>
@@ -53,22 +46,16 @@
                   </tbody>
                 </table>
               </div>
-              <!-- /.card-body -->
             </div>
-            <!-- /.card -->
           </div>
-          <!-- /.col -->
         </div>
-        <!-- /.row -->
 
-        <!-- Add Function Form -->
         <div class="row">
           <div class="col-12">
             <div class="card">
               <div class="card-header bg-success">
                 <h3 class="card-title">Add Function Entry</h3>
               </div>
-              <!-- /.card-header -->
               <div class="card-body">
                 <form id="addFunctionForm">
                   <div class="form-group">
@@ -106,7 +93,6 @@
                   <div class="form-group">
                     <label for="functionArguments">Function Arguments</label>
                     <div id="functionArgumentsContainer">
-                      <!-- Arguments will be dynamically added here -->
                     </div>
                     <button type="button" class="btn btn-secondary mt-2" id="addArgumentBtn">Add Argument</button>
                   </div>
@@ -117,15 +103,10 @@
                   <button type="submit" class="btn btn-success mt-3">Add Function</button>
                 </form>
               </div>
-              <!-- /.card-body -->
             </div>
-            <!-- /.card -->
           </div>
-          <!-- /.col -->
         </div>
-        <!-- /.row -->
 
-        <!-- Edit Function Modal -->
         <div class="modal fade" id="editFunctionModal" tabindex="-1" role="dialog" aria-labelledby="editFunctionModalLabel" aria-hidden="true">
           <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
@@ -190,7 +171,6 @@
                     </tr>
                   </thead>
                   <tbody id="functionArgsBody">
-                    <!-- Function arguments will be dynamically added here -->
                   </tbody>
                 </table>
                 <button type="button" class="btn btn-success" id="addNewArg">Add New Argument</button>
@@ -202,27 +182,20 @@
             </div>
           </div>
         </div>
-      </div><!-- /.container-fluid -->
+      </div>
     </section>
-    <!-- /.content -->
   </div>
-  <!-- /.content-wrapper -->
-     <!-- Footer -->
   {% include 'footer.html' %}
-  <!-- /.footer -->
 {% endblock %}
 
 {% block scripts %}
-  <!-- Add DataTables CSS and JS -->
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
   <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
-    <!-- Add Bootstrap JS -->
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
 
   <script>
     $(document).ready(function() {
-      // Initialize Swal toast
       const Toast = Swal.mixin({
         toast: true,
         position: 'top-end',
@@ -235,7 +208,6 @@
         }
       });
 
-      // Initialize DataTable with responsive and autoWidth options
       $('#functionTable').DataTable({
         "responsive": true,
         "autoWidth": false,
@@ -271,7 +243,6 @@
         ]
       });
 
-      // Add event listeners for delete buttons
       $('#functionTable').on('click', '.delete-function', function() {
         const functionId = $(this).data('id');
         Swal.fire({
@@ -299,7 +270,7 @@
                   icon: 'success',
                   title: 'Function entry has been deleted.'
                 });
-                $('#functionTable').DataTable().ajax.reload(); // Reload DataTable without page reload
+                $('#functionTable').DataTable().ajax.reload();
               } else {
                 Swal.fire('Error', 'Error deleting function', 'error');
               }
@@ -312,7 +283,6 @@
         });
       });
 
-      // Add event listeners for edit buttons
       $('#functionTable').on('click', '.edit-function', function() {
         const functionId = $(this).data('id');
         fetch(`/functions/${functionId}`)
@@ -344,7 +314,7 @@
           .then(response => response.json())
           .then(args => {
             const argsBody = $('#functionArgsBody');
-            argsBody.empty(); // Clear existing rows
+            argsBody.empty();
             args.forEach(arg => {
               argsBody.append(createArgRow(arg));
             });
@@ -385,7 +355,6 @@
         `;
       }
 
-      // Add event listener to toggle enum field visibility based on type selection
       $('#functionArgsBody').on('change', 'select[name="arg_type"]', function() {
         const $row = $(this).closest('tr');
         const isArrayType = $(this).val() === 'array';
@@ -408,7 +377,7 @@
 
       $('#functionArgsBody').on('click', '.delete-arg', function() {
         const $row = $(this).closest('tr');
-        const argId = $row.data('arg-id'); // Ensure this is correctly set
+        const argId = $row.data('arg-id');
 
         if (typeof argId === 'string' && argId.startsWith('new_')) {
           $row.remove();
@@ -479,7 +448,6 @@
           active: $('#editFunctionActive').is(':checked')
         };
 
-        // Update function
         fetch(`/functions/${functionId}`, {
           method: 'PUT',
           headers: {
@@ -490,7 +458,6 @@
         .then(response => response.json())
         .then(data => {
           if (data.message === 'Function entry updated successfully') {
-            // Update arguments
             const argRows = $('#functionArgsBody tr');
             const argPromises = argRows.map((index, row) => {
               const $row = $(row);
@@ -530,7 +497,7 @@
                   title: 'Function entry updated successfully'
                 });
                 $('#editFunctionModal').modal('hide');
-                $('#functionTable').DataTable().ajax.reload(); // Reload DataTable without page reload
+                $('#functionTable').DataTable().ajax.reload();
               })
               .catch(error => {
                 console.error('Error updating arguments:', error);
@@ -609,7 +576,6 @@
           arguments: []
         };
 
-        // Process arguments
         const argNames = formData.getAll('arg_name[]');
         const argTypes = formData.getAll('arg_type[]');
         const argDescriptions = formData.getAll('arg_description[]');
@@ -652,6 +618,4 @@
       });
     });
   </script>
-</script>
 {% endblock %}
-

@@ -3,31 +3,24 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-  <!-- Navbar -->
   {% include 'navbar.html' %}
-  <!-- /.navbar -->
 
-  <!-- Main Sidebar Container -->
   {% include 'sidebar.html' %}
 
-  <!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
-    <!-- Content Header (Page header) -->
     <div class="content-header">
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-6">
             <h1 class="m-0">Dashboard</h1>
           </div>
-        </div><!-- /.row -->
-      </div><!-- /.container-fluid -->
+        </div>
+      </div>
     </div>
     <section class="content">
       <div class="container-fluid">
-        <!-- Small boxes (Stat box) -->
         <div class="row">
           <div class="col-12">
-            <!-- Calls Graph -->
             <div class="card">
               <div class="card-header bg-primary">
                 <h3 class="card-title">AI Agent Completed Conversations (UTC)</h3>
@@ -46,15 +39,15 @@
                         datasets: [{
                           label: 'Completed Conversations (UTC)',
                           data: data.counts,
-                          fill: true, // This makes it an area chart
+                          fill: true,
                           backgroundColor: 'rgba(54, 162, 235, 0.2)',
                           borderColor: 'rgba(54, 162, 235, 1)',
                           borderWidth: 1,
-                          tension: 0.4 // This makes the line smooth
+                          tension: 0.4
                         }]
                       };
                       const callsChart = new Chart(ctx, {
-                        type: 'line', // Change 'area' to 'line'
+                        type: 'line',
                         data: chartData,
                         options: {
                           scales: {
@@ -76,7 +69,6 @@
         </div>
         <div class="row">
           <div class="col-12">
-            <!-- SWML and YAML URLs Card -->
             <div class="card">
               <div class="card-header bg-success">
                 <h3 class="card-title">Service URLs</h3>
@@ -112,7 +104,6 @@
             </div>
           </div>
           <div class="col-lg-3 col-6">
-            <!-- Number of Requests Card -->
             <div class="small-box bg-info">
               <div class="inner">
                 <h3>{{ number_of_requests }}</h3>
@@ -125,7 +116,6 @@
             </div>
           </div>
           <div class="col-lg-3 col-6">
-            <!-- Number of Post Prompts Card -->
             <div class="small-box bg-success">
               <div class="inner">
                 <h3>{{ number_of_conversations }}</h3>
@@ -140,11 +130,8 @@
         </div>
       </div>
     </section>
-    <!-- /.content -->
  </div>
-  <!-- Footer -->
   {% include 'footer.html' %}
-  <!-- /.footer -->
 
   <script>
     function copyToClipboard(elementId) {

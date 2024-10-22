@@ -2,7 +2,6 @@ from modules.db import db
 from flask_login import UserMixin
 from datetime import datetime
 
-# AIAgent model definition
 class AIAgent(db.Model):
     __tablename__ = 'ai_agents'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -13,7 +12,6 @@ class AIAgent(db.Model):
 
     user = db.relationship('AIUser', backref=db.backref('ai_agents', lazy=True))
     
-    # Add cascade delete to all related models with unique backref names
     ai_debug_logs = db.relationship('AIDebugLogs', back_populates='agent', cascade='all, delete-orphan', lazy=True)
     ai_signalwire_params = db.relationship('AISignalWireParams', back_populates='agent', cascade='all, delete-orphan', lazy=True)
     ai_swml_requests = db.relationship('AISWMLRequest', back_populates='agent', cascade='all, delete-orphan', lazy=True)
@@ -30,13 +28,12 @@ class AIAgent(db.Model):
     def __repr__(self):
         return f'<AIAgent {self.name}>'
 
-# AIDebugLogs model definition
 class AIDebugLogs(db.Model):
     __tablename__ = 'ai_debug_logs'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
-    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # New reference
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
     data = db.Column(db.JSON, nullable=False)
     ip_address = db.Column(db.String(45), nullable=True)
 
@@ -46,12 +43,11 @@ class AIDebugLogs(db.Model):
     def __repr__(self):
         return f'<AIDebugLogs {self.id}>'
 
-# AISignalWireParams model definition
 class AISignalWireParams(db.Model):
     __tablename__ = 'ai_signalwire_params'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
-    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # New reference
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
     name = db.Column(db.String(100), nullable=False)
     value = db.Column(db.String(255), nullable=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -62,13 +58,12 @@ class AISignalWireParams(db.Model):
     def __repr__(self):
         return f'<AISignalWireParams {self.name}: {self.value}>'
 
-# AISWMLRequest model definition
 class AISWMLRequest(db.Model):
     __tablename__ = 'ai_swml_requests'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
-    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # New reference
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
     request = db.Column(db.JSON, nullable=False)
     response = db.Column(db.JSON, nullable=False)
     ip_address = db.Column(db.String(45), nullable=True)
@@ -79,7 +74,6 @@ class AISWMLRequest(db.Model):
     def __repr__(self):
         return f'<AISWMLRequest {self.id}>'
 
-# AIFunctions model definition
 class AIFunctions(db.Model):
     __tablename__ = 'ai_functions'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -108,7 +102,6 @@ class AIFunctions(db.Model):
     def __repr__(self):
         return f'<AIFunctions {self.name}>'
 
-# AIFunctionArgs model definition
 class AIFunctionArgs(db.Model):
     __tablename__ = 'ai_function_argument'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -122,7 +115,7 @@ class AIFunctionArgs(db.Model):
     active = db.Column(db.Boolean, nullable=False, default=True)
     required = db.Column(db.Boolean, nullable=False, default=False)
     enum = db.Column(db.Text, nullable=True)
-    default = db.Column(db.Text, nullable=True)  # New field
+    default = db.Column(db.Text, nullable=True)
 
     function = db.relationship(
         'AIFunctions', 
@@ -136,14 +129,13 @@ class AIFunctionArgs(db.Model):
     def __repr__(self):
         return f'<AIFunctionArgs {self.name}>'
 
-# AIHints model definition
 class AIHints(db.Model):
     __tablename__ = 'ai_hints'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     hint = db.Column(db.Text, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
-    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # New reference
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
 
     user = db.relationship('AIUser', backref=db.backref('ai_hints', lazy=True))
     agent = db.relationship('AIAgent', back_populates='ai_hints')
@@ -151,7 +143,6 @@ class AIHints(db.Model):
     def __repr__(self):
         return f'<AIHints {self.hint}>'
 
-# AIPronounce model definition
 class AIPronounce(db.Model):
     __tablename__ = 'ai_pronounce'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -160,7 +151,7 @@ class AIPronounce(db.Model):
     replace_this = db.Column(db.Text, nullable=False)
     replace_with = db.Column(db.Text, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
-    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # New reference
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
 
     user = db.relationship('AIUser', backref=db.backref('ai_pronounce', lazy=True))
     agent = db.relationship('AIAgent', back_populates='ai_pronounce')
@@ -168,7 +159,6 @@ class AIPronounce(db.Model):
     def __repr__(self):
         return f'<AIPronounce {self.replace_this} -> {self.replace_with}>'
 
-# AIPrompt model definition
 class AIPrompt(db.Model):
     __tablename__ = 'ai_prompt'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -182,23 +172,20 @@ class AIPrompt(db.Model):
     frequency_penalty = db.Column(db.Float, nullable=True)
     presence_penalty = db.Column(db.Float, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
-    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # New reference
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
 
     user = db.relationship('AIUser', backref=db.backref('ai_prompt', lazy=True))
     agent = db.relationship('AIAgent', back_populates='ai_prompt')
 
-    #__table_args__ = (db.UniqueConstraint('user_id', 'prompt_type'),)
-
     def __repr__(self):
         return f'<AIPrompt {self.prompt_type}: {self.prompt_text}>'
 
-# AILanguage model definition
 class AILanguage(db.Model):
     __tablename__ = 'ai_language'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
-    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # New reference
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
     code = db.Column(db.Text, nullable=True)
     name = db.Column(db.Text, nullable=True)
     voice = db.Column(db.Text, nullable=True)
@@ -212,14 +199,13 @@ class AILanguage(db.Model):
     def __repr__(self):
         return f'<AILanguage {self.name}>'
 
-# AIConversation model definition
 class AIConversation(db.Model):
     __tablename__ = 'ai_conversation'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     data = db.Column(db.JSON, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
-    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # New reference
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
 
     user = db.relationship('AIUser', backref=db.backref('ai_conversation', lazy=True))
     agent = db.relationship('AIAgent', back_populates='ai_conversation')
@@ -227,12 +213,11 @@ class AIConversation(db.Model):
     def __repr__(self):
         return f'<AIConversation {self.id}>'
 
-# AIParams model definition
 class AIParams(db.Model):
     __tablename__ = 'ai_params'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
-    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # New reference
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
     name = db.Column(db.String(100), nullable=False)
     value = db.Column(db.String(255), nullable=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -243,7 +228,6 @@ class AIParams(db.Model):
     def __repr__(self):
         return f'<AIParams {self.name}: {self.value}>'
 
-# AIFeatures model definition
 class AIFeatures(db.Model):
     __tablename__ = 'ai_features'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -260,7 +244,6 @@ class AIFeatures(db.Model):
     def __repr__(self):
         return f'<AIFeatures {self.name}: {self.value}, Enabled: {self.enabled}>'
 
-# AIUser model definition
 class AIUser(UserMixin, db.Model):
     __tablename__ = 'ai_users'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True, nullable=False)
@@ -286,4 +269,3 @@ class AIIncludes(db.Model):
 
     def __repr__(self):
         return f'<AIIncludes {self.url}>'
-

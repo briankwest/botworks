@@ -3,15 +3,10 @@
 {% block title %}Conversations{% endblock %}
 
 {% block content %}
-  <!-- Navbar -->
   {% include 'navbar.html' %}
-  <!-- /.navbar -->
-
-  <!-- Main Sidebar Container -->
   {% include 'sidebar.html' %}
   
   <div class="content-wrapper">
-    <!-- Content Header (Page header) -->
     <section class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
@@ -19,10 +14,9 @@
                     <h1 class="m-0">SWML Requests</h1>
                 </div>
             </div>
-        </div><!-- /.container-fluid -->
+        </div>
     </section>
 
-    <!-- Main content -->
     <section class="content">
         <div class="container-fluid">
             <div class="row">
@@ -31,7 +25,6 @@
                         <div class="card-header bg-primary">
                             <h3 class="card-title">SWML Requests</h3>
                         </div>
-                        <!-- /.card-header -->
                         <div class="card-body">
                             <table id="swmlRequestsTable" class="table table-striped w-100">
                                 <thead>
@@ -44,62 +37,44 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <!-- Data will be populated by JavaScript -->
                                 </tbody>
                             </table>
                         </div>
-                        <!-- /.card-body -->
                     </div>
-                    <!-- /.card -->
                 </div>
-                <!-- /.col -->
             </div>
-            <!-- /.row -->
-        </div>
-        <!-- /.container-fluid -->
-        <!-- Actions Card -->
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card">
-              <div class="card-header bg-success">
-                  <h3 class="card-title">Actions</h3>
-              </div>
-              <div class="card-body text-center">
-                  <button id="delete-all-swml-requests" class="btn btn-danger">Delete All SWML Requests</button>
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-success">
+                            <h3 class="card-title">Actions</h3>
+                        </div>
+                        <div class="card-body text-center">
+                            <button id="delete-all-swml-requests" class="btn btn-danger">Delete All SWML Requests</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
-    <!-- /.content -->
-
-
-    <!-- /.row -->
   </div>
-  <!-- /.content-wrapper -->
-     <!-- Footer -->
   {% include 'footer.html' %}
-  <!-- /.footer -->
 {% endblock %}
 
 {% block scripts %}
-  <!-- Add DataTables CSS and JS -->
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
   <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
-
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
- <script>
+  <script>
     $(document).ready(function() {
       initializeDataTable();
 
-      // Event delegation for dynamically created elements
       $('#swmlRequestsTable').on('click', '.copy-btn', function() {
         const dataString = $(this).prev('textarea').val();
         copyToClipboard(dataString);
       });
 
-      // Add event listener for the "Delete All" button
       document.getElementById('delete-all-swml-requests').addEventListener('click', function() {
         Swal.fire({
           title: 'Are you sure?',
@@ -127,7 +102,6 @@
                   timer: 2000,
                   showConfirmButton: false
                 });
-                // Refresh the DataTable to reflect the deletion
                 $('#swmlRequestsTable').DataTable().ajax.reload();
             })
             .catch(error => {
@@ -146,9 +120,7 @@
     });
 
     function initializeDataTable() {
-      // Check if DataTables is loaded
       if ($.fn.DataTable) {
-        // Initialize DataTable
         $('#swmlRequestsTable').DataTable({
           "ajax": {
             "url": "{{ url_for('swmlrequests') }}",
@@ -168,7 +140,7 @@
             { "data": "request",
               "render": function(data, type, row) {
                 const dataString = JSON.stringify(data, null, 2);
-                const uniqueId = `copy-btn-${row.id}`; // Assuming each row has a unique ID
+                const uniqueId = `copy-btn-${row.id}`;
                 return `
                   <textarea readonly style="width: 400px; height: 5em;">${dataString}</textarea>
                   <i id="${uniqueId}" class="fas fa-copy copy-btn"></i>
@@ -178,7 +150,7 @@
             { "data": "response",
               "render": function(data, type, row) {
                 const dataString = JSON.stringify(data, null, 2);
-                const uniqueId = `copy-btn-${row.id}`; // Assuming each row has a unique ID
+                const uniqueId = `copy-btn-${row.id}`;
                 return `
                   <textarea readonly style="width: 400px; height: 5em;">${dataString}</textarea>
                   <i id="${uniqueId}" class="fas fa-copy copy-btn"></i>
@@ -198,7 +170,6 @@
 
       window.copyToClipboard = async function(value) {
         try {
-          // Parse the JSON string to ensure it's not escaped
           const parsedValue = JSON.parse(value);
           const formattedValue = JSON.stringify(parsedValue, null, 2);
 
@@ -243,13 +214,11 @@
 
     function deleteRequest(id) {
       $.ajax({
-        url: `/swmlrequests/${id}`, // Adjust the URL to match your backend endpoint
+        url: `/swmlrequests/${id}`,
         type: 'DELETE',
         success: function(result) {
-          // Reload the DataTable to reflect the changes
           $('#swmlRequestsTable').DataTable().ajax.reload();
           
-          // Use a small toast for delete success
           const Toast = Swal.mixin({
             toast: true,
             position: 'top-end',
@@ -273,5 +242,4 @@
       });
     }
   </script>
-    
 {% endblock %}

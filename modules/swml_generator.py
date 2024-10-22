@@ -12,7 +12,6 @@ def generate_swml_response(user_id, agent_id, request_body):
     request_body = request_body or {}
     swml = SignalWireML(version="1.0.0")
     
-    # Determine if the request is outbound
     outbound = request_body.get('outbound', False)
     
     enable_record_feature = get_feature(agent_id, 'ENABLE_RECORD')
@@ -23,7 +22,6 @@ def generate_swml_response(user_id, agent_id, request_body):
             "format": enable_record_feature.value
         })  
     
-    # Select the appropriate prompt based on the outbound flag
     if outbound:
         prompt = AIPrompt.query.filter_by(user_id=user_id, agent_id=agent_id, prompt_type='outbound_prompt').first()
         post_prompt = AIPrompt.query.filter_by(user_id=user_id, agent_id=agent_id, prompt_type='outbound_post_prompt').first()
@@ -43,7 +41,6 @@ def generate_swml_response(user_id, agent_id, request_body):
         db.session.add(prompt)
         db.session.commit()
 
-    # Set up the initial prompt
     aiprompt_data = {
         "temperature": prompt.temperature if prompt.temperature is not None else 0.5,
         "top_p": prompt.top_p if prompt.top_p is not None else 0.5,
@@ -60,7 +57,6 @@ def generate_swml_response(user_id, agent_id, request_body):
    
     swml.set_aiprompt(aiprompt_data)
     
-    # Add post_prompt if available
     if post_prompt:
         post_prompt_data = {
             "temperature": post_prompt.temperature if post_prompt.temperature is not None else 0.5,
@@ -78,12 +74,10 @@ def generate_swml_response(user_id, agent_id, request_body):
 
         swml.set_aipost_prompt(post_prompt_data)
     
-    # Add parameters
     ai_params = AIParams.query.filter_by(user_id=user_id, agent_id=agent_id).all()
     params_dict = {param.name: param.value for param in ai_params}
     swml.set_aiparams(params_dict)
 
-    # Set URLs with authentication if available
     auth_user = AIUser.query.filter_by(id=user_id).first().username
     auth_pass = get_signal_wire_param(user_id, agent_id, 'HTTP_PASSWORD')
     
@@ -102,11 +96,9 @@ def generate_swml_response(user_id, agent_id, request_body):
         debug_webhook_url = f"https://{auth_user}:{auth_pass}@{request.host}/debugwebhook/{user_id}/{agent_id}"
         swml.add_aiparams({"debug_webhook_url": debug_webhook_url})
 
-    # Add hints
     hints = AIHints.query.filter_by(user_id=user_id, agent_id=agent_id).all()
     swml.add_aihints([hint.hint for hint in hints])
             
-    # Add languages
     languages = AILanguage.query.filter_by(user_id=user_id, agent_id=agent_id).order_by(AILanguage.language_order.asc()).all()
     for language in languages:
         language_data = {
@@ -122,7 +114,6 @@ def generate_swml_response(user_id, agent_id, request_body):
 
         swml.add_ailanguage(language_data)
 
-    # Add pronounces
     pronounces = AIPronounce.query.filter_by(user_id=user_id, agent_id=agent_id).all()
     for pronounce in pronounces:
         swml.add_aipronounce({
@@ -131,7 +122,6 @@ def generate_swml_response(user_id, agent_id, request_body):
             "ignore_case": pronounce.ignore_case
         })
 
-    # Add functions
     functions = AIFunctions.query.filter_by(user_id=user_id, agent_id=agent_id).all()
     for function in functions:
         function_data = {
@@ -173,21 +163,17 @@ def generate_swml_response(user_id, agent_id, request_body):
             function_payload["active"] = function.active
         swml.add_aiswaigfunction(function_payload)
 
-    # Check if the ENABLE_MESSAGE feature is enabled for the agent
     enable_message_feature = get_feature(agent_id, 'ENABLE_MESSAGE')
 
     if enable_message_feature and enable_message_feature.enabled:
-        # Create a new SignalWireML instance
         msg = SignalWireML(version="1.0.0")
 
-        # Add the application with the send_sms function
         msg.add_application("main", "send_sms", {
             "to_number": '${args.to}',
             "from_number": enable_message_feature.value,
             "body": '${args.message}'
         })
 
-        # Check if ENABLE_MESSAGE_INACTIVE is set
         enable_message_inactive = get_feature(agent_id, 'ENABLE_MESSAGE_INACTIVE')
 
         swml.add_aiswaigfunction({
@@ -220,10 +206,8 @@ def generate_swml_response(user_id, agent_id, request_body):
             }
         })
 
-    # Fetch all includes from the AIIncludes model
     ai_includes = AIIncludes.query.filter_by(user_id=user_id, agent_id=agent_id).all()
     for ai_include in ai_includes:
-        # Prepare the function dictionary
         function_dict = {
             "url": ai_include.url,
             "functions": json.loads(ai_include.functions)
@@ -231,20 +215,16 @@ def generate_swml_response(user_id, agent_id, request_body):
 
         swml.add_aiinclude(function_dict)
 
-    # Check if the ENABLE_TRANSFER feature is enabled for the agent
     enable_transfer_feature = get_feature(agent_id, 'ENABLE_TRANSFER')
 
     if enable_transfer_feature and enable_transfer_feature.enabled:
-        # Create a new SignalWireML instance for transfer
         transfer = SignalWireML(version="1.0.0")
 
-        # Add the application with the connect function
         transfer.add_application("main", "connect", {
             "to": '${meta_data.table.${lc:args.target}}',
-            "from": 'assistant'  # Replace 'assistant' with the appropriate variable
+            "from": 'assistant'
         })
 
-        # Parse the TRANSFER_TABLE configuration
         transfer_table = get_feature(agent_id, 'TRANSFER_TABLE')
         transfer_hash = {}
         for pair in transfer_table.value.split('|'):
@@ -253,7 +233,6 @@ def generate_swml_response(user_id, agent_id, request_body):
 
         enable_transfer_inactive = get_feature(agent_id, 'ENABLE_TRANSFER_INACTIVE')
 
-        # Add the transfer function to SWML
         swml.add_aiswaigfunction({
             "function": "transfer",
             **({"active": False} if enable_transfer_inactive and enable_transfer_inactive.enabled else {}),
@@ -292,12 +271,10 @@ def generate_swml_response(user_id, agent_id, request_body):
             }
         })
     
-    # Retrieve API_NINJAS_KEY using get_feature
     api_ninjas_key_feature = get_feature(agent_id, 'API_NINJAS_KEY')
     api_ninjas_key = api_ninjas_key_feature.value if api_ninjas_key_feature and api_ninjas_key_feature.enabled else None
 
     if api_ninjas_key:
-        # Add weather function if enabled
         api_ninjas_weather_feature = get_feature(agent_id, 'API_NINJAS_WEATHER')
         if api_ninjas_weather_feature and api_ninjas_weather_feature.enabled:
             swml.add_aiswaigfunction({
@@ -335,7 +312,6 @@ def generate_swml_response(user_id, agent_id, request_body):
                 }
             })
 
-        # Add jokes function if enabled
         api_ninjas_jokes_feature = get_feature(agent_id, 'API_NINJAS_JOKES')
         if api_ninjas_jokes_feature and api_ninjas_jokes_feature.enabled:
             dj = SignalWireML(version="1.0.0")
@@ -369,7 +345,6 @@ def generate_swml_response(user_id, agent_id, request_body):
                 }
             })
 
-        # Add trivia function if enabled
         api_ninjas_trivia_feature = get_feature(agent_id, 'API_NINJAS_TRIVIA')
         if api_ninjas_trivia_feature and api_ninjas_trivia_feature.enabled:
             swml.add_aiswaigfunction({
@@ -398,7 +373,6 @@ def generate_swml_response(user_id, agent_id, request_body):
                 }
             })
 
-        # Add facts function if enabled
         api_ninjas_facts_feature = get_feature(agent_id, 'API_NINJAS_FACTS')
         if api_ninjas_facts_feature and api_ninjas_facts_feature.enabled:
             swml.add_aiswaigfunction({
@@ -419,7 +393,6 @@ def generate_swml_response(user_id, agent_id, request_body):
                 }
             })
 
-        # Add quotes function if enabled
         api_ninjas_quotes_feature = get_feature(agent_id, 'API_NINJAS_QUOTES')
         if api_ninjas_quotes_feature and api_ninjas_quotes_feature.enabled:
             swml.add_aiswaigfunction({
@@ -461,7 +434,6 @@ def generate_swml_response(user_id, agent_id, request_body):
                 }
             })
             
-        # Check if the API_NINJAS_COCKTAILS feature is enabled for the agent
         api_ninjas_cocktails_feature = get_feature(agent_id, 'API_NINJAS_COCKTAILS')
         if api_ninjas_cocktails_feature and api_ninjas_cocktails_feature.enabled:
             swml.add_aiswaigfunction({
@@ -494,24 +466,18 @@ def generate_swml_response(user_id, agent_id, request_body):
                 }
             })
 
-
-    # Check if the ENABLE_DATASPHERE feature is enabled for the agent
     enable_datasphere_feature = get_feature(agent_id, 'ENABLE_DATASPHERE')
     if enable_datasphere_feature and enable_datasphere_feature.enabled:
-        # Retrieve the document ID from the feature's value
         document_id = enable_datasphere_feature.value
 
-        # Retrieve SIGNALWIRE details
         space_name = get_signal_wire_param(user_id, agent_id, 'SPACE_NAME')
         project_id = get_signal_wire_param(user_id, agent_id, 'PROJECT_ID')
         auth_token = get_signal_wire_param(user_id, agent_id, 'AUTH_TOKEN')
 
-        # Construct the URL and authorization header
         encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
         url = f"https://{space_name}/api/datasphere/documents/search"
         authorization = f"Basic {encoded_credentials}"
 
-        # Add the get_vector_data function
         swml.add_aiswaigfunction({
             "function": "get_vector_data",
             "data_map": {
@@ -546,20 +512,16 @@ def generate_swml_response(user_id, agent_id, request_body):
             }
         })
 
-    # Add application
     swml.add_aiapplication("main")
-    # Render the SWML response (this is what you will store in the response column)
     swml_response = swml.render()
 
-    # Get the IP address of the client
     ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
 
-    # Log the SWML request (as a JSONB object) and the response in the AISWMLRequest table
     new_swml_request = AISWMLRequest(
         user_id=user_id,
-        agent_id=agent_id,  # Include agent_id in the request log
-        request=jsonify(request_body).json,    # Log the incoming request JSON data as JSONB
-        response=jsonify(swml_response).json,   # Log the SWML response data as JSONB
+        agent_id=agent_id,
+        request=jsonify(request_body).json,
+        response=jsonify(swml_response).json,
         ip_address=ip_address
     )
     db.session.add(new_swml_request)

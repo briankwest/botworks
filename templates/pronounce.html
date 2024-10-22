@@ -3,28 +3,20 @@
 {% block title %}Pronounce{% endblock %}
 
 {% block content %}
-  <!-- Navbar -->
   {% include 'navbar.html' %}
-  <!-- /.navbar -->
-
-  <!-- Main Sidebar Container -->
   {% include 'sidebar.html' %}
 
-  <!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
-    <!-- Content Header (Page header) -->
     <div class="content-header">
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-6">
             <h1 class="m-0">Pronounce</h1>
-          </div><!-- /.col -->
-        </div><!-- /.row -->
-      </div><!-- /.container-fluid -->
+          </div>
+        </div>
+      </div>
     </div>
-    <!-- /.content-header -->
 
-    <!-- Main content -->
     <section class="content">
       <div class="container-fluid">
         <div class="row">
@@ -33,7 +25,6 @@
               <div class="card-header bg-primary">
                 <h3 class="card-title">Pronounce Entries</h3>
               </div>
-              <!-- /.card-header -->
               <div class="card-body">
                 <table id="pronounceTable" class="table table-striped w-100">
                   <thead>
@@ -49,22 +40,16 @@
                   </tbody>
                 </table>
               </div>
-              <!-- /.card-body -->
             </div>
-            <!-- /.card -->
           </div>
-          <!-- /.col -->
         </div>
-        <!-- /.row -->
 
-        <!-- Add Pronounce Form -->
         <div class="row">
           <div class="col-12">
             <div class="card">
               <div class="card-header bg-success">
                 <h3 class="card-title">Add Pronounce Entry</h3>
               </div>
-              <!-- /.card-header -->
               <div class="card-body">
                 <form id="addPronounceForm">
                   <div class="form-group">
@@ -82,20 +67,12 @@
                   <button type="submit" class="btn btn-success">Add Pronounce</button>
                 </form>
               </div>
-              <!-- /.card-body -->
             </div>
-            <!-- /.card -->
           </div>
-          <!-- /.col -->
         </div>
-        <!-- /.row -->
-
       </div>
-      <!-- /.container-fluid -->
     </section>
-    <!-- /.content -->
 
-    <!-- Add this modal at the end of the content block -->
     <div class="modal fade" id="editPronounceModal" tabindex="-1" role="dialog" aria-labelledby="editPronounceModalLabel" aria-hidden="true">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -130,24 +107,19 @@
       </div>
     </div>
   </div>
-  <!-- /.content-wrapper -->
-  <!-- Footer -->
   {% include 'footer.html' %}
-  <!-- /.footer -->
 
 {% endblock %}
 
 {% block scripts %}
-  <!-- Add DataTables CSS and JS -->
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
   <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
 
   <script>
     $(document).ready(function() {
-      // Initialize DataTable
       $('#pronounceTable').DataTable({
-        "responsive": true,  // Enable responsive design
-        "autoWidth": true,   // Enable auto-width
+        "responsive": true,
+        "autoWidth": true,
         "ajax": {
           "url": "{{ url_for('pronounce') }}",
           "dataSrc": ""
@@ -170,7 +142,6 @@
         ]
       });
 
-      // Function to show toast notification
       function showToast(icon, title) {
         const Toast = Swal.mixin({
           toast: true,
@@ -190,7 +161,6 @@
         });
       }
 
-      // Handle form submission for creating new pronounce entry
       $('#addPronounceForm').submit(function(e) {
         e.preventDefault();
         const formData = {
@@ -218,7 +188,6 @@
         });
       });
 
-      // Handle delete button click
       $('#pronounceTable').on('click', '.delete-pronounce', function() {
         const id = $(this).data('id');
         
@@ -250,7 +219,6 @@
         });
       });
 
-      // Handle edit button click
       $('#pronounceTable').on('click', '.edit-pronounce', function() {
         const id = $(this).data('id');
         const row = $('#pronounceTable').DataTable().row($(this).closest('tr')).data();
@@ -263,7 +231,6 @@
         $('#editPronounceModal').modal('show');
       });
 
-      // Handle save changes button click
       $('#saveEditButton').on('click', function() {
         const formData = {
           id: $('#editId').val(),
