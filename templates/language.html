@@ -72,66 +72,14 @@
                 <form id="addLanguageForm">
                   <div class="form-group">
                     <label for="name">Name</label>
-                    <input type="text" class="form-control" id="name" name="name" required>
+                    <select class="form-control" id="name" name="name" required>
+                      <!-- Options will be populated dynamically -->
+                    </select>
                   </div>
                   <div class="form-group">
                     <label for="code">Code</label>
                     <select class="form-control" id="code" name="code" required>
-                      <option value="af-ZA">Afrikaans (South Africa)</option>
-                      <option value="ar-XA">Arabic</option>
-                      <option value="eu-ES">Basque (Spain)</option>
-                      <option value="bn-IN">Bengali (India)</option>
-                      <option value="bg-BG">Bulgarian (Bulgaria)</option>
-                      <option value="ca-ES">Catalan (Spain)</option>
-                      <option value="yue-HK">Chinese (Hong Kong)</option>
-                      <option value="cs-CZ">Czech (Czech Republic)</option>
-                      <option value="da-DK">Danish (Denmark)</option>
-                      <option value="nl-BE">Dutch (Belgium)</option>
-                      <option value="nl-NL">Dutch (Netherlands)</option>
-                      <option value="en-AU">English (Australia)</option>
-                      <option value="en-IN">English (India)</option>
-                      <option value="en-GB">English (UK)</option>
-                      <option value="en-US" selected>English (US)</option> <!-- Set default to English (US) -->
-                      <option value="fil-PH">Filipino (Philippines)</option>
-                      <option value="fi-FI">Finnish (Finland)</option>
-                      <option value="fr-CA">French (Canada)</option>
-                      <option value="fr-FR">French (France)</option>
-                      <option value="gl-ES">Galician (Spain)</option>
-                      <option value="de-DE">German (Germany)</option>
-                      <option value="el-GR">Greek (Greece)</option>
-                      <option value="gu-IN">Gujarati (India)</option>
-                      <option value="hi-IN">Hindi (India)</option>
-                      <option value="hu-HU">Hungarian (Hungary)</option>
-                      <option value="is-IS">Icelandic (Iceland)</option>
-                      <option value="id-ID">Indonesian (Indonesia)</option>
-                      <option value="it-IT">Italian (Italy)</option>
-                      <option value="ja-JP">Japanese (Japan)</option>
-                      <option value="kn-IN">Kannada (India)</option>
-                      <option value="ko-KR">Korean (South Korea)</option>
-                      <option value="lv-LV">Latvian (Latvia)</option>
-                      <option value="lt-LT">Lithuanian (Lithuania)</option>
-                      <option value="ms-MY">Malay (Malaysia)</option>
-                      <option value="ml-IN">Malayalam (India)</option>
-                      <option value="cmn-CN">Mandarin Chinese</option>
-                      <option value="mr-IN">Marathi (India)</option>
-                      <option value="nb-NO">Norwegian (Norway)</option>
-                      <option value="pl-PL">Polish (Poland)</option>
-                      <option value="pt-BR">Portuguese (Brazil)</option>
-                      <option value="pt-PT">Portuguese (Portugal)</option>
-                      <option value="pa-IN">Punjabi (India)</option>
-                      <option value="ro-RO">Romanian (Romania)</option>
-                      <option value="ru-RU">Russian (Russia)</option>
-                      <option value="sr-RS">Serbian (Cyrillic)</option>
-                      <option value="sk-SK">Slovak (Slovakia)</option>
-                      <option value="es-ES">Spanish (Spain)</option>
-                      <option value="es-US">Spanish (US)</option>
-                      <option value="sv-SE">Swedish (Sweden)</option>
-                      <option value="ta-IN">Tamil (India)</option>
-                      <option value="te-IN">Telugu (India)</option>
-                      <option value="th-TH">Thai (Thailand)</option>
-                      <option value="tr-TR">Turkish (Turkey)</option>
-                      <option value="uk-UA">Ukrainian (Ukraine)</option>
-                      <option value="vi-VN">Vietnamese (Vietnam)</option>
+                      <!-- Options will be populated dynamically -->
                     </select>
                   </div>
                   <div class="form-group">
@@ -183,66 +131,14 @@
               <input type="hidden" id="editId" name="id">
               <div class="form-group">
                 <label for="editName">Name</label>
-                <input type="text" class="form-control" id="editName" name="name" required>
+                <select class="form-control" id="editName" name="name" required>
+                  <!-- Options will be populated dynamically -->
+                </select>
               </div>
               <div class="form-group">
                 <label for="editCode">Code</label>
                 <select class="form-control" id="editCode" name="code" required>
-                  <option value="af-ZA">Afrikaans (South Africa)</option>
-                  <option value="ar-XA">Arabic</option>
-                  <option value="eu-ES">Basque (Spain)</option>
-                  <option value="bn-IN">Bengali (India)</option>
-                  <option value="bg-BG">Bulgarian (Bulgaria)</option>
-                  <option value="ca-ES">Catalan (Spain)</option>
-                  <option value="yue-HK">Chinese (Hong Kong)</option>
-                  <option value="cs-CZ">Czech (Czech Republic)</option>
-                  <option value="da-DK">Danish (Denmark)</option>
-                  <option value="nl-BE">Dutch (Belgium)</option>
-                  <option value="nl-NL">Dutch (Netherlands)</option>
-                  <option value="en-AU">English (Australia)</option>
-                  <option value="en-IN">English (India)</option>
-                  <option value="en-GB">English (UK)</option>
-                  <option value="en-US">English (US)</option>
-                  <option value="fil-PH">Filipino (Philippines)</option>
-                  <option value="fi-FI">Finnish (Finland)</option>
-                  <option value="fr-CA">French (Canada)</option>
-                  <option value="fr-FR">French (France)</option>
-                  <option value="gl-ES">Galician (Spain)</option>
-                  <option value="de-DE">German (Germany)</option>
-                  <option value="el-GR">Greek (Greece)</option>
-                  <option value="gu-IN">Gujarati (India)</option>
-                  <option value="hi-IN">Hindi (India)</option>
-                  <option value="hu-HU">Hungarian (Hungary)</option>
-                  <option value="is-IS">Icelandic (Iceland)</option>
-                  <option value="id-ID">Indonesian (Indonesia)</option>
-                  <option value="it-IT">Italian (Italy)</option>
-                  <option value="ja-JP">Japanese (Japan)</option>
-                  <option value="kn-IN">Kannada (India)</option>
-                  <option value="ko-KR">Korean (South Korea)</option>
-                  <option value="lv-LV">Latvian (Latvia)</option>
-                  <option value="lt-LT">Lithuanian (Lithuania)</option>
-                  <option value="ms-MY">Malay (Malaysia)</option>
-                  <option value="ml-IN">Malayalam (India)</option>
-                  <option value="cmn-CN">Mandarin Chinese</option>
-                  <option value="mr-IN">Marathi (India)</option>
-                  <option value="nb-NO">Norwegian (Norway)</option>
-                  <option value="pl-PL">Polish (Poland)</option>
-                  <option value="pt-BR">Portuguese (Brazil)</option>
-                  <option value="pt-PT">Portuguese (Portugal)</option>
-                  <option value="pa-IN">Punjabi (India)</option>
-                  <option value="ro-RO">Romanian (Romania)</option>
-                  <option value="ru-RU">Russian (Russia)</option>
-                  <option value="sr-RS">Serbian (Cyrillic)</option>
-                  <option value="sk-SK">Slovak (Slovakia)</option>
-                  <option value="es-ES">Spanish (Spain)</option>
-                  <option value="es-US">Spanish (US)</option>
-                  <option value="sv-SE">Swedish (Sweden)</option>
-                  <option value="ta-IN">Tamil (India)</option>
-                  <option value="te-IN">Telugu (India)</option>
-                  <option value="th-TH">Thai (Thailand)</option>
-                  <option value="tr-TR">Turkish (Turkey)</option>
-                  <option value="uk-UA">Ukrainian (Ukraine)</option>
-                  <option value="vi-VN">Vietnamese (Vietnam)</option>
+                  <!-- Options will be populated dynamically -->
                 </select>
               </div>
               <div class="form-group">
@@ -290,6 +186,59 @@
 
   <script>
     $(document).ready(function() {
+      // Function to populate language dropdowns
+      function populateLanguageDropdowns() {
+        $.getJSON('/static/js/language.json', function(data) {
+          const languages = data.languages;
+          const nameDropdowns = $('#name, #editName');
+          const codeDropdowns = $('#code, #editCode');
+
+          nameDropdowns.empty();
+          codeDropdowns.empty();
+
+          $.each(languages, function(index, language) {
+            const nameOption = $('<option></option>').attr('value', language.name).text(language.name);
+            const codeOption = $('<option></option>').attr('value', language.code).text(language.code);
+            
+            nameDropdowns.append(nameOption);
+            codeDropdowns.append(codeOption);
+          });
+
+          // Set default selection
+          nameDropdowns.val('English (United States)');
+          codeDropdowns.val('en-US');
+        });
+      }
+
+      // Call the function to populate language dropdowns
+      populateLanguageDropdowns();
+
+      // Update name dropdown when code is selected
+      $('#code, #editCode').change(function() {
+        const selectedCode = $(this).val();
+        const nameDropdown = $(this).attr('id') === 'code' ? $('#name') : $('#editName');
+        
+        $.getJSON('/static/js/language.json', function(data) {
+          const language = data.languages.find(lang => lang.code === selectedCode);
+          if (language) {
+            nameDropdown.val(language.name);
+          }
+        });
+      });
+
+      // Update code dropdown when name is selected
+      $('#name, #editName').change(function() {
+        const selectedName = $(this).val();
+        const codeDropdown = $(this).attr('id') === 'name' ? $('#code') : $('#editCode');
+        
+        $.getJSON('/static/js/language.json', function(data) {
+          const language = data.languages.find(lang => lang.name === selectedName);
+          if (language) {
+            codeDropdown.val(language.code);
+          }
+        });
+      });
+
       // Initialize DataTable
       $('#languageTable').DataTable({
         "responsive": true,  // Enable responsive feature
