@@ -81,7 +81,7 @@
                   </div>
                   <div class="form-group">
                     <label for="functionWebhookUrl">Function Webhook URL</label>
-                    <input type="url" class="form-control" id="functionWebhookUrl" name="webhook_url">
+                    <input type="url" class="form-control" id="functionWebhookUrl" name="web_hook_url">
                   </div>
                   <div class="form-group">
                     <label for="functionWaitFile">Wait File</label>
@@ -141,7 +141,7 @@
                   </div>
                   <div class="form-group">
                     <label for="editFunctionWebhookUrl">Function Webhook URL</label>
-                    <input type="url" class="form-control" id="editFunctionWebhookUrl" name="webhook_url">
+                    <input type="url" class="form-control" id="editFunctionWebhookUrl" name="web_hook_url">
                   </div>
                   <div class="form-group">
                     <label for="editFunctionWaitFile">Wait File</label>
@@ -240,7 +240,7 @@
           { "data": "name" },
           { "data": "purpose" },
           { "data": "active" },
-          { "data": "webhook_url" },
+          { "data": "web_hook_url" },
           { "data": "wait_file" },
           { "data": "wait_file_loops" },
           { "data": "fillers" },
@@ -313,7 +313,7 @@
             $('#editFunctionId').val(data.id);
             $('#editFunctionName').val(data.name);
             $('#editFunctionPurpose').val(data.purpose);
-            $('#editFunctionWebhookUrl').val(data.webhook_url);
+            $('#editFunctionWebhookUrl').val(data.web_hook_url);
             $('#editFunctionWaitFile').val(data.wait_file);
             $('#editFunctionWaitFileLoops').val(data.wait_file_loops);
             $('#editFunctionFillers').val(data.fillers);
@@ -460,7 +460,7 @@
         const functionData = {
           name: $('#editFunctionName').val(),
           purpose: $('#editFunctionPurpose').val(),
-          webhook_url: $('#editFunctionWebhookUrl').val(),
+          web_hook_url: $('#editFunctionWebhookUrl').val(),
           wait_file: $('#editFunctionWaitFile').val(),
           wait_file_loops: $('#editFunctionWaitFileLoops').val(),
           fillers: $('#editFunctionFillers').val(),

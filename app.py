@@ -245,7 +245,7 @@ def functions():
                 'name': f.name,
                 'purpose': f.purpose,
                 'active': f.active,
-                'webhook_url': f.webhook_url,
+                'web_hook_url': f.web_hook_url,
                 'wait_file': f.wait_file,
                 'wait_file_loops': f.wait_file_loops,
                 'fillers': f.fillers,
@@ -263,7 +263,7 @@ def functions():
             purpose=data['purpose'],
             user_id=current_user.id,
             agent_id=selected_agent_id,
-            webhook_url=data.get('webhook_url'),
+            web_hook_url=data.get('web_hook_url'),
             wait_file=data.get('wait_file'),
             wait_file_loops=data.get('wait_file_loops', -1),
             fillers=data.get('fillers'),
@@ -294,7 +294,7 @@ def manage_function(id):
             'name': function_entry.name,
             'purpose': function_entry.purpose,
             'active': function_entry.active,
-            'webhook_url': function_entry.webhook_url,
+            'web_hook_url': function_entry.web_hook_url,
             'wait_file': function_entry.wait_file,
             'wait_file_loops': function_entry.wait_file_loops,
             'fillers': function_entry.fillers,
@@ -307,7 +307,7 @@ def manage_function(id):
         function_entry.name = data.get('name', function_entry.name)
         function_entry.purpose = data.get('purpose', function_entry.purpose)
         function_entry.active = data.get('active', function_entry.active)
-        function_entry.webhook_url = data.get('webhook_url', function_entry.webhook_url)
+        function_entry.web_hook_url = data.get('web_hook_url', function_entry.web_hook_url)
         function_entry.wait_file = data.get('wait_file', function_entry.wait_file)
         function_entry.wait_file_loops = data.get('wait_file_loops', function_entry.wait_file_loops)
         function_entry.fillers = data.get('fillers', function_entry.fillers)
