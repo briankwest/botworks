@@ -39,6 +39,13 @@
                       <th>ID</th>
                       <th>Name</th>
                       <th>Purpose</th>
+                      <th>Active</th>
+                      <th>Webhook URL</th>
+                      <th>Wait File</th>
+                      <th>Wait File Loops</th>
+                      <th>Fillers</th>
+                      <th>Meta Data</th>
+                      <th>Meta Data Token</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -76,7 +83,31 @@
                     <label for="functionWebhookUrl">Function Webhook URL</label>
                     <input type="url" class="form-control" id="functionWebhookUrl" name="webhook_url">
                   </div>
-                  <button type="submit" class="btn btn-success">Add Function</button>
+                  <div class="form-group">
+                    <label for="functionWaitFile">Wait File</label>
+                    <input type="text" class="form-control" id="functionWaitFile" name="wait_file">
+                  </div>
+                  <div class="form-group">
+                    <label for="functionWaitFileLoops">Wait File Loops</label>
+                    <input type="number" class="form-control" id="functionWaitFileLoops" name="wait_file_loops" value="1">
+                  </div>
+                  <div class="form-group">
+                    <label for="functionFillers">Fillers</label>
+                    <input type="text" class="form-control" id="functionFillers" name="fillers">
+                  </div>
+                  <div class="form-group">
+                    <label for="functionMetaData">Meta Data</label>
+                    <textarea class="form-control" id="functionMetaData" name="meta_data" placeholder="Enter valid JSON only"></textarea>
+                  </div>
+                  <div class="form-group">
+                    <label for="functionMetaDataToken">Meta Data Token</label>
+                    <input type="text" class="form-control" id="functionMetaDataToken" name="meta_data_token">
+                  </div>
+                  <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="functionActive" name="active" checked>
+                    <label class="form-check-label" for="functionActive">Active</label>
+                  </div>
+                  <button type="submit" class="btn btn-success mt-3">Add Function</button>
                 </form>
               </div>
               <!-- /.card-body -->
@@ -110,7 +141,31 @@
                   </div>
                   <div class="form-group">
                     <label for="editFunctionWebhookUrl">Function Webhook URL</label>
-                    <input type="url" class="form-control" id="editFunctionWebhookUrl" name="webhook_url" required>
+                    <input type="url" class="form-control" id="editFunctionWebhookUrl" name="webhook_url">
+                  </div>
+                  <div class="form-group">
+                    <label for="editFunctionWaitFile">Wait File</label>
+                    <input type="text" class="form-control" id="editFunctionWaitFile" name="wait_file">
+                  </div>
+                  <div class="form-group">
+                    <label for="editFunctionWaitFileLoops">Wait File Loops</label>
+                    <input type="number" class="form-control" id="editFunctionWaitFileLoops" name="wait_file_loops">
+                  </div>
+                  <div class="form-group">
+                    <label for="editFunctionFillers">Fillers</label>
+                    <input type="text" class="form-control" id="editFunctionFillers" name="fillers">
+                  </div>
+                  <div class="form-group">
+                    <label for="editFunctionMetaData">Meta Data</label>
+                    <textarea class="form-control" id="editFunctionMetaData" name="meta_data" placeholder="Enter valid JSON only"></textarea>
+                  </div>
+                  <div class="form-group">
+                    <label for="editFunctionMetaDataToken">Meta Data Token</label>
+                    <input type="text" class="form-control" id="editFunctionMetaDataToken" name="meta_data_token">
+                  </div>
+                  <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="editFunctionActive" name="active">
+                    <label class="form-check-label" for="editFunctionActive">Active</label>
                   </div>
                 </form>
                 <hr>
@@ -184,6 +239,18 @@
           { "data": "id" },
           { "data": "name" },
           { "data": "purpose" },
+          { "data": "active" },
+          { "data": "webhook_url" },
+          { "data": "wait_file" },
+          { "data": "wait_file_loops" },
+          { "data": "fillers" },
+          {
+            "data": "meta_data",
+            "render": function(data, type, row) {
+              return JSON.stringify(data);
+            }
+          },
+          { "data": "meta_data_token" },
           {
             "data": null,
             "render": function(data, type, row) {
@@ -240,18 +307,23 @@
       // Add event listeners for edit buttons
       $('#functionTable').on('click', '.edit-function', function() {
         const functionId = $(this).data('id');
-        // Fetch function details to populate the modal
         fetch(`/functions/${functionId}`)
           .then(response => response.json())
           .then(data => {
             $('#editFunctionId').val(data.id);
             $('#editFunctionName').val(data.name);
             $('#editFunctionPurpose').val(data.purpose);
-            $('#editFunctionWebhookUrl').val(data.webhook_url); // Add this line
+            $('#editFunctionWebhookUrl').val(data.webhook_url);
+            $('#editFunctionWaitFile').val(data.wait_file);
+            $('#editFunctionWaitFileLoops').val(data.wait_file_loops);
+            $('#editFunctionFillers').val(data.fillers);
+            $('#editFunctionMetaData').val(JSON.stringify(data.meta_data));
+            $('#editFunctionMetaDataToken').val(data.meta_data_token);
+            $('#editFunctionActive').prop('checked', data.active);
 
             loadFunctionArgs(functionId);
 
-            $('#editFunctionModal').modal('show'); // Ensure this line is present
+            $('#editFunctionModal').modal('show');
           })
           .catch(error => {
             console.error('Error fetching function details:', error);
@@ -361,12 +433,40 @@
         }
       });
 
+      function isValidJSON(str) {
+        try {
+          JSON.parse(str);
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }
+
+      $('#addFunctionForm').on('submit', function(event) {
+        const metaData = $('#functionMetaData').val();
+        if (metaData && !isValidJSON(metaData)) {
+          event.preventDefault();
+          alert('Please enter valid JSON in the Meta Data field.');
+        }
+      });
+
       $('#saveEditFunction').on('click', function() {
+        const metaData = $('#editFunctionMetaData').val();
+        if (metaData && !isValidJSON(metaData)) {
+          alert('Please enter valid JSON in the Meta Data field.');
+          return;
+        }
         const functionId = $('#editFunctionId').val();
         const functionData = {
           name: $('#editFunctionName').val(),
           purpose: $('#editFunctionPurpose').val(),
-          webhook_url: $('#editFunctionWebhookUrl').val()
+          webhook_url: $('#editFunctionWebhookUrl').val(),
+          wait_file: $('#editFunctionWaitFile').val(),
+          wait_file_loops: $('#editFunctionWaitFileLoops').val(),
+          fillers: $('#editFunctionFillers').val(),
+          meta_data: JSON.parse($('#editFunctionMetaData').val()),
+          meta_data_token: $('#editFunctionMetaDataToken').val(),
+          active: $('#editFunctionActive').is(':checked')
         };
 
         // Update function
@@ -435,10 +535,9 @@
       $('#addFunctionForm').on('submit', function(event) {
         event.preventDefault();
         const formData = new FormData(this);
-        const data = {};
-        formData.forEach((value, key) => {
-          data[key] = value;
-        });
+        const data = Object.fromEntries(formData.entries());
+        data.active = formData.get('active') === 'on';
+        data.meta_data = JSON.parse(data.meta_data || '{}');
 
         fetch('/functions', {
           method: 'POST',
@@ -454,8 +553,8 @@
               icon: 'success',
               title: 'Function entry created successfully'
             });
-            $('#addFunctionForm')[0].reset(); // Reset form fields
-            $('#functionTable').DataTable().ajax.reload(); // Reload DataTable without page reload
+            $('#addFunctionForm')[0].reset();
+            $('#functionTable').DataTable().ajax.reload();
           } else {
             Swal.fire('Error', 'Error creating function', 'error');
           }

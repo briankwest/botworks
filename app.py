@@ -244,6 +244,13 @@ def functions():
                 'id': f.id,
                 'name': f.name,
                 'purpose': f.purpose,
+                'active': f.active,
+                'webhook_url': f.webhook_url,
+                'wait_file': f.wait_file,
+                'wait_file_loops': f.wait_file_loops,
+                'fillers': f.fillers,
+                'meta_data': f.meta_data,
+                'meta_data_token': f.meta_data_token,
                 'created': f.created.isoformat()
             } for f in functions]
             return jsonify(function_list), 200
@@ -256,7 +263,13 @@ def functions():
             purpose=data['purpose'],
             user_id=current_user.id,
             agent_id=selected_agent_id,
-            webhook_url=data.get('webhook_url')  # Include webhook_url
+            webhook_url=data.get('webhook_url'),
+            wait_file=data.get('wait_file'),
+            wait_file_loops=data.get('wait_file_loops', -1),
+            fillers=data.get('fillers'),
+            meta_data=data.get('meta_data'),
+            meta_data_token=data.get('meta_data_token'),
+            active=data.get('active', True)
         )
         db.session.add(new_function)
         db.session.commit()
@@ -281,7 +294,12 @@ def manage_function(id):
             'name': function_entry.name,
             'purpose': function_entry.purpose,
             'active': function_entry.active,
-            'webhook_url': function_entry.webhook_url  # Include webhook_url
+            'webhook_url': function_entry.webhook_url,
+            'wait_file': function_entry.wait_file,
+            'wait_file_loops': function_entry.wait_file_loops,
+            'fillers': function_entry.fillers,
+            'meta_data': function_entry.meta_data,
+            'meta_data_token': function_entry.meta_data_token
         }), 200
 
     elif request.method == 'PUT':
@@ -289,7 +307,12 @@ def manage_function(id):
         function_entry.name = data.get('name', function_entry.name)
         function_entry.purpose = data.get('purpose', function_entry.purpose)
         function_entry.active = data.get('active', function_entry.active)
-        function_entry.webhook_url = data.get('webhook_url', function_entry.webhook_url)  # Update webhook_url
+        function_entry.webhook_url = data.get('webhook_url', function_entry.webhook_url)
+        function_entry.wait_file = data.get('wait_file', function_entry.wait_file)
+        function_entry.wait_file_loops = data.get('wait_file_loops', function_entry.wait_file_loops)
+        function_entry.fillers = data.get('fillers', function_entry.fillers)
+        function_entry.meta_data = data.get('meta_data', function_entry.meta_data)
+        function_entry.meta_data_token = data.get('meta_data_token', function_entry.meta_data_token)
         db.session.commit()
         return jsonify({'message': 'Function entry updated successfully'}), 200
 

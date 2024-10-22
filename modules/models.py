@@ -85,11 +85,16 @@ class AIFunctions(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
-    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # New reference
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
     name = db.Column(db.Text, nullable=True)
     purpose = db.Column(db.Text, nullable=True)
     active = db.Column(db.Boolean, nullable=False, default=True)
-    webhook_url = db.Column(db.String(255), nullable=True)  # New field
+    webhook_url = db.Column(db.String(255), nullable=True)
+    wait_file = db.Column(db.String(255), nullable=True)
+    wait_file_loops = db.Column(db.Integer, nullable=True, default=-1)
+    fillers = db.Column(db.Text, nullable=True)
+    meta_data = db.Column(db.JSON, nullable=True)
+    meta_data_token = db.Column(db.String(255), nullable=True)
 
     user = db.relationship('AIUser', backref=db.backref('ai_functions', lazy=True))
     agent = db.relationship('AIAgent', back_populates='ai_functions')
