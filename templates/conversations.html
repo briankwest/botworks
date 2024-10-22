@@ -205,6 +205,8 @@
       // Handle view button click
       $('#conversationsTable').on('click', '.view-conversation', function() {
         const id = $(this).data('id');
+        $('#fullScreenModal').show(); // Show the modal immediately
+        $('#fullScreenModal .modal-content').scrollTop(0); // Scroll to the top
         fetchData(id);
       });
 
@@ -624,5 +626,6 @@
   </script>
 
 {% endblock %}
+
 
 
