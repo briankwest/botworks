@@ -4,15 +4,10 @@
 
 
 {% block content %}
-  <!-- Navbar -->
   {% include 'navbar.html' %}
-  <!-- /.navbar -->
-
-  <!-- Main Sidebar Container -->
   {% include 'sidebar.html' %}
   
   <div class="content-wrapper">
-    <!-- Content Header (Page header) -->
     <section class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
@@ -20,10 +15,9 @@
                     <h1 class="m-0">Live Debug</h1>
                 </div>
             </div>
-        </div><!-- /.container-fluid -->
+        </div>
     </section>
 
-    <!-- Main content -->
     <section class="content">
         <div class="container-fluid">
             <div class="row">
@@ -32,7 +26,6 @@
                         <div class="card-header bg-primary">
                             <h3 class="card-title">Live Debug</h3>
                         </div>
-                        <!-- /.card-header -->
                         <div class="card-body">
                             <input id="channel" type="hidden" placeholder="Enter channel name" class="form-control mb-2">
                             <button class="btn btn-primary" onclick="joinChannel()">Join Channel</button>
@@ -53,22 +46,13 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- /.card-body -->
                     </div>
-                    <!-- /.card -->
                 </div>
-                <!-- /.col -->
             </div>
-            <!-- /.row -->
         </div>
-        <!-- /.container-fluid -->
     </section>
-    <!-- /.content -->
   </div>
-  <!-- /.content-wrapper -->
-  <!-- Footer -->
   {% include 'footer.html' %}
-  <!-- /.footer -->
 {% endblock %}
 
 {% block scripts %}
@@ -76,7 +60,6 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    // Get access_token from cookies
     const accessToken = getCookie('access_token');
 
     let socket;
@@ -112,12 +95,11 @@
 
     function disconnectSocket() {
       if (socket && socket.connected) {
-        leaveChannel(); // Ensure leaving the channel first
+        leaveChannel();
         socket.disconnect();
         updateConnectionStatus(false);
         console.log('Socket disconnected');
         
-        // Add toast notification for disconnect
         Swal.fire({
           toast: true,
           position: 'top-end',
@@ -136,7 +118,7 @@
 
       socket.on('disconnect', function() {
         updateConnectionStatus(false);
-        updateJoinStatus(false); // Assume leave on disconnect
+        updateJoinStatus(false);
       });
 
       socket.on('send_message', function(data) {
@@ -174,7 +156,7 @@
     function joinChannel() {
       currentChannel = document.getElementById('channel').value;
       if (!socket || !socket.connected) {
-        connectSocket(); // Connect first if not connected
+        connectSocket();
       }
       if (currentChannel) {
         socket.emit('join', { channel: currentChannel });
@@ -191,7 +173,6 @@
         updateJoinStatus(false);
         currentChannel = '';
         
-        // Add toast notification for leaving channel
         Swal.fire({
           toast: true,
           position: 'top-end',
@@ -211,7 +192,7 @@
           message: message
         };
         socket.emit('send_message', messageData);
-        document.getElementById('message').value = ''; // Clear input after sending
+        document.getElementById('message').value = '';
       } else {
         console.error('Cannot send message: socket not connected or channel/message is empty');
       }
@@ -222,7 +203,6 @@
       messagesTextarea.value = '';
     }
 
-    // Expose functions to global scope
     window.joinChannel = joinChannel;
     window.leaveChannel = leaveChannel;
     window.sendMessage = sendMessage;
@@ -230,9 +210,14 @@
     window.connectSocket = connectSocket;
     window.disconnectSocket = disconnectSocket;
 
-    // Automatically connect and join channel on page load
     connectSocket();
     joinChannel();
+
+    document.getElementById('message').addEventListener('keydown', function(event) {
+      if (event.key === 'Enter') {
+        sendMessage();
+      }
+    });
   });
 </script>
 {% endblock %}
