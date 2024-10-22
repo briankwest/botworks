@@ -89,7 +89,7 @@ class AIFunctions(db.Model):
     name = db.Column(db.Text, nullable=True)
     purpose = db.Column(db.Text, nullable=True)
     active = db.Column(db.Boolean, nullable=False, default=True)
-    webhook_url = db.Column(db.String(255), nullable=True)
+    web_hook_url = db.Column(db.String(255), nullable=True)
     wait_file = db.Column(db.String(255), nullable=True)
     wait_file_loops = db.Column(db.Integer, nullable=True, default=-1)
     fillers = db.Column(db.Text, nullable=True)
