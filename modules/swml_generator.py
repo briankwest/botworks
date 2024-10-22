@@ -151,7 +151,12 @@ def generate_swml_response(user_id, agent_id, request_body):
         for arg in function_args:
             function_data["argument"]["properties"][arg.name] = {
                 "type": arg.type,
-                "description": arg.description
+                "description": arg.description,
+                **({"default": (int(arg.default) if arg.type == 'integer' else 
+                               float(arg.default) if arg.type == 'number' else 
+                               bool(arg.default) if arg.type == 'boolean' else 
+                               arg.default) 
+                    } if arg.default else {})
             }
             if arg.enum and arg.type == 'array':
                 function_data["argument"]["properties"][arg.name]["enum"] = arg.enum.split(',')

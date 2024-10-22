@@ -103,6 +103,13 @@
                     <label for="functionMetaDataToken">Meta Data Token</label>
                     <input type="text" class="form-control" id="functionMetaDataToken" name="meta_data_token">
                   </div>
+                  <div class="form-group">
+                    <label for="functionArguments">Function Arguments</label>
+                    <div id="functionArgumentsContainer">
+                      <!-- Arguments will be dynamically added here -->
+                    </div>
+                    <button type="button" class="btn btn-secondary mt-2" id="addArgumentBtn">Add Argument</button>
+                  </div>
                   <div class="form-check">
                     <input type="checkbox" class="form-check-input" id="functionActive" name="active" checked>
                     <label class="form-check-label" for="functionActive">Active</label>
@@ -178,6 +185,7 @@
                       <th>Description</th>
                       <th>Required</th>
                       <th>Enum</th>
+                      <th>Default</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -369,6 +377,7 @@
                 <input type="text" class="form-control" name="arg_placeholder" value="" placeholder="N/A" readonly>
               </div>
             </td>
+            <td><input type="text" class="form-control" name="arg_default" value="${arg.default || ''}"></td>
             <td>
               <button type="button" class="btn btn-sm btn-danger delete-arg" data-id="${arg.id}">Delete</button>
             </td>
@@ -388,10 +397,11 @@
         const newArg = {
           id: 'new_' + Date.now(),
           name: '',
-          type: '',
+          type: 'string',
           description: '',
           required: false,
-          enum: ''
+          enum: '',
+          default: ''
         };
         $('#functionArgsBody').append(createArgRow(newArg));
       });
@@ -490,7 +500,8 @@
                 type: $row.find('[name="arg_type"]').val(),
                 description: $row.find('[name="arg_description"]').val(),
                 required: $row.find('[name="arg_required"]').is(':checked'),
-                enum: $row.find('[name="arg_type"]').val() === 'array' ? $row.find('[name="arg_enum"]').val() : undefined
+                enum: $row.find('[name="arg_type"]').val() === 'array' ? $row.find('[name="arg_enum"]').val() : undefined,
+                default: $row.find('[name="arg_default"]').val()
               };
 
               if (typeof argId === 'string' && argId.startsWith('new_')) {
@@ -531,13 +542,91 @@
         });
       });
 
-      // Handle add function form submission
+      function createArgumentInput(index) {
+        return `
+          <div class="argument-input mb-3">
+            <h5>Argument ${index + 1}</h5>
+            <div class="form-row">
+              <div class="col">
+                <input type="text" class="form-control" name="arg_name[]" placeholder="Name" required>
+              </div>
+              <div class="col">
+                <select class="form-control" name="arg_type[]" required>
+                  <option value="string">String</option>
+                  <option value="integer">Integer</option>
+                  <option value="boolean">Boolean</option>
+                  <option value="array">Array</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row mt-2">
+              <div class="col">
+                <input type="text" class="form-control" name="arg_description[]" placeholder="Description">
+              </div>
+              <div class="col">
+                <div class="form-check">
+                  <input type="checkbox" class="form-check-input" name="arg_required[]" id="argRequired${index}">
+                  <label class="form-check-label" for="argRequired${index}">Required</label>
+                </div>
+              </div>
+            </div>
+            <div class="form-row mt-2">
+              <div class="col">
+                <input type="text" class="form-control" name="arg_enum[]" placeholder="Enum (comma-separated for array type)">
+              </div>
+              <div class="col">
+                <input type="text" class="form-control" name="arg_default[]" placeholder="Default value">
+              </div>
+            </div>
+            <button type="button" class="btn btn-danger btn-sm mt-2 remove-argument">Remove</button>
+          </div>
+        `;
+      }
+
+      $('#addArgumentBtn').on('click', function() {
+        const argumentsContainer = $('#functionArgumentsContainer');
+        const index = argumentsContainer.children().length;
+        argumentsContainer.append(createArgumentInput(index));
+      });
+
+      $('#functionArgumentsContainer').on('click', '.remove-argument', function() {
+        $(this).closest('.argument-input').remove();
+      });
+
       $('#addFunctionForm').on('submit', function(event) {
         event.preventDefault();
         const formData = new FormData(this);
-        const data = Object.fromEntries(formData.entries());
-        data.active = formData.get('active') === 'on';
-        data.meta_data = JSON.parse(data.meta_data || '{}');
+        const data = {
+          name: formData.get('name'),
+          purpose: formData.get('purpose'),
+          web_hook_url: formData.get('web_hook_url'),
+          wait_file: formData.get('wait_file'),
+          wait_file_loops: formData.get('wait_file_loops'),
+          fillers: formData.get('fillers'),
+          meta_data: JSON.parse(formData.get('meta_data') || '{}'),
+          meta_data_token: formData.get('meta_data_token'),
+          active: formData.get('active') === 'on',
+          arguments: []
+        };
+
+        // Process arguments
+        const argNames = formData.getAll('arg_name[]');
+        const argTypes = formData.getAll('arg_type[]');
+        const argDescriptions = formData.getAll('arg_description[]');
+        const argRequireds = formData.getAll('arg_required[]');
+        const argEnums = formData.getAll('arg_enum[]');
+        const argDefaults = formData.getAll('arg_default[]');
+
+        for (let i = 0; i < argNames.length; i++) {
+          data.arguments.push({
+            name: argNames[i],
+            type: argTypes[i],
+            description: argDescriptions[i],
+            required: argRequireds[i] === 'on',
+            enum: argEnums[i],
+            default: argDefaults[i]
+          });
+        }
 
         fetch('/functions', {
           method: 'POST',
@@ -554,35 +643,10 @@
               title: 'Function entry created successfully'
             });
             $('#addFunctionForm')[0].reset();
+            $('#functionArgumentsContainer').empty();
             $('#functionTable').DataTable().ajax.reload();
           } else {
             Swal.fire('Error', 'Error creating function', 'error');
-          }
-        });
-      });
-
-      // Handle edit function form submission
-      $('#editFunctionForm').on('submit', function(event) {
-        event.preventDefault();
-        const formData = new FormData(this);
-        const data = {};
-        formData.forEach((value, key) => {
-          data[key] = value;
-        });
-
-        fetch('/functions', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(data)
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.message === 'Function entry updated successfully') {
-            location.reload();
-          } else {
-            alert('Error updating function');
           }
         });
       });

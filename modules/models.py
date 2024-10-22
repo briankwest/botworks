@@ -115,13 +115,14 @@ class AIFunctionArgs(db.Model):
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     function_id = db.Column(db.Integer, db.ForeignKey('ai_functions.id', ondelete='CASCADE'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
-    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)  # New reference
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
     name = db.Column(db.Text, nullable=False)
     type = db.Column(db.Text, nullable=False, default='string')
     description = db.Column(db.Text, nullable=True)
     active = db.Column(db.Boolean, nullable=False, default=True)
     required = db.Column(db.Boolean, nullable=False, default=False)
     enum = db.Column(db.Text, nullable=True)
+    default = db.Column(db.Text, nullable=True)  # New field
 
     function = db.relationship(
         'AIFunctions', 
@@ -285,3 +286,4 @@ class AIIncludes(db.Model):
 
     def __repr__(self):
         return f'<AIIncludes {self.url}>'
+

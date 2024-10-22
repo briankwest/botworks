@@ -342,7 +342,8 @@ def add_function_arg(function_id):
         name=data['name'],
         type=data['type'],
         required=data.get('required', False),
-        enum=data.get('enum')
+        enum=data.get('enum'),
+        default=data.get('default')
     )
     db.session.add(new_arg)
     db.session.commit()
@@ -369,7 +370,8 @@ def get_function_args(function_id):
         'type': arg.type,
         'description': arg.description,
         'required': arg.required,
-        'enum': arg.enum
+        'enum': arg.enum,
+        'default': arg.default
     } for arg in args]), 200
 
 # Manage Function Arguments route
@@ -394,6 +396,7 @@ def manage_function_arg(function_id, arg_id):
         arg_entry.required = data.get('required', arg_entry.required)
         arg_entry.active = data.get('active', arg_entry.active)
         arg_entry.enum = data.get('enum', arg_entry.enum)
+        arg_entry.default = data.get('default', arg_entry.default)
         db.session.commit()
         return jsonify({'message': 'Function argument updated successfully'}), 200
 
