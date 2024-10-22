@@ -1,13 +1,12 @@
-import string
+import string, base64
 import random
-import jwt
-from datetime import datetime, timedelta
-from flask import g, request
+import requests
+import os
 from urllib.parse import urlparse
+from flask import g, request
 from werkzeug.security import generate_password_hash
 from modules.db import db
 from modules.models import AIFeatures, AIUser, AISignalWireParams, AIAgent
-import os
 
 def generate_random_password(length=16):
     characters = string.ascii_letters + string.digits
