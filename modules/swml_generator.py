@@ -2,7 +2,7 @@ import json, base64
 from flask import request, jsonify
 from modules.models import (
     AIPrompt, AIParams, AIUser, AIHints, AILanguage, AIPronounce, 
-    AIFunctions, AIFunctionArgs, AIIncludes, AIFeatures, AISWMLRequest
+    AIFunctions, AIFunctionArgs, AIIncludes, AISWMLRequest
 )
 from modules.utils import get_feature, get_signal_wire_param
 from modules.signalwireml import SignalWireML

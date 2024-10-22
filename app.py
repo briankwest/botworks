@@ -19,7 +19,7 @@ from modules.signalwireml import SignalWireML
 from modules.models import db, AIAgent, AIUser, AISignalWireParams, AIFeatures, AIFunctions, AIIncludes, AIConversation, AISWMLRequest, AIParams, AIFunctionArgs, AIPrompt, AIPronounce, AILanguage, AIHints, AIIncludes, AISWMLRequest, AIDebugLogs
 from modules.swml_generator import generate_swml_response
 from modules.utils import (
-    generate_random_password, get_feature, get_signal_wire_param, 
+    generate_random_password, get_signal_wire_param, 
     extract_agent_id, setup_default_agent_and_params, create_admin_user,
     get_swaig_includes
 )
