@@ -159,6 +159,19 @@
 
   <script>
     $(document).ready(function() {
+      // Initialize Swal toast
+      const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+          toast.addEventListener('mouseenter', Swal.stopTimer)
+          toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+      });
+
       // Initialize DataTable with responsive and autoWidth options
       $('#functionTable').DataTable({
         "responsive": true,
@@ -207,14 +220,18 @@
             })
             .then(data => {
               if (data.message === 'Function entry deleted successfully') {
-                location.reload();
+                Toast.fire({
+                  icon: 'success',
+                  title: 'Function entry has been deleted.'
+                });
+                $('#functionTable').DataTable().ajax.reload(); // Reload DataTable without page reload
               } else {
-                alert('Error deleting function');
+                Swal.fire('Error', 'Error deleting function', 'error');
               }
             })
             .catch(error => {
               console.error('Error deleting function:', error);
-              alert('Error deleting function');
+              Swal.fire('Error', 'Error deleting function', 'error');
             });
           }
         });
@@ -349,7 +366,7 @@
         const functionData = {
           name: $('#editFunctionName').val(),
           purpose: $('#editFunctionPurpose').val(),
-          webhook_url: $('#editFunctionWebhookUrl').val() // Add this line
+          webhook_url: $('#editFunctionWebhookUrl').val()
         };
 
         // Update function
@@ -397,15 +414,19 @@
 
             Promise.all(argPromises)
               .then(() => {
+                Toast.fire({
+                  icon: 'success',
+                  title: 'Function entry updated successfully'
+                });
                 $('#editFunctionModal').modal('hide');
-                location.reload();
+                $('#functionTable').DataTable().ajax.reload(); // Reload DataTable without page reload
               })
               .catch(error => {
                 console.error('Error updating arguments:', error);
-                alert('Error updating arguments');
+                Swal.fire('Error', 'Error updating arguments', 'error');
               });
           } else {
-            alert('Error updating function');
+            Swal.fire('Error', 'Error updating function', 'error');
           }
         });
       });
@@ -429,9 +450,14 @@
         .then(response => response.json())
         .then(data => {
           if (data.message === 'Function entry created successfully') {
-            location.reload();
+            Toast.fire({
+              icon: 'success',
+              title: 'Function entry created successfully'
+            });
+            $('#addFunctionForm')[0].reset(); // Reset form fields
+            $('#functionTable').DataTable().ajax.reload(); // Reload DataTable without page reload
           } else {
-            alert('Error creating function');
+            Swal.fire('Error', 'Error creating function', 'error');
           }
         });
       });
@@ -465,3 +491,4 @@
   </script>
 </script>
 {% endblock %}
+

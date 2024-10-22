@@ -126,7 +126,15 @@
           success: function() {
             $('#featuresTable').DataTable().ajax.reload(); // Reload the table data
             $('#addFeatureForm')[0].reset();
-            Swal.fire('Success!', 'Feature added successfully.', 'success');
+            Swal.fire({
+              icon: 'success',
+              title: 'Success!',
+              text: 'Feature added successfully.',
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 1500
+            });
           },
           error: function() {
             Swal.fire('Error!', 'There was an error adding the feature.', 'error');
@@ -163,7 +171,15 @@
           success: function() {
             $('#featuresTable').DataTable().ajax.reload();
             $('#editFeatureModal').modal('hide');
-            Swal.fire('Success!', 'Feature updated successfully.', 'success');
+            Swal.fire({
+              icon: 'success',
+              title: 'Success!',
+              text: 'Feature updated successfully.',
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 1500
+            });
           },
           error: function() {
             Swal.fire('Error!', 'There was an error updating the feature.', 'error');
@@ -236,11 +252,15 @@
               type: 'DELETE',
               success: function() {
                 $('#featuresTable').DataTable().ajax.reload();
-                Swal.fire(
-                  'Deleted!',
-                  'The feature has been deleted.',
-                  'success'
-                );
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Deleted!',
+                  text: 'The feature has been deleted.',
+                  toast: true,
+                  position: 'top-end',
+                  showConfirmButton: false,
+                  timer: 1500
+                });
               },
               error: function() {
                 Swal.fire(

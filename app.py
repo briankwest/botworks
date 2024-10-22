@@ -541,7 +541,16 @@ def dashboard():
 
     return render_template('dashboard.html', user=current_user, swml_url=swml_url, yaml_url=yaml_url, debugwebhook_url=debugwebhook_url, number_of_requests=number_of_requests, number_of_conversations=number_of_conversations)
 
-# SWML Requests route
+# SWML Requests DELETE route
+@app.route('/swmlrequests/<int:agent_id>', methods=['DELETE'])
+@login_required
+def delete_swmlrequests(agent_id):
+    # Delete all SWML requests for the specified agent
+    AISWMLRequest.query.filter_by(user_id=current_user.id, agent_id=agent_id).delete()
+    db.session.commit()
+    return jsonify({'message': 'All SWML requests for the agent deleted successfully'}), 200
+
+# SWML Requests GET route
 @app.route('/swmlrequests', methods=['GET'])
 @login_required
 def swmlrequests():
@@ -564,19 +573,6 @@ def swmlrequests():
 
     else:
         return render_template('swmlrequests.html', user=current_user)
-
-# Delete SWML Request route
-@app.route('/swmlrequests/<int:request_id>', methods=['DELETE'])
-@login_required
-def delete_swmlrequest(request_id):
-    swml_request = AISWMLRequest.query.get_or_404(request_id)
-    
-    if swml_request.user_id != current_user.id:
-        return jsonify({'message': 'Permission denied'}), 403
-
-    db.session.delete(swml_request)
-    db.session.commit()
-    return jsonify({'message': 'SWML request deleted successfully'}), 200
 
 # Dashboard Completed route
 @app.route('/dashboard/completed', methods=['GET'])
