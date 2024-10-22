@@ -2,6 +2,7 @@
 
 {% block title %}Dynamic WebSocket Channels{% endblock %}
 
+
 {% block content %}
   <!-- Navbar -->
   {% include 'navbar.html' %}
@@ -33,16 +34,24 @@
                         </div>
                         <!-- /.card-header -->
                         <div class="card-body">
-                            <label for="channel">Channel:</label>
-                            <input id="channel" type="text" placeholder="Enter channel name">
-                            <button onclick="joinChannel()">Join Channel</button>
-                            <button onclick="leaveChannel()">Leave Channel</button>
+                            <input id="channel" type="hidden" placeholder="Enter channel name" class="form-control mb-2">
+                            <button class="btn btn-primary" onclick="joinChannel()">Join Channel</button>
+                            <button class="btn btn-secondary" onclick="leaveChannel()">Leave Channel</button>
+                            <button class="btn btn-info" onclick="connectSocket()">Connect</button>
+                            <button class="btn btn-warning" onclick="disconnectSocket()">Disconnect</button>
 
                             <h2>Messages:</h2>
-                            <ul id="messages"></ul>
+                            <textarea id="messages" class="form-control mb-2" rows="10" readonly></textarea>
 
-                            <input id="message" type="text" placeholder="Enter message">
-                            <button onclick="sendMessage()">Send Message</button>
+                            <input id="message" type="text" placeholder="Enter message" class="form-control mb-2">
+                            <div class="d-flex align-items-center mb-2">
+                                <button class="btn btn-success" onclick="sendMessage()">Send Message</button>
+                                <button class="btn btn-danger" onclick="clearMessages()">Clear Messages</button>
+                                <div class="ml-auto status-container">
+                                    <div id="connection-status">connected: false</div>
+                                    <div id="join-status">joined: false</div>
+                                </div>
+                            </div>
                         </div>
                         <!-- /.card-body -->
                     </div>
@@ -70,79 +79,160 @@
     // Get access_token from cookies
     const accessToken = getCookie('access_token');
 
-    // Initialize socket with access_token
-    const socket = io({
-      transports: ['websocket'],
-      auth: {
-        token: accessToken
-      }
-    });
-
-    let currentChannel = '{{ channel}}';
+    let socket;
+    let currentChannel = '{{ channel }}';
     document.getElementById('channel').value = currentChannel;
 
+    function updateConnectionStatus(connected) {
+      const connectionStatus = document.getElementById('connection-status');
+      if (connectionStatus) {
+        connectionStatus.textContent = `connected: ${connected}`;
+      }
+    }
+
+    function updateJoinStatus(joined) {
+      const joinStatus = document.getElementById('join-status');
+      if (joinStatus) {
+        joinStatus.textContent = `joined: ${joined}`;
+      }
+    }
+
+    function connectSocket() {
+      if (!socket || socket.disconnected) {
+        socket = io({
+          transports: ['websocket'],
+          auth: {
+            token: accessToken
+          }
+        });
+        setupSocketListeners();
+        console.log('Socket connected');
+      }
+    }
+
+    function disconnectSocket() {
+      if (socket && socket.connected) {
+        leaveChannel(); // Ensure leaving the channel first
+        socket.disconnect();
+        updateConnectionStatus(false);
+        console.log('Socket disconnected');
+        
+        // Add toast notification for disconnect
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'info',
+          title: 'Disconnected from socket',
+          showConfirmButton: false,
+          timer: 3000
+        });
+      }
+    }
+
+    function setupSocketListeners() {
+      socket.on('connect', function() {
+        updateConnectionStatus(true);
+      });
+
+      socket.on('disconnect', function() {
+        updateConnectionStatus(false);
+        updateJoinStatus(false); // Assume leave on disconnect
+      });
+
+      socket.on('send_message', function(data) {
+        updateMessagesList(`Sent: ${data.message}`);
+      });
+
+      socket.on('response', function(data) {
+        if (data instanceof ArrayBuffer) {
+          const decoder = new TextDecoder('utf-8');
+          const decodedMessage = decoder.decode(data);
+          updateMessagesList(`${decodedMessage}`);
+        } else {
+          updateMessagesList(`${data.data}`);
+        }
+      });
+
+      socket.on('status', function(data) {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: data.message,
+          showConfirmButton: false,
+          timer: 3000
+        });
+      });
+    }
+
     function updateMessagesList(message) {
-      const li = document.createElement("li");
-      li.textContent = message;
-      document.getElementById('messages').appendChild(li);
+      const messagesTextarea = document.getElementById('messages');
+      messagesTextarea.value += message + '\n';
+      messagesTextarea.scrollTop = messagesTextarea.scrollHeight;
     }
 
     function joinChannel() {
       currentChannel = document.getElementById('channel').value;
+      if (!socket || !socket.connected) {
+        connectSocket(); // Connect first if not connected
+      }
       if (currentChannel) {
         socket.emit('join', { channel: currentChannel });
-        // Removed alert for joining channel
+        updateJoinStatus(true);
+        console.log(`Joining channel: ${currentChannel}`);
+      } else {
+        console.error('Channel name is empty');
       }
     }
 
     function leaveChannel() {
       if (currentChannel) {
         socket.emit('leave', { channel: currentChannel });
+        updateJoinStatus(false);
         currentChannel = '';
+        
+        // Add toast notification for leaving channel
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'info',
+          title: 'Left the channel',
+          showConfirmButton: false,
+          timer: 3000
+        });
       }
     }
 
     function sendMessage() {
       const message = document.getElementById('message').value;
-      if (currentChannel && message) {
+      if (socket && socket.connected && currentChannel && message) {
         const messageData = {
           channel: currentChannel,
           message: message
         };
         socket.emit('send_message', messageData);
+        document.getElementById('message').value = ''; // Clear input after sending
+      } else {
+        console.error('Cannot send message: socket not connected or channel/message is empty');
       }
     }
 
-    socket.on('send_message', function(data) {
-      updateMessagesList(`Sent: [${data.channel}] ${data.message}`);
-    });
-
-    socket.on('response', function(data) {
-      if (data instanceof ArrayBuffer) {
-        const decoder = new TextDecoder('utf-8');
-        const decodedMessage = decoder.decode(data);
-        updateMessagesList(`[${data.channel}] ${decodedMessage}`);
-      } else {
-        updateMessagesList(`[${data.channel}] ${data.data}`);
-      }
-    });
-
-    socket.on('status', function(data) {
-      // Use Swal toast instead of alert
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: data.message,
-        showConfirmButton: false,
-        timer: 3000
-      });
-    });
+    function clearMessages() {
+      const messagesTextarea = document.getElementById('messages');
+      messagesTextarea.value = '';
+    }
 
     // Expose functions to global scope
     window.joinChannel = joinChannel;
     window.leaveChannel = leaveChannel;
     window.sendMessage = sendMessage;
+    window.clearMessages = clearMessages;
+    window.connectSocket = connectSocket;
+    window.disconnectSocket = disconnectSocket;
+
+    // Automatically connect and join channel on page load
+    connectSocket();
+    joinChannel();
   });
 </script>
 {% endblock %}

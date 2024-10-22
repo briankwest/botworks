@@ -2355,6 +2355,15 @@ def on_join(data):
         # Decode the access token
         token_data = jwt.decode(access_token, app.config['ACCESS_SECRET_KEY'], algorithms=['HS256'])
         user_id = token_data['user_id']
+        channel = data['channel']
+        agent_id = int(channel.split('_')[-1])
+
+        # Verify the user owns the agent
+        agent = AIAgent.query.filter_by(id=agent_id, user_id=user_id).first()
+        if not agent:
+            emit('error', {'message': 'Agent not found or access denied'}, namespace='/')
+            disconnect()
+            return
 
         user = db.session.get(AIUser, user_id)
 
@@ -2378,7 +2387,7 @@ def on_join(data):
             print(f"Creating listener for channel {channel}")
             pubsub_threads[channel] = eventlet.spawn(redis_listener, channel)
 
-        emit('status', {'message': f'Joined channel {channel}'}, room=channel)
+        emit('status', {'message': f'Joined debug channel for {agent.name}'}, room=channel)
 
     except jwt.ExpiredSignatureError:
         emit('error', {'message': 'Access token expired'}, namespace='/')
