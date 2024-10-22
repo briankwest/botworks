@@ -125,13 +125,13 @@
                 </a>
               </li>
             </ul>
-          </li>
-          <!-- Live Debug -->
-          <li class="nav-item">
-            <a href="{{ url_for('livedebug') }}" class="nav-link {{ 'active' if request.endpoint == 'livedebug' else '' }}">
-              <i class="nav-icon fas fa-bug"></i>
-              <p>Live Debug</p>
-            </a>
+            <!-- Live Debug -->
+            <li class="nav-item">
+              <a href="{{ url_for('livedebug') }}" class="nav-link {{ 'active' if request.endpoint == 'livedebug' else '' }}">
+                <i class="nav-icon fas fa-bug"></i>
+                <p>Live Debug</p>
+              </a>
+            </li>
           </li>
           <!-- SignalWire -->
           <li class="nav-item">
