@@ -221,6 +221,26 @@
       $('.close').on('click', function() {
         $('#fullScreenModal').hide();
       });
+
+      // Add keydown event listener for navigation and closing modal
+      $(document).on('keydown', function(event) {
+        if ($('#fullScreenModal').is(':visible')) { // Check if the modal is visible
+          switch (event.key) {
+            case 'ArrowLeft':
+              // Trigger the previous button if it exists
+              $('#navContainer button:contains("Previous")').click();
+              break;
+            case 'ArrowRight':
+              // Trigger the next button if it exists
+              $('#navContainer button:contains("Next")').click();
+              break;
+            case 'Escape':
+              // Close the modal
+              $('#fullScreenModal').hide();
+              break;
+          }
+        }
+      });
     });
 
     function fetchData(id) {
@@ -561,21 +581,25 @@
 
         // Include the raw or substituted data
         if (postPromptData.raw) {
-            table += `
+              table += `
             <tr>
-                <td><strong>Raw Data:</strong></td>
-                <td><pre>${postPromptData.raw}</pre></td>
-                <td><i class="fas fa-copy copy-btn" onclick="copyToClipboard(\`${postPromptData.raw}\`)"></i></td>
+                <td style="word-wrap: break-word; max-width: 100%; text-align: left;"><strong>Raw Data:</strong></td>
+                <td style="word-wrap: break-word; max-width: 100%; text-align: left;">${postPromptData.raw}</td>
+                <td style="word-wrap: break-word; max-width: 100%; text-align: left;">
+                  <i class="fas fa-copy copy-btn" data-copy='${JSON.stringify(postPromptData.raw, null, 2)}' onclick="copyToClipboard(this.getAttribute('data-copy'))"></i>
+                </td>
             </tr>
-        `;
+            `;
         }
 
         if (postPromptData.substituted) {
             table += `
             <tr>
-                <td><strong>Substituted Data:</strong></td>
-                <td><pre>${postPromptData.substituted}</pre></td>
-                <td><i class="fas fa-copy copy-btn" onclick="copyToClipboard(\`${postPromptData.substituted}\`)"></i></td>
+                <td style="word-wrap: break-word; max-width: 100%; text-align: left;"><strong>Substituted Data:</strong></td>
+                <td style="word-wrap: break-word; max-width: 100%; text-align: left;">${postPromptData.substituted}</td>
+                <td style="word-wrap: break-word; max-width: 100%; text-align: left;">
+                  <i class="fas fa-copy copy-btn" data-copy='${JSON.stringify(postPromptData.substituted, null, 2)}' onclick="copyToClipboard(this.getAttribute('data-copy'))"></i>
+                </td>
             </tr>
         `;
         }
@@ -585,9 +609,11 @@
             postPromptData.parsed.forEach((parsedItem, index) => {
                 table += `
                 <tr>
-                    <td><strong>Parsed Item ${index + 1}:</strong></td>
-                    <td><pre>${JSON.stringify(parsedItem, null, 2)}</pre></td>
-                    <td><i class="fas fa-copy copy-btn" onclick="copyToClipboard(\`${JSON.stringify(parsedItem, null, 2)}\`)"></i></td>
+                    <td style="word-wrap: break-word; max-width: 100%; text-align: left;"><strong>Parsed Item ${index + 1}:</strong></td>
+                    <td style="word-wrap: break-word; max-width: 100%; text-align: left;"><pre>${JSON.stringify(parsedItem, null, 2)}</pre></td>
+                    <td style="word-wrap: break-word; max-width: 100%; text-align: left;">
+                      <i class="fas fa-copy copy-btn" data-copy='${JSON.stringify(parsedItem, null, 2)}' onclick="copyToClipboard(this.getAttribute('data-copy'))"></i>
+                    </td>
                 </tr>
             `;
             });
@@ -626,6 +652,8 @@
   </script>
 
 {% endblock %}
+
+
 
 
 
