@@ -212,7 +212,25 @@
                 { "data": "id" },
                 { "data": "number" },
                 { "data": "number_type" },
-                { "data": "capabilities", "render": function(data) { return data.join(', '); } },
+                { 
+                    "data": "capabilities", 
+                    "render": function(data) { 
+                        return data.map(function(capability) {
+                            switch(capability) {
+                                case 'voice':
+                                    return '<i class="fas fa-phone"></i>';
+                                case 'fax':
+                                    return '<i class="fas fa-fax"></i>';
+                                case 'sms':
+                                    return '<i class="fas fa-sms"></i>';
+                                case 'mms':
+                                    return '<i class="fas fa-image"></i>';
+                                default:
+                                    return capability;
+                            }
+                        }).join(' ');
+                    } 
+                },
                 {
                     "data": null,
                     "render": function(data, type, row) {
@@ -285,7 +303,20 @@
                 { 
                     "data": "capabilities",
                     "render": function(data) {
-                        return data.join(', ');
+                        return data.map(function(capability) {
+                            switch(capability) {
+                                case 'voice':
+                                    return '<i class="fas fa-phone"></i>';
+                                case 'fax':
+                                    return '<i class="fas fa-fax"></i>';
+                                case 'sms':
+                                    return '<i class="fas fa-sms"></i>';
+                                case 'mms':
+                                    return '<i class="fas fa-photo-video"></i>';
+                                default:
+                                    return capability;
+                            }
+                        }).join(' ');
                     }
                 },
                 {

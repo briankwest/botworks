@@ -158,54 +158,32 @@
           }
         });
       });
-    });
 
-    function initializeFeaturesTable(agentId) {
-      if ($.fn.DataTable) {
-        $('#featuresTable').DataTable({
-          "ajax": {
-            "url": `/aifeatures/${agentId}`,
-            "dataSrc": "",
-            "headers": {
-              "Accept": "application/json"
-            },
-            "dataFilter": function(data) {
-              console.log("AJAX Response:", data);
-              return data;
-            }
+      $(document).on('change', '.toggle-enabled', function() {
+        const featureId = $(this).data('id');
+        const enabled = $(this).is(':checked');
+        
+        $.ajax({
+          url: `/aifeatures/${selectedAgentId}/${featureId}`,
+          type: 'PATCH',
+          contentType: 'application/json',
+          data: JSON.stringify({ enabled }),
+          success: function() {
+            Swal.fire({
+              icon: 'success',
+              title: 'Success!',
+              text: `Feature ${enabled ? 'enabled' : 'disabled'} successfully.`,
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 1500
+            });
           },
-          "order": [[3, 'desc']],
-          "columns": [
-            { "data": "id" },
-            { "data": "name" },
-            { "data": "value" },
-            { "data": "enabled",
-              "render": function(data, type, row) {
-                return data ? 'Yes' : 'No';
-              }
-            },
-            { "data": "created",
-              "render": function(data, type, row) {
-                return new Date(data).toLocaleString();
-              }
-            },
-            { "data": null,
-              "render": function(data, type, row) {
-                return `
-                  <button class="btn btn-primary edit-btn" data-id="${row.id}">Edit</button>
-                  <button class="btn btn-danger delete-btn" data-id="${row.id}">Delete</button>
-                `;
-              }
-            }
-          ],
-          "pageLength": 10,
-          "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
-          "responsive": true,
-          "autoWidth": false
+          error: function() {
+            Swal.fire('Error!', 'There was an error updating the feature.', 'error');
+          }
         });
-      } else {
-        console.error('DataTables is not loaded. Make sure you have included the DataTables library.');
-      }
+      });
 
       $(document).on('click', '.delete-btn', function() {
         const featureId = $(this).data('id');
@@ -220,7 +198,7 @@
         }).then((result) => {
           if (result.isConfirmed) {
             $.ajax({
-              url: `/aifeatures/${agentId}/${featureId}`,
+              url: `/aifeatures/${selectedAgentId}/${featureId}`,
               type: 'DELETE',
               success: function() {
                 $('#featuresTable').DataTable().ajax.reload();
@@ -245,6 +223,59 @@
           }
         });
       });
+    });
+
+    function initializeFeaturesTable(agentId) {
+      if ($.fn.DataTable) {
+        $('#featuresTable').DataTable({
+          "ajax": {
+            "url": `/aifeatures/${agentId}`,
+            "dataSrc": "",
+            "headers": {
+              "Accept": "application/json"
+            },
+            "dataFilter": function(data) {
+              console.log("AJAX Response:", data);
+              return data;
+            }
+          },
+          "order": [[3, 'desc']],
+          "columns": [
+            { "data": "id" },
+            { "data": "name" },
+            { "data": "value" },
+            { "data": "enabled",
+              "render": function(data, type, row) {
+                return `
+                  <div class="custom-control custom-switch">
+                    <input type="checkbox" class="custom-control-input toggle-enabled" id="toggle-${row.id}" ${data ? 'checked' : ''} data-id="${row.id}">
+                    <label class="custom-control-label" for="toggle-${row.id}"></label>
+                  </div>
+                `;
+              }
+            },
+            { "data": "created",
+              "render": function(data, type, row) {
+                return new Date(data).toLocaleString();
+              }
+            },
+            { "data": null,
+              "render": function(data, type, row) {
+                return `
+                  <button class="btn btn-primary edit-btn" data-id="${row.id}">Edit</button>
+                  <button class="btn btn-danger delete-btn" data-id="${row.id}">Delete</button>
+                `;
+              }
+            }
+          ],
+          "pageLength": 10,
+          "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+          "responsive": true,
+          "autoWidth": false
+        });
+      } else {
+        console.error('DataTables is not loaded. Make sure you have included the DataTables library.');
+      }
     }
   </script>
 
@@ -267,10 +298,6 @@
             <div class="form-group">
               <label for="editFeatureValue">Value</label>
               <input type="text" class="form-control" id="editFeatureValue">
-            </div>
-            <div class="form-group">
-              <label for="editFeatureEnabled">Enabled</label>
-              <input type="checkbox" id="editFeatureEnabled">
             </div>
             <button type="submit" class="btn btn-primary">Save changes</button>
           </form>

@@ -100,7 +100,9 @@
                             <table id="swaigTable" class="table table-striped w-100">
                                 <thead>
                                     <tr>
-                                        <th>Use</th>
+                                        <th>
+                                            <input type="checkbox" id="checkAllToggle"> <!-- Check All/Uncheck All toggle -->
+                                        </th>
                                         <th>Function</th>
                                         <th>Arguments</th>
                                         <th>Purpose</th>
@@ -246,8 +248,38 @@
         "pageLength": -1, // Show all entries
         "lengthMenu": [[-1], ["All"]], // Only offer "All" as an option
         "responsive": true,
-        "autoWidth": false
+        "autoWidth": false,
+        "dom": 't' // Only show the table body
       });
+
+      // Add event listener for the Check All/Uncheck All toggle
+      $('#checkAllToggle').on('change', function() {
+        const isChecked = $(this).is(':checked');
+        $('.swaig-checkbox').prop('checked', isChecked);
+        updateFunctionsTextarea();
+      });
+
+      // Function to update the Functions textarea with selected functions
+      function updateFunctionsTextarea() {
+        const selectedFunctions = [];
+        $('.swaig-checkbox:checked').each(function() {
+          selectedFunctions.push($(this).data('function'));
+        });
+        $('#includeFunctions').val(JSON.stringify(selectedFunctions));
+      }
+
+      // Update the Functions textarea and toggle checkbox whenever a checkbox is changed
+      $(document).on('change', '.swaig-checkbox', function() {
+        updateFunctionsTextarea();
+        updateCheckAllToggle();
+      });
+
+      // Function to update the Check All/Uncheck All toggle based on individual checkboxes
+      function updateCheckAllToggle() {
+        const totalCheckboxes = $('.swaig-checkbox').length;
+        const checkedCheckboxes = $('.swaig-checkbox:checked').length;
+        $('#checkAllToggle').prop('checked', totalCheckboxes > 0 && totalCheckboxes === checkedCheckboxes);
+      }
 
       // Function to populate the table with SWAIG data
       function populateSwaigTable(data) {
@@ -312,6 +344,9 @@
                 row.find('.swaig-checkbox').prop('checked', true);
               }
             });
+
+            // Update the Check All/Uncheck All toggle after setting checkboxes
+            updateCheckAllToggle();
           });
         });
       });
@@ -398,7 +433,18 @@
             "columns": [
               { "data": "id" },
               { "data": "url" },
-              { "data": "functions" },
+              { "data": "functions",
+                "render": function(data, type, row) {
+                  try {
+                    const functionsArray = JSON.parse(row.functions);
+                    const formattedFunctions = functionsArray.join(' ');
+                    return formattedFunctions;
+                  } catch (error) {
+                    console.error('Error parsing functions:', error);
+                    return row.functions;
+                  }
+                }
+              },
               { "data": null,
                 "render": function(data, type, row) {
                   return `
@@ -520,6 +566,9 @@
                   row.find('.swaig-checkbox').prop('checked', true);
                 }
               });
+
+              // Update the Check All/Uncheck All toggle after setting checkboxes
+              updateCheckAllToggle();
             });
           });
         });
@@ -582,6 +631,12 @@
 
   
 {% endblock %}
+
+
+
+
+
+
 
 
 

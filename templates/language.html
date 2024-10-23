@@ -35,7 +35,6 @@
                       <th>Voice</th>
                       <th>Speech Fillers</th>
                       <th>Function Fillers</th>
-                      <th>Language Order</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -77,10 +76,6 @@
                   <div class="form-group">
                     <label for="functionFillers">Function Fillers</label>
                     <input type="text" class="form-control" id="functionFillers" name="function_fillers">
-                  </div>
-                  <div class="form-group">
-                    <label for="languageOrder">Language Order</label>
-                    <input type="number" class="form-control" id="languageOrder" name="language_order" required>
                   </div>
                   <button type="submit" class="btn btn-success">Add Language</button>
                 </form>
@@ -126,10 +121,6 @@
                 <label for="editFunctionFillers">Function Fillers</label>
                 <input type="text" class="form-control" id="editFunctionFillers" name="function_fillers">
               </div>
-              <div class="form-group">
-                <label for="editLanguageOrder">Language Order</label>
-                <input type="number" class="form-control" id="editLanguageOrder" name="language_order" required>
-              </div>
             </form>
           </div>
           <div class="modal-footer">
@@ -147,6 +138,7 @@
 {% block scripts %}
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
   <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
   <script src="/static/js/voiceLoader.js"></script>
 
   <script>
@@ -213,7 +205,6 @@
           { "data": "voice" },
           { "data": "speech_fillers" },
           { "data": "function_fillers" },
-          { "data": "language_order" },
           {
             "data": null,
             "render": function(data, type, row) {
@@ -223,7 +214,10 @@
               `;
             }
           }
-        ]
+        ],
+        order: [],
+        ordering: false,
+        dom: 't'
       });
 
       function showToast(icon, title) {
@@ -262,8 +256,9 @@
           contentType: 'application/json',
           data: JSON.stringify(formData),
           success: function(response) {
-            $('#languageTable').DataTable().ajax.reload();
-            $('#addLanguageForm')[0].reset();
+            $('#languageTable').DataTable().ajax.reload(null, false); // Reload table without resetting pagination
+            $('#addLanguageForm')[0].reset(); // Reset the form fields
+            populateLanguageDropdowns(); // Reload the language dropdowns
             showToast('success', 'Language entry created successfully');
           },
           error: function(error) {
@@ -346,6 +341,56 @@
           }
         });
       });
+
+      $('#languageTable tbody').sortable({
+        update: function(event, ui) {
+          const order = $(this).children().map(function(index, element) {
+            return {
+              id: $(element).find('td:first').text(), // Assuming the first column is the ID
+              order: index + 1
+            };
+          }).get();
+
+          // Send updated order to the server
+          order.forEach(function(item) {
+            $.ajax({
+              type: 'PATCH',
+              url: `/language/${item.id}`,
+              contentType: 'application/json',
+              headers: {
+                'Accept': 'application/json'
+              },
+              data: JSON.stringify({ language_order: item.order }),
+              success: function(response) {
+                showToast('success', `Language order updated successfully`);
+              },
+              error: function(error) {
+                showToast('error', `Error updating language order for ID ${item.id}`);
+              }
+            });
+          });
+        }
+      }).disableSelection();
+
+      // Function to show toast notifications
+      function showToast(icon, title) {
+        const Toast = Swal.mixin({
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+          didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer)
+            toast.addEventListener('mouseleave', Swal.resumeTimer)
+          }
+        });
+
+        Toast.fire({
+          icon: icon,
+          title: title
+        });
+      }
     });
   </script>
 {% endblock %}

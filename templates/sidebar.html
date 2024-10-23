@@ -23,8 +23,8 @@
               <p>Numbers</p>
             </a>
           </li>
-          <li class="nav-item has-treeview {{ 'menu-open' if request.endpoint in ['agents', 'prompt', 'conversations', 'conversation', 'pronounce', 'language', 'hints', 'params', 'includes', 'aifeatures', 'functions', 'swmlrequests', 'livedebug', 'debuglogs'] else '' }}">
-            <a href="#" class="nav-link {{ 'active' if request.endpoint in ['agents', 'prompt', 'conversations', 'conversation', 'pronounce', 'language', 'hints', 'params', 'includes', 'aifeatures', 'functions', 'swmlrequests', 'livedebug', 'debuglogs'] else '' }}">
+          <li class="nav-item has-treeview {{ 'menu-open' if request.endpoint in ['agents', 'prompt', 'conversations', 'pronounce', 'language', 'hints', 'params', 'includes', 'aifeatures', 'functions', 'swmlrequests', 'livedebug', 'debuglogs'] else '' }}">
+            <a href="#" class="nav-link {{ 'active' if request.endpoint in ['agents', 'prompt', 'conversations', 'pronounce', 'language', 'hints', 'params', 'includes', 'aifeatures', 'functions', 'swmlrequests', 'livedebug', 'debuglogs'] else '' }}">
               <i class="nav-icon fas fa-robot"></i>
               <p>
                 AI Agents
@@ -89,13 +89,13 @@
               <li class="nav-item">
                 <a href="{{ url_for('functions') }}" class="nav-link {{ 'active' if request.endpoint == 'functions' else '' }}">
                   <i class="nav-icon fas fa-code"></i>
-                  <p>SWAIG Functions</p>
+                  <p>Functions</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="{{ url_for('swmlrequests') }}" class="nav-link {{ 'active' if request.endpoint == 'swmlrequests' else '' }}">
                   <i class="nav-icon fas fa-file-alt"></i>
-                  <p>SWML Requests</p>
+                  <p>Requests</p>
                 </a>
               </li>
               <li class="nav-item">
@@ -104,13 +104,13 @@
                   <p>Debug Logs</p>
                 </a>
               </li>
+              <li class="nav-item">
+                <a href="{{ url_for('livedebug') }}" class="nav-link {{ 'active' if request.endpoint == 'livedebug' else '' }}">
+                  <i class="nav-icon fas fa-bug"></i>
+                  <p>Live Debug</p>
+                </a>
+              </li>
             </ul>
-            <li class="nav-item">
-              <a href="{{ url_for('livedebug') }}" class="nav-link {{ 'active' if request.endpoint == 'livedebug' else '' }}">
-                <i class="nav-icon fas fa-bug"></i>
-                <p>Live Debug</p>
-              </a>
-            </li>
           </li>
           <li class="nav-item">
             <a href="{{ url_for('signalwire') }}" class="nav-link {{ 'active' if request.endpoint == 'signalwire' else '' }}">

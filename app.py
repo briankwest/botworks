@@ -256,6 +256,46 @@ def functions():
             else:
                 return jsonify({'message': 'An error occurred while adding arguments'}), 500
 
+@app.route('/functions/<int:id>', methods=['PATCH'])
+@login_required
+def patch_function(id):
+    selected_agent_id = request.cookies.get('selectedAgentId')
+    if not selected_agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
+    function_entry = AIFunctions.query.filter_by(id=id, agent_id=selected_agent_id).first_or_404()
+
+    if function_entry.user_id != current_user.id:
+        return jsonify({'message': 'Permission denied'}), 403
+
+    data = request.get_json()
+    try:
+        if 'name' in data:
+            function_entry.name = data['name']
+        if 'purpose' in data:
+            function_entry.purpose = data['purpose']
+        if 'active' in data:
+            function_entry.active = data['active']
+        if 'web_hook_url' in data:
+            function_entry.web_hook_url = data['web_hook_url']
+        if 'wait_file' in data:
+            function_entry.wait_file = data['wait_file']
+        if 'wait_file_loops' in data:
+            function_entry.wait_file_loops = data['wait_file_loops'] or 0
+        if 'fillers' in data:
+            function_entry.fillers = data['fillers']
+        if 'meta_data' in data:
+            function_entry.meta_data = data['meta_data']
+        if 'meta_data_token' in data:
+            function_entry.meta_data_token = data['meta_data_token']
+
+        db.session.commit()
+        return jsonify({'message': 'Function updated successfully'}), 200
+
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return jsonify({'message': 'An error occurred while updating the function', 'error': str(e)}), 500
+
 @app.route('/functions/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 @login_required
 def manage_function(id):
@@ -351,6 +391,41 @@ def get_function_args(function_id):
         'enum': arg.enum,
         'default': arg.default
     } for arg in args]), 200
+
+@app.route('/functions/<int:function_id>/args/<int:arg_id>', methods=['PATCH'])
+@login_required
+def patch_function_arg(function_id, arg_id):
+    selected_agent_id = request.cookies.get('selectedAgentId')
+    if not selected_agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
+    function_entry = AIFunctions.query.filter_by(id=function_id, agent_id=selected_agent_id).first_or_404()
+    arg_entry = AIFunctionArgs.query.filter_by(id=arg_id, agent_id=selected_agent_id).first_or_404()
+    
+    if function_entry.user_id != current_user.id or arg_entry.function_id != function_id:
+        return jsonify({'message': 'Permission denied'}), 403
+
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'message': 'No data provided'}), 400
+
+        # Update fields if they are present in the request
+        arg_entry.name = data.get('name', arg_entry.name)
+        arg_entry.type = data.get('type', arg_entry.type)
+        arg_entry.description = data.get('description', arg_entry.description)
+        arg_entry.required = data.get('required', arg_entry.required)
+        arg_entry.active = data.get('active', arg_entry.active)
+        arg_entry.enum = data.get('enum', arg_entry.enum)
+        arg_entry.default = data.get('default', arg_entry.default)
+
+        db.session.commit()
+        return jsonify({'message': 'Argument updated successfully'}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': 'Error updating argument', 'error': str(e)}), 500
+
 
 @app.route('/functions/<int:function_id>/args/<int:arg_id>', methods=['PUT', 'DELETE'])
 @login_required
@@ -640,7 +715,9 @@ def refresh():
 def logout():
     logout_user()
     flash('You have been logged out successfully.', 'success')
-    return redirect(url_for('login'))
+    response = make_response(redirect(url_for('login')))
+    response.set_cookie('selectedAgentId', '', expires=0)  # Clear the selectedAgentId cookie
+    return response
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -913,6 +990,33 @@ def update_prompt(id):
     db.session.commit()
     return jsonify({'message': 'Prompt updated successfully'}), 200
 
+@app.route('/language/<int:id>', methods=['PATCH'])
+@login_required
+def patch_language(id):
+    language_entry = AILanguage.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'message': 'No data provided'}), 400
+
+        # Update fields if they are present in the request
+        language_entry.name = data.get('name', language_entry.name)
+        language_entry.code = data.get('code', language_entry.code)
+        language_entry.voice = data.get('voice', language_entry.voice)
+        language_entry.speech_fillers = data.get('speech_fillers', language_entry.speech_fillers)
+        language_entry.function_fillers = data.get('function_fillers', language_entry.function_fillers)
+        language_entry.language_order = data.get('language_order', language_entry.language_order)
+
+        db.session.commit()
+        return jsonify({'message': 'Language entry updated successfully'}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': 'Error updating language entry', 'error': str(e)}), 500
+
+
+
 @app.route('/language/<int:id>', methods=['PUT'])
 @login_required
 def update_language(id):
@@ -960,7 +1064,7 @@ def language():
 
     if request.method == 'GET':
         if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
-            languages = AILanguage.query.filter_by(user_id=current_user.id, agent_id=selected_agent_id).all()
+            languages = AILanguage.query.filter_by(user_id=current_user.id, agent_id=selected_agent_id).order_by(AILanguage.language_order.asc()).all()
             language_list = [{
                 'id': l.id,
                 'name': l.name,
@@ -1513,6 +1617,21 @@ def get_debuglogs(agent_id):
 @login_required
 def debuglogs():
     return render_template('debuglog.html', user=current_user)
+@app.route('/aifeatures/<int:agent_id>/<int:feature_id>', methods=['PATCH'])
+@login_required
+def patch_aifeature(agent_id, feature_id):
+    feature = AIFeatures.query.filter_by(id=feature_id, agent_id=agent_id, user_id=current_user.id).first_or_404()
+    data = request.get_json()
+
+    if 'name' in data:
+        feature.name = data['name']
+    if 'value' in data:
+        feature.value = data['value']
+    if 'enabled' in data:
+        feature.enabled = data['enabled']
+
+    db.session.commit()
+    return jsonify({'message': 'Feature patched successfully'}), 200
 
 @app.route('/aifeatures/<int:agent_id>/<int:feature_id>', methods=['GET', 'PUT', 'DELETE'])
 @login_required
