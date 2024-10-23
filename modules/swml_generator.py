@@ -169,9 +169,9 @@ def generate_swml_response(user_id, agent_id, request_body):
         msg = SignalWireML(version="1.0.0")
 
         msg.add_application("main", "send_sms", {
-            "to_number": '${args.to}',
+            "to_number": '%{args.to}',
             "from_number": enable_message_feature.value,
-            "body": '${args.message}'
+            "body": '%{args.message}'
         })
 
         enable_message_inactive = get_feature(agent_id, 'ENABLE_MESSAGE_INACTIVE')
@@ -196,7 +196,7 @@ def generate_swml_response(user_id, agent_id, request_body):
             },
             "data_map": {
                     "expressions": [{
-                        "string": '${args.message}',
+                        "string": '%{args.message}',
                         "pattern": ".*",
                         "output": {
                             "response": "Message sent.",
@@ -221,7 +221,7 @@ def generate_swml_response(user_id, agent_id, request_body):
         transfer = SignalWireML(version="1.0.0")
 
         transfer.add_application("main", "connect", {
-            "to": '${meta_data.table.${lc:args.target}}',
+            "to": '%{meta_data.table.%{lc:args.target}}',
             "from": 'assistant'
         })
 
@@ -253,7 +253,7 @@ def generate_swml_response(user_id, agent_id, request_body):
             "data_map": {
                 "expressions": [
                     {
-                        "string": '${meta_data.table.${lc:args.target}}',
+                        "string": '%{meta_data.table.%{lc:args.target}}',
                         "pattern": '\\w+',
                         "output": {
                             "response": "Tell the user you are going to transfer the call to whoever they asked for. Do not change languages from the one you are currently using. Do not hangup.",
@@ -261,10 +261,10 @@ def generate_swml_response(user_id, agent_id, request_body):
                         }
                     },
                     {
-                        "string": '${args.target}',
+                        "string": '%{args.target}',
                         "pattern": '.*',
                         "output": {
-                            "response": "I'm sorry, I was unable to transfer your call to ${input.args.target}."
+                            "response": "I'm sorry, I was unable to transfer your call to %{input.args.target}."
                         }
                     }
                 ]
@@ -299,14 +299,14 @@ def generate_swml_response(user_id, agent_id, request_body):
                 },
                 "data_map": {
                     "webhooks": [{
-                        "url": f'https://api.api-ninjas.com/v1/weather?city=${{enc:args.city}}&state=${{enc:args.state}}&country=${{enc:args.country}}',
+                        "url": f'https://api.api-ninjas.com/v1/weather?city=%{{enc:args.city}}&state=%{{enc:args.state}}&country=%{{enc:args.country}}',
                         "method": "GET",
                         "error_keys": "error",
                         "headers": {
                             "X-Api-Key": api_ninjas_key
                         },
                         "output": {
-                            "response": 'Say the temperature in Fahrenheit. The weather in ${input.args.city} ${temp}C, Humidity: ${humidity}%, High: ${max_temp}C, Low: ${min_temp}C Wind Direction: ${wind_degrees} (say cardinal direction), Clouds: ${cloud_pct}%, Feels Like: ${feels_like}C.'
+                            "response": 'Say the temperature in Fahrenheit. The weather in %{input.args.city} %{temp}C, Humidity: %{humidity}%, High: %{max_temp}C, Low: %{min_temp}C Wind Direction: %{wind_degrees} (say cardinal direction), Clouds: %{cloud_pct}%, Feels Like: %{feels_like}C.'
                         }
                     }]
                 }
@@ -315,7 +315,7 @@ def generate_swml_response(user_id, agent_id, request_body):
         api_ninjas_jokes_feature = get_feature(agent_id, 'API_NINJAS_JOKES')
         if api_ninjas_jokes_feature and api_ninjas_jokes_feature.enabled:
             dj = SignalWireML(version="1.0.0")
-            dj.add_application("main", "set", {"dad_joke": '${array[0].joke}'})
+            dj.add_application("main", "set", {"dad_joke": '%{array[0].joke}'})
 
             swml.add_aiswaigfunction({
                 "function": "get_joke",
@@ -331,14 +331,14 @@ def generate_swml_response(user_id, agent_id, request_body):
                 },
                 "data_map": {
                     "webhooks": [{
-                        "url": f'https://api.api-ninjas.com/v1/${{args.type}}',
+                        "url": f'https://api.api-ninjas.com/v1/%{{args.type}}',
                         "method": "GET",
                         "error_keys": "error",
                         "headers": {
                             "X-Api-Key": api_ninjas_key
                         },
                         "output": {
-                            "response": 'Tell the user: ${array[0].joke}',
+                            "response": 'Tell the user: %{array[0].joke}',
                             "action": [{"SWML": dj.render()}]
                         }
                     }]
@@ -360,14 +360,14 @@ def generate_swml_response(user_id, agent_id, request_body):
                     }                },
                 "data_map": {
                     "webhooks": [{
-                        "url": f'https://api.api-ninjas.com/v1/trivia?category=${{args.category}}',
+                        "url": f'https://api.api-ninjas.com/v1/trivia?category=%{{args.category}}',
                         "method": "GET",
                         "error_keys": "error",
                         "headers": {
                             "X-Api-Key": api_ninjas_key
                         },
                         "output": {
-                            "response": 'category ${array[0].category} questions: ${array[0].question} answer: ${array[0].answer}, be sure to give the user time to answer before saying the answer.'
+                            "response": 'category %{array[0].category} questions: %{array[0].question} answer: %{array[0].answer}, be sure to give the user time to answer before saying the answer.'
                         }
                     }]
                 }
@@ -387,7 +387,7 @@ def generate_swml_response(user_id, agent_id, request_body):
                             "X-Api-Key": api_ninjas_key
                         },
                         "output": {
-                            "response": 'Here is a fact for you: ${array[0].fact}'
+                            "response": 'Here is a fact for you: %{array[0].fact}'
                         }
                     }]
                 }
@@ -421,14 +421,14 @@ def generate_swml_response(user_id, agent_id, request_body):
                 },
                 "data_map": {
                     "webhooks": [{
-                        "url": f'https://api.api-ninjas.com/v1/quotes?category=${{args.category}}',
+                        "url": f'https://api.api-ninjas.com/v1/quotes?category=%{{args.category}}',
                         "method": "GET",
                         "error_keys": "error",
                         "headers": {
                             "X-Api-Key": api_ninjas_key
                         },
                         "output": {
-                            "response": 'Here is a quote for you: "${array[0].quote}" - ${array[0].author}'
+                            "response": 'Here is a quote for you: "%{array[0].quote}" - %{array[0].author}'
                         }
                     }]
                 }
@@ -454,13 +454,13 @@ def generate_swml_response(user_id, agent_id, request_body):
                 },
                 "data_map": {
                     "webhooks": [{
-                        "url": f'https://api.api-ninjas.com/v1/cocktail?name=${{enc:args.name}}&ingredients=${{enc:args.ingredients}}',
+                        "url": f'https://api.api-ninjas.com/v1/cocktail?name=%{{enc:args.name}}&ingredients=%{{enc:args.ingredients}}',
                         "method": "GET",
                         "headers": {
                             "X-Api-Key": api_ninjas_key
                         },
                         "output": {
-                            "response": 'Here is a cocktail recipe for you: ${array[0].name}. Ingredients: ${array[0].ingredients[0]}, ${array[0].ingredients[1]}, ${array[0].ingredients[2]}, ${array[0].ingredients[3]}, ${array[0].ingredients[4]}, ${array[0].ingredients[5]}, ${array[0].ingredients[6]}, ${array[0].ingredients[7]}, ${array[0].ingredients[8]}, ${array[0].ingredients[9]}, ${array[0].ingredients[10]}. Instructions: ${array[0].instructions}.'
+                            "response": 'Here is a cocktail recipe for you: %{array[0].name}. Ingredients: %{array[0].ingredients[0]}, %{array[0].ingredients[1]}, %{array[0].ingredients[2]}, %{array[0].ingredients[3]}, %{array[0].ingredients[4]}, %{array[0].ingredients[5]}, %{array[0].ingredients[6]}, %{array[0].ingredients[7]}, %{array[0].ingredients[8]}, %{array[0].ingredients[9]}, %{array[0].ingredients[10]}. Instructions: %{array[0].instructions}.'
                         }
                     }]
                 }
@@ -490,12 +490,12 @@ def generate_swml_response(user_id, agent_id, request_body):
                             "Authorization": authorization
                         },
                         "params": {
-                            "query_string": "${args.user_question}",
+                            "query_string": "%{args.user_question}",
                             "document_id": document_id,
                             "count": 1
                         },
                         "output": {
-                            "response": 'Use this information to answer the user\'s query, only provide answers from this information and do not make up anything: ${chunks[0].text} and ${chunks[0].document_id}'
+                            "response": 'Use this information to answer the user\'s query, only provide answers from this information and do not make up anything: %{chunks[0].text} and %{chunks[0].document_id}'
                         }
                     }
                 ]
