@@ -3,15 +3,10 @@
 {% block title %}Includes{% endblock %}
 
 {% block content %}
-  <!-- Navbar -->
   {% include 'navbar.html' %}
-  <!-- /.navbar -->
-
-  <!-- Main Sidebar Container -->
   {% include 'sidebar.html' %}
   
   <div class="content-wrapper">
-    <!-- Content Header (Page header) -->
     <section class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
@@ -19,10 +14,9 @@
                     <h1 class="m-0">Includes</h1>
                 </div>
             </div>
-        </div><!-- /.container-fluid -->
+        </div>
     </section>
 
-    <!-- Main content -->
     <section class="content">
         <div class="container-fluid">
             <div class="row">
@@ -31,7 +25,6 @@
                         <div class="card-header bg-primary">
                             <h3 class="card-title">Includes</h3>
                         </div>
-                        <!-- /.card-header -->
                         <div class="card-body">
                             <div class="table-responsive">
                                 <table id="includesTable" class="table table-striped table-bordered table-hover">
@@ -44,27 +37,20 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <!-- Data will be populated by JavaScript -->
                                     </tbody>
                                 </table>
                             </div>
                         </div>
-                        <!-- /.card-body -->
                     </div>
-                    <!-- /.card -->
                 </div>
-                <!-- /.col -->
             </div>
-            <!-- /.row -->
 
-            <!-- Add/Edit Include Card -->
             <div class="row mt-4">
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header bg-success">
                             <h3 class="card-title">Add New Include</h3>
                         </div>
-                        <!-- /.card-header -->
                         <div class="card-body">
                             <form id="addIncludeForm">
                                 <div class="form-group">
@@ -80,28 +66,22 @@
                                 <button type="button" class="btn btn-secondary" id="cancelButton" style="display: none;">Cancel</button>
                             </form>
                         </div>
-                        <!-- /.card-body -->
                     </div>
-                    <!-- /.card -->
                 </div>
-                <!-- /.col -->
             </div>
-            <!-- /.row -->
 
-            <!-- SWAIG Table -->
             <div class="row mt-4">
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header bg-info">
                             <h3 class="card-title">SWAIG Data</h3>
                         </div>
-                        <!-- /.card-header -->
                         <div class="card-body table-responsive">
                             <table id="swaigTable" class="table table-striped w-100">
                                 <thead>
                                     <tr>
                                         <th>
-                                            <input type="checkbox" id="checkAllToggle"> <!-- Check All/Uncheck All toggle -->
+                                            <input type="checkbox" id="checkAllToggle">
                                         </th>
                                         <th>Function</th>
                                         <th>Arguments</th>
@@ -109,40 +89,28 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <!-- Data will be populated by JavaScript -->
                                 </tbody>
                             </table>
                         </div>
-                        <!-- /.card-body -->
                     </div>
-                    <!-- /.card -->
                 </div>
-                <!-- /.col -->
             </div>
-            <!-- /.row -->
         </div>
-        <!-- /.container-fluid -->
     </section>
-    <!-- /.content -->
   </div>
-  <!-- /.content-wrapper -->
-  <!-- Footer -->
   {% include 'footer.html' %}
-  <!-- /.footer -->
 {% endblock %}
 
 {% block scripts %}
-  <!-- Add DataTables CSS and JS -->
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
   <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
 
   <script>
     $(document).ready(function() {
-      var selectedAgentId = getCookie('selectedAgentId'); // Retrieve the selected agent ID from cookies
+      var selectedAgentId = getCookie('selectedAgentId');
 
       initializeIncludesTable(selectedAgentId);
 
-      // Fetch includes without debounce
       function fetchIncludes(url) {
         $.ajax({
           url: `/includes/${selectedAgentId}`,
@@ -157,13 +125,11 @@
         });
       }
 
-      // Add event listener to URL input field
       $('#includeUrl').on('input', function() {
         const url = $(this).val();
         fetchIncludes(url);
       });
 
-      // Debounce function
       function debounce(func, wait) {
         let timeout;
         return function(...args) {
@@ -173,10 +139,8 @@
         };
       }
 
-      // Debounced function to fetch SWAIG data
-      const debouncedFetchSwaigData = debounce(fetchSwaigData, 1000); // 1 second debounce
+      const debouncedFetchSwaigData = debounce(fetchSwaigData, 1000);
 
-      // Function to fetch SWAIG data
       function fetchSwaigData(url) {
         console.log('Attempting to fetch SWAIG data for URL:', url);
         $.ajax({
@@ -197,7 +161,6 @@
         });
       }
 
-      // Add event listener to URL input field for SWAIG data
       $('#includeUrl').on('input', function() {
         const url = $(this).val().trim();
         console.log('URL input changed:', url);
@@ -210,24 +173,23 @@
         }
       });
 
-      // Function to validate URL
       function isValidUrl(url) {
-        const urlPattern = new RegExp('^(https?:\\/\\/)' + // Protocol
-          '((([a-zA-Z\\d]([a-zA-Z\\d-]*[a-zA-Z\\d])*)\\.)+[a-zA-Z]{2,}|' + // Domain name
-          '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR IP (v4) address
-          '(\\:\\d+)?' + // Port
-          '(\\/[-a-zA-Z\\d%_.~+]*)*' + // Path
-          '(\\?[;&a-zA-Z\\d%_.~+=-]*)?' + // Query string
-          '(\\#[-a-zA-Z\\d_]*)?$', 'i'); // Fragment locator
+        const urlPattern = new RegExp('^(https?:\\/\\/)' +
+          '((([a-zA-Z\\d]([a-zA-Z\\d-]*[a-zA-Z\\d])*)\\.)+[a-zA-Z]{2,}|' +
+          '((\\d{1,3}\\.){3}\\d{1,3}))' +
+          '(\\:\\d+)?' +
+          '(\\/[-a-zA-Z\\d%_.~+]*)*' +
+          '(\\?[;&a-zA-Z\\d%_.~+=-]*)?' +
+          '(\\#[-a-zA-Z\\d_]*)?$', 'i');
 
-        const userInfoPattern = new RegExp('^(https?:\\/\\/)' + // Protocol
-          '([\\w-]+(:[\\w-]+)?@)?' + // User:Password
-          '((([a-zA-Z\\d]([a-zA-Z\\d-]*[a-zA-Z\\d])*)\\.)+[a-zA-Z]{2,}|' + // Domain name
-          '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR IP (v4) address
-          '(\\:\\d+)?' + // Port
-          '(\\/[-a-zA-Z\\d%_.~+]*)*' + // Path
-          '(\\?[;&a-zA-Z\\d%_.~+=-]*)?' + // Query string
-          '(\\#[-a-zA-Z\\d_]*)?$', 'i'); // Fragment locator
+        const userInfoPattern = new RegExp('^(https?:\\/\\/)' +
+          '([\\w-]+(:[\\w-]+)?@)?' +
+          '((([a-zA-Z\\d]([a-zA-Z\\d-]*[a-zA-Z\\d])*)\\.)+[a-zA-Z]{2,}|' +
+          '((\\d{1,3}\\.){3}\\d{1,3}))' +
+          '(\\:\\d+)?' +
+          '(\\/[-a-zA-Z\\d%_.~+]*)*' +
+          '(\\?[;&a-zA-Z\\d%_.~+=-]*)?' +
+          '(\\#[-a-zA-Z\\d_]*)?$', 'i');
 
         return !!userInfoPattern.test(url);
       }
@@ -245,21 +207,19 @@
           { "data": "arguments", "defaultContent": "" },
           { "data": "purpose", "defaultContent": "" }
         ],
-        "pageLength": -1, // Show all entries
-        "lengthMenu": [[-1], ["All"]], // Only offer "All" as an option
+        "pageLength": -1,
+        "lengthMenu": [[-1], ["All"]],
         "responsive": true,
         "autoWidth": false,
-        "dom": 't' // Only show the table body
+        "dom": 't'
       });
 
-      // Add event listener for the Check All/Uncheck All toggle
       $('#checkAllToggle').on('change', function() {
         const isChecked = $(this).is(':checked');
         $('.swaig-checkbox').prop('checked', isChecked);
         updateFunctionsTextarea();
       });
 
-      // Function to update the Functions textarea with selected functions
       function updateFunctionsTextarea() {
         const selectedFunctions = [];
         $('.swaig-checkbox:checked').each(function() {
@@ -268,20 +228,17 @@
         $('#includeFunctions').val(JSON.stringify(selectedFunctions));
       }
 
-      // Update the Functions textarea and toggle checkbox whenever a checkbox is changed
       $(document).on('change', '.swaig-checkbox', function() {
         updateFunctionsTextarea();
         updateCheckAllToggle();
       });
 
-      // Function to update the Check All/Uncheck All toggle based on individual checkboxes
       function updateCheckAllToggle() {
         const totalCheckboxes = $('.swaig-checkbox').length;
         const checkedCheckboxes = $('.swaig-checkbox:checked').length;
         $('#checkAllToggle').prop('checked', totalCheckboxes > 0 && totalCheckboxes === checkedCheckboxes);
       }
 
-      // Function to populate the table with SWAIG data
       function populateSwaigTable(data) {
         console.log('Populating SWAIG table with data:', data);
         if ($.fn.DataTable.isDataTable('#swaigTable')) {
@@ -298,7 +255,6 @@
         }
       }
 
-      // Add this new function to reset the form and SWAIG table
       function resetForm() {
         $('#addIncludeForm')[0].reset();
         $('#saveButton').text('Add Include');
@@ -308,32 +264,26 @@
         swaigTable.clear().draw();
       }
 
-      // Add click event listener for the cancel button
       $('#cancelButton').on('click', function(e) {
         e.preventDefault();
         resetForm();
+        $('#checkAllToggle').prop('checked', false);
       });
 
-      // Modify the edit button click handler
       $(document).on('click', '.edit-btn', function() {
         const includeId = $(this).data('id');
         $.get(`/includes/${selectedAgentId}/${includeId}`, function(data) {
           $('#includeUrl').val(data.url);
           $('#includeFunctions').val(data.functions);
 
-          // Change to "Edit" state
           $('#saveButton').text('Save');
           $('.card-title').text('Edit Include');
           $('#reloadButton').show();
-          $('#cancelButton').show(); // Show the cancel button
-
-          // Fetch SWAIG data and populate the table
+          $('#cancelButton').show();
           fetchSwaigData(data.url).then(() => {
-            // Parse the functions from the data
             const enabledFunctions = JSON.parse(data.functions || '[]');
             console.log('Enabled functions:', enabledFunctions);
 
-            // Iterate over each enabled function and find the corresponding row in the SWAIG table
             enabledFunctions.forEach(functionName => {
               console.log('Checking function:', functionName);
               const row = $('#swaigTable tbody tr').filter(function() {
@@ -345,13 +295,11 @@
               }
             });
 
-            // Update the Check All/Uncheck All toggle after setting checkboxes
             updateCheckAllToggle();
           });
         });
       });
 
-      // Modify the form submission handler
       $('#addIncludeForm').on('submit', function(e) {
         e.preventDefault();
         const url = $('#includeUrl').val();
@@ -367,7 +315,8 @@
           data: JSON.stringify({ url, functions }),
           success: function() {
             $('#includesTable').DataTable().ajax.reload();
-            resetForm(); // Use the new resetForm function
+            resetForm();
+            $('#checkAllToggle').prop('checked', false);
             Swal.fire({
               title: 'Success!',
               text: 'Include added successfully.',
@@ -385,7 +334,6 @@
         });
       });
 
-      // Edit Include Form Submission
       $('#editIncludeForm').on('submit', function(e) {
         e.preventDefault();
         const id = $('#editIncludeId').val();
@@ -408,13 +356,11 @@
         });
       });
 
-      // Add event listener for the add button click
       $('#addIncludeForm').on('click', function() {
         const swaigTable = $('#swaigTable').DataTable();
         swaigTable.draw();
       });
 
-      // Initialize Includes Table
       function initializeIncludesTable(agentId) {
         if ($.fn.DataTable) {
           const includesTable = $('#includesTable').DataTable({
@@ -499,7 +445,6 @@
         });
       }
 
-      // Update Functions textarea with selected functions
       $(document).on('change', '.swaig-checkbox', function() {
         const selectedFunctions = [];
         $('.swaig-checkbox:checked').each(function() {
@@ -508,7 +453,6 @@
         $('#includeFunctions').val(JSON.stringify(selectedFunctions));
       });
 
-      // Function to initialize and populate the SWAIG table
       function initializeSwaigTable() {
         if (!$.fn.DataTable.isDataTable('#swaigTable')) {
           $('#swaigTable').DataTable({
@@ -532,30 +476,24 @@
         }
       }
 
-      // Call this function when the document is ready
       $(document).ready(function() {
         initializeSwaigTable();
 
-        // Attach the event listener for the edit button
         $(document).on('click', '.edit-btn', function() {
           const includeId = $(this).data('id');
           $.get(`/includes/${selectedAgentId}/${includeId}`, function(data) {
             $('#includeUrl').val(data.url);
             $('#includeFunctions').val(data.functions);
 
-            // Change to "Edit" state
             $('#saveButton').text('Save');
             $('.card-title').text('Edit Include');
             $('#reloadButton').show();
-            $('#cancelButton').show(); // Show the cancel button
+            $('#cancelButton').show();
 
-            // Fetch SWAIG data and populate the table
             fetchSwaigData(data.url).then(() => {
-              // Parse the functions from the data
               const enabledFunctions = JSON.parse(data.functions || '[]');
               console.log('Enabled functions:', enabledFunctions);
 
-              // Iterate over each enabled function and find the corresponding row in the SWAIG table
               enabledFunctions.forEach(functionName => {
                 console.log('Checking function:', functionName);
                 const row = $('#swaigTable tbody tr').filter(function() {
@@ -567,14 +505,12 @@
                 }
               });
 
-              // Update the Check All/Uncheck All toggle after setting checkboxes
               updateCheckAllToggle();
             });
           });
         });
       });
 
-      // Modify fetchSwaigData to return a promise
       function fetchSwaigData(url) {
         return new Promise((resolve, reject) => {
           $.ajax({
@@ -598,7 +534,6 @@
         });
       }
 
-      // Add this new function to handle SWAIG data reloading
       function reloadSwaigData() {
         const url = $('#includeUrl').val().trim();
         if (isValidUrl(url)) {
@@ -621,31 +556,10 @@
         });
       }
 
-      // Add click event listener for the reload button
       $('#reloadButton').on('click', function(e) {
         e.preventDefault();
         reloadSwaigData();
       });
     });
   </script>
-
-  
 {% endblock %}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
