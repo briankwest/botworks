@@ -3,15 +3,10 @@
 {% block title %}Hints{% endblock %}
 
 {% block content %}
-  <!-- Navbar -->
   {% include 'navbar.html' %}
-  <!-- /.navbar -->
-
-  <!-- Main Sidebar Container -->
   {% include 'sidebar.html' %}
 
   <div class="content-wrapper">
-    <!-- Content Header (Page header) -->
     <section class="content-header">
       <div class="container-fluid">
         <div class="row mb-2">
@@ -19,10 +14,9 @@
             <h1 class="m-0">Hints</h1>
           </div>
         </div>
-      </div><!-- /.container-fluid -->
+      </div>
     </section>
 
-    <!-- Main content -->
     <section class="content">
       <div class="container-fluid">
         <div class="row">
@@ -31,7 +25,6 @@
               <div class="card-header bg-primary">
                 <h3 class="card-title">Hints List</h3>
               </div>
-              <!-- /.card-header -->
               <div class="card-body">
                 <table id="hintTable" class="table table-striped w-100">
                   <thead>
@@ -45,22 +38,16 @@
                   </tbody>
                 </table>
               </div>
-              <!-- /.card-body -->
             </div>
-            <!-- /.card -->
           </div>
-          <!-- /.col -->
         </div>
-        <!-- /.row -->
 
-        <!-- Add Hint Form -->
         <div class="row">
           <div class="col-12">
             <div class="card">
               <div class="card-header bg-success">
                 <h3 class="card-title">Add Hint Entry</h3>
               </div>
-              <!-- /.card-header -->
               <div class="card-body">
                 <form id="addHintForm">
                   <div class="form-group">
@@ -70,20 +57,13 @@
                   <button type="submit" class="btn btn-success">Add Hint</button>
                 </form>
               </div>
-              <!-- /.card-body -->
             </div>
-            <!-- /.card -->
           </div>
-          <!-- /.col -->
         </div>
-        <!-- /.row -->
 
       </div>
-      <!-- /.container-fluid -->
     </section>
-    <!-- /.content -->
 
-    <!-- Add this modal at the end of the content block -->
     <div class="modal fade" id="editHintModal" tabindex="-1" role="dialog" aria-labelledby="editHintModalLabel" aria-hidden="true">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -110,11 +90,8 @@
       </div>
     </div>
   </div>
-  <!-- /.content-wrapper -->
 
-  <!-- Footer -->
   {% include 'footer.html' %}
-  <!-- /.footer -->
 {% endblock %}
 
 {% block scripts %}
@@ -123,10 +100,9 @@
 
   <script>
     $(document).ready(function() {
-      // Initialize DataTable with responsive and autoWidth options
       $('#hintTable').DataTable({
-        "responsive": true,  // Enable responsive design
-        "autoWidth": false,  // Disable auto width to allow manual control
+        "responsive": true,
+        "autoWidth": false,
         "ajax": {
           "url": "{{ url_for('hints') }}",
           "dataSrc": ""
@@ -146,7 +122,6 @@
         ]
       });
 
-      // Function to show toast notification
       function showToast(icon, title) {
         const Toast = Swal.mixin({
           toast: true,
@@ -166,7 +141,6 @@
         });
       }
 
-      // Handle form submission for creating new hint entry
       $('#addHintForm').submit(function(e) {
         e.preventDefault();
         const formData = {
@@ -189,7 +163,6 @@
         });
       });
 
-      // Handle delete button click
       $('#hintTable').on('click', '.delete-hint', function() {
         const id = $(this).data('id');
         Swal.fire({
@@ -204,7 +177,7 @@
           if (result.isConfirmed) {
             $.ajax({
               type: 'DELETE',
-              url: "/hints/" + id,  // Updated URL
+              url: "/hints/" + id,
               success: function(response) {
                 $('#hintTable').DataTable().ajax.reload();
                 showToast('success', 'Hint entry deleted successfully');
@@ -217,12 +190,11 @@
         });
       });
 
-      // Handle edit button click
       $('#hintTable').on('click', '.edit-hint', function() {
         const id = $(this).data('id');
         $.ajax({
           type: 'GET',
-          url: "/hints/" + id,  // Updated URL
+          url: "/hints/" + id,
           success: function(response) {
             $('#editId').val(response.id);
             $('#editHintText').val(response.hint);
@@ -234,7 +206,10 @@
         });
       });
 
-      // Handle save changes button click in edit modal
+      $('#editHintForm').on('submit', function(e) {
+        e.preventDefault();
+      });
+
       $('#saveEditButton').click(function() {
         const id = $('#editId').val();
         const formData = {
@@ -243,7 +218,7 @@
 
         $.ajax({
           type: 'PUT',
-          url: "/hints/" + id,  // Updated URL
+          url: "/hints/" + id,
           contentType: 'application/json',
           data: JSON.stringify(formData),
           success: function(response) {
@@ -259,6 +234,3 @@
     });
   </script>
 {% endblock %}
-
-
-
