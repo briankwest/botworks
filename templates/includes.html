@@ -212,7 +212,30 @@
           "orderable": false
         },
         { "data": "function" },
-        { "data": "arguments", "defaultContent": "" },
+        {
+          "data": "arguments",
+          "render": function (data, type, row) {
+            try {
+              const args = JSON.parse(data);
+              if (args.properties) {
+                let formattedArgs = '<ul>';
+                const requiredFields = args.required || [];
+                for (const [key, value] of Object.entries(args.properties)) {
+                  const isRequired = requiredFields.includes(key);
+                  const style = isRequired ? 'style="color: blue;"' : '';
+                  const defaultValue = value.default ? ` (default: ${value.default})` : '';
+                  formattedArgs += `<li ${style}><strong>${key}:</strong> ${value.description}${defaultValue}</li>`;
+                }
+                formattedArgs += '</ul>';
+                return formattedArgs;
+              }
+            } catch (error) {
+              console.error('Error parsing arguments:', error);
+            }
+            return data; // Fallback to raw data if parsing fails
+          },
+          "defaultContent": ""
+        },
         { "data": "purpose", "defaultContent": "" }
       ],
       "pageLength": -1,
@@ -404,8 +427,10 @@
               "data": null,
               "render": function (data, type, row) {
                 return `
-                    <button class="btn btn-primary edit-btn" data-id="${row.id}">Edit</button>
-                    <button class="btn btn-danger delete-btn" data-id="${row.id}">Delete</button>
+                    <div class="text-nowrap">
+                      <button class="btn btn-primary edit-btn" data-id="${row.id}">Edit</button>
+                      <button class="btn btn-danger delete-btn" data-id="${row.id}">Delete</button>
+                    </div>
                   `;
               }
             }
@@ -573,3 +598,4 @@
   });
 </script>
 {% endblock %}
+
