@@ -62,7 +62,10 @@
                   </div>
                   <div class="form-group">
                     <label for="ignoreCase">Ignore Case</label>
-                    <input type="checkbox" id="ignoreCase" name="ignore_case">
+                    <div class="custom-control custom-switch">
+                      <input type="checkbox" class="custom-control-input ignore-case-toggle" id="ignoreCase" name="ignore_case">
+                      <label class="custom-control-label" for="ignoreCase"></label>
+                    </div>
                   </div>
                   <button type="submit" class="btn btn-success">Add Pronounce</button>
                 </form>
@@ -93,10 +96,6 @@
                 <label for="editReplaceWith">Replace With</label>
                 <input type="text" class="form-control" id="editReplaceWith" name="replace_with" required>
               </div>
-              <div class="form-group">
-                <label for="editIgnoreCase">Ignore Case</label>
-                <input type="checkbox" id="editIgnoreCase" name="ignore_case">
-              </div>
             </form>
           </div>
           <div class="modal-footer">
@@ -117,7 +116,7 @@
 
   <script>
     $(document).ready(function() {
-      $('#pronounceTable').DataTable({
+      const table = $('#pronounceTable').DataTable({
         "responsive": true,
         "autoWidth": true,
         "ajax": {
@@ -129,7 +128,17 @@
           { "data": "id" },
           { "data": "replace_this" },
           { "data": "replace_with" },
-          { "data": "ignore_case" },
+          { 
+            "data": "ignore_case",
+            "render": function(data, type, row) {
+              return `
+                <div class="custom-control custom-switch">
+                  <input type="checkbox" class="custom-control-input ignore-case-toggle" id="ignoreCaseToggle${row.id}" data-id="${row.id}" ${data ? 'checked' : ''}>
+                  <label class="custom-control-label" for="ignoreCaseToggle${row.id}"></label>
+                </div>
+              `;
+            }
+          },
           {
             "data": null,
             "render": function(data, type, row) {
@@ -140,6 +149,27 @@
             }
           }
         ]
+      });
+
+      // Event listener for toggle change
+      $('#pronounceTable tbody').on('change', '.ignore-case-toggle', function() {
+        const id = $(this).data('id');
+        const ignoreCase = $(this).is(':checked');
+
+        $.ajax({
+          type: 'PUT',
+          url: `/pronounce/${id}`,
+          contentType: 'application/json',
+          data: JSON.stringify({ ignore_case: ignoreCase }),
+          success: function(response) {
+            showToast('success', 'Ignore case setting updated successfully');
+          },
+          error: function(error) {
+            showToast('error', 'Error updating ignore case setting');
+            // Revert the toggle state in case of error
+            $(this).prop('checked', !ignoreCase);
+          }
+        });
       });
 
       function showToast(icon, title) {

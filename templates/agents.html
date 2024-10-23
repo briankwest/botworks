@@ -1,300 +1,300 @@
 {% extends 'base.html' %}
 
-{% block title %}AI Agents{% endblock %}
+{% block title %}Agents{% endblock %}
 
 {% block content %}
-  {% include 'navbar.html' %}
+{% include 'navbar.html' %}
+{% include 'sidebar.html' %}
 
-  {% include 'sidebar.html' %}
-
-  <div class="content-wrapper">
-    <section class="content-header">
-      <div class="container-fluid">
-        <div class="row mb-2">
-          <div class="col-6">
-            <h1 class="m-0">AI Agents</h1>
-          </div>
+<div class="content-wrapper">
+  <section class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-6">
+          <h1 class="m-0">AI Agents</h1>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section class="content">
-      <div class="container-fluid">
-        <div class="row">
-          <div class="col-12">
-            <div class="card">
-              <div class="card-header bg-primary">
-                <h3 class="card-title">AI Agents List</h3>
-              </div>
-              <div class="card-body">
-                <table id="agentTable" class="table table-striped">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Name</th>
-                      <th>Phone Number</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                  </tbody>
-                </table>
-              </div>
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header bg-primary">
+              <h3 class="card-title">AI Agents List</h3>
+            </div>
+            <div class="card-body">
+              <table id="agentTable" class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Phone Number</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
+      </div>
 
-        <div class="row">
-          <div class="col-12">
-            <div class="card">
-              <div class="card-header bg-success">
-                <h3 class="card-title">Add AI Agent</h3>
-              </div>
-              <div class="card-body">
-                <form id="addAgentForm">
-                  <div class="form-group">
-                    <label for="agentName">Name</label>
-                    <input type="text" class="form-control" id="agentName" name="name" required>
-                  </div>
-                  <div class="form-group">
-                    <label for="agentPhoneNumber">Phone Number</label>
-                    <input type="text" class="form-control" id="agentPhoneNumber" name="number" required>
-                  </div>
-                  <button type="submit" class="btn btn-success">Add AI Agent</button>
-                </form>
-              </div>
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header bg-success">
+              <h3 class="card-title">Add AI Agent</h3>
+            </div>
+            <div class="card-body">
+              <form id="addAgentForm">
+                <div class="form-group">
+                  <label for="agentName">Name</label>
+                  <input type="text" class="form-control" id="agentName" name="name" required>
+                </div>
+                <div class="form-group">
+                  <label for="agentPhoneNumber">Phone Number</label>
+                  <input type="text" class="form-control" id="agentPhoneNumber" name="number" required>
+                </div>
+                <button type="submit" class="btn btn-success">Add AI Agent</button>
+              </form>
             </div>
           </div>
         </div>
-
       </div>
-    </section>
 
-    <div class="modal fade" id="editAgentModal" tabindex="-1" role="dialog" aria-labelledby="editAgentModalLabel" aria-hidden="true">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="editAgentModalLabel">Edit AI Agent Entry</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <form id="editAgentForm">
-              <input type="hidden" id="editId" name="id">
-              <div class="form-group">
-                <label for="editAgentName">Name</label>
-                <input type="text" class="form-control" id="editAgentName" name="name" required>
-              </div>
-              <div class="form-group">
-                <label for="editAgentPhoneNumber">Phone Number</label>
-                <input type="text" class="form-control" id="editAgentPhoneNumber" name="number" required>
-              </div>
-            </form>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" id="saveEditButton">Save</button>
-          </div>
+    </div>
+  </section>
+
+  <div class="modal fade" id="editAgentModal" tabindex="-1" role="dialog" aria-labelledby="editAgentModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editAgentModalLabel">Edit AI Agent Entry</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="editAgentForm">
+            <input type="hidden" id="editId" name="id">
+            <div class="form-group">
+              <label for="editAgentName">Name</label>
+              <input type="text" class="form-control" id="editAgentName" name="name" required>
+            </div>
+            <div class="form-group">
+              <label for="editAgentPhoneNumber">Phone Number</label>
+              <input type="text" class="form-control" id="editAgentPhoneNumber" name="number" required>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="saveEditButton">Save</button>
         </div>
       </div>
     </div>
   </div>
+</div>
 
-  {% include 'footer.html' %}
+{% include 'footer.html' %}
 
 {% endblock %}
 
 {% block scripts %}
-  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
-  <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
 
-  <script>
-    $(document).ready(function() {
-      $('#agentTable').DataTable({
-        "responsive": true,
-        "autoWidth": false,
-        "ajax": {
-          "url": "{{ url_for('agents') }}",
-          "dataSrc": "",
-          "headers": {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-          }
-        },
-        "columns": [
-          { "data": "id" },
-          { "data": "name" },
-          { "data": "number" },
-          {
-            "data": null,
-            "render": function(data, type, row) {
-              let buttons = `<button class="btn btn-sm btn-primary edit-agent mr-2" data-id="${row.id}">Edit</button>`;
-              if (row.name !== "BotWorks") {
-                buttons += `<button class="btn btn-sm btn-danger delete-agent mr-2" data-id="${row.id}">Delete</button>`;
-              }
-              buttons += `<button class="btn btn-success btn-sm clone-agent" data-id="${row.id}">Clone</button>`;
-              return buttons;
+<script>
+  $(document).ready(function () {
+    $('#agentTable').DataTable({
+      "responsive": true,
+      "autoWidth": false,
+      "ajax": {
+        "url": "{{ url_for('agents') }}",
+        "dataSrc": "",
+        "headers": {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        }
+      },
+      "columns": [
+        { "data": "id" },
+        { "data": "name" },
+        { "data": "number" },
+        {
+          "data": null,
+          "render": function (data, type, row) {
+            let buttons = `<button class="btn btn-sm btn-primary edit-agent mr-2" data-id="${row.id}">Edit</button>`;
+            if (row.name !== "BotWorks") {
+              buttons += `<button class="btn btn-sm btn-danger delete-agent mr-2" data-id="${row.id}">Delete</button>`;
             }
+            buttons += `<button class="btn btn-success btn-sm clone-agent" data-id="${row.id}">Clone</button>`;
+            return buttons;
           }
-        ]
-      });
-
-      $('#addAgentForm').submit(function(e) {
-        e.preventDefault();
-        const formData = {
-          name: $('#agentName').val(),
-          number: $('#agentPhoneNumber').val()
-        };
-
-        $.ajax({
-          type: 'POST',
-          url: "{{ url_for('agents') }}",
-          contentType: 'application/json',
-          data: JSON.stringify(formData),
-          success: function(response) {
-            $('#agentTable').DataTable().ajax.reload();
-            $('#addAgentForm')[0].reset();
-            showToast('success', 'AI Agent entry created successfully');
-            delayedRefreshAgentsDropdown();
-          },
-          error: function(error) {
-            showToast('error', 'Error creating AI Agent entry');
-          }
-        });
-      });
-
-      $('#agentTable').on('click', '.delete-agent', function() {
-        const id = $(this).data('id');
-        Swal.fire({
-          title: 'Are you sure?',
-          text: "You won't be able to revert this!",
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#3085d6',
-          cancelButtonColor: '#d33',
-          confirmButtonText: 'Yes, delete it!'
-        }).then((result) => {
-          if (result.isConfirmed) {
-            $.ajax({
-              type: 'DELETE',
-              url: "/agents/" + id,
-              success: function(response) {
-                $('#agentTable').DataTable().ajax.reload();
-                showToast('success', 'AI Agent entry deleted successfully');
-                delayedRefreshAgentsDropdown();
-              },
-              error: function(error) {
-                showToast('error', 'Error deleting AI Agent entry');
-              }
-            });
-          }
-        });
-      });
-
-      $('#agentTable').on('click', '.edit-agent', function() {
-        const id = $(this).data('id');
-        console.log('Edit button clicked for ID:', id);
-
-        $.ajax({
-          type: 'GET',
-          url: "/agents/" + id,
-          success: function(response) {
-            console.log('AJAX success:', response);
-            $('#editId').val(response.id);
-            $('#editAgentName').val(response.name);
-            $('#editAgentPhoneNumber').val(response.number);
-
-            if (response.name === "BotWorks") {
-              $('#editAgentName').prop('disabled', true);
-            } else {
-              $('#editAgentName').prop('disabled', false);
-            }
-
-            $('#editAgentModal').modal('show');
-          },
-          error: function(error) {
-            console.error('AJAX error:', error);
-            showToast('error', 'Error fetching AI Agent entry');
-          }
-        });
-      });
-
-      $('#saveEditButton').click(function() {
-        const id = $('#editId').val();
-        const formData = {
-          name: $('#editAgentName').val(),
-          number: $('#editAgentPhoneNumber').val()
-        };
-
-        $.ajax({
-          type: 'PUT',
-          url: "/agents/" + id,
-          contentType: 'application/json',
-          data: JSON.stringify(formData),
-          success: function(response) {
-            $('#agentTable').DataTable().ajax.reload();
-            $('#editAgentModal').modal('hide');
-            delayedRefreshAgentsDropdown();
-            showToast('success', 'AI Agent entry updated successfully');
-          },
-          error: function(error) {
-            showToast('error', 'Error updating AI Agent entry');
-          }
-        });
-      });
-
-      $('#agentTable').on('click', '.clone-agent', function() {
-        const id = $(this).data('id');
-        $.ajax({
-          type: 'POST',
-          url: "/agents/clone/" + id,
-          success: function(response) {
-            $('#agentTable').DataTable().ajax.reload();
-            showToast('success', 'AI Agent entry cloned successfully');
-            delayedRefreshAgentsDropdown();
-          },
-          error: function(error) {
-            showToast('error', 'Error cloning AI Agent entry');
-          }
-        });
-      });
-
-      function refreshAgentsDropdown() {
-        $.ajax({
-          type: 'GET',
-          url: "/agents",
-          success: function(data) {
-            const dropdown = $('#agentsDropdown');
-            dropdown.empty();
-            data.forEach(agent => {
-              dropdown.append(new Option(agent.name, agent.id));
-            });
-          },
-          error: function(error) {
-            showToast('error', 'Error refreshing agents dropdown');
-          }
-        });
-      }
-
-      function showToast(icon, title) {
-        const Toast = Swal.mixin({
-          toast: true,
-          position: 'top-end',
-          showConfirmButton: false,
-          timer: 3000,
-          timerProgressBar: true,
-          didOpen: (toast) => {
-            toast.addEventListener('mouseenter', Swal.stopTimer)
-            toast.addEventListener('mouseleave', Swal.resumeTimer)
-          }
-        });
-
-        Toast.fire({
-          icon: icon,
-          title: title
-        });
-      }
+        }
+      ]
     });
-  </script>
+
+    $('#addAgentForm').submit(function (e) {
+      e.preventDefault();
+      const formData = {
+        name: $('#agentName').val(),
+        number: $('#agentPhoneNumber').val()
+      };
+
+      $.ajax({
+        type: 'POST',
+        url: "{{ url_for('agents') }}",
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
+        success: function (response) {
+          $('#agentTable').DataTable().ajax.reload();
+          $('#addAgentForm')[0].reset();
+          showToast('success', 'AI Agent entry created successfully');
+          delayedRefreshAgentsDropdown();
+        },
+        error: function (error) {
+          showToast('error', 'Error creating AI Agent entry');
+        }
+      });
+    });
+
+    $('#agentTable').on('click', '.delete-agent', function () {
+      const id = $(this).data('id');
+      Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          $.ajax({
+            type: 'DELETE',
+            url: "/agents/" + id,
+            success: function (response) {
+              $('#agentTable').DataTable().ajax.reload();
+              showToast('success', 'AI Agent entry deleted successfully');
+              delayedRefreshAgentsDropdown();
+            },
+            error: function (error) {
+              showToast('error', 'Error deleting AI Agent entry');
+            }
+          });
+        }
+      });
+    });
+
+    $('#agentTable').on('click', '.edit-agent', function () {
+      const id = $(this).data('id');
+      console.log('Edit button clicked for ID:', id);
+
+      $.ajax({
+        type: 'GET',
+        url: "/agents/" + id,
+        success: function (response) {
+          console.log('AJAX success:', response);
+          $('#editId').val(response.id);
+          $('#editAgentName').val(response.name);
+          $('#editAgentPhoneNumber').val(response.number);
+
+          if (response.name === "BotWorks") {
+            $('#editAgentName').prop('disabled', true);
+          } else {
+            $('#editAgentName').prop('disabled', false);
+          }
+
+          $('#editAgentModal').modal('show');
+        },
+        error: function (error) {
+          console.error('AJAX error:', error);
+          showToast('error', 'Error fetching AI Agent entry');
+        }
+      });
+    });
+
+    $('#saveEditButton').click(function () {
+      const id = $('#editId').val();
+      const formData = {
+        name: $('#editAgentName').val(),
+        number: $('#editAgentPhoneNumber').val()
+      };
+
+      $.ajax({
+        type: 'PUT',
+        url: "/agents/" + id,
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
+        success: function (response) {
+          $('#agentTable').DataTable().ajax.reload();
+          $('#editAgentModal').modal('hide');
+          delayedRefreshAgentsDropdown();
+          showToast('success', 'AI Agent entry updated successfully');
+        },
+        error: function (error) {
+          showToast('error', 'Error updating AI Agent entry');
+        }
+      });
+    });
+
+    $('#agentTable').on('click', '.clone-agent', function () {
+      const id = $(this).data('id');
+      $.ajax({
+        type: 'POST',
+        url: "/agents/clone/" + id,
+        success: function (response) {
+          $('#agentTable').DataTable().ajax.reload();
+          showToast('success', 'AI Agent entry cloned successfully');
+          delayedRefreshAgentsDropdown();
+        },
+        error: function (error) {
+          showToast('error', 'Error cloning AI Agent entry');
+        }
+      });
+    });
+
+    function refreshAgentsDropdown() {
+      $.ajax({
+        type: 'GET',
+        url: "/agents",
+        success: function (data) {
+          const dropdown = $('#agentsDropdown');
+          dropdown.empty();
+          data.forEach(agent => {
+            dropdown.append(new Option(agent.name, agent.id));
+          });
+        },
+        error: function (error) {
+          showToast('error', 'Error refreshing agents dropdown');
+        }
+      });
+    }
+
+    function showToast(icon, title) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+          toast.addEventListener('mouseenter', Swal.stopTimer)
+          toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+      });
+
+      Toast.fire({
+        icon: icon,
+        title: title
+      });
+    }
+  });
+</script>
 {% endblock %}

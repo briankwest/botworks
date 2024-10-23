@@ -3,280 +3,284 @@
 {% block title %}SWAIG Functions{% endblock %}
 
 {% block content %}
-  {% include 'navbar.html' %}
-  {% include 'sidebar.html' %}
+{% include 'navbar.html' %}
+{% include 'sidebar.html' %}
 
-  <div class="content-wrapper">
-    <section class="content-header">
-      <div class="container-fluid">
-        <div class="row mb-2">
-          <div class="col-6">
-            <h1 class="m-0">Functions</h1>
-          </div>
+<div class="content-wrapper">
+  <section class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-6">
+          <h1 class="m-0">Functions</h1>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section class="content">
-      <div class="container-fluid">
-        <div class="row">
-          <div class="col-12">
-            <div class="card">
-              <div class="card-header bg-primary">
-                <h3 class="card-title">Functions List</h3>
-              </div>
-              <div class="card-body">
-                <table id="functionTable" class="table table-striped w-100">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Name</th>
-                      <th>Purpose</th>
-                      <th>Active</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                  </tbody>
-                </table>
-              </div>
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header bg-primary">
+              <h3 class="card-title">Functions List</h3>
             </div>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="col-12">
-            <div class="card">
-              <div class="card-header bg-success">
-                <h3 class="card-title">Add Function Entry</h3>
-              </div>
-              <div class="card-body">
-                <form id="addFunctionForm">
-                  <div class="form-group">
-                    <label for="functionName">Function Name</label>
-                    <input type="text" class="form-control" id="functionName" name="name" required>
-                  </div>
-                  <div class="form-group">
-                    <label for="functionPurpose">Function Purpose</label>
-                    <input type="text" class="form-control" id="functionPurpose" name="purpose" required>
-                  </div>
-                  <div class="form-group">
-                    <label for="functionWebhookUrl">Function Webhook URL</label>
-                    <input type="url" class="form-control" id="functionWebhookUrl" name="web_hook_url">
-                  </div>
-                  <div class="form-group">
-                    <label for="functionWaitFile">Wait File</label>
-                    <input type="text" class="form-control" id="functionWaitFile" name="wait_file">
-                  </div>
-                  <div class="form-group">
-                    <label for="functionWaitFileLoops">Wait File Loops</label>
-                    <input type="number" class="form-control" id="functionWaitFileLoops" name="wait_file_loops" value="1" required>
-                  </div>
-                  <div class="form-group">
-                    <label for="functionFillers">Fillers</label>
-                    <input type="text" class="form-control" id="functionFillers" name="fillers">
-                  </div>
-                  <div class="form-group">
-                    <label for="functionMetaData">Meta Data</label>
-                    <textarea class="form-control" id="functionMetaData" name="meta_data" placeholder="Enter valid JSON only"></textarea>
-                  </div>
-                  <div class="form-group">
-                    <label for="functionMetaDataToken">Meta Data Token</label>
-                    <input type="text" class="form-control" id="functionMetaDataToken" name="meta_data_token">
-                  </div>
-                  <div class="form-group">
-                    <label for="functionArguments">Function Arguments</label>
-                    <table class="table table-bordered" id="addFunctionArgsTable">
-                      <thead>
-                        <tr>
-                          <th>Name</th>
-                          <th>Type</th>
-                          <th>Description</th>
-                          <th>Required</th>
-                          <th>Enum</th>
-                          <th>Default</th>
-                          <th>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody id="functionArgumentsContainer">
-                      </tbody>
-                    </table>
-                    <button type="button" class="btn btn-primary mt-2" id="addArgumentBtn">Add Argument</button>
-                  </div>
-                  <div class="form-group">
-                    <label for="functionActive">Active</label>
-                    <div class="custom-control custom-switch">
-                      <input type="checkbox" class="custom-control-input" id="functionActive" name="active" checked>
-                      <label class="custom-control-label" for="functionActive"></label>
-                    </div>
-                  </div>
-                  <button type="submit" class="btn btn-success mt-3">Add Function</button>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="modal fade" id="editFunctionModal" tabindex="-1" role="dialog" aria-labelledby="editFunctionModalLabel" aria-hidden="true">
-          <div class="modal-dialog modal-xl" role="document">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title" id="editFunctionModalLabel">Edit Function</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                  <span aria-hidden="true">&times;</span>
-                </button>
-              </div>
-              <div class="modal-body">
-                <form id="editFunctionForm">
-                  <input type="hidden" id="editFunctionId" name="id">
-                  <div class="form-group">
-                    <label for="editFunctionName">Function Name</label>
-                    <input type="text" class="form-control" id="editFunctionName" name="name" required>
-                  </div>
-                  <div class="form-group">
-                    <label for="editFunctionPurpose">Function Purpose</label>
-                    <input type="text" class="form-control" id="editFunctionPurpose" name="purpose" required>
-                  </div>
-                  <div class="form-group">
-                    <label for="editFunctionWebhookUrl">Function Webhook URL</label>
-                    <input type="url" class="form-control" id="editFunctionWebhookUrl" name="web_hook_url">
-                  </div>
-                  <div class="form-group">
-                    <label for="editFunctionWaitFile">Wait File</label>
-                    <input type="text" class="form-control" id="editFunctionWaitFile" name="wait_file">
-                  </div>
-                  <div class="form-group">
-                    <label for="editFunctionWaitFileLoops">Wait File Loops</label>
-                    <input type="number" class="form-control" id="editFunctionWaitFileLoops" name="wait_file_loops">
-                  </div>
-                  <div class="form-group">
-                    <label for="editFunctionFillers">Fillers</label>
-                    <input type="text" class="form-control" id="editFunctionFillers" name="fillers">
-                  </div>
-                  <div class="form-group">
-                    <label for="editFunctionMetaData">Meta Data</label>
-                    <textarea class="form-control" id="editFunctionMetaData" name="meta_data" placeholder="Enter valid JSON only"></textarea>
-                  </div>
-                  <div class="form-group">
-                    <label for="editFunctionMetaDataToken">Meta Data Token</label>
-                    <input type="text" class="form-control" id="editFunctionMetaDataToken" name="meta_data_token">
-                  </div>
-                  <div class="form-check">
-                    <div class="custom-control custom-switch">
-                      <input type="checkbox" class="custom-control-input" id="editFunctionActiveToggle" name="active">
-                      <label class="custom-control-label" for="editFunctionActiveToggle">Active</label>
-                    </div>
-                  </div>
-                </form>
-                <hr>
-                <label>Function Arguments</label>
-                <table class="table table-bordered" id="functionArgsTable">
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Type</th>
-                      <th>Description</th>
-                      <th>Required</th>
-                      <th>Enum</th>
-                      <th>Default</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody id="functionArgsBody">
-                  </tbody>
-                </table>
-                <button type="button" class="btn btn-primary" id="addNewArg">Add Argument</button>
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="saveEditFunction">Save changes</button>
-              </div>
+            <div class="card-body">
+              <table id="functionTable" class="table table-striped w-100">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Purpose</th>
+                    <th>Active</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
       </div>
-    </section>
-  </div>
-  {% include 'footer.html' %}
+
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header bg-success">
+              <h3 class="card-title">Add Function Entry</h3>
+            </div>
+            <div class="card-body">
+              <form id="addFunctionForm">
+                <div class="form-group">
+                  <label for="functionName">Function Name</label>
+                  <input type="text" class="form-control" id="functionName" name="name" required>
+                </div>
+                <div class="form-group">
+                  <label for="functionPurpose">Function Purpose</label>
+                  <input type="text" class="form-control" id="functionPurpose" name="purpose" required>
+                </div>
+                <div class="form-group">
+                  <label for="functionWebhookUrl">Function Webhook URL</label>
+                  <input type="url" class="form-control" id="functionWebhookUrl" name="web_hook_url">
+                </div>
+                <div class="form-group">
+                  <label for="functionWaitFile">Wait File</label>
+                  <input type="text" class="form-control" id="functionWaitFile" name="wait_file">
+                </div>
+                <div class="form-group">
+                  <label for="functionWaitFileLoops">Wait File Loops</label>
+                  <input type="number" class="form-control" id="functionWaitFileLoops" name="wait_file_loops" value="1"
+                    required>
+                </div>
+                <div class="form-group">
+                  <label for="functionFillers">Fillers</label>
+                  <input type="text" class="form-control" id="functionFillers" name="fillers">
+                </div>
+                <div class="form-group">
+                  <label for="functionMetaData">Meta Data</label>
+                  <textarea class="form-control" id="functionMetaData" name="meta_data"
+                    placeholder="Enter valid JSON only"></textarea>
+                </div>
+                <div class="form-group">
+                  <label for="functionMetaDataToken">Meta Data Token</label>
+                  <input type="text" class="form-control" id="functionMetaDataToken" name="meta_data_token">
+                </div>
+                <div class="form-group">
+                  <label for="functionArguments">Function Arguments</label>
+                  <table class="table table-bordered" id="addFunctionArgsTable">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th>Required</th>
+                        <th>Enum</th>
+                        <th>Default</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="functionArgumentsContainer">
+                    </tbody>
+                  </table>
+                  <button type="button" class="btn btn-primary mt-2" id="addArgumentBtn">Add Argument</button>
+                </div>
+                <div class="form-group">
+                  <label for="functionActive">Active</label>
+                  <div class="custom-control custom-switch">
+                    <input type="checkbox" class="custom-control-input" id="functionActive" name="active" checked>
+                    <label class="custom-control-label" for="functionActive"></label>
+                  </div>
+                </div>
+                <button type="submit" class="btn btn-success mt-3">Add Function</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal fade" id="editFunctionModal" tabindex="-1" role="dialog"
+        aria-labelledby="editFunctionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="editFunctionModalLabel">Edit Function</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <form id="editFunctionForm">
+                <input type="hidden" id="editFunctionId" name="id">
+                <div class="form-group">
+                  <label for="editFunctionName">Function Name</label>
+                  <input type="text" class="form-control" id="editFunctionName" name="name" required>
+                </div>
+                <div class="form-group">
+                  <label for="editFunctionPurpose">Function Purpose</label>
+                  <input type="text" class="form-control" id="editFunctionPurpose" name="purpose" required>
+                </div>
+                <div class="form-group">
+                  <label for="editFunctionWebhookUrl">Function Webhook URL</label>
+                  <input type="url" class="form-control" id="editFunctionWebhookUrl" name="web_hook_url">
+                </div>
+                <div class="form-group">
+                  <label for="editFunctionWaitFile">Wait File</label>
+                  <input type="text" class="form-control" id="editFunctionWaitFile" name="wait_file">
+                </div>
+                <div class="form-group">
+                  <label for="editFunctionWaitFileLoops">Wait File Loops</label>
+                  <input type="number" class="form-control" id="editFunctionWaitFileLoops" name="wait_file_loops">
+                </div>
+                <div class="form-group">
+                  <label for="editFunctionFillers">Fillers</label>
+                  <input type="text" class="form-control" id="editFunctionFillers" name="fillers">
+                </div>
+                <div class="form-group">
+                  <label for="editFunctionMetaData">Meta Data</label>
+                  <textarea class="form-control" id="editFunctionMetaData" name="meta_data"
+                    placeholder="Enter valid JSON only"></textarea>
+                </div>
+                <div class="form-group">
+                  <label for="editFunctionMetaDataToken">Meta Data Token</label>
+                  <input type="text" class="form-control" id="editFunctionMetaDataToken" name="meta_data_token">
+                </div>
+                <div class="form-check">
+                  <div class="custom-control custom-switch">
+                    <input type="checkbox" class="custom-control-input" id="editFunctionActiveToggle" name="active">
+                    <label class="custom-control-label" for="editFunctionActiveToggle">Active</label>
+                  </div>
+                </div>
+              </form>
+              <hr>
+              <label>Function Arguments</label>
+              <table class="table table-bordered" id="functionArgsTable">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>Required</th>
+                    <th>Enum</th>
+                    <th>Default</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="functionArgsBody">
+                </tbody>
+              </table>
+              <button type="button" class="btn btn-primary" id="addNewArg">Add Argument</button>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-primary" id="saveEditFunction">Save changes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% include 'footer.html' %}
 {% endblock %}
 
 {% block scripts %}
-  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
-  <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> <!-- Ensure SweetAlert2 is included -->
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+<script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> <!-- Ensure SweetAlert2 is included -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
 
-  <script>
-    $(document).ready(function() {
-      // Initialize the Toast object using SweetAlert2
-      const Toast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-        didOpen: (toast) => {
-          toast.addEventListener('mouseenter', Swal.stopTimer)
-          toast.addEventListener('mouseleave', Swal.resumeTimer)
-        }
-      });
-
-      // Ensure Toast is defined before using it
-      if (typeof Toast === 'undefined') {
-        console.error('Toast is not defined. Please check the SweetAlert2 initialization.');
-        return;
+<script>
+  $(document).ready(function () {
+    // Initialize the Toast object using SweetAlert2
+    const Toast = Swal.mixin({
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+      didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer)
+        toast.addEventListener('mouseleave', Swal.resumeTimer)
       }
+    });
 
-      $('#functionTable').DataTable({
-        "responsive": true,
-        "autoWidth": false,
-        "ajax": {
-          "url": "{{ url_for('functions') }}",
-          "dataSrc": ""
-        },
-        "columns": [
-          { "data": "id" },
-          { "data": "name" },
-          { "data": "purpose" },
-          {
-            "data": "active",
-            "render": function(data, type, row) {
-              return `
+    // Ensure Toast is defined before using it
+    if (typeof Toast === 'undefined') {
+      console.error('Toast is not defined. Please check the SweetAlert2 initialization.');
+      return;
+    }
+
+    $('#functionTable').DataTable({
+      "responsive": true,
+      "autoWidth": false,
+      "ajax": {
+        "url": "{{ url_for('functions') }}",
+        "dataSrc": ""
+      },
+      "columns": [
+        { "data": "id" },
+        { "data": "name" },
+        { "data": "purpose" },
+        {
+          "data": "active",
+          "render": function (data, type, row) {
+            return `
                 <div class="custom-control custom-switch">
                   <input type="checkbox" class="custom-control-input toggle-active" id="toggleActive${row.id}" ${data ? 'checked' : ''} data-id="${row.id}">
                   <label class="custom-control-label" for="toggleActive${row.id}"></label>
                 </div>
               `;
-            }
-          },
-          {
-            "data": null,
-            "render": function(data, type, row) {
-              return `
+          }
+        },
+        {
+          "data": null,
+          "render": function (data, type, row) {
+            return `
                 <button class="btn btn-primary btn-sm edit-function" data-id="${row.id}">Edit</button>
                 <button class="btn btn-danger btn-sm delete-function" data-id="${row.id}">Delete</button>
               `;
-            }
           }
-        ]
-      });
+        }
+      ]
+    });
 
-      $('#functionTable').on('click', '.delete-function', function() {
-        const functionId = $(this).data('id');
-        Swal.fire({
-          title: 'Are you sure?',
-          text: "You won't be able to revert this!",
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#3085d6',
-          cancelButtonColor: '#d33',
-          confirmButtonText: 'Yes, delete it!'
-        }).then((result) => {
-          if (result.isConfirmed) {
-            fetch(`/functions/${functionId}`, {
-              method: 'DELETE'
-            })
+    $('#functionTable').on('click', '.delete-function', function () {
+      const functionId = $(this).data('id');
+      Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch(`/functions/${functionId}`, {
+            method: 'DELETE'
+          })
             .then(response => {
               if (!response.ok) {
                 throw new Error('Network response was not ok');
@@ -298,54 +302,54 @@
               console.error('Error deleting function:', error);
               Swal.fire('Error', 'Error deleting function', 'error');
             });
-          }
+        }
+      });
+    });
+
+    $('#functionTable').on('click', '.edit-function', function () {
+      const functionId = $(this).data('id');
+      fetch(`/functions/${functionId}`)
+        .then(response => response.json())
+        .then(data => {
+          $('#editFunctionId').val(data.id);
+          $('#editFunctionName').val(data.name);
+          $('#editFunctionPurpose').val(data.purpose);
+          $('#editFunctionWebhookUrl').val(data.web_hook_url);
+          $('#editFunctionWaitFile').val(data.wait_file);
+          $('#editFunctionWaitFileLoops').val(data.wait_file_loops);
+          $('#editFunctionFillers').val(data.fillers);
+          $('#editFunctionMetaData').val(JSON.stringify(data.meta_data));
+          $('#editFunctionMetaDataToken').val(data.meta_data_token);
+          $('#editFunctionActiveToggle').prop('checked', data.active);
+
+          loadFunctionArgs(functionId);
+
+          $('#editFunctionModal').modal('show');
+        })
+        .catch(error => {
+          console.error('Error fetching function details:', error);
+          alert('Error loading function details');
         });
-      });
+    });
 
-      $('#functionTable').on('click', '.edit-function', function() {
-        const functionId = $(this).data('id');
-        fetch(`/functions/${functionId}`)
-          .then(response => response.json())
-          .then(data => {
-            $('#editFunctionId').val(data.id);
-            $('#editFunctionName').val(data.name);
-            $('#editFunctionPurpose').val(data.purpose);
-            $('#editFunctionWebhookUrl').val(data.web_hook_url);
-            $('#editFunctionWaitFile').val(data.wait_file);
-            $('#editFunctionWaitFileLoops').val(data.wait_file_loops);
-            $('#editFunctionFillers').val(data.fillers);
-            $('#editFunctionMetaData').val(JSON.stringify(data.meta_data));
-            $('#editFunctionMetaDataToken').val(data.meta_data_token);
-            $('#editFunctionActiveToggle').prop('checked', data.active);
-
-            loadFunctionArgs(functionId);
-
-            $('#editFunctionModal').modal('show');
-          })
-          .catch(error => {
-            console.error('Error fetching function details:', error);
-            alert('Error loading function details');
+    function loadFunctionArgs(functionId) {
+      fetch(`/functions/${functionId}/args`)
+        .then(response => response.json())
+        .then(args => {
+          const argsBody = $('#functionArgsBody');
+          argsBody.empty();
+          args.forEach(arg => {
+            argsBody.append(createArgRow(arg));
           });
-      });
+        })
+        .catch(error => {
+          console.error('Error loading function arguments:', error);
+          alert('Error loading function arguments');
+        });
+    }
 
-      function loadFunctionArgs(functionId) {
-        fetch(`/functions/${functionId}/args`)
-          .then(response => response.json())
-          .then(args => {
-            const argsBody = $('#functionArgsBody');
-            argsBody.empty();
-            args.forEach(arg => {
-              argsBody.append(createArgRow(arg));
-            });
-          })
-          .catch(error => {
-            console.error('Error loading function arguments:', error);
-            alert('Error loading function arguments');
-          });
-      }
-
-      function createArgRow(arg) {
-        return `
+    function createArgRow(arg) {
+      return `
           <tr data-arg-id="${arg.id}">
             <td><input type="text" class="form-control" name="arg_name" value="${arg.name}" required></td>
             <td>
@@ -377,48 +381,48 @@
             </td>
           </tr>
         `;
-      }
+    }
 
-      $('#functionArgsBody').on('change', 'select[name="arg_type"]', function() {
-        const $row = $(this).closest('tr');
-        const isArrayType = $(this).val() === 'array';
-        $row.find('.enum-field').toggle(isArrayType);
-        $row.find('.placeholder-field').toggle(!isArrayType);
-      });
+    $('#functionArgsBody').on('change', 'select[name="arg_type"]', function () {
+      const $row = $(this).closest('tr');
+      const isArrayType = $(this).val() === 'array';
+      $row.find('.enum-field').toggle(isArrayType);
+      $row.find('.placeholder-field').toggle(!isArrayType);
+    });
 
-      $('#addNewArg').on('click', function() {
-        const newArg = {
-          id: 'new_' + Date.now(),
-          name: '',
-          type: 'string',
-          description: '',
-          required: false,
-          enum: '',
-          default: ''
-        };
-        $('#functionArgsBody').append(createArgRow(newArg));
-      });
+    $('#addNewArg').on('click', function () {
+      const newArg = {
+        id: 'new_' + Date.now(),
+        name: '',
+        type: 'string',
+        description: '',
+        required: false,
+        enum: '',
+        default: ''
+      };
+      $('#functionArgsBody').append(createArgRow(newArg));
+    });
 
-      $('#functionArgsBody').on('click', '.delete-arg', function() {
-        const $row = $(this).closest('tr');
-        const argId = $row.data('arg-id');
+    $('#functionArgsBody').on('click', '.delete-arg', function () {
+      const $row = $(this).closest('tr');
+      const argId = $row.data('arg-id');
 
-        if (typeof argId === 'string' && argId.startsWith('new_')) {
-          $row.remove();
-        } else {
-          Swal.fire({
-            title: 'Are you sure?',
-            text: "You won't be able to revert this!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, delete it!'
-          }).then((result) => {
-            if (result.isConfirmed) {
-              fetch(`/functions/${$('#editFunctionId').val()}/args/${argId}`, {
-                method: 'DELETE'
-              })
+      if (typeof argId === 'string' && argId.startsWith('new_')) {
+        $row.remove();
+      } else {
+        Swal.fire({
+          title: 'Are you sure?',
+          text: "You won't be able to revert this!",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            fetch(`/functions/${$('#editFunctionId').val()}/args/${argId}`, {
+              method: 'DELETE'
+            })
               .then(response => response.json())
               .then(data => {
                 if (data.message === 'Function argument deleted successfully') {
@@ -431,54 +435,54 @@
                 console.error('Error deleting argument:', error);
                 Swal.fire('Error', 'Error deleting argument', 'error');
               });
-            }
-          });
-        }
-      });
-
-      function isValidJSON(str) {
-        try {
-          JSON.parse(str);
-          return true;
-        } catch (e) {
-          return false;
-        }
+          }
+        });
       }
+    });
 
-      $('#addFunctionForm').on('submit', function(event) {
-        const metaData = $('#functionMetaData').val();
-        if (metaData && !isValidJSON(metaData)) {
-          event.preventDefault();
-          alert('Please enter valid JSON in the Meta Data field.');
-        }
-      });
+    function isValidJSON(str) {
+      try {
+        JSON.parse(str);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
 
-      $('#saveEditFunction').on('click', function() {
-        const metaData = $('#editFunctionMetaData').val();
-        if (metaData && !isValidJSON(metaData)) {
-          alert('Please enter valid JSON in the Meta Data field.');
-          return;
-        }
-        const functionId = $('#editFunctionId').val();
-        const functionData = {
-          name: $('#editFunctionName').val(),
-          purpose: $('#editFunctionPurpose').val(),
-          web_hook_url: $('#editFunctionWebhookUrl').val(),
-          wait_file: $('#editFunctionWaitFile').val(),
-          wait_file_loops: $('#editFunctionWaitFileLoops').val(),
-          fillers: $('#editFunctionFillers').val(),
-          meta_data: JSON.parse($('#editFunctionMetaData').val()),
-          meta_data_token: $('#editFunctionMetaDataToken').val(),
-          active: $('#editFunctionActiveToggle').is(':checked')
-        };
+    $('#addFunctionForm').on('submit', function (event) {
+      const metaData = $('#functionMetaData').val();
+      if (metaData && !isValidJSON(metaData)) {
+        event.preventDefault();
+        alert('Please enter valid JSON in the Meta Data field.');
+      }
+    });
 
-        fetch(`/functions/${functionId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(functionData)
-        })
+    $('#saveEditFunction').on('click', function () {
+      const metaData = $('#editFunctionMetaData').val();
+      if (metaData && !isValidJSON(metaData)) {
+        alert('Please enter valid JSON in the Meta Data field.');
+        return;
+      }
+      const functionId = $('#editFunctionId').val();
+      const functionData = {
+        name: $('#editFunctionName').val(),
+        purpose: $('#editFunctionPurpose').val(),
+        web_hook_url: $('#editFunctionWebhookUrl').val(),
+        wait_file: $('#editFunctionWaitFile').val(),
+        wait_file_loops: $('#editFunctionWaitFileLoops').val(),
+        fillers: $('#editFunctionFillers').val(),
+        meta_data: JSON.parse($('#editFunctionMetaData').val()),
+        meta_data_token: $('#editFunctionMetaDataToken').val(),
+        active: $('#editFunctionActiveToggle').is(':checked')
+      };
+
+      fetch(`/functions/${functionId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(functionData)
+      })
         .then(response => response.json())
         .then(data => {
           if (data.message === 'Function entry updated successfully') {
@@ -532,10 +536,10 @@
             Swal.fire('Error', 'Error updating function', 'error');
           }
         });
-      });
+    });
 
-      function createArgumentInput() {
-        return `
+    function createArgumentInput() {
+      return `
           <tr class="argument-input">
             <td>
               <input type="text" class="form-control" name="arg_name[]" placeholder="Name" required>
@@ -573,21 +577,21 @@
             </td>
           </tr>
         `;
-      }
+    }
 
     // Event handler to add a new argument row in the Add Function form
-    $('#addArgumentBtn').on('click', function() {
+    $('#addArgumentBtn').on('click', function () {
       const argumentsContainer = $('#functionArgumentsContainer');
       argumentsContainer.append(createArgumentInput());
     });
 
     // Event handler to remove an argument row in the Add Function form
-    $('#functionArgumentsContainer').on('click', '.remove-argument', function() {
+    $('#functionArgumentsContainer').on('click', '.remove-argument', function () {
       $(this).closest('tr').remove();
     });
 
     // Event handler to toggle the display of the enum field based on the selected type
-    $('#functionArgumentsContainer').on('change', '.arg-type-select', function() {
+    $('#functionArgumentsContainer').on('change', '.arg-type-select', function () {
       const $row = $(this).closest('tr');
       const isArrayType = $(this).val() === 'array';
       $row.find('.enum-field').toggle(isArrayType);
@@ -595,7 +599,7 @@
     });
 
     // Modify the form submission handler to collect argument data from the table
-    $('#addFunctionForm').on('submit', function(event) {
+    $('#addFunctionForm').on('submit', function (event) {
       event.preventDefault();
 
       // Validate Meta Data field
@@ -616,12 +620,12 @@
         meta_data_token: $('#functionMetaDataToken').val(),
         active: $('#functionActive').is(':checked'),
         arguments: []
-    };
+      };
 
-    // Collect argument data from the table rows
-    $('#functionArgumentsContainer tr').each(function() {
-      const $row = $(this);
-      data.arguments.push({
+      // Collect argument data from the table rows
+      $('#functionArgumentsContainer tr').each(function () {
+        const $row = $(this);
+        data.arguments.push({
           name: $row.find('input[name="arg_name[]"]').val(),
           type: $row.find('select[name="arg_type[]"]').val(),
           description: $row.find('input[name="arg_description[]"]').val(),
@@ -632,13 +636,13 @@
       });
 
       fetch('/functions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify(data)
-        })
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(data)
+      })
         .then(response => response.json())
         .then(data => {
           if (data.message === 'Function entry created successfully') {
@@ -655,10 +659,10 @@
             Swal.fire('Error', 'Error creating function', 'error');
           }
         });
-      });
+    });
 
 
-    $('#functionTable').on('change', '.toggle-active', function() {
+    $('#functionTable').on('change', '.toggle-active', function () {
       const functionId = $(this).data('id');
       const isActive = $(this).is(':checked');
 
@@ -670,67 +674,64 @@
         },
         body: JSON.stringify({ active: isActive })
       })
-      .then(response => response.json())
-      .then(data => {
-        if (data.message === 'Function updated successfully') {
-          Toast.fire({
-            icon: 'success',
-            title: 'Function updated successfully'
-          });
-        } else {
+        .then(response => response.json())
+        .then(data => {
+          if (data.message === 'Function updated successfully') {
+            Toast.fire({
+              icon: 'success',
+              title: 'Function updated successfully'
+            });
+          } else {
+            Toast.fire({
+              icon: 'error',
+              title: 'Error updating function'
+            });
+          }
+        })
+        .catch(error => {
+          console.error('Error updating function:', error);
           Toast.fire({
             icon: 'error',
             title: 'Error updating function'
           });
-        }
-      })
-      .catch(error => {
-        console.error('Error updating function:', error);
-        Toast.fire({
-          icon: 'error',
-          title: 'Error updating function'
         });
-      });
     });
 
-    $('#functionArgsBody').on('change', '.toggle-arg-active', function() {
-        const argId = $(this).data('id');
-        const isActive = $(this).is(':checked');
-        const functionId = $('#editFunctionId').val();
+    $('#functionArgsBody').on('change', '.toggle-arg-active', function () {
+      const argId = $(this).data('id');
+      const isActive = $(this).is(':checked');
+      const functionId = $('#editFunctionId').val();
 
-        fetch(`/functions/${functionId}/args/${argId}`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({ active: isActive })
-        })
+      fetch(`/functions/${functionId}/args/${argId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ active: isActive })
+      })
         .then(response => response.json())
         .then(data => {
-            if (data.message === 'Argument updated successfully') {
-                Toast.fire({
-                    icon: 'success',
-                    title: 'Argument updated successfully'
-                });
-            } else {
-                Toast.fire({
-                    icon: 'error',
-                    title: 'Error updating argument'
-                });
-            }
+          if (data.message === 'Argument updated successfully') {
+            Toast.fire({
+              icon: 'success',
+              title: 'Argument updated successfully'
+            });
+          } else {
+            Toast.fire({
+              icon: 'error',
+              title: 'Error updating argument'
+            });
+          }
         })
         .catch(error => {
-            console.error('Error updating argument:', error);
-            Toast.fire({
-                icon: 'error',
-                title: 'Error updating argument'
-            });
+          console.error('Error updating argument:', error);
+          Toast.fire({
+            icon: 'error',
+            title: 'Error updating argument'
+          });
         });
     });
   });
-  </script>
+</script>
 {% endblock %}
-
-
-

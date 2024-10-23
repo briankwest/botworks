@@ -4,62 +4,63 @@
 
 
 {% block content %}
-  {% include 'navbar.html' %}
-  {% include 'sidebar.html' %}
-  
-  <div class="content-wrapper">
-    <section class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-6">
-                    <h1 class="m-0">Live Debug</h1>
-                </div>
-            </div>
+{% include 'navbar.html' %}
+{% include 'sidebar.html' %}
+
+<div class="content-wrapper">
+  <section class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-6">
+          <h1 class="m-0">Live Debug</h1>
         </div>
-    </section>
+      </div>
+    </div>
+  </section>
 
-    <section class="content">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header bg-primary">
-                            <h3 class="card-title">Live Debug</h3>
-                        </div>
-                        <div class="card-body">
-                            <input id="channel" type="hidden" placeholder="Enter channel name" class="form-control mb-2">
-                            <button class="btn btn-primary" onclick="joinChannel()">Join Channel</button>
-                            <button class="btn btn-secondary" onclick="leaveChannel()">Leave Channel</button>
-                            <button class="btn btn-info" onclick="connectSocket()">Connect</button>
-                            <button class="btn btn-warning" onclick="disconnectSocket()">Disconnect</button>
-
-                            <h2>Messages:</h2>
-                            <textarea id="messages" class="form-control mb-2" rows="10" readonly></textarea>
-
-                            <input id="message" type="text" placeholder="Enter message to inject into the AI conversation" class="form-control mb-2">
-                            <div class="d-flex align-items-center mb-2">
-                                <button class="btn btn-success mr-2" onclick="sendMessage()">Send Message</button>
-                                <button class="btn btn-danger" onclick="clearMessages()">Clear Messages</button>
-                                <div class="ml-auto status-container">
-                                    <div id="connection-status">connected: false</div>
-                                    <div id="join-status">joined: false</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header bg-primary">
+              <h3 class="card-title">Live Debug</h3>
             </div>
+            <div class="card-body">
+              <input id="channel" type="hidden" placeholder="Enter channel name" class="form-control mb-2">
+              <button class="btn btn-primary" onclick="joinChannel()">Join Channel</button>
+              <button class="btn btn-secondary" onclick="leaveChannel()">Leave Channel</button>
+              <button class="btn btn-info" onclick="connectSocket()">Connect</button>
+              <button class="btn btn-warning" onclick="disconnectSocket()">Disconnect</button>
+
+              <h2>Messages:</h2>
+              <textarea id="messages" class="form-control mb-2" rows="10" readonly></textarea>
+
+              <input id="message" type="text" placeholder="Enter message to inject into the AI conversation"
+                class="form-control mb-2">
+              <div class="d-flex align-items-center mb-2">
+                <button class="btn btn-success mr-2" onclick="sendMessage()">Send Message</button>
+                <button class="btn btn-danger" onclick="clearMessages()">Clear Messages</button>
+                <div class="ml-auto status-container">
+                  <div id="connection-status">connected: false</div>
+                  <div id="join-status">joined: false</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-    </section>
-  </div>
-  {% include 'footer.html' %}
+      </div>
+    </div>
+  </section>
+</div>
+{% include 'footer.html' %}
 {% endblock %}
 
 {% block scripts %}
 <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     const accessToken = getCookie('access_token');
 
     let socket;
@@ -99,7 +100,7 @@
         socket.disconnect();
         updateConnectionStatus(false);
         console.log('Socket disconnected');
-        
+
         Swal.fire({
           toast: true,
           position: 'top-end',
@@ -112,20 +113,20 @@
     }
 
     function setupSocketListeners() {
-      socket.on('connect', function() {
+      socket.on('connect', function () {
         updateConnectionStatus(true);
       });
 
-      socket.on('disconnect', function() {
+      socket.on('disconnect', function () {
         updateConnectionStatus(false);
         updateJoinStatus(false);
       });
 
-      socket.on('send_message', function(data) {
+      socket.on('send_message', function (data) {
         updateMessagesList(`Sent: ${data.message}`);
       });
 
-      socket.on('response', function(data) {
+      socket.on('response', function (data) {
         if (data instanceof ArrayBuffer) {
           const decoder = new TextDecoder('utf-8');
           const decodedMessage = decoder.decode(data);
@@ -135,7 +136,7 @@
         }
       });
 
-      socket.on('status', function(data) {
+      socket.on('status', function (data) {
         Swal.fire({
           toast: true,
           position: 'top-end',
@@ -172,7 +173,7 @@
         socket.emit('leave', { channel: currentChannel });
         updateJoinStatus(false);
         currentChannel = '';
-        
+
         Swal.fire({
           toast: true,
           position: 'top-end',
@@ -213,7 +214,7 @@
     connectSocket();
     joinChannel();
 
-    document.getElementById('message').addEventListener('keydown', function(event) {
+    document.getElementById('message').addEventListener('keydown', function (event) {
       if (event.key === 'Enter') {
         sendMessage();
       }

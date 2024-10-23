@@ -3,65 +3,67 @@
 {% block title %}Conversations{% endblock %}
 
 {% block content %}
-  {% include 'navbar.html' %}
-  {% include 'sidebar.html' %}
+{% include 'navbar.html' %}
+{% include 'sidebar.html' %}
 
-  <div class="content-wrapper">
-    <div class="content-header">
-      <div class="container-fluid">
-        <div class="row mb-2">
-          <div class="col-6">
-            <h1 class="m-0">Conversations</h1>
+<div class="content-wrapper">
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-6">
+          <h1 class="m-0">Conversations</h1>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header bg-primary">
+              <h3 class="card-title">Conversations List</h3>
+            </div>
+            <div class="card-body">
+              <table id="conversationsTable" class="table table-striped w-100">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Created</th>
+                    <th>Caller ID Name</th>
+                    <th>Caller ID Number</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
     </div>
+  </section>
 
-    <section class="content">
-      <div class="container-fluid">
-        <div class="row">
-          <div class="col-12">
-            <div class="card">
-              <div class="card-header bg-primary">
-                <h3 class="card-title">Conversations List</h3>
-              </div>
-              <div class="card-body">
-                <table id="conversationsTable" class="table table-striped w-100">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Created</th>
-                      <th>Caller ID Name</th>
-                      <th>Caller ID Number</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                  </tbody>
-                </table>
+  <div id="fullScreenModal" class="modal" role="dialog" aria-labelledby="modalTitle" aria-hidden="true" tabindex="-1"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.8); z-index:1050;">
+    <div class="modal-content" tabindex="0" style="position:relative; width:100%; height:100%; overflow:auto;">
+      <span class="close"
+        style="position:fixed; top:10px; right:20px; font-size:30px; color:black; cursor:pointer; z-index:1100;">&times;</span>
+      <div class="p-3">
+        <section class="content-header">
+          <div class="container-fluid">
+            <div class="row mb-2">
+              <div class="col-6">
+                <h1 id="modalTitle" class="m-0">Conversation Details</h1>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-    </section>
-
-    <div id="fullScreenModal" class="modal" role="dialog" aria-labelledby="modalTitle" aria-hidden="true" tabindex="-1" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.8); z-index:1050;">
-      <div class="modal-content" tabindex="0" style="position:relative; width:100%; height:100%; overflow:auto;">
-        <span class="close" style="position:fixed; top:10px; right:20px; font-size:30px; color:black; cursor:pointer; z-index:1100;">&times;</span>
-        <div class="p-3">
-          <section class="content-header">
-            <div class="container-fluid">
-              <div class="row mb-2">
-                <div class="col-6">
-                  <h1 id="modalTitle" class="m-0">Conversation Details</h1>
-                </div>
-              </div>
-            </div>
-          </section>
-          <section class="content">
-            <div class="row">
-              <div class="col-md-12">
+        </section>
+        <section class="content">
+          <div class="row">
+            <div class="col-md-12">
               <div class="card card-primary">
                 <div class="card-header bg-primary">
                   <h3 class="card-title">Interaction Details</h3>
@@ -72,294 +74,294 @@
               </div>
             </div>
           </div>
-          </section>
-        </div>
+        </section>
       </div>
     </div>
   </div>
+</div>
 
-  {% include 'footer.html' %}
+{% include 'footer.html' %}
 {% endblock %}
 
 {% block scripts %}
-  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
 
-  <script>
-    $(document).ready(function() {
-      console.log('Document is ready'); // Global debug statement
+<script>
+  $(document).ready(function () {
+    console.log('Document is ready'); // Global debug statement
 
-      $('#conversationsTable').DataTable({
-        "ajax": {
-          "url": "{{ url_for('conversations') }}",
-          "dataSrc": "",
-          "headers": {
-            "Accept": "application/json"
+    $('#conversationsTable').DataTable({
+      "ajax": {
+        "url": "{{ url_for('conversations') }}",
+        "dataSrc": "",
+        "headers": {
+          "Accept": "application/json"
+        }
+      },
+      "order": [[0, 'desc']],
+      "columns": [
+        { "data": "id" },
+        {
+          "data": "created",
+          "render": function (data, type, row) {
+            if (type === 'display' || type === 'filter') {
+              const date = new Date(data);
+              return date.toLocaleString();
+            }
+            return data;
           }
         },
-        "order": [[0, 'desc']],
-        "columns": [
-          { "data": "id" },
-          {
-            "data": "created",
-            "render": function(data, type, row) {
-              if (type === 'display' || type === 'filter') {
-                const date = new Date(data);
-                return date.toLocaleString();
-              }
-              return data;
-            }
-          },
-          { "data": "data.caller_id_name" },
-          { "data": "data.caller_id_number" },
-          {
-            "data": null,
-            "render": function(data, type, row) {
-              return `
+        { "data": "data.caller_id_name" },
+        { "data": "data.caller_id_number" },
+        {
+          "data": null,
+          "render": function (data, type, row) {
+            return `
                 <button class="btn btn-primary btn-sm view-conversation" data-id="${row.id}">View</button>
                 <button class="btn btn-danger btn-sm delete-conversation" data-id="${row.id}">Delete</button>
               `;
-            }
           }
-        ],
-        "responsive": true,
-        "autoWidth": false,
-        "paging": true,
-        "lengthChange": true,
-        "searching": true,
-        "info": true,
-        "error": function(xhr, error, thrown) {
-          console.log('DataTables error: ', error);
-          console.log('DataTables error details: ', thrown);
-          console.log('Response text: ', xhr.responseText);
+        }
+      ],
+      "responsive": true,
+      "autoWidth": false,
+      "paging": true,
+      "lengthChange": true,
+      "searching": true,
+      "info": true,
+      "error": function (xhr, error, thrown) {
+        console.log('DataTables error: ', error);
+        console.log('DataTables error details: ', thrown);
+        console.log('Response text: ', xhr.responseText);
+      }
+    });
+
+    function showToast(icon, title) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+          toast.addEventListener('mouseenter', Swal.stopTimer)
+          toast.addEventListener('mouseleave', Swal.resumeTimer)
         }
       });
 
-      function showToast(icon, title) {
-        const Toast = Swal.mixin({
-          toast: true,
-          position: 'top-end',
-          showConfirmButton: false,
-          timer: 3000,
-          timerProgressBar: true,
-          didOpen: (toast) => {
-            toast.addEventListener('mouseenter', Swal.stopTimer)
-            toast.addEventListener('mouseleave', Swal.resumeTimer)
-          }
-        });
-
-        Toast.fire({
-          icon: icon,
-          title: title
-        });
-      }
-
-      $('#conversationsTable').on('click', '.delete-conversation', function() {
-        const id = $(this).data('id');
-        Swal.fire({
-          title: 'Are you sure?',
-          text: "You won't be able to revert this!",
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#3085d6',
-          cancelButtonColor: '#d33',
-          confirmButtonText: 'Yes, delete it!'
-        }).then((result) => {
-          if (result.isConfirmed) {
-            $.ajax({
-              type: 'DELETE',
-              url: "/conversations/" + id,
-              success: function(response) {
-                $('#conversationsTable').DataTable().ajax.reload();
-                showToast('success', 'Conversation entry deleted successfully');
-              },
-              error: function(error) {
-                showToast('error', 'Error deleting conversation entry');
-              }
-            });
-          }
-        });
+      Toast.fire({
+        icon: icon,
+        title: title
       });
+    }
 
-      $('#conversationsTable').on('click', '.view-conversation', function() {
-        const id = $(this).data('id');
-        const triggerElement = this;
-
-        $('#fullScreenModal').show();
-        $('#fullScreenModal').attr('aria-hidden', 'false');
-        $('#fullScreenModal .modal-content').scrollTop(0);
-
-        setTimeout(() => {
-          $('#fullScreenModal').focus();
-        }, 200);
-
-        fetchData(id);
-
-        $(document).on('focusin', function(e) {
-          if ($('#fullScreenModal').is(':visible') && !$('#fullScreenModal').has(e.target).length) {
-            $('#fullScreenModal').focus();
-          }
-        });
-
-        $('.close').on('click', function() {
-          $('#fullScreenModal').hide();
-          $('#fullScreenModal').attr('aria-hidden', 'true');
-          $(document).off('focusin');
-        });
-      });
-
-      $(document).on('keydown', function(event) {
-        if ($('#fullScreenModal').is(':visible')) {
-          const modalContent = $('#fullScreenModal .modal-content');
-          switch (event.key) {
-            case 'ArrowLeft':
-              $('#navContainer button:contains("Previous")').click();
-              modalContent.scrollTop(0);
-              setTimeout(() => {
-                modalContent.focus();
-              }, 100);
-              break;
-            case 'ArrowRight':
-              $('#navContainer button:contains("Next")').click();
-              modalContent.scrollTop(0);
-              setTimeout(() => {
-                modalContent.focus();
-              }, 100);
-              break;
-            case 'ArrowUp':
-              event.preventDefault();
-              modalContent.scrollTop(modalContent.scrollTop() - 50);
-              break;
-            case 'ArrowDown':
-              event.preventDefault();
-              modalContent.scrollTop(modalContent.scrollTop() + 50);
-              break;
-            case 'PageUp':
-              event.preventDefault();
-              modalContent.scrollTop(modalContent.scrollTop() - modalContent.height());
-              break;
-            case 'PageDown':
-              event.preventDefault();
-              modalContent.scrollTop(modalContent.scrollTop() + modalContent.height());
-              break;
-            case 'Escape':
-              $('#fullScreenModal').hide();
-              break;
-          }
+    $('#conversationsTable').on('click', '.delete-conversation', function () {
+      const id = $(this).data('id');
+      Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          $.ajax({
+            type: 'DELETE',
+            url: "/conversations/" + id,
+            success: function (response) {
+              $('#conversationsTable').DataTable().ajax.reload();
+              showToast('success', 'Conversation entry deleted successfully');
+            },
+            error: function (error) {
+              showToast('error', 'Error deleting conversation entry');
+            }
+          });
         }
       });
     });
 
-    function fetchData(id) {
-      fetch(`/conversations/${id}`)
-          .then(response => response.json())
-          .then(responseData => {
-              clearContent();
-              displayData(responseData.data);
-              setupNavigationButtons(responseData.next, responseData.prev);
-          })
-          .catch(error => console.error('Error fetching JSON:', error));
-    }
+    $('#conversationsTable').on('click', '.view-conversation', function () {
+      const id = $(this).data('id');
+      const triggerElement = this;
 
-    function clearContent() {
-      const content = document.getElementById('PostPromptDataContent');
-      content.innerHTML = '';
-    }
+      $('#fullScreenModal').show();
+      $('#fullScreenModal').attr('aria-hidden', 'false');
+      $('#fullScreenModal .modal-content').scrollTop(0);
 
-    function setupNavigationButtons(nextId, prevId) {
-      const content = document.getElementById('PostPromptDataContent');
+      setTimeout(() => {
+        $('#fullScreenModal').focus();
+      }, 200);
 
-      let navContainer = document.getElementById('navContainer');
-      if (!navContainer) {
-        navContainer = document.createElement('div');
-        navContainer.id = 'navContainer';
-        navContainer.className = 'd-flex justify-content-between mb-3';
-        content.insertAdjacentElement('beforebegin', navContainer);
+      fetchData(id);
+
+      $(document).on('focusin', function (e) {
+        if ($('#fullScreenModal').is(':visible') && !$('#fullScreenModal').has(e.target).length) {
+          $('#fullScreenModal').focus();
+        }
+      });
+
+      $('.close').on('click', function () {
+        $('#fullScreenModal').hide();
+        $('#fullScreenModal').attr('aria-hidden', 'true');
+        $(document).off('focusin');
+      });
+    });
+
+    $(document).on('keydown', function (event) {
+      if ($('#fullScreenModal').is(':visible')) {
+        const modalContent = $('#fullScreenModal .modal-content');
+        switch (event.key) {
+          case 'ArrowLeft':
+            $('#navContainer button:contains("Previous")').click();
+            modalContent.scrollTop(0);
+            setTimeout(() => {
+              modalContent.focus();
+            }, 100);
+            break;
+          case 'ArrowRight':
+            $('#navContainer button:contains("Next")').click();
+            modalContent.scrollTop(0);
+            setTimeout(() => {
+              modalContent.focus();
+            }, 100);
+            break;
+          case 'ArrowUp':
+            event.preventDefault();
+            modalContent.scrollTop(modalContent.scrollTop() - 50);
+            break;
+          case 'ArrowDown':
+            event.preventDefault();
+            modalContent.scrollTop(modalContent.scrollTop() + 50);
+            break;
+          case 'PageUp':
+            event.preventDefault();
+            modalContent.scrollTop(modalContent.scrollTop() - modalContent.height());
+            break;
+          case 'PageDown':
+            event.preventDefault();
+            modalContent.scrollTop(modalContent.scrollTop() + modalContent.height());
+            break;
+          case 'Escape':
+            $('#fullScreenModal').hide();
+            break;
+        }
       }
-      navContainer.innerHTML = '';
+    });
+  });
 
-      if (prevId) {
-        const prevButton = document.createElement('button');
-        prevButton.className = 'btn btn-primary';
-        prevButton.innerText = 'Previous';
-        prevButton.onclick = () => {
-          fetchData(prevId);
-        };
-        navContainer.appendChild(prevButton);
-      }
+  function fetchData(id) {
+    fetch(`/conversations/${id}`)
+      .then(response => response.json())
+      .then(responseData => {
+        clearContent();
+        displayData(responseData.data);
+        setupNavigationButtons(responseData.next, responseData.prev);
+      })
+      .catch(error => console.error('Error fetching JSON:', error));
+  }
 
-      if (nextId) {
-        const nextButton = document.createElement('button');
-        nextButton.className = 'btn btn-primary ml-auto';
-        nextButton.innerText = 'Next';
-        nextButton.onclick = () => {
-          fetchData(nextId);
-        };
-        navContainer.appendChild(nextButton);
-      }
+  function clearContent() {
+    const content = document.getElementById('PostPromptDataContent');
+    content.innerHTML = '';
+  }
+
+  function setupNavigationButtons(nextId, prevId) {
+    const content = document.getElementById('PostPromptDataContent');
+
+    let navContainer = document.getElementById('navContainer');
+    if (!navContainer) {
+      navContainer = document.createElement('div');
+      navContainer.id = 'navContainer';
+      navContainer.className = 'd-flex justify-content-between mb-3';
+      content.insertAdjacentElement('beforebegin', navContainer);
+    }
+    navContainer.innerHTML = '';
+
+    if (prevId) {
+      const prevButton = document.createElement('button');
+      prevButton.className = 'btn btn-primary';
+      prevButton.innerText = 'Previous';
+      prevButton.onclick = () => {
+        fetchData(prevId);
+      };
+      navContainer.appendChild(prevButton);
     }
 
-    function displayData(data) {
-        const content = document.getElementById('PostPromptDataContent');
+    if (nextId) {
+      const nextButton = document.createElement('button');
+      nextButton.className = 'btn btn-primary ml-auto';
+      nextButton.innerText = 'Next';
+      nextButton.onclick = () => {
+        fetchData(nextId);
+      };
+      navContainer.appendChild(nextButton);
+    }
+  }
 
-        if (data) {
-            const interactionDetailsCard = createCard('Interaction Details', createInteractionDetailsTable(data), 'bg-info');
-            content.appendChild(interactionDetailsCard);
-        }
+  function displayData(data) {
+    const content = document.getElementById('PostPromptDataContent');
 
-        if (data.raw_call_log) {
-            const callLogCard = createCard('Call Log', createCallLogTable(data.raw_call_log), 'bg-success');
-            content.appendChild(callLogCard);
-        }
-
-        if (data.times) {
-            const timesCard = createCard('Times', createTimesTable(data.times), 'bg-warning');
-            content.appendChild(timesCard);
-        }
-
-        if (data.SWMLVars) {
-            const swmlVarsCard = createCard('SWML Vars', createSWMLVarsTable(data.SWMLVars), 'bg-danger');
-            content.appendChild(swmlVarsCard);
-        }
-
-        if (data.swaig_log) {
-            const swaigLogCard = createCard('SWAIG Log', createSwaigLogTable(data.swaig_log), 'bg-secondary');
-            content.appendChild(swaigLogCard);
-        }
-
-        if (data.post_prompt_data) {
-            const postPromptDataCard = createCard('Post Prompt Data', createPostPromptDataTable(data.post_prompt_data), 'bg-primary');
-            content.appendChild(postPromptDataCard);
-        }
+    if (data) {
+      const interactionDetailsCard = createCard('Interaction Details', createInteractionDetailsTable(data), 'bg-info');
+      content.appendChild(interactionDetailsCard);
     }
 
-    function createCard(title, contentHtml, headerClass) {
-        const card = document.createElement('div');
-        card.className = 'card mb-3';
-
-        const cardHeader = document.createElement('div');
-        cardHeader.className = 'card-header ' + (headerClass || 'bg-info');
-
-        const cardTitle = document.createElement('h5');
-        cardTitle.className = 'card-title';
-        cardTitle.innerText = title;
-
-        cardHeader.appendChild(cardTitle);
-
-        const cardBody = document.createElement('div');
-        cardBody.className = 'card-body';
-        cardBody.innerHTML = contentHtml;
-
-        card.appendChild(cardHeader);
-        card.appendChild(cardBody);
-
-        return card;
+    if (data.raw_call_log) {
+      const callLogCard = createCard('Call Log', createCallLogTable(data.raw_call_log), 'bg-success');
+      content.appendChild(callLogCard);
     }
 
-    function createInteractionDetailsTable(data) {
-        let table = '<table class="table table-striped table-sm">';
-        table += `
+    if (data.times) {
+      const timesCard = createCard('Times', createTimesTable(data.times), 'bg-warning');
+      content.appendChild(timesCard);
+    }
+
+    if (data.SWMLVars) {
+      const swmlVarsCard = createCard('SWML Vars', createSWMLVarsTable(data.SWMLVars), 'bg-danger');
+      content.appendChild(swmlVarsCard);
+    }
+
+    if (data.swaig_log) {
+      const swaigLogCard = createCard('SWAIG Log', createSwaigLogTable(data.swaig_log), 'bg-secondary');
+      content.appendChild(swaigLogCard);
+    }
+
+    if (data.post_prompt_data) {
+      const postPromptDataCard = createCard('Post Prompt Data', createPostPromptDataTable(data.post_prompt_data), 'bg-primary');
+      content.appendChild(postPromptDataCard);
+    }
+  }
+
+  function createCard(title, contentHtml, headerClass) {
+    const card = document.createElement('div');
+    card.className = 'card mb-3';
+
+    const cardHeader = document.createElement('div');
+    cardHeader.className = 'card-header ' + (headerClass || 'bg-info');
+
+    const cardTitle = document.createElement('h5');
+    cardTitle.className = 'card-title';
+    cardTitle.innerText = title;
+
+    cardHeader.appendChild(cardTitle);
+
+    const cardBody = document.createElement('div');
+    cardBody.className = 'card-body';
+    cardBody.innerHTML = contentHtml;
+
+    card.appendChild(cardHeader);
+    card.appendChild(cardBody);
+
+    return card;
+  }
+
+  function createInteractionDetailsTable(data) {
+    let table = '<table class="table table-striped table-sm">';
+    table += `
         <tr>
             <th style="width: 45%;">Key</th>
             <th style="width: 45%;">Value</th>
@@ -400,40 +402,40 @@
             <td>${data.ai_end_date ? new Date(data.ai_end_date / 1000).toLocaleString() : ''}</td>
             <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.ai_end_date ? new Date(data.ai_end_date / 1000).toLocaleString() : ''}')"></i></td>
         </tr>`;
-        const additionalFields = [
-            { key: 'Total Input Tokens', value: data.total_input_tokens },
-            { key: 'Total Output Tokens', value: data.total_output_tokens },
-            { key: 'Total ASR Cost Factor', value: data.total_asr_cost_factor },
-            { key: 'Total ASR Minutes', value: data.total_asr_minutes },
-            { key: 'Total Minutes', value: data.total_minutes },
-            { key: 'Total TTS Chars', value: data.total_tts_chars },
-            { key: 'Total TTS Chars Per Minute', value: data.total_tts_chars_per_min },
-            { key: 'Total Wire Input Tokens', value: data.total_wire_input_tokens },
-            { key: 'Total Wire Input Tokens Per Minute', value: data.total_wire_input_tokens_per_minute },
-            { key: 'Total Wire Output Tokens', value: data.total_wire_output_tokens },
-            { key: 'Total Wire Output Tokens Per Minute', value: data.total_wire_output_tokens_per_minute },
-            { key: 'Version', value: data.version }
-        ];
+    const additionalFields = [
+      { key: 'Total Input Tokens', value: data.total_input_tokens },
+      { key: 'Total Output Tokens', value: data.total_output_tokens },
+      { key: 'Total ASR Cost Factor', value: data.total_asr_cost_factor },
+      { key: 'Total ASR Minutes', value: data.total_asr_minutes },
+      { key: 'Total Minutes', value: data.total_minutes },
+      { key: 'Total TTS Chars', value: data.total_tts_chars },
+      { key: 'Total TTS Chars Per Minute', value: data.total_tts_chars_per_min },
+      { key: 'Total Wire Input Tokens', value: data.total_wire_input_tokens },
+      { key: 'Total Wire Input Tokens Per Minute', value: data.total_wire_input_tokens_per_minute },
+      { key: 'Total Wire Output Tokens', value: data.total_wire_output_tokens },
+      { key: 'Total Wire Output Tokens Per Minute', value: data.total_wire_output_tokens_per_minute },
+      { key: 'Version', value: data.version }
+    ];
 
-        additionalFields.forEach(field => {
-            if (field.value !== undefined) {
-                table += `
+    additionalFields.forEach(field => {
+      if (field.value !== undefined) {
+        table += `
         <tr>
             <td>${field.key}</td>
             <td>${field.value}</td>
             <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${field.value}')"></i></td>
         </tr>`;
-            }
-        });
-        
+      }
+    });
 
-        table += '</table>';
-        return table;
-    }
 
-    function createCallLogTable(callLog) {
-        let table = '<div style="overflow-x: auto;"><table class="table table-striped table-sm" style="table-layout: fixed; width: 100%;">';
-        table += `
+    table += '</table>';
+    return table;
+  }
+
+  function createCallLogTable(callLog) {
+    let table = '<div style="overflow-x: auto;"><table class="table table-striped table-sm" style="table-layout: fixed; width: 100%;">';
+    table += `
             <tr>
                 <th style="width: 10%;">Role</th>
                 <th style="width: 65%;">Content</th>
@@ -442,23 +444,23 @@
                 <th style="width: 5%;">Utterance Latency</th>
             </tr>
         `;
-        callLog.forEach(log => {
-            if (log.hasOwnProperty('tool_calls')) {
-                return;
-            }
-            const roleColors = {
-                'user': 'bg-primary text-white',
-                'assistant': 'bg-success text-white',
-                'system': 'bg-warning text-dark',
-                'other': 'bg-secondary text-white',
-                'system-log': 'bg-warning text-dark',
-                'tool': 'bg-info text-dark',
-                'other': 'bg-secondary text-dark',
-            };
+    callLog.forEach(log => {
+      if (log.hasOwnProperty('tool_calls')) {
+        return;
+      }
+      const roleColors = {
+        'user': 'bg-primary text-white',
+        'assistant': 'bg-success text-white',
+        'system': 'bg-warning text-dark',
+        'other': 'bg-secondary text-white',
+        'system-log': 'bg-warning text-dark',
+        'tool': 'bg-info text-dark',
+        'other': 'bg-secondary text-dark',
+      };
 
-            const roleClass = roleColors[log.role] || 'bg-light text-dark';
-            
-            table += `
+      const roleClass = roleColors[log.role] || 'bg-light text-dark';
+
+      table += `
                 <tr class="${roleClass}">
                     <td class="role">${log.role}</td>
                     <td style="word-wrap: break-word;">${log.content.replace(/\n/g, '<br/>')}</td>
@@ -467,14 +469,14 @@
                     <td>${log.utterance_latency ? log.utterance_latency + ' ms' : 'N/A'}</td>
                 </tr>
             `;
-        });
-        table += '</table></div>';
-        return table;
-    }
+    });
+    table += '</table></div>';
+    return table;
+  }
 
-    function createTimesTable(times) {
-        let table = '<table class="table table-striped table-sm">'; 
-        table += `
+  function createTimesTable(times) {
+    let table = '<table class="table table-striped table-sm">';
+    table += `
             <tr>
                 <th>Token Time</th>
                 <th>Tokens</th>
@@ -485,8 +487,8 @@
                 <th>Answer Time</th>
             </tr>
         `;
-        times.forEach(time => {
-            table += `
+    times.forEach(time => {
+      table += `
                 <tr>
                     <td>${time.token_time}</td>
                     <td>${time.tokens}</td>
@@ -497,22 +499,22 @@
                     <td>${time.answer_time}</td>
                 </tr>
             `;
-        });
-        table += '</table>';
-        return table;
-    }
+    });
+    table += '</table>';
+    return table;
+  }
 
-    function createSWMLVarsTable(swmlVars) {
-        let table = '<table class="table table-striped table-sm">';
-        table += `
+  function createSWMLVarsTable(swmlVars) {
+    let table = '<table class="table table-striped table-sm">';
+    table += `
             <tr>
                 <th>Key</th>
                 <th>Value</th>
                 <th>Copy</th>
             </tr>
         `;
-        for (const [key, value] of Object.entries(swmlVars)) {
-            table += `
+    for (const [key, value] of Object.entries(swmlVars)) {
+      table += `
                 <tr>
                     <td>${key}</td>
                     <td>
@@ -522,14 +524,14 @@
                     <td class="copy-btn"><i class="fas fa-copy" data-copy="${value}" onclick="copyToClipboard('${value}')"></i></td>
                 </tr>
             `;
-        }
-        table += '</table>';
-        return table;
     }
+    table += '</table>';
+    return table;
+  }
 
-    function createSwaigLogTable(swaigLog) {
-        let table = '<div class="table-responsive"><table class="table table-striped table-sm">';
-        table += `
+  function createSwaigLogTable(swaigLog) {
+    let table = '<div class="table-responsive"><table class="table table-striped table-sm">';
+    table += `
             <tr>
                 <th>URL</th>
                 <th>Active Count</th>
@@ -540,12 +542,12 @@
                 <th>Epoch Time</th>
             </tr>
         `;
-        swaigLog.forEach(log => {
-            const isDelayed = log.delayed_post_response ? true : false;
-            const postResponse = isDelayed ? log.delayed_post_response : log.post_response;
-            const postResponseClass = isDelayed ? 'delayed-response' : '';
+    swaigLog.forEach(log => {
+      const isDelayed = log.delayed_post_response ? true : false;
+      const postResponse = isDelayed ? log.delayed_post_response : log.post_response;
+      const postResponseClass = isDelayed ? 'delayed-response' : '';
 
-            table += `
+      table += `
             <tr>
                 <td>
                     <input type="text" readonly value="${log.url}" style="width: 200px;">
@@ -569,16 +571,16 @@
                 </td>
             </tr>
         `;
-        });
-        table += '</table></div>';
-        return table;
-    }
+    });
+    table += '</table></div>';
+    return table;
+  }
 
-    function createPostPromptDataTable(postPromptData) {
-        let table = '<table class="table table-striped table-sm">';
+  function createPostPromptDataTable(postPromptData) {
+    let table = '<table class="table table-striped table-sm">';
 
-        if (postPromptData.raw) {
-              table += `
+    if (postPromptData.raw) {
+      table += `
             <tr>
                 <td style="word-wrap: break-word; max-width: 100%; text-align: left;"><strong>Raw Data:</strong></td>
                 <td style="word-wrap: break-word; max-width: 100%; text-align: left;">${postPromptData.raw}</td>
@@ -587,10 +589,10 @@
                 </td>
             </tr>
             `;
-        }
+    }
 
-        if (postPromptData.substituted) {
-            table += `
+    if (postPromptData.substituted) {
+      table += `
             <tr>
                 <td style="word-wrap: break-word; max-width: 100%; text-align: left;"><strong>Substituted Data:</strong></td>
                 <td style="word-wrap: break-word; max-width: 100%; text-align: left;">${postPromptData.substituted}</td>
@@ -599,11 +601,11 @@
                 </td>
             </tr>
         `;
-        }
+    }
 
-        if (postPromptData.parsed && postPromptData.parsed.length > 0) {
-            postPromptData.parsed.forEach((parsedItem, index) => {
-                table += `
+    if (postPromptData.parsed && postPromptData.parsed.length > 0) {
+      postPromptData.parsed.forEach((parsedItem, index) => {
+        table += `
                 <tr>
                     <td style="word-wrap: break-word; max-width: 100%; text-align: left;"><strong>Parsed Item ${index + 1}:</strong></td>
                     <td style="word-wrap: break-word; max-width: 100%; text-align: left;"><pre>${JSON.stringify(parsedItem, null, 2)}</pre></td>
@@ -612,47 +614,39 @@
                     </td>
                 </tr>
             `;
-            });
-        }
-
-        table += '</table>';
-        return table;
+      });
     }
 
-    window.copyToClipboard = function(value) {
-        const tempInput = document.createElement('textarea');
-        tempInput.style.position = 'absolute';
-        tempInput.style.left = '-9999px';
-        tempInput.value = value;
-        document.body.appendChild(tempInput);
-        tempInput.select();
-        document.execCommand('copy');
-        document.body.removeChild(tempInput);
-        const Toast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 1500,
-            timerProgressBar: true,
-            didOpen: (toast) => {
-                toast.addEventListener('mouseenter', Swal.stopTimer)
-                toast.addEventListener('mouseleave', Swal.resumeTimer)
-            }
-        });
+    table += '</table>';
+    return table;
+  }
 
-        Toast.fire({
-            icon: 'success',
-            title: 'Copied to clipboard'
-        });
-    }
-  </script>
+  window.copyToClipboard = function (value) {
+    const tempInput = document.createElement('textarea');
+    tempInput.style.position = 'absolute';
+    tempInput.style.left = '-9999px';
+    tempInput.value = value;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    document.execCommand('copy');
+    document.body.removeChild(tempInput);
+    const Toast = Swal.mixin({
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 1500,
+      timerProgressBar: true,
+      didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer)
+        toast.addEventListener('mouseleave', Swal.resumeTimer)
+      }
+    });
+
+    Toast.fire({
+      icon: 'success',
+      title: 'Copied to clipboard'
+    });
+  }
+</script>
 
 {% endblock %}
-
-
-
-
-
-
-
-

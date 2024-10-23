@@ -1695,7 +1695,24 @@ def aifeatures_agent(agent_id):
             'created': feature.created
         } for feature in features]
         return jsonify(features_data), 200
-    
+
+@app.route('/translate', methods=['GET'])
+@login_required
+def translate():
+    if request.headers.get('Accept') == 'application/json':
+        print("FUCKER")
+        return jsonify([]), 200
+    else:
+        return render_template('translate.html', user=current_user)
+
+@app.route('/transcribe', methods=['GET'])
+@login_required
+def transcribe():
+    if request.headers.get('Accept') == 'application/json':
+        return jsonify([]), 200
+    else:
+        return render_template('transcribe.html', user=current_user)
+
 @app.route('/phone_numbers', methods=['GET'])
 @login_required
 def list_phone_numbers():
@@ -1910,7 +1927,7 @@ def release_phone_number(phone_number_id):
     }
 
     response = requests.delete(url, headers=headers)
-
+    print(f"Response: {response}")
     if response.status_code == 204:
         return jsonify({'message': 'Phone number released successfully'}), 204
     else:

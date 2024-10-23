@@ -3,174 +3,178 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-  {% include 'navbar.html' %}
+{% include 'navbar.html' %}
+{% include 'sidebar.html' %}
 
-  {% include 'sidebar.html' %}
-
-  <div class="content-wrapper">
-    <div class="content-header">
-      <div class="container-fluid">
-        <div class="row mb-2">
-          <div class="col-6">
-            <h1 class="m-0">Dashboard</h1>
+<div class="content-wrapper">
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-6">
+          <h1 class="m-0">Dashboard</h1>
+        </div>
+      </div>
+    </div>
+  </div>
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header bg-primary">
+              <h3 class="card-title">AI Agent Completed Conversations (UTC)</h3>
+            </div>
+            <div class="card-body">
+              <canvas id="callsChart"
+                style="min-height: 250px; height: 400px; max-height: 400px; width: 100%;"></canvas>
+            </div>
+            <script>
+              document.addEventListener('DOMContentLoaded', function () {
+                fetch('/dashboard/completed')
+                  .then(response => response.json())
+                  .then(data => {
+                    const ctx = document.getElementById('callsChart').getContext('2d');
+                    const chartData = {
+                      labels: data.labels,
+                      datasets: [{
+                        label: 'Completed Conversations (UTC)',
+                        data: data.counts,
+                        fill: true,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1,
+                        tension: 0.4
+                      }]
+                    };
+                    const callsChart = new Chart(ctx, {
+                      type: 'line',
+                      data: chartData,
+                      options: {
+                        scales: {
+                          x: {
+                            beginAtZero: true
+                          },
+                          y: {
+                            beginAtZero: true
+                          }
+                        }
+                      }
+                    });
+                  })
+                  .catch(error => console.error('Error fetching call data:', error));
+              });
+            </script>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header bg-success">
+              <h3 class="card-title">Service URLs</h3>
+            </div>
+            <div class="card-body table-responsive">
+              <table class="table no-border">
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th>URL</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>JSON URL</td>
+                    <td><span id="swmlUrl">{{ swml_url }}</span></td>
+                    <td><button class="copy-btn" onclick="copyToClipboard('swmlUrl')">Copy</button></td>
+                  </tr>
+                  <tr>
+                    <td>YAML URL</td>
+                    <td><span id="yamlUrl">{{ yaml_url }}</span></td>
+                    <td><button class="copy-btn" onclick="copyToClipboard('yamlUrl')">Copy</button></td>
+                  </tr>
+                  <tr>
+                    <td>Debug Webhook URL</td>
+                    <td><span id="debugWebhookUrl">{{ debugwebhook_url }}</span></td>
+                    <td><button class="copy-btn" onclick="copyToClipboard('debugWebhookUrl')">Copy</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-6">
+          <div class="small-box bg-info">
+            <div class="inner">
+              <h3>{{ number_of_requests }}</h3>
+              <p>Number of Requests</p>
+            </div>
+            <div class="icon">
+              <i class="ion ion-chatbubbles"></i>
+            </div>
+            <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+          </div>
+        </div>
+        <div class="col-lg-3 col-6">
+          <div class="small-box bg-success">
+            <div class="inner">
+              <h3>{{ number_of_conversations }}</h3>
+              <p>Number of Conversations</p>
+            </div>
+            <div class="icon">
+              <i class="ion ion-chatbubbles"></i>
+            </div>
+            <a href="{{ url_for('conversations') }}" class="small-box-footer">More info <i
+                class="fas fa-arrow-circle-right"></i></a>
           </div>
         </div>
       </div>
     </div>
-    <section class="content">
-      <div class="container-fluid">
-        <div class="row">
-          <div class="col-12">
-            <div class="card">
-              <div class="card-header bg-primary">
-                <h3 class="card-title">AI Agent Completed Conversations (UTC)</h3>
-              </div>
-              <div class="card-body">
-                <canvas id="callsChart" style="min-height: 250px; height: 400px; max-height: 400px; width: 100%;"></canvas>
-              </div>
-              <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                  fetch('/dashboard/completed')
-                    .then(response => response.json())
-                    .then(data => {
-                      const ctx = document.getElementById('callsChart').getContext('2d');
-                      const chartData = {
-                        labels: data.labels,
-                        datasets: [{
-                          label: 'Completed Conversations (UTC)',
-                          data: data.counts,
-                          fill: true,
-                          backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                          borderColor: 'rgba(54, 162, 235, 1)',
-                          borderWidth: 1,
-                          tension: 0.4
-                        }]
-                      };
-                      const callsChart = new Chart(ctx, {
-                        type: 'line',
-                        data: chartData,
-                        options: {
-                          scales: {
-                            x: {
-                              beginAtZero: true
-                            },
-                            y: {
-                              beginAtZero: true
-                            }
-                          }
-                        }
-                      });
-                    })
-                    .catch(error => console.error('Error fetching call data:', error));
-                });
-              </script>
-            </div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-12">
-            <div class="card">
-              <div class="card-header bg-success">
-                <h3 class="card-title">Service URLs</h3>
-              </div>
-              <div class="card-body table-responsive">
-                <table class="table no-border">
-                  <thead>
-                    <tr>
-                      <th>Type</th>
-                      <th>URL</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>JSON URL</td>
-                      <td><span id="swmlUrl">{{ swml_url }}</span></td>
-                      <td><button class="copy-btn" onclick="copyToClipboard('swmlUrl')">Copy</button></td>
-                    </tr>
-                    <tr>
-                      <td>YAML URL</td>
-                      <td><span id="yamlUrl">{{ yaml_url }}</span></td>
-                      <td><button class="copy-btn" onclick="copyToClipboard('yamlUrl')">Copy</button></td>
-                    </tr>
-                    <tr>
-                      <td>Debug Webhook URL</td>
-                      <td><span id="debugWebhookUrl">{{ debugwebhook_url }}</span></td>
-                      <td><button class="copy-btn" onclick="copyToClipboard('debugWebhookUrl')">Copy</button></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-          <div class="col-lg-3 col-6">
-            <div class="small-box bg-info">
-              <div class="inner">
-                <h3>{{ number_of_requests }}</h3>
-                <p>Number of Requests</p>
-              </div>
-              <div class="icon">
-                <i class="ion ion-chatbubbles"></i>
-              </div>
-              <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
-            </div>
-          </div>
-          <div class="col-lg-3 col-6">
-            <div class="small-box bg-success">
-              <div class="inner">
-                <h3>{{ number_of_conversations }}</h3>
-                <p>Number of Conversations</p>
-              </div>
-              <div class="icon">
-                <i class="ion ion-chatbubbles"></i>
-              </div>
-              <a href="{{ url_for('conversations') }}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
- </div>
-  {% include 'footer.html' %}
+  </section>
+</div>
+{% include 'footer.html' %}
 
-  <script>
-    function copyToClipboard(elementId) {
-      var copyText = document.getElementById(elementId).textContent;
-      navigator.clipboard.writeText(copyText).then(function() {
-        Swal.fire({
-          icon: 'success',
-          title: 'Copied!',
-          text: 'URL has been copied to clipboard',
-          toast: true,
-          position: 'top-end',
-          showConfirmButton: false,
-          timer: 1500,
-          timerProgressBar: true
-        });
-      }, function(err) {
-        console.error('Could not copy text: ', err);
+<script>
+  function copyToClipboard(elementId) {
+    var copyText = document.getElementById(elementId).textContent;
+    navigator.clipboard.writeText(copyText).then(function () {
+      Swal.fire({
+        icon: 'success',
+        title: 'Copied!',
+        text: 'URL has been copied to clipboard',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 1500,
+        timerProgressBar: true
       });
-    }
-  </script>
-  <style>
-    .copy-btn {
-      background-color: #007bff;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      text-align: center;
-      text-decoration: none;
-      display: inline-block;
-      font-size: 14px;
-      margin: 4px 2px;
-      cursor: pointer;
-      border-radius: 4px;
-    }
-    .copy-btn:hover {
-      background-color: #0056b3;
-    }
-    .no-border th, .no-border td {
-      border: none;
-    }
-  </style>
+    }, function (err) {
+      console.error('Could not copy text: ', err);
+    });
+  }
+</script>
+<style>
+  .copy-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+
+  .copy-btn:hover {
+    background-color: #0056b3;
+  }
+
+  .no-border th,
+  .no-border td {
+    border: none;
+  }
+</style>
 {% endblock %}

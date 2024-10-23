@@ -3,8 +3,8 @@
 {% block title %}DataSphere{% endblock %}
 
 {% block content %}
-  {% include 'navbar.html' %}
-  {% include 'sidebar.html' %}
+{% include 'navbar.html' %}
+{% include 'sidebar.html' %}
 
 <div class="content-wrapper">
     <section class="content-header">
@@ -51,7 +51,8 @@
                     <form id="addDocumentForm">
                         <div class="form-group">
                             <label for="documentUrl">Document URL</label>
-                            <input type="url" class="form-control" id="documentUrl" placeholder="Enter document URL" required>
+                            <input type="url" class="form-control" id="documentUrl" placeholder="Enter document URL"
+                                required>
                         </div>
                         <div class="form-group">
                             <label for="chunkingStrategy">Chunking Strategy</label>
@@ -69,7 +70,8 @@
                         <div id="sentenceOptions" class="chunking-options" style="display: none;">
                             <div class="form-group">
                                 <label for="maxSentencesPerChunk">Max Sentences Per Chunk</label>
-                                <input type="number" class="form-control" id="maxSentencesPerChunk" placeholder="Enter max sentences per chunk">
+                                <input type="number" class="form-control" id="maxSentencesPerChunk"
+                                    placeholder="Enter max sentences per chunk">
                             </div>
                             <div class="form-group">
                                 <label for="splitNewlines">Split Newlines</label>
@@ -83,7 +85,8 @@
                             </div>
                             <div class="form-group">
                                 <label for="overlapSize">Overlap Size</label>
-                                <input type="number" class="form-control" id="overlapSize" placeholder="Enter overlap size">
+                                <input type="number" class="form-control" id="overlapSize"
+                                    placeholder="Enter overlap size">
                             </div>
                         </div>
                         <button type="submit" class="btn btn-success">Add Document</button>
@@ -99,10 +102,11 @@
 
 {% block scripts %}
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.min.css">
-<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" charset="utf8"
+    src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
 
 <script>
-    $(document).ready(function() {
+    $(document).ready(function () {
         $('#datasphereTable').DataTable({
             "ajax": {
                 "url": "{{ url_for('datasphere') }}",
@@ -111,7 +115,7 @@
                     "Accept": "application/json",
                     "Content-Type": "application/json"
                 },
-                "error": function(xhr, error, thrown) {
+                "error": function (xhr, error, thrown) {
                     if (xhr.status === 401 && xhr.responseJSON && xhr.responseJSON.error === 'SignalWire credentials missing') {
                         Swal.fire({
                             icon: 'error',
@@ -131,13 +135,13 @@
                 { "data": "id" },
                 { "data": "filename" },
                 { "data": "status" },
-                { "data": "tags", "render": function(data) { return data.join(', '); } },
+                { "data": "tags", "render": function (data) { return data.join(', '); } },
                 { "data": "created_at" },
                 { "data": "updated_at" },
                 { "data": "number_of_chunks" },
                 {
                     "data": null,
-                    "render": function(data, type, row) {
+                    "render": function (data, type, row) {
                         return `
                             <div class="btn-group" role="group">
                                 <button class="btn btn-primary btn-sm edit-btn" data-id="${row.id}" style="margin-right: 5px;">Edit</button>
@@ -164,19 +168,19 @@
             }
         });
 
-        $('#datasphereTable').on('click', '.edit-btn', function() {
+        $('#datasphereTable').on('click', '.edit-btn', function () {
             var docId = $(this).data('id');
-            
+
             var rowData = $('#datasphereTable').DataTable().row($(this).parents('tr')).data();
-            
+
             $('#editTags').val(rowData.tags.join(', '));
-            
+
             $('#editDocumentModal').data('docId', docId);
-            
+
             $('#editDocumentModal').modal('show');
         });
 
-        $('#datasphereTable').on('click', '.delete-btn', function() {
+        $('#datasphereTable').on('click', '.delete-btn', function () {
             var docId = $(this).data('id');
 
             Swal.fire({
@@ -192,14 +196,14 @@
                     $.ajax({
                         url: "/datasphere/documents/" + docId,
                         type: 'DELETE',
-                        success: function(result) {
+                        success: function (result) {
                             Toast.fire({
                                 icon: 'success',
                                 title: 'Document deleted successfully!'
                             });
                             $('#datasphereTable').DataTable().ajax.reload();
                         },
-                        error: function(err) {
+                        error: function (err) {
                             Toast.fire({
                                 icon: 'error',
                                 title: 'Failed to delete document.'
@@ -210,7 +214,7 @@
             });
         });
 
-        $('#chunkingStrategy').change(function() {
+        $('#chunkingStrategy').change(function () {
             var strategy = $(this).val();
             $('.chunking-options').hide();
             if (strategy === 'sentence') {
@@ -220,9 +224,9 @@
             }
         });
 
-        $('#addDocumentForm').on('submit', function(event) {
+        $('#addDocumentForm').on('submit', function (event) {
             event.preventDefault();
-            
+
             var documentUrl = $('#documentUrl').val();
             var chunkingStrategy = $('#chunkingStrategy').val();
             var tags = $('#tags').val().split(',').map(tag => tag.trim());
@@ -249,14 +253,14 @@
                     tags: tags,
                     ...additionalOptions
                 }),
-                success: function(response) {
+                success: function (response) {
                     Toast.fire({
                         icon: 'success',
                         title: 'Document added successfully!'
                     });
                     $('#datasphereTable').DataTable().ajax.reload();
                 },
-                error: function(err) {
+                error: function (err) {
                     Toast.fire({
                         icon: 'error',
                         title: 'Failed to add document.'
@@ -265,9 +269,9 @@
             });
         });
 
-        $('#editDocumentForm').on('submit', function(event) {
+        $('#editDocumentForm').on('submit', function (event) {
             event.preventDefault();
-            
+
             var docId = $('#editDocumentModal').data('docId');
             var updatedTags = $('#editTags').val().split(',').map(tag => tag.trim());
 
@@ -281,7 +285,7 @@
                 data: JSON.stringify({
                     tags: updatedTags
                 }),
-                success: function(response) {
+                success: function (response) {
                     Toast.fire({
                         icon: 'success',
                         title: 'Document updated successfully!'
@@ -289,7 +293,7 @@
                     $('#editDocumentModal').modal('hide');
                     $('#datasphereTable').DataTable().ajax.reload();
                 },
-                error: function(err) {
+                error: function (err) {
                     Toast.fire({
                         icon: 'error',
                         title: 'Failed to update document.'
@@ -298,7 +302,7 @@
             });
         });
 
-        $('#datasphereTable').on('click', '.query-btn', function() {
+        $('#datasphereTable').on('click', '.query-btn', function () {
             var docId = $(this).data('id');
             var numberOfChunks = $(this).data('chunks');
 
@@ -311,7 +315,7 @@
 
         function debounce(func, wait) {
             let timeout;
-            return function(...args) {
+            return function (...args) {
                 const context = this;
                 clearTimeout(timeout);
                 timeout = setTimeout(() => func.apply(context, args), wait);
@@ -343,11 +347,11 @@
                     type: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify(data),
-                    success: function(response) {
+                    success: function (response) {
                         var results = response.chunks.map(chunk => `<div class="chunk-result"><p>${chunk.text}</p></div>`).join('');
                         $('#queryResults').html(results);
                     },
-                    error: function(err) {
+                    error: function (err) {
                         $('#queryResults').html('<p class="text-danger">Failed to fetch results.</p>');
                     }
                 });
@@ -365,7 +369,8 @@
 </script>
 
 <!-- Edit Document Modal -->
-<div class="modal fade" id="editDocumentModal" tabindex="-1" role="dialog" aria-labelledby="editDocumentModalLabel" aria-hidden="true">
+<div class="modal fade" id="editDocumentModal" tabindex="-1" role="dialog" aria-labelledby="editDocumentModalLabel"
+    aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -388,7 +393,8 @@
 </div>
 
 <!-- Query Document Modal -->
-<div class="modal fade" id="queryDocumentModal" tabindex="-1" role="dialog" aria-labelledby="queryDocumentModalLabel" aria-hidden="true">
+<div class="modal fade" id="queryDocumentModal" tabindex="-1" role="dialog" aria-labelledby="queryDocumentModalLabel"
+    aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -405,27 +411,33 @@
                     </div>
                     <div class="form-group">
                         <label for="queryTags">Tags</label>
-                        <input type="text" class="form-control" id="queryTags" placeholder="Only documents tagged with 'Drinks' and 'Bar' will be searched.">
+                        <input type="text" class="form-control" id="queryTags"
+                            placeholder="Only documents tagged with 'Drinks' and 'Bar' will be searched.">
                     </div>
                     <div class="form-group">
                         <label for="queryDistance">Distance</label>
-                        <input type="number" class="form-control" id="queryDistance" placeholder="A distance of 15.0 will allow moderate flexibility in matching search results.">
+                        <input type="number" class="form-control" id="queryDistance"
+                            placeholder="A distance of 15.0 will allow moderate flexibility in matching search results.">
                     </div>
                     <div class="form-group">
                         <label for="queryCount">Count</label>
-                        <input type="number" class="form-control" id="queryCount" value="3" min="1" placeholder="The search will return a maximum of 3 results.">
+                        <input type="number" class="form-control" id="queryCount" value="3" min="1"
+                            placeholder="The search will return a maximum of 3 results.">
                     </div>
                     <div class="form-group">
                         <label for="queryLanguage">Language</label>
-                        <input type="text" class="form-control" id="queryLanguage" value="en" placeholder="The search is limited to documents in English ('en').">
+                        <input type="text" class="form-control" id="queryLanguage" value="en"
+                            placeholder="The search is limited to documents in English ('en').">
                     </div>
                     <div class="form-group">
                         <label for="queryPosToExpand">POS to Expand</label>
-                        <input type="text" class="form-control" id="queryPosToExpand" placeholder="Synonym expansion will only happen for nouns and verbs.">
+                        <input type="text" class="form-control" id="queryPosToExpand"
+                            placeholder="Synonym expansion will only happen for nouns and verbs.">
                     </div>
                     <div class="form-group">
                         <label for="queryMaxSynonyms">Max Synonyms</label>
-                        <input type="number" class="form-control" id="queryMaxSynonyms" placeholder="A maximum of 5 synonyms will be used for each word in the query.">
+                        <input type="number" class="form-control" id="queryMaxSynonyms"
+                            placeholder="A maximum of 5 synonyms will be used for each word in the query.">
                     </div>
                     <div class="form-group">
                         <label>Number of Chunks</label>

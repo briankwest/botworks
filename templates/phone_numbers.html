@@ -3,8 +3,8 @@
 {% block title %}Phone Numbers{% endblock %}
 
 {% block content %}
-  {% include 'navbar.html' %}
-  {% include 'sidebar.html' %}
+{% include 'navbar.html' %}
+{% include 'sidebar.html' %}
 
 <div class="content-wrapper">
     <section class="content-header">
@@ -180,10 +180,11 @@
 
 {% block scripts %}
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.min.css">
-<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" charset="utf8"
+    src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
 
 <script>
-    $(document).ready(function() {
+    $(document).ready(function () {
         $('#phoneNumbersTable').DataTable({
             "ajax": {
                 "url": "{{ url_for('list_phone_numbers') }}",
@@ -192,7 +193,7 @@
                     "Accept": "application/json",
                     "Content-Type": "application/json"
                 },
-                "error": function(xhr, error, thrown) {
+                "error": function (xhr, error, thrown) {
                     if (xhr.status === 401 && xhr.responseJSON && xhr.responseJSON.error === 'SignalWire credentials missing') {
                         Swal.fire({
                             icon: 'error',
@@ -212,11 +213,11 @@
                 { "data": "id" },
                 { "data": "number" },
                 { "data": "number_type" },
-                { 
-                    "data": "capabilities", 
-                    "render": function(data) { 
-                        return data.map(function(capability) {
-                            switch(capability) {
+                {
+                    "data": "capabilities",
+                    "render": function (data) {
+                        return data.map(function (capability) {
+                            switch (capability) {
                                 case 'voice':
                                     return '<i class="fas fa-phone"></i>';
                                 case 'fax':
@@ -229,11 +230,11 @@
                                     return capability;
                             }
                         }).join(' ');
-                    } 
+                    }
                 },
                 {
                     "data": null,
-                    "render": function(data, type, row) {
+                    "render": function (data, type, row) {
                         return `
                             <div class="btn-group" role="group">
                                 <button class="btn btn-sm btn-primary edit-btn mr-2" data-id="${row.id}">Edit</button>
@@ -259,7 +260,7 @@
             }
         });
 
-        $('#phoneNumbersTable').on('click', '.release-btn', function() {
+        $('#phoneNumbersTable').on('click', '.release-btn', function () {
             var phoneNumberId = $(this).data('id');
 
             Swal.fire({
@@ -275,14 +276,14 @@
                     $.ajax({
                         url: "/phone_numbers/" + phoneNumberId,
                         type: 'DELETE',
-                        success: function(result) {
+                        success: function (result) {
                             Toast.fire({
                                 icon: 'success',
                                 title: 'Phone number released successfully!'
                             });
                             $('#phoneNumbersTable').DataTable().ajax.reload();
                         },
-                        error: function(err) {
+                        error: function (err) {
                             Toast.fire({
                                 icon: 'error',
                                 title: 'Failed to release phone number.'
@@ -300,11 +301,11 @@
                 { "data": "international_number_formatted" },
                 { "data": "region" },
                 { "data": "rate_center" },
-                { 
+                {
                     "data": "capabilities",
-                    "render": function(data) {
-                        return data.map(function(capability) {
-                            switch(capability) {
+                    "render": function (data) {
+                        return data.map(function (capability) {
+                            switch (capability) {
                                 case 'voice':
                                     return '<i class="fas fa-phone"></i>';
                                 case 'fax':
@@ -321,16 +322,16 @@
                 },
                 {
                     "data": null,
-                    "render": function(data, type, row) {
+                    "render": function (data, type, row) {
                         return `<button class="btn btn-primary btn-sm purchase-btn" data-number="${row.e164}">Purchase</button>`;
                     }
                 }
             ]
         });
 
-        $('#searchPhoneNumberForm').on('submit', function(event) {
+        $('#searchPhoneNumberForm').on('submit', function (event) {
             event.preventDefault();
-            
+
             var areacode = $('#areacode').val();
             var numberType = $('#numberType').val();
             var startsWith = $('#startsWith').val();
@@ -377,10 +378,10 @@
                     region: region,
                     city: city
                 },
-                success: function(response) {
+                success: function (response) {
                     searchResultsTable.clear().rows.add(response.data).draw();
                 },
-                error: function(err) {
+                error: function (err) {
                     Toast.fire({
                         icon: 'error',
                         title: 'Failed to search numbers.'
@@ -389,7 +390,7 @@
             });
         });
 
-        $('#searchResultsTable').on('click', '.purchase-btn', function() {
+        $('#searchResultsTable').on('click', '.purchase-btn', function () {
             var phoneNumber = $(this).data('number');
 
             Swal.fire({
@@ -407,14 +408,14 @@
                         type: 'POST',
                         contentType: 'application/json',
                         data: JSON.stringify({ number: phoneNumber }),
-                        success: function(response) {
+                        success: function (response) {
                             Toast.fire({
                                 icon: 'success',
                                 title: 'Phone number purchased successfully!'
                             });
                             $('#phoneNumbersTable').DataTable().ajax.reload();
                         },
-                        error: function(err) {
+                        error: function (err) {
                             Toast.fire({
                                 icon: 'error',
                                 title: 'Failed to purchase phone number.'
@@ -433,12 +434,12 @@
                     "Accept": "application/json",
                     "Content-Type": "application/json"
                 },
-                success: function(response) {
+                success: function (response) {
                     if (Array.isArray(response)) {
                         var agentSelect = $('#agentSelect');
                         agentSelect.empty();
                         agentSelect.append('<option value="">Select Agent</option>');
-                        response.forEach(function(agent) {
+                        response.forEach(function (agent) {
                             agentSelect.append(`<option value="${agent.id}">${agent.name}</option>`);
                         });
                     } else {
@@ -448,7 +449,7 @@
                         });
                     }
                 },
-                error: function(err) {
+                error: function (err) {
                     Toast.fire({
                         icon: 'error',
                         title: 'Failed to fetch agents.'
@@ -457,7 +458,7 @@
             });
         }
 
-        $('#phoneNumbersTable').on('click', '.edit-btn', function() {
+        $('#phoneNumbersTable').on('click', '.edit-btn', function () {
             var phoneNumberId = $(this).data('id');
             var phoneNumber = $(this).closest('tr').find('td:eq(1)').text();
             $('#editPhoneNumberModal').modal('show');
@@ -466,7 +467,7 @@
             $('#editPhoneNumberForm').data('phoneNumber', phoneNumber);
         });
 
-        $('#editPhoneNumberForm').on('submit', function(event) {
+        $('#editPhoneNumberForm').on('submit', function (event) {
             event.preventDefault();
             var phoneNumberId = $(this).data('phoneNumberId');
             var phoneNumber = $(this).data('phoneNumber');
@@ -480,12 +481,12 @@
                     "Accept": "application/json",
                     "Content-Type": "application/json"
                 },
-                data: JSON.stringify({ 
-                    agent_id: agentId, 
+                data: JSON.stringify({
+                    agent_id: agentId,
                     phone_number_id: phoneNumberId,
                     phone_number: phoneNumber
                 }),
-                success: function(response) {
+                success: function (response) {
                     Toast.fire({
                         icon: 'success',
                         title: 'Phone number updated successfully!'
@@ -493,7 +494,7 @@
                     $('#editPhoneNumberModal').modal('hide');
                     $('#phoneNumbersTable').DataTable().ajax.reload();
                 },
-                error: function(err) {
+                error: function (err) {
                     Toast.fire({
                         icon: 'error',
                         title: 'Failed to update phone number.'
@@ -504,7 +505,8 @@
     });
 </script>
 
-<div class="modal fade" id="searchResultsModal" tabindex="-1" role="dialog" aria-labelledby="searchResultsModalLabel" aria-hidden="true">
+<div class="modal fade" id="searchResultsModal" tabindex="-1" role="dialog" aria-labelledby="searchResultsModalLabel"
+    aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -521,7 +523,8 @@
     </div>
 </div>
 
-<div class="modal fade" id="editPhoneNumberModal" tabindex="-1" role="dialog" aria-labelledby="editPhoneNumberModalLabel" aria-hidden="true">
+<div class="modal fade" id="editPhoneNumberModal" tabindex="-1" role="dialog"
+    aria-labelledby="editPhoneNumberModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">

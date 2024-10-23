@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Hints{% endblock %}
+{% block title %}Translate{% endblock %}
 
 {% block content %}
 {% include 'navbar.html' %}
@@ -11,7 +11,7 @@
     <div class="container-fluid">
       <div class="row mb-2">
         <div class="col-6">
-          <h1 class="m-0">Hints</h1>
+          <h1 class="m-0">Translate</h1>
         </div>
       </div>
     </div>
@@ -23,14 +23,14 @@
         <div class="col-12">
           <div class="card">
             <div class="card-header bg-primary">
-              <h3 class="card-title">Hints List</h3>
+              <h3 class="card-title">Translate</h3>
             </div>
             <div class="card-body">
-              <table id="hintTable" class="table table-striped w-100">
+              <table id="translationTable" class="table table-striped w-100">
                 <thead>
                   <tr>
                     <th>ID</th>
-                    <th>Hint Text</th>
+                    <th>Translation Text</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -46,15 +46,15 @@
         <div class="col-12">
           <div class="card">
             <div class="card-header bg-success">
-              <h3 class="card-title">Add Hint Entry</h3>
+              <h3 class="card-title">Add Translation Entry</h3>
             </div>
             <div class="card-body">
-              <form id="addHintForm">
+              <form id="addTranslationForm">
                 <div class="form-group">
-                  <label for="hintText">Hint Text</label>
-                  <input type="text" class="form-control" id="hintText" name="hint" required>
+                  <label for="translationText">Translation Text</label>
+                  <input type="text" class="form-control" id="translationText" name="translation" required>
                 </div>
-                <button type="submit" class="btn btn-success">Add Hint</button>
+                <button type="submit" class="btn btn-success">Add Translation</button>
               </form>
             </div>
           </div>
@@ -64,22 +64,22 @@
     </div>
   </section>
 
-  <div class="modal fade" id="editHintModal" tabindex="-1" role="dialog" aria-labelledby="editHintModalLabel"
-    aria-hidden="true">
+  <div class="modal fade" id="editTranslationModal" tabindex="-1" role="dialog"
+    aria-labelledby="editTranslationModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="editHintModalLabel">Edit Hint Entry</h5>
+          <h5 class="modal-title" id="editTranslationModalLabel">Edit Translation Entry</h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
         <div class="modal-body">
-          <form id="editHintForm">
+          <form id="editTranslationForm">
             <input type="hidden" id="editId" name="id">
             <div class="form-group">
-              <label for="editHintText">Hint Text</label>
-              <input type="text" class="form-control" id="editHintText" name="hint" required>
+              <label for="editTranslationText">Translation Text</label>
+              <input type="text" class="form-control" id="editTranslationText" name="translation" required>
             </div>
           </form>
         </div>
@@ -101,22 +101,25 @@
 
 <script>
   $(document).ready(function () {
-    $('#hintTable').DataTable({
+    $('#translationTable').DataTable({
       "responsive": true,
       "autoWidth": false,
       "ajax": {
-        "url": "{{ url_for('hints') }}",
+        "url": "{{ url_for('translate') }}",
+        "headers": {
+          "Accept": "application/json"
+        },
         "dataSrc": ""
       },
       "columns": [
         { "data": "id" },
-        { "data": "hint" },
+        { "data": "translation" },
         {
           "data": null,
           "render": function (data, type, row) {
             return `
-                <button class="btn btn-primary btn-sm edit-hint" data-id="${row.id}">Edit</button>
-                <button class="btn btn-danger btn-sm delete-hint" data-id="${row.id}">Delete</button>
+                <button class="btn btn-primary btn-sm edit-translation" data-id="${row.id}">Edit</button>
+                <button class="btn btn-danger btn-sm delete-translation" data-id="${row.id}">Delete</button>
               `;
           }
         }
@@ -142,29 +145,32 @@
       });
     }
 
-    $('#addHintForm').submit(function (e) {
+    $('#addTranslationForm').submit(function (e) {
       e.preventDefault();
       const formData = {
-        hint: $('#hintText').val()
+        translation: $('#translationText').val()
       };
 
       $.ajax({
         type: 'POST',
-        url: "{{ url_for('hints') }}",
-        contentType: 'application/json',
+        url: "{{ url_for('translate') }}",
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
         data: JSON.stringify(formData),
         success: function (response) {
-          $('#hintTable').DataTable().ajax.reload();
-          $('#addHintForm')[0].reset();
-          showToast('success', 'Hint entry created successfully');
+          $('#translationTable').DataTable().ajax.reload();
+          $('#addTranslationForm')[0].reset();
+          showToast('success', 'Translation entry created successfully');
         },
         error: function (error) {
-          showToast('error', 'Error creating hint entry');
+          showToast('error', 'Error creating translation entry');
         }
       });
     });
 
-    $('#hintTable').on('click', '.delete-hint', function () {
+    $('#translationTable').on('click', '.delete-translation', function () {
       const id = $(this).data('id');
       Swal.fire({
         title: 'Are you sure?',
@@ -178,57 +184,59 @@
         if (result.isConfirmed) {
           $.ajax({
             type: 'DELETE',
-            url: "/hints/" + id,
+            url: "/translate/" + id,
             success: function (response) {
-              $('#hintTable').DataTable().ajax.reload();
-              showToast('success', 'Hint entry deleted successfully');
+              $('#translationTable').DataTable().ajax.reload();
+              showToast('success', 'Translation entry deleted successfully');
             },
             error: function (error) {
-              showToast('error', 'Error deleting hint entry');
+              showToast('error', 'Error deleting translation entry');
             }
           });
         }
       });
     });
 
-    $('#hintTable').on('click', '.edit-hint', function () {
+    $('#translationTable').on('click', '.edit-translation', function () {
       const id = $(this).data('id');
       $.ajax({
         type: 'GET',
-        url: "/hints/" + id,
-        success: function (response) {
-          $('#editId').val(response.id);
-          $('#editHintText').val(response.hint);
-          $('#editHintModal').modal('show');
+        url: "/translation/" + id,
+        headers: {
+          'Accept': 'application/json'
+        },
+        success: function (data) {
+          $('#editId').val(data.id);
+          $('#editTranslationText').val(data.translation);
+          $('#editTranslationModal').modal('show');
         },
         error: function (error) {
-          showToast('error', 'Error fetching hint entry');
+          showToast('error', 'Error fetching translation entry');
         }
       });
-    });
-
-    $('#editHintForm').on('submit', function (e) {
-      e.preventDefault();
     });
 
     $('#saveEditButton').click(function () {
       const id = $('#editId').val();
       const formData = {
-        hint: $('#editHintText').val()
+        translation: $('#editTranslationText').val()
       };
 
       $.ajax({
         type: 'PUT',
-        url: "/hints/" + id,
-        contentType: 'application/json',
+        url: "/translate/" + id,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
         data: JSON.stringify(formData),
         success: function (response) {
-          $('#hintTable').DataTable().ajax.reload();
-          $('#editHintModal').modal('hide');
-          showToast('success', 'Hint entry updated successfully');
+          $('#translationTable').DataTable().ajax.reload();
+          $('#editTranslationModal').modal('hide');
+          showToast('success', 'Translation entry updated successfully');
         },
         error: function (error) {
-          showToast('error', 'Error updating hint entry');
+          showToast('error', 'Error updating translation entry');
         }
       });
     });

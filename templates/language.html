@@ -3,394 +3,395 @@
 {% block title %}Language{% endblock %}
 
 {% block content %}
-  {% include 'navbar.html' %}
-  {% include 'sidebar.html' %}
+{% include 'navbar.html' %}
+{% include 'sidebar.html' %}
 
-  <div class="content-wrapper">
-    <div class="content-header">
-      <div class="container-fluid">
-        <div class="row mb-2">
-          <div class="col-6">
-            <h1 class="m-0">Languages</h1>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <section class="content">
-      <div class="container-fluid">
-        <div class="row">
-          <div class="col-12">
-            <div class="card">
-              <div class="card-header bg-primary">
-                <h3 class="card-title">Language Entries</h3>
-              </div>
-              <div class="card-body">
-                <table id="languageTable" class="table table-striped w-100">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Name</th>
-                      <th>Code</th>
-                      <th>Voice</th>
-                      <th>Speech Fillers</th>
-                      <th>Function Fillers</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="col-12">
-            <div class="card">
-              <div class="card-header bg-success">
-                <h3 class="card-title">Add Language Entry</h3>
-              </div>
-              <div class="card-body">
-                <form id="addLanguageForm">
-                  <div class="form-group">
-                    <label for="name">Name</label>
-                    <select class="form-control" id="name" name="name" required>
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label for="code">Code</label>
-                    <select class="form-control" id="code" name="code" required>
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label for="voice">Voice</label>
-                    <select class="form-control" id="voice" name="voice">
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label for="speechFillers">Speech Fillers</label>
-                    <input type="text" class="form-control" id="speechFillers" name="speech_fillers">
-                  </div>
-                  <div class="form-group">
-                    <label for="functionFillers">Function Fillers</label>
-                    <input type="text" class="form-control" id="functionFillers" name="function_fillers">
-                  </div>
-                  <button type="submit" class="btn btn-success">Add Language</button>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <div class="modal fade" id="editLanguageModal" tabindex="-1" role="dialog" aria-labelledby="editLanguageModalLabel" aria-hidden="true">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="editLanguageModalLabel">Edit Language Entry</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <form id="editLanguageForm">
-              <input type="hidden" id="editId" name="id">
-              <div class="form-group">
-                <label for="editName">Name</label>
-                <select class="form-control" id="editName" name="name" required>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="editCode">Code</label>
-                <select class="form-control" id="editCode" name="code" required>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="editVoice">Edit Voice</label>
-                <select class="form-control" id="editVoice" name="editVoice">
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="editSpeechFillers">Speech Fillers</label>
-                <input type="text" class="form-control" id="editSpeechFillers" name="speech_fillers">
-              </div>
-              <div class="form-group">
-                <label for="editFunctionFillers">Function Fillers</label>
-                <input type="text" class="form-control" id="editFunctionFillers" name="function_fillers">
-              </div>
-            </form>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" id="saveEditButton">Save changes</button>
-          </div>
+<div class="content-wrapper">
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-6">
+          <h1 class="m-0">Languages</h1>
         </div>
       </div>
     </div>
   </div>
 
-  {% include 'footer.html' %}
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header bg-primary">
+              <h3 class="card-title">Language Entries</h3>
+            </div>
+            <div class="card-body">
+              <table id="languageTable" class="table table-striped w-100">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Code</th>
+                    <th>Voice</th>
+                    <th>Speech Fillers</th>
+                    <th>Function Fillers</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header bg-success">
+              <h3 class="card-title">Add Language Entry</h3>
+            </div>
+            <div class="card-body">
+              <form id="addLanguageForm">
+                <div class="form-group">
+                  <label for="name">Name</label>
+                  <select class="form-control" id="name" name="name" required>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="code">Code</label>
+                  <select class="form-control" id="code" name="code" required>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="voice">Voice</label>
+                  <select class="form-control" id="voice" name="voice">
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="speechFillers">Speech Fillers</label>
+                  <input type="text" class="form-control" id="speechFillers" name="speech_fillers">
+                </div>
+                <div class="form-group">
+                  <label for="functionFillers">Function Fillers</label>
+                  <input type="text" class="form-control" id="functionFillers" name="function_fillers">
+                </div>
+                <button type="submit" class="btn btn-success">Add Language</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="modal fade" id="editLanguageModal" tabindex="-1" role="dialog" aria-labelledby="editLanguageModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editLanguageModalLabel">Edit Language Entry</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="editLanguageForm">
+            <input type="hidden" id="editId" name="id">
+            <div class="form-group">
+              <label for="editName">Name</label>
+              <select class="form-control" id="editName" name="name" required>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="editCode">Code</label>
+              <select class="form-control" id="editCode" name="code" required>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="editVoice">Edit Voice</label>
+              <select class="form-control" id="editVoice" name="editVoice">
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="editSpeechFillers">Speech Fillers</label>
+              <input type="text" class="form-control" id="editSpeechFillers" name="speech_fillers">
+            </div>
+            <div class="form-group">
+              <label for="editFunctionFillers">Function Fillers</label>
+              <input type="text" class="form-control" id="editFunctionFillers" name="function_fillers">
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="saveEditButton">Save changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% include 'footer.html' %}
 {% endblock %}
 
 {% block scripts %}
-  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
-  <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
-  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-  <script src="/static/js/voiceLoader.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script src="/static/js/voiceLoader.js"></script>
 
-  <script>
-    $(document).ready(function() {
-      function populateLanguageDropdowns() {
-        $.getJSON('/static/js/language.json', function(data) {
-          const languages = data.languages;
-          const nameDropdowns = $('#name, #editName');
-          const codeDropdowns = $('#code, #editCode');
+<script>
+  $(document).ready(function () {
+    function populateLanguageDropdowns() {
+      $.getJSON('/static/js/language.json', function (data) {
+        const languages = data.languages;
+        const nameDropdowns = $('#name, #editName');
+        const codeDropdowns = $('#code, #editCode');
 
-          nameDropdowns.empty();
-          codeDropdowns.empty();
+        nameDropdowns.empty();
+        codeDropdowns.empty();
 
-          $.each(languages, function(index, language) {
-            const nameOption = $('<option></option>').attr('value', language.name).text(language.name);
-            const codeOption = $('<option></option>').attr('value', language.code).text(language.code);
-            
-            nameDropdowns.append(nameOption);
-            codeDropdowns.append(codeOption);
-          });
+        $.each(languages, function (index, language) {
+          const nameOption = $('<option></option>').attr('value', language.name).text(language.name);
+          const codeOption = $('<option></option>').attr('value', language.code).text(language.code);
 
-          nameDropdowns.val('English (United States)');
-          codeDropdowns.val('en-US');
+          nameDropdowns.append(nameOption);
+          codeDropdowns.append(codeOption);
         });
-      }
 
-      populateLanguageDropdowns();
-
-      $('#code, #editCode').change(function() {
-        const selectedCode = $(this).val();
-        const nameDropdown = $(this).attr('id') === 'code' ? $('#name') : $('#editName');
-        
-        $.getJSON('/static/js/language.json', function(data) {
-          const language = data.languages.find(lang => lang.code === selectedCode);
-          if (language) {
-            nameDropdown.val(language.name);
-          }
-        });
+        nameDropdowns.val('English (United States)');
+        codeDropdowns.val('en-US');
       });
+    }
 
-      $('#name, #editName').change(function() {
-        const selectedName = $(this).val();
-        const codeDropdown = $(this).attr('id') === 'name' ? $('#code') : $('#editCode');
-        
-        $.getJSON('/static/js/language.json', function(data) {
-          const language = data.languages.find(lang => lang.name === selectedName);
-          if (language) {
-            codeDropdown.val(language.code);
-          }
-        });
+    populateLanguageDropdowns();
+
+    $('#code, #editCode').change(function () {
+      const selectedCode = $(this).val();
+      const nameDropdown = $(this).attr('id') === 'code' ? $('#name') : $('#editName');
+
+      $.getJSON('/static/js/language.json', function (data) {
+        const language = data.languages.find(lang => lang.code === selectedCode);
+        if (language) {
+          nameDropdown.val(language.name);
+        }
       });
+    });
 
-      $('#languageTable').DataTable({
-        "responsive": true,
-        "autoWidth": false,
-        "ajax": {
-          "url": "{{ url_for('language') }}",
-          "dataSrc": ""
-        },
-        "columns": [
-          { "data": "id" },
-          { "data": "name" },
-          { "data": "code" },
-          { "data": "voice" },
-          { "data": "speech_fillers" },
-          { "data": "function_fillers" },
-          {
-            "data": null,
-            "render": function(data, type, row) {
-              return `
+    $('#name, #editName').change(function () {
+      const selectedName = $(this).val();
+      const codeDropdown = $(this).attr('id') === 'name' ? $('#code') : $('#editCode');
+
+      $.getJSON('/static/js/language.json', function (data) {
+        const language = data.languages.find(lang => lang.name === selectedName);
+        if (language) {
+          codeDropdown.val(language.code);
+        }
+      });
+    });
+
+    $('#languageTable').DataTable({
+      "responsive": true,
+      "autoWidth": false,
+      "ajax": {
+        "url": "{{ url_for('language') }}",
+        "dataSrc": ""
+      },
+      "columns": [
+        { "data": "id" },
+        { "data": "name" },
+        { "data": "code" },
+        { "data": "voice" },
+        { "data": "speech_fillers" },
+        { "data": "function_fillers" },
+        {
+          "data": null,
+          "render": function (data, type, row) {
+            return `
                 <button class="btn btn-primary btn-sm edit-language" data-id="${row.id}">Edit</button>
                 <button class="btn btn-danger btn-sm delete-language" data-id="${row.id}">Delete</button>
               `;
+          }
+        }
+      ],
+      order: [],
+      ordering: false,
+      dom: 't'
+    });
+
+    function showToast(icon, title) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+          toast.addEventListener('mouseenter', Swal.stopTimer)
+          toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+      });
+
+      Toast.fire({
+        icon: icon,
+        title: title
+      });
+    }
+
+    $('#addLanguageForm').submit(function (e) {
+      e.preventDefault();
+      const formData = {
+        name: $('#name').val(),
+        code: $('#code').val(),
+        voice: $('#voice').val(),
+        speech_fillers: $('#speechFillers').val(),
+        function_fillers: $('#functionFillers').val(),
+        language_order: $('#languageOrder').val()
+      };
+
+      $.ajax({
+        type: 'POST',
+        url: "{{ url_for('language') }}",
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
+        success: function (response) {
+          $('#languageTable').DataTable().ajax.reload(null, false); // Reload table without resetting pagination
+          $('#addLanguageForm')[0].reset(); // Reset the form fields
+          populateLanguageDropdowns(); // Reload the language dropdowns
+          showToast('success', 'Language entry created successfully');
+        },
+        error: function (error) {
+          showToast('error', 'Error creating language entry');
+        }
+      });
+    });
+
+    $('#languageTable').on('click', '.delete-language', function () {
+      const id = $(this).data('id');
+      Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          $.ajax({
+            type: 'DELETE',
+            url: `/language/${id}`,
+            success: function (response) {
+              $('#languageTable').DataTable().ajax.reload();
+              showToast('success', 'Language entry deleted successfully');
+            },
+            error: function (error) {
+              showToast('error', 'Error deleting language entry');
             }
-          }
-        ],
-        order: [],
-        ordering: false,
-        dom: 't'
-      });
-
-      function showToast(icon, title) {
-        const Toast = Swal.mixin({
-          toast: true,
-          position: 'top-end',
-          showConfirmButton: false,
-          timer: 3000,
-          timerProgressBar: true,
-          didOpen: (toast) => {
-            toast.addEventListener('mouseenter', Swal.stopTimer)
-            toast.addEventListener('mouseleave', Swal.resumeTimer)
-          }
-        });
-
-        Toast.fire({
-          icon: icon,
-          title: title
-        });
-      }
-
-      $('#addLanguageForm').submit(function(e) {
-        e.preventDefault();
-        const formData = {
-          name: $('#name').val(),
-          code: $('#code').val(),
-          voice: $('#voice').val(),
-          speech_fillers: $('#speechFillers').val(),
-          function_fillers: $('#functionFillers').val(),
-          language_order: $('#languageOrder').val()
-        };
-
-        $.ajax({
-          type: 'POST',
-          url: "{{ url_for('language') }}",
-          contentType: 'application/json',
-          data: JSON.stringify(formData),
-          success: function(response) {
-            $('#languageTable').DataTable().ajax.reload(null, false); // Reload table without resetting pagination
-            $('#addLanguageForm')[0].reset(); // Reset the form fields
-            populateLanguageDropdowns(); // Reload the language dropdowns
-            showToast('success', 'Language entry created successfully');
-          },
-          error: function(error) {
-            showToast('error', 'Error creating language entry');
-          }
-        });
-      });
-
-      $('#languageTable').on('click', '.delete-language', function() {
-        const id = $(this).data('id');
-        Swal.fire({
-          title: 'Are you sure?',
-          text: "You won't be able to revert this!",
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#3085d6',
-          cancelButtonColor: '#d33',
-          confirmButtonText: 'Yes, delete it!'
-        }).then((result) => {
-          if (result.isConfirmed) {
-            $.ajax({
-              type: 'DELETE',
-              url: `/language/${id}`,
-              success: function(response) {
-                $('#languageTable').DataTable().ajax.reload();
-                showToast('success', 'Language entry deleted successfully');
-              },
-              error: function(error) {
-                showToast('error', 'Error deleting language entry');
-              }
-            });
-          }
-        });
-      });
-
-      $('#languageTable').on('click', '.edit-language', function() {
-        const id = $(this).data('id');
-        $.ajax({
-          type: 'GET',
-          url: `/language/${id}`,  
-          success: function(response) {
-            $('#editId').val(response.id);
-            $('#editName').val(response.name);
-            $('#editCode').val(response.code);
-            $('#editVoice').val(response.voice);
-            $('#editSpeechFillers').val(response.speech_fillers);
-            $('#editFunctionFillers').val(response.function_fillers);
-            $('#editLanguageOrder').val(response.language_order);
-            $('#editLanguageModal').modal('show');
-          },
-          error: function(error) {
-            showToast('error', 'Error fetching language entry');
-          }
-        });
-      });
-
-      $('#saveEditButton').click(function() {
-        const id = $('#editId').val();
-        const formData = {
-          name: $('#editName').val(),
-          code: $('#editCode').val(),
-          voice: $('#editVoice').val(),
-          speech_fillers: $('#editSpeechFillers').val(),
-          function_fillers: $('#editFunctionFillers').val(),
-          language_order: $('#editLanguageOrder').val()
-        };
-
-        $.ajax({
-          type: 'PUT',
-          url: `/language/${id}`,
-          contentType: 'application/json',
-          data: JSON.stringify(formData),
-          success: function(response) {
-            $('#languageTable').DataTable().ajax.reload();
-            $('#editLanguageModal').modal('hide');
-            showToast('success', 'Language entry updated successfully');
-          },
-          error: function(error) {
-            showToast('error', 'Error updating language entry');
-          }
-        });
-      });
-
-      $('#languageTable tbody').sortable({
-        update: function(event, ui) {
-          const order = $(this).children().map(function(index, element) {
-            return {
-              id: $(element).find('td:first').text(), // Assuming the first column is the ID
-              order: index + 1
-            };
-          }).get();
-
-          // Send updated order to the server
-          order.forEach(function(item) {
-            $.ajax({
-              type: 'PATCH',
-              url: `/language/${item.id}`,
-              contentType: 'application/json',
-              headers: {
-                'Accept': 'application/json'
-              },
-              data: JSON.stringify({ language_order: item.order }),
-              success: function(response) {
-                showToast('success', `Language order updated successfully`);
-              },
-              error: function(error) {
-                showToast('error', `Error updating language order for ID ${item.id}`);
-              }
-            });
           });
         }
-      }).disableSelection();
+      });
+    });
 
-      // Function to show toast notifications
-      function showToast(icon, title) {
-        const Toast = Swal.mixin({
-          toast: true,
-          position: 'top-end',
-          showConfirmButton: false,
-          timer: 3000,
-          timerProgressBar: true,
-          didOpen: (toast) => {
-            toast.addEventListener('mouseenter', Swal.stopTimer)
-            toast.addEventListener('mouseleave', Swal.resumeTimer)
-          }
-        });
+    $('#languageTable').on('click', '.edit-language', function () {
+      const id = $(this).data('id');
+      $.ajax({
+        type: 'GET',
+        url: `/language/${id}`,
+        success: function (response) {
+          $('#editId').val(response.id);
+          $('#editName').val(response.name);
+          $('#editCode').val(response.code);
+          $('#editVoice').val(response.voice);
+          $('#editSpeechFillers').val(response.speech_fillers);
+          $('#editFunctionFillers').val(response.function_fillers);
+          $('#editLanguageOrder').val(response.language_order);
+          $('#editLanguageModal').modal('show');
+        },
+        error: function (error) {
+          showToast('error', 'Error fetching language entry');
+        }
+      });
+    });
 
-        Toast.fire({
-          icon: icon,
-          title: title
+    $('#saveEditButton').click(function () {
+      const id = $('#editId').val();
+      const formData = {
+        name: $('#editName').val(),
+        code: $('#editCode').val(),
+        voice: $('#editVoice').val(),
+        speech_fillers: $('#editSpeechFillers').val(),
+        function_fillers: $('#editFunctionFillers').val(),
+        language_order: $('#editLanguageOrder').val()
+      };
+
+      $.ajax({
+        type: 'PUT',
+        url: `/language/${id}`,
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
+        success: function (response) {
+          $('#languageTable').DataTable().ajax.reload();
+          $('#editLanguageModal').modal('hide');
+          showToast('success', 'Language entry updated successfully');
+        },
+        error: function (error) {
+          showToast('error', 'Error updating language entry');
+        }
+      });
+    });
+
+    $('#languageTable tbody').sortable({
+      update: function (event, ui) {
+        const order = $(this).children().map(function (index, element) {
+          return {
+            id: $(element).find('td:first').text(), // Assuming the first column is the ID
+            order: index + 1
+          };
+        }).get();
+
+        // Send updated order to the server
+        order.forEach(function (item) {
+          $.ajax({
+            type: 'PATCH',
+            url: `/language/${item.id}`,
+            contentType: 'application/json',
+            headers: {
+              'Accept': 'application/json'
+            },
+            data: JSON.stringify({ language_order: item.order }),
+            success: function (response) {
+              showToast('success', `Language order updated successfully`);
+            },
+            error: function (error) {
+              showToast('error', `Error updating language order for ID ${item.id}`);
+            }
+          });
         });
       }
-    });
-  </script>
+    }).disableSelection();
+
+    // Function to show toast notifications
+    function showToast(icon, title) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+          toast.addEventListener('mouseenter', Swal.stopTimer)
+          toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+      });
+
+      Toast.fire({
+        icon: icon,
+        title: title
+      });
+    }
+  });
+</script>
 {% endblock %}

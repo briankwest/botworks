@@ -3,241 +3,242 @@
 {% block title %}SignalWire{% endblock %}
 
 {% block content %}
-  {% include 'navbar.html' %}
-  {% include 'sidebar.html' %}
+{% include 'navbar.html' %}
+{% include 'sidebar.html' %}
 
-  <div class="content-wrapper">
-    <div class="content-header">
-      <div class="container-fluid">
-        <div class="row mb-2">
-          <div class="col-6">
-            <h1 class="m-0">SignalWire</h1>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <section class="content">
-      <div class="container-fluid">
-        <div class="row">
-          <div class="col-12">
-            <div class="card">
-              <div class="card-header bg-primary">
-                <h3 class="card-title">SignalWire List</h3>
-              </div>
-              <div class="card-body">
-                <table id="paramsTable" class="table table-striped w-100">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Parameter Name</th>
-                      <th>Parameter Value</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div class="card">
-              <div class="card-header bg-success">
-                <h3 class="card-title">Add New Parameter</h3>
-              </div>
-              <div class="card-body">
-                <form id="addParamForm">
-                  <div class="form-group">
-                    <label for="paramName">Parameter Name</label>
-                    <input type="text" class="form-control" id="paramName" name="name" required>
-                  </div>
-                  <div class="form-group">
-                    <label for="paramValue">Parameter Value</label>
-                    <input type="text" class="form-control" id="paramValue" name="value" required>
-                  </div>
-                  <button type="submit" class="btn btn-success">Add Parameter</button>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  </div>
-
-  <div class="modal fade" id="editParamModal" tabindex="-1" role="dialog" aria-labelledby="editParamModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="editParamModalLabel">Edit Parameter Value</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          <form id="editParamForm">
-            <input type="hidden" id="editId" name="id">
-            <div class="form-group">
-              <label for="editParamName">Parameter Name</label>
-              <input type="text" class="form-control" id="editParamName" name="name" readonly>
-            </div>
-            <div class="form-group">
-              <label for="editParamValue">Parameter Value</label>
-              <input type="text" class="form-control" id="editParamValue" name="value" required>
-            </div>
-          </form>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary" id="saveEditButton">Save changes</button>
+<div class="content-wrapper">
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-6">
+          <h1 class="m-0">SignalWire</h1>
         </div>
       </div>
     </div>
   </div>
 
-  {% include 'footer.html' %}
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header bg-primary">
+              <h3 class="card-title">SignalWire List</h3>
+            </div>
+            <div class="card-body">
+              <table id="paramsTable" class="table table-striped w-100">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Parameter Name</th>
+                    <th>Parameter Value</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header bg-success">
+              <h3 class="card-title">Add New Parameter</h3>
+            </div>
+            <div class="card-body">
+              <form id="addParamForm">
+                <div class="form-group">
+                  <label for="paramName">Parameter Name</label>
+                  <input type="text" class="form-control" id="paramName" name="name" required>
+                </div>
+                <div class="form-group">
+                  <label for="paramValue">Parameter Value</label>
+                  <input type="text" class="form-control" id="paramValue" name="value" required>
+                </div>
+                <button type="submit" class="btn btn-success">Add Parameter</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="modal fade" id="editParamModal" tabindex="-1" role="dialog" aria-labelledby="editParamModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editParamModalLabel">Edit Parameter Value</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="editParamForm">
+          <input type="hidden" id="editId" name="id">
+          <div class="form-group">
+            <label for="editParamName">Parameter Name</label>
+            <input type="text" class="form-control" id="editParamName" name="name" readonly>
+          </div>
+          <div class="form-group">
+            <label for="editParamValue">Parameter Value</label>
+            <input type="text" class="form-control" id="editParamValue" name="value" required>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="saveEditButton">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% include 'footer.html' %}
 {% endblock %}
 
 {% block scripts %}
-  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
-  <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
 
-  <script>
-    $(document).ready(function() {
-      $('#paramsTable').DataTable({
-        "responsive": true,
-        "autoWidth": false,
-        "ajax": {
-          "url": "{{ url_for('signalwire') }}",
-          "dataSrc": "",
-          "headers": {
-            "Accept": "application/json",
-            "Content-Type": "application/json"
-          }
-        },
-        "columns": [
-          { "data": "id" },
-          { "data": "name" },
-          { "data": "value" },
-          {
-            "data": null,
-            "render": function(data, type, row) {
-              return `
+<script>
+  $(document).ready(function () {
+    $('#paramsTable').DataTable({
+      "responsive": true,
+      "autoWidth": false,
+      "ajax": {
+        "url": "{{ url_for('signalwire') }}",
+        "dataSrc": "",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json"
+        }
+      },
+      "columns": [
+        { "data": "id" },
+        { "data": "name" },
+        { "data": "value" },
+        {
+          "data": null,
+          "render": function (data, type, row) {
+            return `
                 <button class="btn btn-primary btn-sm edit-param" data-id="${row.id}">Edit</button>
                 <button class="btn btn-danger btn-sm delete-param" data-id="${row.id}">Delete</button>
               `;
-            }
           }
-        ]
+        }
+      ]
+    });
+
+    function showToast(icon, title) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+          toast.addEventListener('mouseenter', Swal.stopTimer)
+          toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
       });
 
-      function showToast(icon, title) {
-        const Toast = Swal.mixin({
-          toast: true,
-          position: 'top-end',
-          showConfirmButton: false,
-          timer: 3000,
-          timerProgressBar: true,
-          didOpen: (toast) => {
-            toast.addEventListener('mouseenter', Swal.stopTimer)
-            toast.addEventListener('mouseleave', Swal.resumeTimer)
-          }
-        });
-
-        Toast.fire({
-          icon: icon,
-          title: title
-        });
-      }
-
-      $('#addParamForm').submit(function(e) {
-        e.preventDefault();
-        const formData = {
-          name: $('#paramName').val(),
-          value: $('#paramValue').val()
-        };
-
-        $.ajax({
-          type: 'POST',
-          url: "{{ url_for('signalwire') }}",
-          contentType: 'application/json',
-          data: JSON.stringify(formData),
-          success: function(response) {
-            $('#paramsTable').DataTable().ajax.reload();
-            $('#addParamForm')[0].reset();
-            showToast('success', 'Parameter entry created successfully');
-          },
-          error: function(error) {
-            showToast('error', 'Error creating parameter entry');
-          }
-        });
+      Toast.fire({
+        icon: icon,
+        title: title
       });
+    }
 
-      $('#paramsTable').on('click', '.delete-param', function() {
-        const id = $(this).data('id');
-        Swal.fire({
-          title: 'Are you sure?',
-          text: "You won't be able to revert this!",
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#3085d6',
-          cancelButtonColor: '#d33',
-          confirmButtonText: 'Yes, delete it!'
-        }).then((result) => {
-          if (result.isConfirmed) {
-            $.ajax({
-              type: 'DELETE',
-              url: "/signalwire/" + id,
-              success: function(response) {
-                $('#paramsTable').DataTable().ajax.reload();
-                showToast('success', 'Parameter entry deleted successfully');
-              },
-              error: function(error) {
-                showToast('error', 'Error deleting parameter entry');
-              }
-            });
-          }
-        });
-      });
+    $('#addParamForm').submit(function (e) {
+      e.preventDefault();
+      const formData = {
+        name: $('#paramName').val(),
+        value: $('#paramValue').val()
+      };
 
-      $('#paramsTable').on('click', '.edit-param', function() {
-        const id = $(this).data('id');
-        $.ajax({
-          type: 'GET',
-          url: "/signalwire/" + id,
-          success: function(response) {
-            $('#editId').val(response.id);
-            $('#editParamName').val(response.name);
-            $('#editParamValue').val(response.value);
-            $('#editParamModal').modal('show');
-          },
-          error: function(error) {
-            showToast('error', 'Error fetching parameter entry');
-          }
-        });
-      });
-
-      $('#saveEditButton').click(function() {
-        const formData = {
-          id: $('#editId').val(),
-          value: $('#editParamValue').val()
-        };
-
-        $.ajax({
-          type: 'PUT',
-          url: "/signalwire/" + formData.id,
-          contentType: 'application/json',
-          data: JSON.stringify(formData),
-          success: function(response) {
-            $('#paramsTable').DataTable().ajax.reload();
-            $('#editParamModal').modal('hide');
-            showToast('success', 'Parameter value updated successfully');
-          },
-          error: function(error) {
-            showToast('error', 'Error updating parameter value');
-          }
-        });
+      $.ajax({
+        type: 'POST',
+        url: "{{ url_for('signalwire') }}",
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
+        success: function (response) {
+          $('#paramsTable').DataTable().ajax.reload();
+          $('#addParamForm')[0].reset();
+          showToast('success', 'Parameter entry created successfully');
+        },
+        error: function (error) {
+          showToast('error', 'Error creating parameter entry');
+        }
       });
     });
-  </script>
+
+    $('#paramsTable').on('click', '.delete-param', function () {
+      const id = $(this).data('id');
+      Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          $.ajax({
+            type: 'DELETE',
+            url: "/signalwire/" + id,
+            success: function (response) {
+              $('#paramsTable').DataTable().ajax.reload();
+              showToast('success', 'Parameter entry deleted successfully');
+            },
+            error: function (error) {
+              showToast('error', 'Error deleting parameter entry');
+            }
+          });
+        }
+      });
+    });
+
+    $('#paramsTable').on('click', '.edit-param', function () {
+      const id = $(this).data('id');
+      $.ajax({
+        type: 'GET',
+        url: "/signalwire/" + id,
+        success: function (response) {
+          $('#editId').val(response.id);
+          $('#editParamName').val(response.name);
+          $('#editParamValue').val(response.value);
+          $('#editParamModal').modal('show');
+        },
+        error: function (error) {
+          showToast('error', 'Error fetching parameter entry');
+        }
+      });
+    });
+
+    $('#saveEditButton').click(function () {
+      const formData = {
+        id: $('#editId').val(),
+        value: $('#editParamValue').val()
+      };
+
+      $.ajax({
+        type: 'PUT',
+        url: "/signalwire/" + formData.id,
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
+        success: function (response) {
+          $('#paramsTable').DataTable().ajax.reload();
+          $('#editParamModal').modal('hide');
+          showToast('success', 'Parameter value updated successfully');
+        },
+        error: function (error) {
+          showToast('error', 'Error updating parameter value');
+        }
+      });
+    });
+  });
+</script>
 {% endblock %}

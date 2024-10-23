@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Hints{% endblock %}
+{% block title %}Transcribe{% endblock %}
 
 {% block content %}
 {% include 'navbar.html' %}
@@ -11,7 +11,7 @@
     <div class="container-fluid">
       <div class="row mb-2">
         <div class="col-6">
-          <h1 class="m-0">Hints</h1>
+          <h1 class="m-0">Transcribe</h1>
         </div>
       </div>
     </div>
@@ -23,14 +23,14 @@
         <div class="col-12">
           <div class="card">
             <div class="card-header bg-primary">
-              <h3 class="card-title">Hints List</h3>
+              <h3 class="card-title">Transcription List</h3>
             </div>
             <div class="card-body">
-              <table id="hintTable" class="table table-striped w-100">
+              <table id="transcriptionTable" class="table table-striped w-100">
                 <thead>
                   <tr>
                     <th>ID</th>
-                    <th>Hint Text</th>
+                    <th>Transcription Text</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -46,15 +46,15 @@
         <div class="col-12">
           <div class="card">
             <div class="card-header bg-success">
-              <h3 class="card-title">Add Hint Entry</h3>
+              <h3 class="card-title">Add Transcription Entry</h3>
             </div>
             <div class="card-body">
-              <form id="addHintForm">
+              <form id="addTranscriptionForm">
                 <div class="form-group">
-                  <label for="hintText">Hint Text</label>
-                  <input type="text" class="form-control" id="hintText" name="hint" required>
+                  <label for="transcriptionText">Transcription Text</label>
+                  <input type="text" class="form-control" id="transcriptionText" name="transcription" required>
                 </div>
-                <button type="submit" class="btn btn-success">Add Hint</button>
+                <button type="submit" class="btn btn-success">Add Transcription</button>
               </form>
             </div>
           </div>
@@ -64,22 +64,22 @@
     </div>
   </section>
 
-  <div class="modal fade" id="editHintModal" tabindex="-1" role="dialog" aria-labelledby="editHintModalLabel"
-    aria-hidden="true">
+  <div class="modal fade" id="editTranscriptionModal" tabindex="-1" role="dialog"
+    aria-labelledby="editTranscriptionModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="editHintModalLabel">Edit Hint Entry</h5>
+          <h5 class="modal-title" id="editTranscriptionModalLabel">Edit Transcription Entry</h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
         <div class="modal-body">
-          <form id="editHintForm">
+          <form id="editTranscriptionForm">
             <input type="hidden" id="editId" name="id">
             <div class="form-group">
-              <label for="editHintText">Hint Text</label>
-              <input type="text" class="form-control" id="editHintText" name="hint" required>
+              <label for="editTranscriptionText">Transcription Text</label>
+              <input type="text" class="form-control" id="editTranscriptionText" name="transcription" required>
             </div>
           </form>
         </div>
@@ -101,22 +101,25 @@
 
 <script>
   $(document).ready(function () {
-    $('#hintTable').DataTable({
+    $('#transcriptionTable').DataTable({
       "responsive": true,
       "autoWidth": false,
       "ajax": {
-        "url": "{{ url_for('hints') }}",
+        "url": "{{ url_for('transcribe') }}",
+        "headers": {
+          "Accept": "application/json"
+        },
         "dataSrc": ""
       },
       "columns": [
         { "data": "id" },
-        { "data": "hint" },
+        { "data": "transcription" },
         {
           "data": null,
           "render": function (data, type, row) {
             return `
-                <button class="btn btn-primary btn-sm edit-hint" data-id="${row.id}">Edit</button>
-                <button class="btn btn-danger btn-sm delete-hint" data-id="${row.id}">Delete</button>
+                <button class="btn btn-primary btn-sm edit-transcription" data-id="${row.id}">Edit</button>
+                <button class="btn btn-danger btn-sm delete-transcription" data-id="${row.id}">Delete</button>
               `;
           }
         }
@@ -142,29 +145,33 @@
       });
     }
 
-    $('#addHintForm').submit(function (e) {
+    $('#addTranscriptionForm').submit(function (e) {
       e.preventDefault();
       const formData = {
-        hint: $('#hintText').val()
+        transcription: $('#transcriptionText').val()
       };
 
       $.ajax({
         type: 'POST',
-        url: "{{ url_for('hints') }}",
+        url: "{{ url_for('transcribe') }}",
         contentType: 'application/json',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
         data: JSON.stringify(formData),
         success: function (response) {
-          $('#hintTable').DataTable().ajax.reload();
-          $('#addHintForm')[0].reset();
-          showToast('success', 'Hint entry created successfully');
+          $('#transcriptionTable').DataTable().ajax.reload();
+          $('#addTranscriptionForm')[0].reset();
+          showToast('success', 'Transcription entry created successfully');
         },
         error: function (error) {
-          showToast('error', 'Error creating hint entry');
+          showToast('error', 'Error creating transcription entry');
         }
       });
     });
 
-    $('#hintTable').on('click', '.delete-hint', function () {
+    $('#transcriptionTable').on('click', '.delete-transcription', function () {
       const id = $(this).data('id');
       Swal.fire({
         title: 'Are you sure?',
@@ -178,57 +185,68 @@
         if (result.isConfirmed) {
           $.ajax({
             type: 'DELETE',
-            url: "/hints/" + id,
+            url: "/transcribe/" + id,
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
             success: function (response) {
-              $('#hintTable').DataTable().ajax.reload();
-              showToast('success', 'Hint entry deleted successfully');
+              $('#transcriptionTable').DataTable().ajax.reload();
+              showToast('success', 'Transcription entry deleted successfully');
             },
             error: function (error) {
-              showToast('error', 'Error deleting hint entry');
+              showToast('error', 'Error deleting transcription entry');
             }
           });
         }
       });
     });
 
-    $('#hintTable').on('click', '.edit-hint', function () {
+    $('#transcriptionTable').on('click', '.edit-transcription', function () {
       const id = $(this).data('id');
       $.ajax({
         type: 'GET',
-        url: "/hints/" + id,
+        url: "/transcribe/" + id,
+        headers: {
+          'Accept': 'application/json'
+        },
         success: function (response) {
           $('#editId').val(response.id);
-          $('#editHintText').val(response.hint);
-          $('#editHintModal').modal('show');
+          $('#editTranscriptionText').val(response.transcription);
+          $('#editTranscriptionModal').modal('show');
         },
         error: function (error) {
-          showToast('error', 'Error fetching hint entry');
+          showToast('error', 'Error fetching transcription entry');
         }
       });
     });
 
-    $('#editHintForm').on('submit', function (e) {
+    $('#editTranscriptionForm').on('submit', function (e) {
       e.preventDefault();
     });
 
     $('#saveEditButton').click(function () {
       const id = $('#editId').val();
       const formData = {
-        hint: $('#editHintText').val()
+        transcription: $('#editTranscriptionText').val()
       };
 
       $.ajax({
         type: 'PUT',
-        url: "/hints/" + id,
+        url: "/transcribe/" + id,
         contentType: 'application/json',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
         data: JSON.stringify(formData),
         success: function (response) {
-          $('#hintTable').DataTable().ajax.reload();
-          $('#editHintModal').modal('hide');
-          showToast('success', 'Hint entry updated successfully');
+          $('#transcriptionTable').DataTable().ajax.reload();
+          $('#editTranscriptionModal').modal('hide');
+          showToast('success', 'Transcription entry updated successfully');
         },
         error: function (error) {
-          showToast('error', 'Error updating hint entry');
+          showToast('error', 'Error updating transcription entry');
         }
       });
     });

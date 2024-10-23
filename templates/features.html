@@ -3,309 +3,313 @@
 {% block title %}Features{% endblock %}
 
 {% block content %}
-  {% include 'navbar.html' %}
-  {% include 'sidebar.html' %}
-  
-  <div class="content-wrapper">
-    <section class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-6">
-                    <h1 class="m-0">Features</h1>
-                </div>
-            </div>
-        </div>
-    </section>
+{% include 'navbar.html' %}
+{% include 'sidebar.html' %}
 
-    <section class="content">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header bg-primary">
-                            <h3 class="card-title">AI Features</h3>
-                        </div>
-                        <div class="card-body table-responsive">
-                            <table id="featuresTable" class="table table-striped w-100">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Name</th>
-                                        <th>Value</th>
-                                        <th>Enabled</th>
-                                        <th>Created At</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row mt-4">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header bg-success">
-                            <h3 class="card-title">Add New Feature</h3>
-                        </div>
-                        <div class="card-body">
-                            <form id="addFeatureForm">
-                                <div class="form-group">
-                                    <label for="featureName">Name</label>
-                                    <input type="text" class="form-control" id="featureName" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="featureValue">Value</label>
-                                    <input type="text" class="form-control" id="featureValue">
-                                </div>
-                                <div class="form-group">
-                                    <label for="featureEnabled">Enabled</label>
-                                    <div class="custom-control custom-switch">
-                                        <input type="checkbox" class="custom-control-input" id="featureEnabled">
-                                        <label class="custom-control-label" for="featureEnabled"></label>
-                                    </div>
-                                </div>
-                                <button type="submit" class="btn btn-success">Add Feature</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<div class="content-wrapper">
+  <section class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-6">
+          <h1 class="m-0">Features</h1>
         </div>
-    </section>
-  </div>
-  {% include 'footer.html' %}
+      </div>
+    </div>
+  </section>
+
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header bg-primary">
+              <h3 class="card-title">AI Features</h3>
+            </div>
+            <div class="card-body table-responsive">
+              <table id="featuresTable" class="table table-striped w-100">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Value</th>
+                    <th>Enabled</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row mt-4">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header bg-success">
+              <h3 class="card-title">Add New Feature</h3>
+            </div>
+            <div class="card-body">
+              <form id="addFeatureForm">
+                <div class="form-group">
+                  <label for="featureName">Name</label>
+                  <input type="text" class="form-control" id="featureName" required>
+                </div>
+                <div class="form-group">
+                  <label for="featureValue">Value</label>
+                  <input type="text" class="form-control" id="featureValue">
+                </div>
+                <div class="form-group">
+                  <label for="featureEnabled">Enabled</label>
+                  <div class="custom-control custom-switch">
+                    <input type="checkbox" class="custom-control-input" id="featureEnabled">
+                    <label class="custom-control-label" for="featureEnabled"></label>
+                  </div>
+                </div>
+                <button type="submit" class="btn btn-success">Add Feature</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% include 'footer.html' %}
 {% endblock %}
 
 {% block scripts %}
-  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
-  <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
 
-  <script>
-    $(document).ready(function() {
-      var selectedAgentId = getCookie('selectedAgentId');
+<script>
+  $(document).ready(function () {
+    var selectedAgentId = getCookie('selectedAgentId');
 
-      initializeFeaturesTable(selectedAgentId);
+    initializeFeaturesTable(selectedAgentId);
 
-      $('#addFeatureForm').on('submit', function(e) {
-        e.preventDefault();
-        const name = $('#featureName').val();
-        const value = $('#featureValue').val();
-        const enabled = $('#featureEnabled').is(':checked');
-                
-        $.ajax({
-          url: `/aifeatures/${selectedAgentId}`,
-          type: 'POST',
-          contentType: 'application/json',
-          data: JSON.stringify({ name, value, enabled }),
-          success: function() {
-            $('#featuresTable').DataTable().ajax.reload();
-            $('#addFeatureForm')[0].reset();
-            Swal.fire({
-              icon: 'success',
-              title: 'Success!',
-              text: 'Feature added successfully.',
-              toast: true,
-              position: 'top-end',
-              showConfirmButton: false,
-              timer: 1500
-            });
-          },
-          error: function() {
-            Swal.fire('Error!', 'There was an error adding the feature.', 'error');
-          }
-        });
-      });
+    $('#addFeatureForm').on('submit', function (e) {
+      e.preventDefault();
+      const name = $('#featureName').val();
+      const value = $('#featureValue').val();
+      const enabled = $('#featureEnabled').is(':checked');
 
-      $(document).on('click', '.edit-btn', function() {
-        const featureId = $(this).data('id');
-        $.get(`/aifeatures/${selectedAgentId}/${featureId}`, function(data) {
-          $('#editFeatureId').val(data.id);
-          $('#editFeatureName').val(data.name);
-          $('#editFeatureValue').val(data.value);
-          $('#editFeatureEnabled').prop('checked', data.enabled);
-          $('#editFeatureModal').modal('show');
-        });
-      });
-
-      $('#editFeatureForm').on('submit', function(e) {
-        e.preventDefault();
-        const id = $('#editFeatureId').val();
-        const name = $('#editFeatureName').val();
-        const value = $('#editFeatureValue').val();
-        const enabled = $('#editFeatureEnabled').is(':checked');
-
-        $.ajax({
-          url: `/aifeatures/${selectedAgentId}/${id}`,
-          type: 'PUT',
-          contentType: 'application/json',
-          data: JSON.stringify({ name, value, enabled }),
-          success: function() {
-            $('#featuresTable').DataTable().ajax.reload();
-            $('#editFeatureModal').modal('hide');
-            Swal.fire({
-              icon: 'success',
-              title: 'Success!',
-              text: 'Feature updated successfully.',
-              toast: true,
-              position: 'top-end',
-              showConfirmButton: false,
-              timer: 1500
-            });
-          },
-          error: function() {
-            Swal.fire('Error!', 'There was an error updating the feature.', 'error');
-          }
-        });
-      });
-
-      $(document).on('change', '.toggle-enabled', function() {
-        const featureId = $(this).data('id');
-        const enabled = $(this).is(':checked');
-        
-        $.ajax({
-          url: `/aifeatures/${selectedAgentId}/${featureId}`,
-          type: 'PATCH',
-          contentType: 'application/json',
-          data: JSON.stringify({ enabled }),
-          success: function() {
-            Swal.fire({
-              icon: 'success',
-              title: 'Success!',
-              text: `Feature ${enabled ? 'enabled' : 'disabled'} successfully.`,
-              toast: true,
-              position: 'top-end',
-              showConfirmButton: false,
-              timer: 1500
-            });
-          },
-          error: function() {
-            Swal.fire('Error!', 'There was an error updating the feature.', 'error');
-          }
-        });
-      });
-
-      $(document).on('click', '.delete-btn', function() {
-        const featureId = $(this).data('id');
-        Swal.fire({
-          title: 'Are you sure?',
-          text: "You won't be able to revert this!",
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#3085d6',
-          cancelButtonColor: '#d33',
-          confirmButtonText: 'Yes, delete it!'
-        }).then((result) => {
-          if (result.isConfirmed) {
-            $.ajax({
-              url: `/aifeatures/${selectedAgentId}/${featureId}`,
-              type: 'DELETE',
-              success: function() {
-                $('#featuresTable').DataTable().ajax.reload();
-                Swal.fire({
-                  icon: 'success',
-                  title: 'Deleted!',
-                  text: 'The feature has been deleted.',
-                  toast: true,
-                  position: 'top-end',
-                  showConfirmButton: false,
-                  timer: 1500
-                });
-              },
-              error: function() {
-                Swal.fire(
-                  'Error!',
-                  'There was an error deleting the feature.',
-                  'error'
-                );
-              }
-            });
-          }
-        });
+      $.ajax({
+        url: `/aifeatures/${selectedAgentId}`,
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ name, value, enabled }),
+        success: function () {
+          $('#featuresTable').DataTable().ajax.reload();
+          $('#addFeatureForm')[0].reset();
+          Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: 'Feature added successfully.',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 1500
+          });
+        },
+        error: function () {
+          Swal.fire('Error!', 'There was an error adding the feature.', 'error');
+        }
       });
     });
 
-    function initializeFeaturesTable(agentId) {
-      if ($.fn.DataTable) {
-        $('#featuresTable').DataTable({
-          "ajax": {
-            "url": `/aifeatures/${agentId}`,
-            "dataSrc": "",
-            "headers": {
-              "Accept": "application/json"
+    $(document).on('click', '.edit-btn', function () {
+      const featureId = $(this).data('id');
+      $.get(`/aifeatures/${selectedAgentId}/${featureId}`, function (data) {
+        $('#editFeatureId').val(data.id);
+        $('#editFeatureName').val(data.name);
+        $('#editFeatureValue').val(data.value);
+        $('#editFeatureEnabled').prop('checked', data.enabled);
+        $('#editFeatureModal').modal('show');
+      });
+    });
+
+    $('#editFeatureForm').on('submit', function (e) {
+      e.preventDefault();
+      const id = $('#editFeatureId').val();
+      const name = $('#editFeatureName').val();
+      const value = $('#editFeatureValue').val();
+      const enabled = $('#editFeatureEnabled').is(':checked');
+
+      $.ajax({
+        url: `/aifeatures/${selectedAgentId}/${id}`,
+        type: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify({ name, value, enabled }),
+        success: function () {
+          $('#featuresTable').DataTable().ajax.reload();
+          $('#editFeatureModal').modal('hide');
+          Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: 'Feature updated successfully.',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 1500
+          });
+        },
+        error: function () {
+          Swal.fire('Error!', 'There was an error updating the feature.', 'error');
+        }
+      });
+    });
+
+    $(document).on('change', '.toggle-enabled', function () {
+      const featureId = $(this).data('id');
+      const enabled = $(this).is(':checked');
+
+      $.ajax({
+        url: `/aifeatures/${selectedAgentId}/${featureId}`,
+        type: 'PATCH',
+        contentType: 'application/json',
+        data: JSON.stringify({ enabled }),
+        success: function () {
+          Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: `Feature ${enabled ? 'enabled' : 'disabled'} successfully.`,
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 1500
+          });
+        },
+        error: function () {
+          Swal.fire('Error!', 'There was an error updating the feature.', 'error');
+        }
+      });
+    });
+
+    $(document).on('click', '.delete-btn', function () {
+      const featureId = $(this).data('id');
+      Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          $.ajax({
+            url: `/aifeatures/${selectedAgentId}/${featureId}`,
+            type: 'DELETE',
+            success: function () {
+              $('#featuresTable').DataTable().ajax.reload();
+              Swal.fire({
+                icon: 'success',
+                title: 'Deleted!',
+                text: 'The feature has been deleted.',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 1500
+              });
             },
-            "dataFilter": function(data) {
-              console.log("AJAX Response:", data);
-              return data;
+            error: function () {
+              Swal.fire(
+                'Error!',
+                'There was an error deleting the feature.',
+                'error'
+              );
             }
+          });
+        }
+      });
+    });
+  });
+
+  function initializeFeaturesTable(agentId) {
+    if ($.fn.DataTable) {
+      $('#featuresTable').DataTable({
+        "ajax": {
+          "url": `/aifeatures/${agentId}`,
+          "dataSrc": "",
+          "headers": {
+            "Accept": "application/json"
           },
-          "order": [[3, 'desc']],
-          "columns": [
-            { "data": "id" },
-            { "data": "name" },
-            { "data": "value" },
-            { "data": "enabled",
-              "render": function(data, type, row) {
-                return `
+          "dataFilter": function (data) {
+            console.log("AJAX Response:", data);
+            return data;
+          }
+        },
+        "order": [[3, 'desc']],
+        "columns": [
+          { "data": "id" },
+          { "data": "name" },
+          { "data": "value" },
+          {
+            "data": "enabled",
+            "render": function (data, type, row) {
+              return `
                   <div class="custom-control custom-switch">
                     <input type="checkbox" class="custom-control-input toggle-enabled" id="toggle-${row.id}" ${data ? 'checked' : ''} data-id="${row.id}">
                     <label class="custom-control-label" for="toggle-${row.id}"></label>
                   </div>
                 `;
-              }
-            },
-            { "data": "created",
-              "render": function(data, type, row) {
-                return new Date(data).toLocaleString();
-              }
-            },
-            { "data": null,
-              "render": function(data, type, row) {
-                return `
+            }
+          },
+          {
+            "data": "created",
+            "render": function (data, type, row) {
+              return new Date(data).toLocaleString();
+            }
+          },
+          {
+            "data": null,
+            "render": function (data, type, row) {
+              return `
                   <button class="btn btn-primary edit-btn" data-id="${row.id}">Edit</button>
                   <button class="btn btn-danger delete-btn" data-id="${row.id}">Delete</button>
                 `;
-              }
             }
-          ],
-          "pageLength": 10,
-          "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
-          "responsive": true,
-          "autoWidth": false
-        });
-      } else {
-        console.error('DataTables is not loaded. Make sure you have included the DataTables library.');
-      }
+          }
+        ],
+        "pageLength": 10,
+        "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+        "responsive": true,
+        "autoWidth": false
+      });
+    } else {
+      console.error('DataTables is not loaded. Make sure you have included the DataTables library.');
     }
-  </script>
+  }
+</script>
 
-  <div class="modal fade" id="editFeatureModal" tabindex="-1" role="dialog" aria-labelledby="editFeatureModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="editFeatureModalLabel">Edit Feature</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          <form id="editFeatureForm">
-            <input type="hidden" id="editFeatureId">
-            <div class="form-group">
-              <label for="editFeatureName">Name</label>
-              <input type="text" class="form-control" id="editFeatureName" required disabled>
-            </div>
-            <div class="form-group">
-              <label for="editFeatureValue">Value</label>
-              <input type="text" class="form-control" id="editFeatureValue">
-            </div>
-            <button type="submit" class="btn btn-primary">Save changes</button>
-          </form>
-        </div>
+<div class="modal fade" id="editFeatureModal" tabindex="-1" role="dialog" aria-labelledby="editFeatureModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editFeatureModalLabel">Edit Feature</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="editFeatureForm">
+          <input type="hidden" id="editFeatureId">
+          <div class="form-group">
+            <label for="editFeatureName">Name</label>
+            <input type="text" class="form-control" id="editFeatureName" required disabled>
+          </div>
+          <div class="form-group">
+            <label for="editFeatureValue">Value</label>
+            <input type="text" class="form-control" id="editFeatureValue">
+          </div>
+          <button type="submit" class="btn btn-primary">Save changes</button>
+        </form>
       </div>
     </div>
   </div>
+</div>
 {% endblock %}
