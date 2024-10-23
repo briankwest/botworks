@@ -635,6 +635,8 @@
             $('#addFunctionForm')[0].reset();
             $('#functionArgumentsContainer').empty();
             $('#functionTable').DataTable().ajax.reload();
+          } else if (data.message) {
+            Swal.fire('Error', data.message, 'error');
           } else {
             Swal.fire('Error', 'Error creating function', 'error');
           }

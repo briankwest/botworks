@@ -204,42 +204,57 @@ def functions():
         else:
             return render_template('functions.html', user=current_user)
     elif request.method == 'POST':
-        data = request.get_json()
-        new_function = AIFunctions(
-            name=data['name'],
-            purpose=data['purpose'],
-            user_id=current_user.id,
-            agent_id=selected_agent_id,
-            web_hook_url=data.get('web_hook_url'),
-            wait_file=data.get('wait_file'),
-            wait_file_loops=data.get('wait_file_loops', 0) or 0,
-            fillers=data.get('fillers'),
-            meta_data=data.get('meta_data'),
-            meta_data_token=data.get('meta_data_token'),
-            active=data.get('active', True)
-        )
-        db.session.add(new_function)
-        db.session.commit()
-
-        # Save the arguments associated with the function
-        arguments = data.get('arguments', [])
-        for arg in arguments:
-            new_argument = AIFunctionArgs(
-                function_id=new_function.id,
-                user_id=current_user.id,  # Ensure user_id is set
-                agent_id=selected_agent_id,  # Ensure agent_id is set
-                name=arg['name'],
-                type=arg['type'],
-                description=arg['description'],
-                required=arg['required'],
-                enum=arg.get('enum'),
-                default=arg.get('default')
+        try:
+            data = request.get_json()
+            new_function = AIFunctions(
+                name=data['name'],
+                purpose=data['purpose'],
+                user_id=current_user.id,
+                agent_id=selected_agent_id,
+                web_hook_url=data.get('web_hook_url'),
+                wait_file=data.get('wait_file'),
+                wait_file_loops=data.get('wait_file_loops', 0) or 0,
+                fillers=data.get('fillers'),
+                meta_data=data.get('meta_data'),
+                meta_data_token=data.get('meta_data_token'),
+                active=data.get('active', True)
             )
-            db.session.add(new_argument)
+            db.session.add(new_function)
+            db.session.commit()
+        except IntegrityError as e:
+            db.session.rollback()
+            if 'Key (user_id, agent_id, name)' in str(e.orig):
+                return jsonify({'message': 'Function name must be unique for the user and agent'}), 200
+            else:
+                return jsonify({'message': 'An error occurred while creating the function'}), 500
         
-        db.session.commit()
-        return jsonify({'message': 'Function entry created successfully'}), 200
-
+        try:
+            # Save the arguments associated with the function
+            arguments = data.get('arguments', [])
+            for arg in arguments:
+                new_argument = AIFunctionArgs(
+                    function_id=new_function.id,
+                    user_id=current_user.id,  # Ensure user_id is set
+                    agent_id=selected_agent_id,  # Ensure agent_id is set
+                    name=arg['name'],
+                    type=arg['type'],
+                    description=arg['description'],
+                    required=arg['required'],
+                    enum=arg.get('enum'),
+                    default=arg.get('default')
+                )
+                db.session.add(new_argument)
+            
+            db.session.commit()
+            return jsonify({'message': 'Function entry created successfully'}), 200
+        except IntegrityError as e:
+            db.session.rollback()
+            if 'Key (user_id, function_id, name)' in str(e.orig):
+                db.session.delete(new_function)
+                db.session.commit()
+                return jsonify({'message': 'Arguments must be unique'}), 200
+            else:
+                return jsonify({'message': 'An error occurred while adding arguments'}), 500
 
 @app.route('/functions/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 @login_required

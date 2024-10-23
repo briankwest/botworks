@@ -92,6 +92,9 @@ class AIFunctions(db.Model):
 
     user = db.relationship('AIUser', backref=db.backref('ai_functions', lazy=True))
     agent = db.relationship('AIAgent', back_populates='ai_functions')
+    
+    __table_args__ = (db.UniqueConstraint('user_id', 'agent_id', 'name'),)
+    
     ai_function_args = db.relationship(
         'AIFunctionArgs', 
         back_populates='function', 
