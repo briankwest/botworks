@@ -81,7 +81,10 @@
                                 <thead>
                                     <tr>
                                         <th>
-                                            <input type="checkbox" id="checkAllToggle">
+                                            <div class="custom-control custom-switch">
+                                                <input type="checkbox" class="custom-control-input" id="checkAllToggle">
+                                                <label class="custom-control-label" for="checkAllToggle"></label>
+                                            </div>
                                         </th>
                                         <th>Function</th>
                                         <th>Arguments</th>
@@ -199,7 +202,12 @@
           {
             "data": null,
             "render": function(data, type, row) {
-              return `<input type="checkbox" class="swaig-checkbox" data-function="${row.function}">`;
+              return `
+                <div class="custom-control custom-switch">
+                    <input type="checkbox" class="custom-control-input swaig-checkbox" data-function="${row.function}" id="toggle-${row.function}">
+                    <label class="custom-control-label" for="toggle-${row.function}"></label>
+                </div>
+              `;
             },
             "orderable": false
           },
@@ -563,3 +571,4 @@
     });
   </script>
 {% endblock %}
+
