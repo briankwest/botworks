@@ -220,7 +220,26 @@ def functions():
         )
         db.session.add(new_function)
         db.session.commit()
-        return jsonify({'message': 'Function entry created successfully'}), 201
+
+        # Save the arguments associated with the function
+        arguments = data.get('arguments', [])
+        for arg in arguments:
+            new_argument = AIFunctionArgs(
+                function_id=new_function.id,
+                user_id=current_user.id,  # Ensure user_id is set
+                agent_id=selected_agent_id,  # Ensure agent_id is set
+                name=arg['name'],
+                type=arg['type'],
+                description=arg['description'],
+                required=arg['required'],
+                enum=arg.get('enum'),
+                default=arg.get('default')
+            )
+            db.session.add(new_argument)
+        
+        db.session.commit()
+        return jsonify({'message': 'Function entry created successfully'}), 200
+
 
 @app.route('/functions/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 @login_required

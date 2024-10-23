@@ -92,9 +92,22 @@
                   </div>
                   <div class="form-group">
                     <label for="functionArguments">Function Arguments</label>
-                    <div id="functionArgumentsContainer">
-                    </div>
-                    <button type="button" class="btn btn-secondary mt-2" id="addArgumentBtn">Add Argument</button>
+                    <table class="table table-bordered" id="addFunctionArgsTable">
+                      <thead>
+                        <tr>
+                          <th>Name</th>
+                          <th>Type</th>
+                          <th>Description</th>
+                          <th>Required</th>
+                          <th>Enum</th>
+                          <th>Default</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody id="functionArgumentsContainer">
+                      </tbody>
+                    </table>
+                    <button type="button" class="btn btn-primary mt-2" id="addArgumentBtn">Add Argument</button>
                   </div>
                   <div class="form-check">
                     <input type="checkbox" class="form-check-input" id="functionActive" name="active" checked>
@@ -157,7 +170,7 @@
                   </div>
                 </form>
                 <hr>
-                <h6>Function Arguments</h6>
+                <label>Function Arguments</label>
                 <table class="table table-bordered" id="functionArgsTable">
                   <thead>
                     <tr>
@@ -173,7 +186,7 @@
                   <tbody id="functionArgsBody">
                   </tbody>
                 </table>
-                <button type="button" class="btn btn-success" id="addNewArg">Add New Argument</button>
+                <button type="button" class="btn btn-primary" id="addNewArg">Add Argument</button>
               </div>
               <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -475,7 +488,8 @@
                 return fetch(`/functions/${functionId}/args`, {
                   method: 'POST',
                   headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                   },
                   body: JSON.stringify(argData)
                 });
@@ -509,95 +523,105 @@
         });
       });
 
-      function createArgumentInput(index) {
+      function createArgumentInput() {
         return `
-          <div class="argument-input mb-3">
-            <h5>Argument ${index + 1}</h5>
-            <div class="form-row">
-              <div class="col">
-                <input type="text" class="form-control" name="arg_name[]" placeholder="Name" required>
+          <tr class="argument-input">
+            <td>
+              <input type="text" class="form-control" name="arg_name[]" placeholder="Name" required>
+            </td>
+            <td>
+              <select class="form-control arg-type-select" name="arg_type[]" required>
+                <option value="string">String</option>
+                <option value="integer">Integer</option>
+                <option value="boolean">Boolean</option>
+                <option value="array">Array</option>
+              </select>
+            </td>
+            <td>
+              <input type="text" class="form-control" name="arg_description[]" placeholder="Description">
+            </td>
+            <td class="text-center">
+              <input type="checkbox" class="form-check-input" name="arg_required[]">
+            </td>
+            <td>
+              <div class="enum-field" style="display: none;">
+                <input type="text" class="form-control" name="arg_enum[]" placeholder="Comma-separated values">
               </div>
-              <div class="col">
-                <select class="form-control" name="arg_type[]" required>
-                  <option value="string">String</option>
-                  <option value="integer">Integer</option>
-                  <option value="boolean">Boolean</option>
-                  <option value="array">Array</option>
-                </select>
+              <div class="placeholder-field">
+            <input type="text" class="form-control" placeholder="N/A" readonly>
               </div>
-            </div>
-            <div class="form-row mt-2">
-              <div class="col">
-                <input type="text" class="form-control" name="arg_description[]" placeholder="Description">
-              </div>
-              <div class="col">
-                <div class="form-check">
-                  <input type="checkbox" class="form-check-input" name="arg_required[]" id="argRequired${index}">
-                  <label class="form-check-label" for="argRequired${index}">Required</label>
-                </div>
-              </div>
-            </div>
-            <div class="form-row mt-2">
-              <div class="col">
-                <input type="text" class="form-control" name="arg_enum[]" placeholder="Enum (comma-separated for array type)">
-              </div>
-              <div class="col">
-                <input type="text" class="form-control" name="arg_default[]" placeholder="Default value">
-              </div>
-            </div>
-            <button type="button" class="btn btn-danger btn-sm mt-2 remove-argument">Remove</button>
-          </div>
+            </td>
+            <td>
+              <input type="text" class="form-control" name="arg_default[]" placeholder="Default value">
+            </td>
+            <td>
+              <button type="button" class="btn btn-danger btn-sm remove-argument">Remove</button>
+            </td>
+          </tr>
         `;
       }
 
-      $('#addArgumentBtn').on('click', function() {
-        const argumentsContainer = $('#functionArgumentsContainer');
-        const index = argumentsContainer.children().length;
-        argumentsContainer.append(createArgumentInput(index));
+    // Event handler to add a new argument row in the Add Function form
+    $('#addArgumentBtn').on('click', function() {
+      const argumentsContainer = $('#functionArgumentsContainer');
+      argumentsContainer.append(createArgumentInput());
+    });
+
+    // Event handler to remove an argument row in the Add Function form
+    $('#functionArgumentsContainer').on('click', '.remove-argument', function() {
+      $(this).closest('tr').remove();
+    });
+
+    // Event handler to toggle the display of the enum field based on the selected type
+    $('#functionArgumentsContainer').on('change', '.arg-type-select', function() {
+      const $row = $(this).closest('tr');
+      const isArrayType = $(this).val() === 'array';
+      $row.find('.enum-field').toggle(isArrayType);
+      $row.find('.placeholder-field').toggle(!isArrayType);
+    });
+
+    // Modify the form submission handler to collect argument data from the table
+    $('#addFunctionForm').on('submit', function(event) {
+      event.preventDefault();
+
+      // Validate Meta Data field
+      const metaData = $('#functionMetaData').val();
+      if (metaData && !isValidJSON(metaData)) {
+        alert('Please enter valid JSON in the Meta Data field.');
+        return;
+      }
+
+      const data = {
+        name: $('#functionName').val(),
+        purpose: $('#functionPurpose').val(),
+        web_hook_url: $('#functionWebhookUrl').val(),
+        wait_file: $('#functionWaitFile').val(),
+        wait_file_loops: $('#functionWaitFileLoops').val(),
+        fillers: $('#functionFillers').val(),
+        meta_data: JSON.parse($('#functionMetaData').val() || '{}'),
+        meta_data_token: $('#functionMetaDataToken').val(),
+        active: $('#functionActive').is(':checked'),
+        arguments: []
+    };
+
+    // Collect argument data from the table rows
+    $('#functionArgumentsContainer tr').each(function() {
+      const $row = $(this);
+      data.arguments.push({
+          name: $row.find('input[name="arg_name[]"]').val(),
+          type: $row.find('select[name="arg_type[]"]').val(),
+          description: $row.find('input[name="arg_description[]"]').val(),
+          required: $row.find('input[name="arg_required[]"]').is(':checked'),
+          enum: $row.find('select[name="arg_type[]"]').val() === 'array' ? $row.find('input[name="arg_enum[]"]').val() : undefined,
+          default: $row.find('input[name="arg_default[]"]').val()
+        });
       });
 
-      $('#functionArgumentsContainer').on('click', '.remove-argument', function() {
-        $(this).closest('.argument-input').remove();
-      });
-
-      $('#addFunctionForm').on('submit', function(event) {
-        event.preventDefault();
-        const formData = new FormData(this);
-        const data = {
-          name: formData.get('name'),
-          purpose: formData.get('purpose'),
-          web_hook_url: formData.get('web_hook_url'),
-          wait_file: formData.get('wait_file'),
-          wait_file_loops: formData.get('wait_file_loops'),
-          fillers: formData.get('fillers'),
-          meta_data: JSON.parse(formData.get('meta_data') || '{}'),
-          meta_data_token: formData.get('meta_data_token'),
-          active: formData.get('active') === 'on',
-          arguments: []
-        };
-
-        const argNames = formData.getAll('arg_name[]');
-        const argTypes = formData.getAll('arg_type[]');
-        const argDescriptions = formData.getAll('arg_description[]');
-        const argRequireds = formData.getAll('arg_required[]');
-        const argEnums = formData.getAll('arg_enum[]');
-        const argDefaults = formData.getAll('arg_default[]');
-
-        for (let i = 0; i < argNames.length; i++) {
-          data.arguments.push({
-            name: argNames[i],
-            type: argTypes[i],
-            description: argDescriptions[i],
-            required: argRequireds[i] === 'on',
-            enum: argEnums[i],
-            default: argDefaults[i]
-          });
-        }
-
-        fetch('/functions', {
+      fetch('/functions', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
           },
           body: JSON.stringify(data)
         })
