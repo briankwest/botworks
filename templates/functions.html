@@ -549,7 +549,10 @@
               <input type="text" class="form-control" name="arg_description[]" placeholder="Description">
             </td>
             <td class="text-center">
-              <input type="checkbox" class="form-check-input" name="arg_required[]">
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" name="arg_required[]" id="toggleArgRequired{{ unique_id }}" value="true">
+                <label class="custom-control-label" for="toggleArgRequired{{ unique_id }}"></label>
+              </div>
             </td>
             <td>
               <div class="enum-field" style="display: none;">
@@ -725,4 +728,6 @@
   });
   </script>
 {% endblock %}
+
+
 
