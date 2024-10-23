@@ -103,9 +103,12 @@
                     </table>
                     <button type="button" class="btn btn-primary mt-2" id="addArgumentBtn">Add Argument</button>
                   </div>
-                  <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="functionActive" name="active" checked>
-                    <label class="form-check-label" for="functionActive">Active</label>
+                  <div class="form-group">
+                    <label for="functionActive">Active</label>
+                    <div class="custom-control custom-switch">
+                      <input type="checkbox" class="custom-control-input" id="functionActive" name="active" checked>
+                      <label class="custom-control-label" for="functionActive"></label>
+                    </div>
                   </div>
                   <button type="submit" class="btn btn-success mt-3">Add Function</button>
                 </form>
