@@ -82,25 +82,37 @@
               </a>
             </li>
             <li class="nav-item">
-              <a href="{{ url_for('includes') }}"
-                class="nav-link {{ 'active' if request.endpoint == 'includes' else '' }}">
-                <i class="nav-icon fas fa-code"></i>
-                <p>Includes</p>
-              </a>
-            </li>
-            <li class="nav-item">
               <a href="{{ url_for('aifeatures') }}"
                 class="nav-link {{ 'active' if request.endpoint == 'aifeatures' else '' }}">
                 <i class="nav-icon fas fa-brain"></i>
                 <p>Features</p>
               </a>
             </li>
-            <li class="nav-item">
-              <a href="{{ url_for('functions') }}"
-                class="nav-link {{ 'active' if request.endpoint == 'functions' else '' }}">
+            <li class="nav-item has-treeview {{ 'menu-open' if request.endpoint in ['functions', 'includes'] else '' }}">
+              <a href="#"
+                class="nav-link {{ 'active' if request.endpoint in ['functions', 'includes'] else '' }}">
                 <i class="nav-icon fas fa-code"></i>
-                <p>Functions</p>
+                <p>
+                  Functions
+                  <i class="right fas fa-angle-left"></i>
+                </p>
               </a>
+              <ul class="nav nav-treeview">
+                <li class="nav-item">
+                  <a href="{{ url_for('functions') }}"
+                    class="nav-link {{ 'active' if request.endpoint == 'functions' else '' }}">
+                    <i class="nav-icon fas fa-circle"></i>
+                    <p>Functions</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="{{ url_for('includes') }}"
+                    class="nav-link {{ 'active' if request.endpoint == 'includes' else '' }}">
+                    <i class="nav-icon fas fa-circle"></i>
+                    <p>Includes</p>
+                  </a>
+                </li>
+              </ul>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('swmlrequests') }}"

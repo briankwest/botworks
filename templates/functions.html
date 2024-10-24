@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}SWAIG Functions{% endblock %}
+{% block title %}Functions{% endblock %}
 
 {% block content %}
 {% include 'navbar.html' %}
@@ -208,12 +208,11 @@
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
 <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> <!-- Ensure SweetAlert2 is included -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
 
 <script>
   $(document).ready(function () {
-    // Initialize the Toast object using SweetAlert2
     const Toast = Swal.mixin({
       toast: true,
       position: 'top-end',
@@ -226,7 +225,6 @@
       }
     });
 
-    // Ensure Toast is defined before using it
     if (typeof Toast === 'undefined') {
       console.error('Toast is not defined. Please check the SweetAlert2 initialization.');
       return;
@@ -350,44 +348,41 @@
 
     function createArgRow(arg) {
       return `
-          <tr data-arg-id="${arg.id}">
-            <td><input type="text" class="form-control" name="arg_name" value="${arg.name}" required></td>
-            <td>
-              <select class="form-control" name="arg_type" required>
-                <option value="string" ${arg.type === 'string' ? 'selected' : ''}>String</option>
-                <option value="integer" ${arg.type === 'integer' ? 'selected' : ''}>Integer</option>
-                <option value="boolean" ${arg.type === 'boolean' ? 'selected' : ''}>Boolean</option>
-                <option value="array" ${arg.type === 'array' ? 'selected' : ''}>Array</option>
-              </select>
-            </td>
-            <td><input type="text" class="form-control" name="arg_description" value="${arg.description || ''}"></td>
-            <td>
-              <div class="custom-control custom-switch">
-                <input type="checkbox" class="custom-control-input" id="toggleArgActive${arg.id}" ${arg.active ? 'checked' : ''} data-id="${arg.id}">
-                <label class="custom-control-label" for="toggleArgActive${arg.id}"></label>
-              </div>
-            </td>
-            <td>
-              <div class="enum-field" style="display: ${arg.type === 'array' ? 'block' : 'none'};">
-                <input type="text" class="form-control" name="arg_enum" value="${arg.enum || ''}" placeholder="Comma-separated list of valid items">
-              </div>
-              <div class="placeholder-field" style="display: ${arg.type !== 'array' ? 'block' : 'none'};">
-                <input type="text" class="form-control" name="arg_placeholder" value="" placeholder="N/A" readonly>
-              </div>
-            </td>
-            <td><input type="text" class="form-control" name="arg_default" value="${arg.default || ''}"></td>
-            <td>
-              <button type="button" class="btn btn-sm btn-danger delete-arg" data-id="${arg.id}">Delete</button>
-            </td>
-          </tr>
-        `;
+        <tr data-arg-id="${arg.id}">
+          <td><input type="text" class="form-control" name="arg_name" value="${arg.name}" required></td>
+          <td>
+            <select class="form-control" name="arg_type" required>
+              <option value="string" ${arg.type === 'string' ? 'selected' : ''}>String</option>
+              <option value="integer" ${arg.type === 'integer' ? 'selected' : ''}>Integer</option>
+              <option value="number" ${arg.type === 'number' ? 'selected' : ''}>Number</option>
+              <option value="null" ${arg.type === 'null' ? 'selected' : ''}>Null</option>
+              <option value="boolean" ${arg.type === 'boolean' ? 'selected' : ''}>Boolean</option>
+              <option value="array" ${arg.type === 'array' ? 'selected' : ''}>Array</option>
+              <option value="object" ${arg.type === 'object' ? 'selected' : ''}>Object</option>
+            </select>
+          </td>
+          <td><input type="text" class="form-control" name="arg_description" value="${arg.description || ''}"></td>
+          <td>
+            <div class="custom-control custom-switch">
+              <input type="checkbox" class="custom-control-input toggle-required" id="toggleArgRequired${arg.id}" ${arg.required ? 'checked' : ''} data-id="${arg.id}">
+              <label class="custom-control-label" for="toggleArgRequired${arg.id}"></label>
+            </div>
+          </td>
+          <td>
+            <input type="text" class="form-control" name="arg_enum" value="${arg.enum || ''}" placeholder="Comma-separated list of valid items">
+          </td>
+          <td><input type="text" class="form-control" name="arg_default" value="${arg.default || ''}"></td>
+          <td>
+            <button type="button" class="btn btn-sm btn-danger delete-arg" data-id="${arg.id}">Delete</button>
+          </td>
+        </tr>
+      `;
     }
 
-    $('#functionArgsBody').on('change', 'select[name="arg_type"]', function () {
+    $('#functionArgsBody').on('change', '.toggle-required', function () {
       const $row = $(this).closest('tr');
-      const isArrayType = $(this).val() === 'array';
-      $row.find('.enum-field').toggle(isArrayType);
-      $row.find('.placeholder-field').toggle(!isArrayType);
+      const isChecked = $(this).is(':checked');
+      $row.find('input[name="arg_name"]').prop('required', isChecked);
     });
 
     $('#addNewArg').on('click', function () {
@@ -458,11 +453,6 @@
     });
 
     $('#saveEditFunction').on('click', function () {
-      const metaData = $('#editFunctionMetaData').val();
-      if (metaData && !isValidJSON(metaData)) {
-        alert('Please enter valid JSON in the Meta Data field.');
-        return;
-      }
       const functionId = $('#editFunctionId').val();
       const functionData = {
         name: $('#editFunctionName').val(),
@@ -476,133 +466,108 @@
         active: $('#editFunctionActiveToggle').is(':checked')
       };
 
-      fetch(`/functions/${functionId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(functionData)
-      })
-        .then(response => response.json())
-        .then(data => {
-          if (data.message === 'Function entry updated successfully') {
-            const argRows = $('#functionArgsBody tr');
-            const argPromises = argRows.map((index, row) => {
-              const $row = $(row);
-              const argId = $row.data('arg-id');
-              const argData = {
-                name: $row.find('[name="arg_name"]').val(),
-                type: $row.find('[name="arg_type"]').val(),
-                description: $row.find('[name="arg_description"]').val(),
-                required: $row.find('[name="arg_required"]').is(':checked'),
-                enum: $row.find('[name="arg_type"]').val() === 'array' ? $row.find('[name="arg_enum"]').val() : undefined,
-                default: $row.find('[name="arg_default"]').val()
-              };
+      const argRows = $('#functionArgsBody tr');
+      const argPromises = argRows.map((index, row) => {
+        const $row = $(row);
+        const argId = $row.data('arg-id');
+        const argData = {
+          name: $row.find('[name="arg_name"]').val(),
+          type: $row.find('[name="arg_type"]').val(),
+          description: $row.find('[name="arg_description"]').val(),
+          required: $row.find('.toggle-required').is(':checked'),
+          enum: $row.find('[name="arg_type"]').val() === 'array' ? $row.find('[name="arg_enum"]').val() : undefined,
+          default: $row.find('[name="arg_default"]').val()
+        };
 
-              if (typeof argId === 'string' && argId.startsWith('new_')) {
-                return fetch(`/functions/${functionId}/args`, {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                  },
-                  body: JSON.stringify(argData)
-                });
-              } else {
-                return fetch(`/functions/${functionId}/args/${argId}`, {
-                  method: 'PUT',
-                  headers: {
-                    'Content-Type': 'application/json'
-                  },
-                  body: JSON.stringify(argData)
-                });
-              }
-            }).get();
+        if (typeof argId === 'string' && argId.startsWith('new_')) {
+          return fetch(`/functions/${functionId}/args`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify(argData)
+          });
+        } else {
+          return fetch(`/functions/${functionId}/args/${argId}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(argData)
+          });
+        }
+      }).get();
 
-            Promise.all(argPromises)
-              .then(() => {
-                Toast.fire({
-                  icon: 'success',
-                  title: 'Function entry updated successfully'
-                });
-                $('#editFunctionModal').modal('hide');
-                $('#functionTable').DataTable().ajax.reload();
-              })
-              .catch(error => {
-                console.error('Error updating arguments:', error);
-                Swal.fire('Error', 'Error updating arguments', 'error');
-              });
-          } else {
-            Swal.fire('Error', 'Error updating function', 'error');
-          }
+      Promise.all(argPromises)
+        .then(() => {
+          Toast.fire({
+            icon: 'success',
+            title: 'Function entry updated successfully'
+          });
+          $('#editFunctionModal').modal('hide');
+          $('#functionTable').DataTable().ajax.reload();
+        })
+        .catch(error => {
+          console.error('Error updating arguments:', error);
+          Swal.fire('Error', 'Error updating arguments', 'error');
         });
     });
 
     function createArgumentInput() {
+      const uniqueId = 'arg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
       return `
-          <tr class="argument-input">
-            <td>
-              <input type="text" class="form-control" name="arg_name[]" placeholder="Name" required>
-            </td>
-            <td>
-              <select class="form-control arg-type-select" name="arg_type[]" required>
-                <option value="string">String</option>
-                <option value="integer">Integer</option>
-                <option value="boolean">Boolean</option>
-                <option value="array">Array</option>
-              </select>
-            </td>
-            <td>
-              <input type="text" class="form-control" name="arg_description[]" placeholder="Description">
-            </td>
-            <td class="text-center">
-              <div class="custom-control custom-switch">
-                <input type="checkbox" class="custom-control-input" name="arg_required[]" id="toggleArgRequired{{ unique_id }}" value="true">
-                <label class="custom-control-label" for="toggleArgRequired{{ unique_id }}"></label>
-              </div>
-            </td>
-            <td>
-              <div class="enum-field" style="display: none;">
-                <input type="text" class="form-control" name="arg_enum[]" placeholder="Comma-separated values">
-              </div>
-              <div class="placeholder-field">
-            <input type="text" class="form-control" placeholder="N/A" readonly>
-              </div>
-            </td>
-            <td>
-              <input type="text" class="form-control" name="arg_default[]" placeholder="Default value">
-            </td>
-            <td>
-              <button type="button" class="btn btn-danger btn-sm remove-argument">Remove</button>
-            </td>
-          </tr>
-        `;
+        <tr class="argument-input">
+          <td>
+            <input type="text" class="form-control" name="arg_name[]" placeholder="Name" required>
+          </td>
+          <td>
+            <select class="form-control arg-type-select" name="arg_type[]" required>
+              <option value="string">String</option>
+              <option value="integer">Integer</option>
+              <option value="number">Number</option>
+              <option value="null">Null</option>
+              <option value="boolean">Boolean</option>
+              <option value="array">Array</option>
+              <option value="object">Object</option>
+            </select>
+          </td>
+          <td>
+            <input type="text" class="form-control" name="arg_description[]" placeholder="Description">
+          </td>
+          <td class="text-center">
+            <div class="custom-control custom-switch">
+              <input type="checkbox" class="custom-control-input" name="arg_required[]" id="toggleArgRequired${uniqueId}" value="true">
+              <label class="custom-control-label" for="toggleArgRequired${uniqueId}"></label>
+            </div>
+          </td>
+          <td>
+            <div class="enum-field">
+              <input type="text" class="form-control" name="arg_enum[]" placeholder="Comma-separated values">
+            </div>
+          </td>
+          <td>
+            <input type="text" class="form-control" name="arg_default[]" placeholder="Default value">
+          </td>
+          <td>
+            <button type="button" class="btn btn-danger btn-sm remove-argument">Remove</button>
+          </td>
+        </tr>
+      `;
     }
 
-    // Event handler to add a new argument row in the Add Function form
     $('#addArgumentBtn').on('click', function () {
       const argumentsContainer = $('#functionArgumentsContainer');
       argumentsContainer.append(createArgumentInput());
     });
 
-    // Event handler to remove an argument row in the Add Function form
     $('#functionArgumentsContainer').on('click', '.remove-argument', function () {
       $(this).closest('tr').remove();
     });
 
-    // Event handler to toggle the display of the enum field based on the selected type
-    $('#functionArgumentsContainer').on('change', '.arg-type-select', function () {
-      const $row = $(this).closest('tr');
-      const isArrayType = $(this).val() === 'array';
-      $row.find('.enum-field').toggle(isArrayType);
-      $row.find('.placeholder-field').toggle(!isArrayType);
-    });
-
-    // Modify the form submission handler to collect argument data from the table
     $('#addFunctionForm').on('submit', function (event) {
       event.preventDefault();
 
-      // Validate Meta Data field
       const metaData = $('#functionMetaData').val();
       if (metaData && !isValidJSON(metaData)) {
         alert('Please enter valid JSON in the Meta Data field.');
@@ -622,7 +587,6 @@
         arguments: []
       };
 
-      // Collect argument data from the table rows
       $('#functionArgumentsContainer tr').each(function () {
         const $row = $(this);
         data.arguments.push({
@@ -660,7 +624,6 @@
           }
         });
     });
-
 
     $('#functionTable').on('change', '.toggle-active', function () {
       const functionId = $(this).data('id');

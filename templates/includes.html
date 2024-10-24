@@ -224,7 +224,8 @@
                   const isRequired = requiredFields.includes(key);
                   const style = isRequired ? 'style="color: blue;"' : '';
                   const defaultValue = value.default ? ` (default: ${value.default})` : '';
-                  formattedArgs += `<li ${style}><strong>${key}:</strong> ${value.description}${defaultValue}</li>`;
+                  const type = value.type ? ` (type: ${value.type})` : '';
+                  formattedArgs += `<li ${style}><strong>${key}:</strong> ${value.description}${type}${defaultValue}</li>`;
                 }
                 formattedArgs += '</ul>';
                 return formattedArgs;
