@@ -7,172 +7,172 @@
 {% include 'sidebar.html' %}
 
 <div class="content-wrapper">
-    <section class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-6">
-                    <h1 class="m-0">Phone Numbers</h1>
-                </div>
-            </div>
+  <section class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-6">
+          <h1 class="m-0">Phone Numbers</h1>
         </div>
-    </section>
+      </div>
+    </div>
+  </section>
 
-    <section class="content">
-        <div class="container-fluid">
-            <div class="card">
-                <div class="card-header bg-primary">
-                    <h3 class="card-title">Phone Numbers List</h3>
-                </div>
-                <div class="card-body">
-                    <table id="phoneNumbersTable" class="table table-striped w-100">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Number</th>
-                                <th>Number Type</th>
-                                <th>Capabilities</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="card mt-3">
-                <div class="card-header bg-success">
-                    <h3 class="card-title">Search and Purchase Phone Number</h3>
-                </div>
-                <div class="card-body">
-                    <form id="searchPhoneNumberForm">
-                        <div class="form-group">
-                            <label for="areacode">Area Code</label>
-                            <input type="text" class="form-control" id="areacode" placeholder="Enter area code">
-                        </div>
-                        <div class="form-group">
-                            <label for="numberType">Number Type</label>
-                            <select class="form-control" id="numberType">
-                                <option value="local" selected>Local</option>
-                                <option value="tollfree">Toll-Free</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="startsWith">Starts With</label>
-                            <input type="text" class="form-control" id="startsWith" placeholder="Enter starting digits">
-                        </div>
-                        <div class="form-group">
-                            <label for="contains">Contains</label>
-                            <input type="text" class="form-control" id="contains" placeholder="Enter digits to contain">
-                        </div>
-                        <div class="form-group">
-                            <label for="endsWith">Ends With</label>
-                            <input type="text" class="form-control" id="endsWith" placeholder="Enter ending digits">
-                        </div>
-                        <div class="form-group">
-                            <label for="maxResults">Max Results</label>
-                            <input type="number" class="form-control" id="maxResults" min="1" max="100" value="50">
-                        </div>
-                        <div class="form-group">
-                            <label for="region">Region</label>
-                            <select class="form-control" id="region">
-                                <option value="">Select Region</option>
-                                <option value="AL">Alabama</option>
-                                <option value="AK">Alaska</option>
-                                <option value="AZ">Arizona</option>
-                                <option value="AR">Arkansas</option>
-                                <option value="CA">California</option>
-                                <option value="CO">Colorado</option>
-                                <option value="CT">Connecticut</option>
-                                <option value="DE">Delaware</option>
-                                <option value="FL">Florida</option>
-                                <option value="GA">Georgia</option>
-                                <option value="HI">Hawaii</option>
-                                <option value="ID">Idaho</option>
-                                <option value="IL">Illinois</option>
-                                <option value="IN">Indiana</option>
-                                <option value="IA">Iowa</option>
-                                <option value="KS">Kansas</option>
-                                <option value="KY">Kentucky</option>
-                                <option value="LA">Louisiana</option>
-                                <option value="ME">Maine</option>
-                                <option value="MD">Maryland</option>
-                                <option value="MA">Massachusetts</option>
-                                <option value="MI">Michigan</option>
-                                <option value="MN">Minnesota</option>
-                                <option value="MS">Mississippi</option>
-                                <option value="MO">Missouri</option>
-                                <option value="MT">Montana</option>
-                                <option value="NE">Nebraska</option>
-                                <option value="NV">Nevada</option>
-                                <option value="NH">New Hampshire</option>
-                                <option value="NJ">New Jersey</option>
-                                <option value="NM">New Mexico</option>
-                                <option value="NY">New York</option>
-                                <option value="NC">North Carolina</option>
-                                <option value="ND">North Dakota</option>
-                                <option value="OH">Ohio</option>
-                                <option value="OK">Oklahoma</option>
-                                <option value="OR">Oregon</option>
-                                <option value="PA">Pennsylvania</option>
-                                <option value="RI">Rhode Island</option>
-                                <option value="SC">South Carolina</option>
-                                <option value="SD">South Dakota</option>
-                                <option value="TN">Tennessee</option>
-                                <option value="TX">Texas</option>
-                                <option value="UT">Utah</option>
-                                <option value="VT">Vermont</option>
-                                <option value="VA">Virginia</option>
-                                <option value="WA">Washington</option>
-                                <option value="WV">West Virginia</option>
-                                <option value="WI">Wisconsin</option>
-                                <option value="WY">Wyoming</option>
-                                <option value="AB">Alberta</option>
-                                <option value="BC">British Columbia</option>
-                                <option value="MB">Manitoba</option>
-                                <option value="NB">New Brunswick</option>
-                                <option value="NL">Newfoundland and Labrador</option>
-                                <option value="NS">Nova Scotia</option>
-                                <option value="ON">Ontario</option>
-                                <option value="PE">Prince Edward Island</option>
-                                <option value="QC">Quebec</option>
-                                <option value="SK">Saskatchewan</option>
-                                <option value="NT">Northwest Territories</option>
-                                <option value="NU">Nunavut</option>
-                                <option value="YT">Yukon</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="city">City</label>
-                            <input type="text" class="form-control" id="city" placeholder="Enter city name">
-                        </div>
-                        <button type="submit" class="btn btn-success">Search Numbers</button>
-                    </form>
-                </div>
-            </div>
-
-            <div class="card mt-3">
-                <div class="card-header bg-info">
-                    <h3 class="card-title">Search Results</h3>
-                </div>
-                <div class="card-body">
-                    <table id="searchResultsTable" class="table table-striped w-100">
-                        <thead>
-                            <tr>
-                                <th>Number</th>
-                                <th>Region</th>
-                                <th>Rate Center</th>
-                                <th>Capabilities</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+  <section class="content">
+    <div class="container-fluid">
+      <div class="card">
+        <div class="card-header bg-primary">
+          <h3 class="card-title">Phone Numbers List</h3>
         </div>
-    </section>
+        <div class="card-body">
+          <table id="phoneNumbersTable" class="table table-striped w-100">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Number</th>
+                <th>Number Type</th>
+                <th>Capabilities</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card mt-3">
+        <div class="card-header bg-success">
+          <h3 class="card-title">Search and Purchase Phone Number</h3>
+        </div>
+        <div class="card-body">
+          <form id="searchPhoneNumberForm">
+            <div class="form-group">
+              <label for="areacode">Area Code</label>
+              <input type="text" class="form-control" id="areacode" placeholder="Enter area code">
+            </div>
+            <div class="form-group">
+              <label for="numberType">Number Type</label>
+              <select class="form-control" id="numberType">
+                <option value="local" selected>Local</option>
+                <option value="tollfree">Toll-Free</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="startsWith">Starts With</label>
+              <input type="text" class="form-control" id="startsWith" placeholder="Enter starting digits">
+            </div>
+            <div class="form-group">
+              <label for="contains">Contains</label>
+              <input type="text" class="form-control" id="contains" placeholder="Enter digits to contain">
+            </div>
+            <div class="form-group">
+              <label for="endsWith">Ends With</label>
+              <input type="text" class="form-control" id="endsWith" placeholder="Enter ending digits">
+            </div>
+            <div class="form-group">
+              <label for="maxResults">Max Results</label>
+              <input type="number" class="form-control" id="maxResults" min="1" max="100" value="50">
+            </div>
+            <div class="form-group">
+              <label for="region">Region</label>
+              <select class="form-control" id="region">
+                <option value="">Select Region</option>
+                <option value="AL">Alabama</option>
+                <option value="AK">Alaska</option>
+                <option value="AZ">Arizona</option>
+                <option value="AR">Arkansas</option>
+                <option value="CA">California</option>
+                <option value="CO">Colorado</option>
+                <option value="CT">Connecticut</option>
+                <option value="DE">Delaware</option>
+                <option value="FL">Florida</option>
+                <option value="GA">Georgia</option>
+                <option value="HI">Hawaii</option>
+                <option value="ID">Idaho</option>
+                <option value="IL">Illinois</option>
+                <option value="IN">Indiana</option>
+                <option value="IA">Iowa</option>
+                <option value="KS">Kansas</option>
+                <option value="KY">Kentucky</option>
+                <option value="LA">Louisiana</option>
+                <option value="ME">Maine</option>
+                <option value="MD">Maryland</option>
+                <option value="MA">Massachusetts</option>
+                <option value="MI">Michigan</option>
+                <option value="MN">Minnesota</option>
+                <option value="MS">Mississippi</option>
+                <option value="MO">Missouri</option>
+                <option value="MT">Montana</option>
+                <option value="NE">Nebraska</option>
+                <option value="NV">Nevada</option>
+                <option value="NH">New Hampshire</option>
+                <option value="NJ">New Jersey</option>
+                <option value="NM">New Mexico</option>
+                <option value="NY">New York</option>
+                <option value="NC">North Carolina</option>
+                <option value="ND">North Dakota</option>
+                <option value="OH">Ohio</option>
+                <option value="OK">Oklahoma</option>
+                <option value="OR">Oregon</option>
+                <option value="PA">Pennsylvania</option>
+                <option value="RI">Rhode Island</option>
+                <option value="SC">South Carolina</option>
+                <option value="SD">South Dakota</option>
+                <option value="TN">Tennessee</option>
+                <option value="TX">Texas</option>
+                <option value="UT">Utah</option>
+                <option value="VT">Vermont</option>
+                <option value="VA">Virginia</option>
+                <option value="WA">Washington</option>
+                <option value="WV">West Virginia</option>
+                <option value="WI">Wisconsin</option>
+                <option value="WY">Wyoming</option>
+                <option value="AB">Alberta</option>
+                <option value="BC">British Columbia</option>
+                <option value="MB">Manitoba</option>
+                <option value="NB">New Brunswick</option>
+                <option value="NL">Newfoundland and Labrador</option>
+                <option value="NS">Nova Scotia</option>
+                <option value="ON">Ontario</option>
+                <option value="PE">Prince Edward Island</option>
+                <option value="QC">Quebec</option>
+                <option value="SK">Saskatchewan</option>
+                <option value="NT">Northwest Territories</option>
+                <option value="NU">Nunavut</option>
+                <option value="YT">Yukon</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="city">City</label>
+              <input type="text" class="form-control" id="city" placeholder="Enter city name">
+            </div>
+            <button type="submit" class="btn btn-success">Search Numbers</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="card mt-3">
+        <div class="card-header bg-info">
+          <h3 class="card-title">Search Results</h3>
+        </div>
+        <div class="card-body">
+          <table id="searchResultsTable" class="table table-striped w-100">
+            <thead>
+              <tr>
+                <th>Number</th>
+                <th>Region</th>
+                <th>Rate Center</th>
+                <th>Capabilities</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
 </div>
 
 {% include 'footer.html' %}
@@ -181,372 +181,372 @@
 {% block scripts %}
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.min.css">
 <script type="text/javascript" charset="utf8"
-    src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+  src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
 
 <script>
-    $(document).ready(function () {
-        $('#phoneNumbersTable').DataTable({
-            "ajax": {
-                "url": "{{ url_for('list_phone_numbers') }}",
-                "dataSrc": "data",
-                "headers": {
-                    "Accept": "application/json",
-                    "Content-Type": "application/json"
-                },
-                "error": function (xhr, error, thrown) {
-                    if (xhr.status === 401 && xhr.responseJSON && xhr.responseJSON.error === 'SignalWire credentials missing') {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'SignalWire Error',
-                            html: 'SignalWire credentials are not set up.<br> Please configure them on the SignalWire tab.',
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'An error occurred while fetching phone numbers.',
-                        });
-                    }
-                }
-            },
-            "columns": [
-                { "data": "id" },
-                { "data": "number" },
-                { "data": "number_type" },
-                {
-                    "data": "capabilities",
-                    "render": function (data) {
-                        return data.map(function (capability) {
-                            switch (capability) {
-                                case 'voice':
-                                    return '<i class="fas fa-phone"></i>';
-                                case 'fax':
-                                    return '<i class="fas fa-fax"></i>';
-                                case 'sms':
-                                    return '<i class="fas fa-sms"></i>';
-                                case 'mms':
-                                    return '<i class="fas fa-image"></i>';
-                                default:
-                                    return capability;
-                            }
-                        }).join(' ');
-                    }
-                },
-                {
-                    "data": null,
-                    "render": function (data, type, row) {
-                        return `
+  $(document).ready(function () {
+    $('#phoneNumbersTable').DataTable({
+      "ajax": {
+        "url": "{{ url_for('list_phone_numbers') }}",
+        "dataSrc": "data",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json"
+        },
+        "error": function (xhr, error, thrown) {
+          if (xhr.status === 401 && xhr.responseJSON && xhr.responseJSON.error === 'SignalWire credentials missing') {
+            Swal.fire({
+              icon: 'error',
+              title: 'SignalWire Error',
+              html: 'SignalWire credentials are not set up.<br> Please configure them on the SignalWire tab.',
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'An error occurred while fetching phone numbers.',
+            });
+          }
+        }
+      },
+      "columns": [
+        { "data": "id" },
+        { "data": "number" },
+        { "data": "number_type" },
+        {
+          "data": "capabilities",
+          "render": function (data) {
+            return data.map(function (capability) {
+              switch (capability) {
+                case 'voice':
+                  return '<i class="fas fa-phone"></i>';
+                case 'fax':
+                  return '<i class="fas fa-fax"></i>';
+                case 'sms':
+                  return '<i class="fas fa-sms"></i>';
+                case 'mms':
+                  return '<i class="fas fa-image"></i>';
+                default:
+                  return capability;
+              }
+            }).join(' ');
+          }
+        },
+        {
+          "data": null,
+          "render": function (data, type, row) {
+            return `
                             <div class="btn-group" role="group">
                                 <button class="btn btn-sm btn-primary edit-btn mr-2" data-id="${row.id}">Edit</button>
                                 <button class="btn btn-sm btn-danger release-btn mr-2" data-id="${row.id}">Release</button>
                             </div>
                         `;
-                    }
-                }
-            ],
-            "responsive": true,
-            "autoWidth": false
-        });
-
-        const Toast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
-            didOpen: (toast) => {
-                toast.addEventListener('mouseenter', Swal.stopTimer)
-                toast.addEventListener('mouseleave', Swal.resumeTimer)
-            }
-        });
-
-        $('#phoneNumbersTable').on('click', '.release-btn', function () {
-            var phoneNumberId = $(this).data('id');
-
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, release it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: "/phone_numbers/" + phoneNumberId,
-                        type: 'DELETE',
-                        success: function (result) {
-                            Toast.fire({
-                                icon: 'success',
-                                title: 'Phone number released successfully!'
-                            });
-                            $('#phoneNumbersTable').DataTable().ajax.reload();
-                        },
-                        error: function (err) {
-                            Toast.fire({
-                                icon: 'error',
-                                title: 'Failed to release phone number.'
-                            });
-                        }
-                    });
-                }
-            });
-        });
-
-        var searchResultsTable = $('#searchResultsTable').DataTable({
-            "responsive": true,
-            "autoWidth": false,
-            "columns": [
-                { "data": "international_number_formatted" },
-                { "data": "region" },
-                { "data": "rate_center" },
-                {
-                    "data": "capabilities",
-                    "render": function (data) {
-                        return data.map(function (capability) {
-                            switch (capability) {
-                                case 'voice':
-                                    return '<i class="fas fa-phone"></i>';
-                                case 'fax':
-                                    return '<i class="fas fa-fax"></i>';
-                                case 'sms':
-                                    return '<i class="fas fa-sms"></i>';
-                                case 'mms':
-                                    return '<i class="fas fa-photo-video"></i>';
-                                default:
-                                    return capability;
-                            }
-                        }).join(' ');
-                    }
-                },
-                {
-                    "data": null,
-                    "render": function (data, type, row) {
-                        return `<button class="btn btn-primary btn-sm purchase-btn" data-number="${row.e164}">Purchase</button>`;
-                    }
-                }
-            ]
-        });
-
-        $('#searchPhoneNumberForm').on('submit', function (event) {
-            event.preventDefault();
-
-            var areacode = $('#areacode').val();
-            var numberType = $('#numberType').val();
-            var startsWith = $('#startsWith').val();
-            var contains = $('#contains').val();
-            var endsWith = $('#endsWith').val();
-            var maxResults = $('#maxResults').val();
-            var region = $('#region').val();
-            var city = $('#city').val();
-
-            if ((startsWith && (contains || endsWith)) || (contains && endsWith)) {
-                Toast.fire({
-                    icon: 'error',
-                    title: 'Please use only one of starts_with, contains, or ends_with.'
-                });
-                return;
-            }
-
-            if (region && areacode) {
-                Toast.fire({
-                    icon: 'error',
-                    title: 'Region and area code cannot be used together.'
-                });
-                return;
-            }
-
-            if (city && (!region || areacode || startsWith || contains || endsWith)) {
-                Toast.fire({
-                    icon: 'error',
-                    title: 'City must be used with region and cannot be combined with area code, starts_with, contains, or ends_with.'
-                });
-                return;
-            }
-
-            $.ajax({
-                url: "{{ url_for('search_phone_numbers') }}",
-                type: 'GET',
-                data: {
-                    areacode: areacode,
-                    number_type: numberType,
-                    starts_with: startsWith,
-                    contains: contains,
-                    ends_with: endsWith,
-                    max_results: maxResults,
-                    region: region,
-                    city: city
-                },
-                success: function (response) {
-                    searchResultsTable.clear().rows.add(response.data).draw();
-                },
-                error: function (err) {
-                    Toast.fire({
-                        icon: 'error',
-                        title: 'Failed to search numbers.'
-                    });
-                }
-            });
-        });
-
-        $('#searchResultsTable').on('click', '.purchase-btn', function () {
-            var phoneNumber = $(this).data('number');
-
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "Do you want to purchase this number?",
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, purchase it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: "{{ url_for('purchase_phone_number') }}",
-                        type: 'POST',
-                        contentType: 'application/json',
-                        data: JSON.stringify({ number: phoneNumber }),
-                        success: function (response) {
-                            Toast.fire({
-                                icon: 'success',
-                                title: 'Phone number purchased successfully!'
-                            });
-                            $('#phoneNumbersTable').DataTable().ajax.reload();
-                        },
-                        error: function (err) {
-                            Toast.fire({
-                                icon: 'error',
-                                title: 'Failed to purchase phone number.'
-                            });
-                        }
-                    });
-                }
-            });
-        });
-
-        function fetchAgents() {
-            $.ajax({
-                url: "{{ url_for('agents') }}",
-                type: 'GET',
-                headers: {
-                    "Accept": "application/json",
-                    "Content-Type": "application/json"
-                },
-                success: function (response) {
-                    if (Array.isArray(response)) {
-                        var agentSelect = $('#agentSelect');
-                        agentSelect.empty();
-                        agentSelect.append('<option value="">Select Agent</option>');
-                        response.forEach(function (agent) {
-                            agentSelect.append(`<option value="${agent.id}">${agent.name}</option>`);
-                        });
-                    } else {
-                        Toast.fire({
-                            icon: 'error',
-                            title: 'Failed to fetch agents. Unexpected response structure.'
-                        });
-                    }
-                },
-                error: function (err) {
-                    Toast.fire({
-                        icon: 'error',
-                        title: 'Failed to fetch agents.'
-                    });
-                }
-            });
+          }
         }
-
-        $('#phoneNumbersTable').on('click', '.edit-btn', function () {
-            var phoneNumberId = $(this).data('id');
-            var phoneNumber = $(this).closest('tr').find('td:eq(1)').text();
-            $('#editPhoneNumberModal').modal('show');
-            fetchAgents();
-            $('#editPhoneNumberForm').data('phoneNumberId', phoneNumberId);
-            $('#editPhoneNumberForm').data('phoneNumber', phoneNumber);
-        });
-
-        $('#editPhoneNumberForm').on('submit', function (event) {
-            event.preventDefault();
-            var phoneNumberId = $(this).data('phoneNumberId');
-            var phoneNumber = $(this).data('phoneNumber');
-            var agentId = $('#agentSelect').val();
-
-            $.ajax({
-                url: "/phone_numbers/" + phoneNumberId,
-                type: 'PUT',
-                contentType: 'application/json',
-                headers: {
-                    "Accept": "application/json",
-                    "Content-Type": "application/json"
-                },
-                data: JSON.stringify({
-                    agent_id: agentId,
-                    phone_number_id: phoneNumberId,
-                    phone_number: phoneNumber
-                }),
-                success: function (response) {
-                    Toast.fire({
-                        icon: 'success',
-                        title: 'Phone number updated successfully!'
-                    });
-                    $('#editPhoneNumberModal').modal('hide');
-                    $('#phoneNumbersTable').DataTable().ajax.reload();
-                },
-                error: function (err) {
-                    Toast.fire({
-                        icon: 'error',
-                        title: 'Failed to update phone number.'
-                    });
-                }
-            });
-        });
+      ],
+      "responsive": true,
+      "autoWidth": false
     });
+
+    const Toast = Swal.mixin({
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+      didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer)
+        toast.addEventListener('mouseleave', Swal.resumeTimer)
+      }
+    });
+
+    $('#phoneNumbersTable').on('click', '.release-btn', function () {
+      var phoneNumberId = $(this).data('id');
+
+      Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, release it!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          $.ajax({
+            url: "/phone_numbers/" + phoneNumberId,
+            type: 'DELETE',
+            success: function (result) {
+              Toast.fire({
+                icon: 'success',
+                title: 'Phone number released successfully!'
+              });
+              $('#phoneNumbersTable').DataTable().ajax.reload();
+            },
+            error: function (err) {
+              Toast.fire({
+                icon: 'error',
+                title: 'Failed to release phone number.'
+              });
+            }
+          });
+        }
+      });
+    });
+
+    var searchResultsTable = $('#searchResultsTable').DataTable({
+      "responsive": true,
+      "autoWidth": false,
+      "columns": [
+        { "data": "international_number_formatted" },
+        { "data": "region" },
+        { "data": "rate_center" },
+        {
+          "data": "capabilities",
+          "render": function (data) {
+            return data.map(function (capability) {
+              switch (capability) {
+                case 'voice':
+                  return '<i class="fas fa-phone"></i>';
+                case 'fax':
+                  return '<i class="fas fa-fax"></i>';
+                case 'sms':
+                  return '<i class="fas fa-sms"></i>';
+                case 'mms':
+                  return '<i class="fas fa-photo-video"></i>';
+                default:
+                  return capability;
+              }
+            }).join(' ');
+          }
+        },
+        {
+          "data": null,
+          "render": function (data, type, row) {
+            return `<button class="btn btn-primary btn-sm purchase-btn" data-number="${row.e164}">Purchase</button>`;
+          }
+        }
+      ]
+    });
+
+    $('#searchPhoneNumberForm').on('submit', function (event) {
+      event.preventDefault();
+
+      var areacode = $('#areacode').val();
+      var numberType = $('#numberType').val();
+      var startsWith = $('#startsWith').val();
+      var contains = $('#contains').val();
+      var endsWith = $('#endsWith').val();
+      var maxResults = $('#maxResults').val();
+      var region = $('#region').val();
+      var city = $('#city').val();
+
+      if ((startsWith && (contains || endsWith)) || (contains && endsWith)) {
+        Toast.fire({
+          icon: 'error',
+          title: 'Please use only one of starts_with, contains, or ends_with.'
+        });
+        return;
+      }
+
+      if (region && areacode) {
+        Toast.fire({
+          icon: 'error',
+          title: 'Region and area code cannot be used together.'
+        });
+        return;
+      }
+
+      if (city && (!region || areacode || startsWith || contains || endsWith)) {
+        Toast.fire({
+          icon: 'error',
+          title: 'City must be used with region and cannot be combined with area code, starts_with, contains, or ends_with.'
+        });
+        return;
+      }
+
+      $.ajax({
+        url: "{{ url_for('search_phone_numbers') }}",
+        type: 'GET',
+        data: {
+          areacode: areacode,
+          number_type: numberType,
+          starts_with: startsWith,
+          contains: contains,
+          ends_with: endsWith,
+          max_results: maxResults,
+          region: region,
+          city: city
+        },
+        success: function (response) {
+          searchResultsTable.clear().rows.add(response.data).draw();
+        },
+        error: function (err) {
+          Toast.fire({
+            icon: 'error',
+            title: 'Failed to search numbers.'
+          });
+        }
+      });
+    });
+
+    $('#searchResultsTable').on('click', '.purchase-btn', function () {
+      var phoneNumber = $(this).data('number');
+
+      Swal.fire({
+        title: 'Are you sure?',
+        text: "Do you want to purchase this number?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, purchase it!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          $.ajax({
+            url: "{{ url_for('purchase_phone_number') }}",
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ number: phoneNumber }),
+            success: function (response) {
+              Toast.fire({
+                icon: 'success',
+                title: 'Phone number purchased successfully!'
+              });
+              $('#phoneNumbersTable').DataTable().ajax.reload();
+            },
+            error: function (err) {
+              Toast.fire({
+                icon: 'error',
+                title: 'Failed to purchase phone number.'
+              });
+            }
+          });
+        }
+      });
+    });
+
+    function fetchAgents() {
+      $.ajax({
+        url: "{{ url_for('agents') }}",
+        type: 'GET',
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json"
+        },
+        success: function (response) {
+          if (Array.isArray(response)) {
+            var agentSelect = $('#agentSelect');
+            agentSelect.empty();
+            agentSelect.append('<option value="">Select Agent</option>');
+            response.forEach(function (agent) {
+              agentSelect.append(`<option value="${agent.id}">${agent.name}</option>`);
+            });
+          } else {
+            Toast.fire({
+              icon: 'error',
+              title: 'Failed to fetch agents. Unexpected response structure.'
+            });
+          }
+        },
+        error: function (err) {
+          Toast.fire({
+            icon: 'error',
+            title: 'Failed to fetch agents.'
+          });
+        }
+      });
+    }
+
+    $('#phoneNumbersTable').on('click', '.edit-btn', function () {
+      var phoneNumberId = $(this).data('id');
+      var phoneNumber = $(this).closest('tr').find('td:eq(1)').text();
+      $('#editPhoneNumberModal').modal('show');
+      fetchAgents();
+      $('#editPhoneNumberForm').data('phoneNumberId', phoneNumberId);
+      $('#editPhoneNumberForm').data('phoneNumber', phoneNumber);
+    });
+
+    $('#editPhoneNumberForm').on('submit', function (event) {
+      event.preventDefault();
+      var phoneNumberId = $(this).data('phoneNumberId');
+      var phoneNumber = $(this).data('phoneNumber');
+      var agentId = $('#agentSelect').val();
+
+      $.ajax({
+        url: "/phone_numbers/" + phoneNumberId,
+        type: 'PUT',
+        contentType: 'application/json',
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json"
+        },
+        data: JSON.stringify({
+          agent_id: agentId,
+          phone_number_id: phoneNumberId,
+          phone_number: phoneNumber
+        }),
+        success: function (response) {
+          Toast.fire({
+            icon: 'success',
+            title: 'Phone number updated successfully!'
+          });
+          $('#editPhoneNumberModal').modal('hide');
+          $('#phoneNumbersTable').DataTable().ajax.reload();
+        },
+        error: function (err) {
+          Toast.fire({
+            icon: 'error',
+            title: 'Failed to update phone number.'
+          });
+        }
+      });
+    });
+  });
 </script>
 
 <div class="modal fade" id="searchResultsModal" tabindex="-1" role="dialog" aria-labelledby="searchResultsModalLabel"
-    aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="searchResultsModalLabel">Search Results</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div id="searchResults">
-                </div>
-            </div>
+  aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="searchResultsModalLabel">Search Results</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="searchResults">
         </div>
+      </div>
     </div>
+  </div>
 </div>
 
 <div class="modal fade" id="editPhoneNumberModal" tabindex="-1" role="dialog"
-    aria-labelledby="editPhoneNumberModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editPhoneNumberModalLabel">Edit Phone Number</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="editPhoneNumberForm">
-                    <div class="form-group">
-                        <label for="agentSelect">Assign to Agent</label>
-                        <select class="form-control" id="agentSelect">
-                        </select>
-                    </div>
-                    <div class="d-flex justify-content-center mt-3">
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
-                    </div>
-                </form>
-            </div>
-        </div>
+  aria-labelledby="editPhoneNumberModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editPhoneNumberModalLabel">Edit Phone Number</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="editPhoneNumberForm">
+          <div class="form-group">
+            <label for="agentSelect">Assign to Agent</label>
+            <select class="form-control" id="agentSelect">
+            </select>
+          </div>
+          <div class="d-flex justify-content-center mt-3">
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+          </div>
+        </form>
+      </div>
     </div>
+  </div>
 </div>
 
 {% endblock %}
