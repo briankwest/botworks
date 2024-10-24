@@ -134,7 +134,7 @@
                 <input type="hidden" id="editFunctionId" name="id">
                 <div class="form-group">
                   <label for="editFunctionName">Function Name</label>
-                  <input type="text" class="form-control" id="editFunctionName" name="name" required>
+                  <input type="text" class="form-control" id="editFunctionName" name="name" readonly>
                 </div>
                 <div class="form-group">
                   <label for="editFunctionPurpose">Function Purpose</label>
@@ -225,11 +225,6 @@
       }
     });
 
-    if (typeof Toast === 'undefined') {
-      console.error('Toast is not defined. Please check the SweetAlert2 initialization.');
-      return;
-    }
-
     $('#functionTable').DataTable({
       "responsive": true,
       "autoWidth": false,
@@ -297,7 +292,6 @@
               }
             })
             .catch(error => {
-              console.error('Error deleting function:', error);
               Swal.fire('Error', 'Error deleting function', 'error');
             });
         }
@@ -325,7 +319,6 @@
           $('#editFunctionModal').modal('show');
         })
         .catch(error => {
-          console.error('Error fetching function details:', error);
           alert('Error loading function details');
         });
     });
@@ -341,7 +334,6 @@
           });
         })
         .catch(error => {
-          console.error('Error loading function arguments:', error);
           alert('Error loading function arguments');
         });
     }
@@ -349,7 +341,7 @@
     function createArgRow(arg) {
       return `
         <tr data-arg-id="${arg.id}">
-          <td><input type="text" class="form-control" name="arg_name" value="${arg.name}" required></td>
+          <td><input type="text" class="form-control arg-name" name="arg_name" value="${arg.name}" required></td>
           <td>
             <select class="form-control" name="arg_type" required>
               <option value="string" ${arg.type === 'string' ? 'selected' : ''}>String</option>
@@ -427,7 +419,6 @@
                 }
               })
               .catch(error => {
-                console.error('Error deleting argument:', error);
                 Swal.fire('Error', 'Error deleting argument', 'error');
               });
           }
@@ -445,127 +436,6 @@
     }
 
     $('#addFunctionForm').on('submit', function (event) {
-      const metaData = $('#functionMetaData').val();
-      if (metaData && !isValidJSON(metaData)) {
-        event.preventDefault();
-        alert('Please enter valid JSON in the Meta Data field.');
-      }
-    });
-
-    $('#saveEditFunction').on('click', function () {
-      const functionId = $('#editFunctionId').val();
-      const functionData = {
-        name: $('#editFunctionName').val(),
-        purpose: $('#editFunctionPurpose').val(),
-        web_hook_url: $('#editFunctionWebhookUrl').val(),
-        wait_file: $('#editFunctionWaitFile').val(),
-        wait_file_loops: $('#editFunctionWaitFileLoops').val(),
-        fillers: $('#editFunctionFillers').val(),
-        meta_data: JSON.parse($('#editFunctionMetaData').val()),
-        meta_data_token: $('#editFunctionMetaDataToken').val(),
-        active: $('#editFunctionActiveToggle').is(':checked')
-      };
-
-      const argRows = $('#functionArgsBody tr');
-      const argPromises = argRows.map((index, row) => {
-        const $row = $(row);
-        const argId = $row.data('arg-id');
-        const argData = {
-          name: $row.find('[name="arg_name"]').val(),
-          type: $row.find('[name="arg_type"]').val(),
-          description: $row.find('[name="arg_description"]').val(),
-          required: $row.find('.toggle-required').is(':checked'),
-          enum: $row.find('[name="arg_type"]').val() === 'array' ? $row.find('[name="arg_enum"]').val() : undefined,
-          default: $row.find('[name="arg_default"]').val()
-        };
-
-        if (typeof argId === 'string' && argId.startsWith('new_')) {
-          return fetch(`/functions/${functionId}/args`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
-            },
-            body: JSON.stringify(argData)
-          });
-        } else {
-          return fetch(`/functions/${functionId}/args/${argId}`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(argData)
-          });
-        }
-      }).get();
-
-      Promise.all(argPromises)
-        .then(() => {
-          Toast.fire({
-            icon: 'success',
-            title: 'Function entry updated successfully'
-          });
-          $('#editFunctionModal').modal('hide');
-          $('#functionTable').DataTable().ajax.reload();
-        })
-        .catch(error => {
-          console.error('Error updating arguments:', error);
-          Swal.fire('Error', 'Error updating arguments', 'error');
-        });
-    });
-
-    function createArgumentInput() {
-      const uniqueId = 'arg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-      return `
-        <tr class="argument-input">
-          <td>
-            <input type="text" class="form-control" name="arg_name[]" placeholder="Name" required>
-          </td>
-          <td>
-            <select class="form-control arg-type-select" name="arg_type[]" required>
-              <option value="string">String</option>
-              <option value="integer">Integer</option>
-              <option value="number">Number</option>
-              <option value="null">Null</option>
-              <option value="boolean">Boolean</option>
-              <option value="array">Array</option>
-              <option value="object">Object</option>
-            </select>
-          </td>
-          <td>
-            <input type="text" class="form-control" name="arg_description[]" placeholder="Description">
-          </td>
-          <td class="text-center">
-            <div class="custom-control custom-switch">
-              <input type="checkbox" class="custom-control-input" name="arg_required[]" id="toggleArgRequired${uniqueId}" value="true">
-              <label class="custom-control-label" for="toggleArgRequired${uniqueId}"></label>
-            </div>
-          </td>
-          <td>
-            <div class="enum-field">
-              <input type="text" class="form-control" name="arg_enum[]" placeholder="Comma-separated values">
-            </div>
-          </td>
-          <td>
-            <input type="text" class="form-control" name="arg_default[]" placeholder="Default value">
-          </td>
-          <td>
-            <button type="button" class="btn btn-danger btn-sm remove-argument">Remove</button>
-          </td>
-        </tr>
-      `;
-    }
-
-    $('#addArgumentBtn').on('click', function () {
-      const argumentsContainer = $('#functionArgumentsContainer');
-      argumentsContainer.append(createArgumentInput());
-    });
-
-    $('#functionArgumentsContainer').on('click', '.remove-argument', function () {
-      $(this).closest('tr').remove();
-    });
-
-    $('#addFunctionForm').on('submit', function (event) {
       event.preventDefault();
 
       const metaData = $('#functionMetaData').val();
@@ -574,54 +444,68 @@
         return;
       }
 
-      const data = {
-        name: $('#functionName').val(),
-        purpose: $('#functionPurpose').val(),
-        web_hook_url: $('#functionWebhookUrl').val(),
-        wait_file: $('#functionWaitFile').val(),
-        wait_file_loops: $('#functionWaitFileLoops').val(),
-        fillers: $('#functionFillers').val(),
-        meta_data: JSON.parse($('#functionMetaData').val() || '{}'),
-        meta_data_token: $('#functionMetaDataToken').val(),
-        active: $('#functionActive').is(':checked'),
-        arguments: []
-      };
+      const functionName = $('#functionName').val();
 
-      $('#functionArgumentsContainer tr').each(function () {
-        const $row = $(this);
-        data.arguments.push({
-          name: $row.find('input[name="arg_name[]"]').val(),
-          type: $row.find('select[name="arg_type[]"]').val(),
-          description: $row.find('input[name="arg_description[]"]').val(),
-          required: $row.find('input[name="arg_required[]"]').is(':checked'),
-          enum: $row.find('select[name="arg_type[]"]').val() === 'array' ? $row.find('input[name="arg_enum[]"]').val() : undefined,
-          default: $row.find('input[name="arg_default[]"]').val()
-        });
-      });
-
-      fetch('/functions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify(data)
-      })
+      fetch('/functions/names')
         .then(response => response.json())
-        .then(data => {
-          if (data.message === 'Function entry created successfully') {
-            Toast.fire({
-              icon: 'success',
-              title: 'Function entry created successfully'
-            });
-            $('#addFunctionForm')[0].reset();
-            $('#functionArgumentsContainer').empty();
-            $('#functionTable').DataTable().ajax.reload();
-          } else if (data.message) {
-            Swal.fire('Error', data.message, 'error');
-          } else {
-            Swal.fire('Error', 'Error creating function', 'error');
+        .then(existingNames => {
+          if (existingNames.includes(functionName)) {
+            Swal.fire('Error', 'Function name must be unique.', 'error');
+            return;
           }
+
+          const data = {
+            name: functionName,
+            purpose: $('#functionPurpose').val(),
+            web_hook_url: $('#functionWebhookUrl').val(),
+            wait_file: $('#functionWaitFile').val(),
+            wait_file_loops: $('#functionWaitFileLoops').val(),
+            fillers: $('#functionFillers').val(),
+            meta_data: JSON.parse(metaData || '{}'),
+            meta_data_token: $('#functionMetaDataToken').val(),
+            active: $('#functionActive').is(':checked'),
+            arguments: []
+          };
+
+          $('#functionArgumentsContainer tr').each(function () {
+            const $row = $(this);
+            data.arguments.push({
+              name: $row.find('input[name="arg_name[]"]').val(),
+              type: $row.find('select[name="arg_type[]"]').val(),
+              description: $row.find('input[name="arg_description[]"]').val(),
+              required: $row.find('input[name="arg_required[]"]').is(':checked'),
+              enum: $row.find('select[name="arg_type[]"]').val() === 'array' ? $row.find('input[name="arg_enum[]"]').val() : undefined,
+              default: $row.find('input[name="arg_default[]"]').val()
+            });
+          });
+
+          fetch('/functions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify(data)
+          })
+            .then(response => response.json())
+            .then(data => {
+              if (data.message === 'Function entry created successfully') {
+                Toast.fire({
+                  icon: 'success',
+                  title: 'Function entry created successfully'
+                });
+                $('#addFunctionForm')[0].reset();
+                $('#functionArgumentsContainer').empty();
+                $('#functionTable').DataTable().ajax.reload();
+              } else if (data.message) {
+                Swal.fire('Error', data.message, 'error');
+              } else {
+                Swal.fire('Error', 'Error creating function', 'error');
+              }
+            });
+        })
+        .catch(error => {
+          Swal.fire('Error', 'Error checking function name uniqueness', 'error');
         });
     });
 
@@ -652,7 +536,6 @@
           }
         })
         .catch(error => {
-          console.error('Error updating function:', error);
           Toast.fire({
             icon: 'error',
             title: 'Error updating function'
@@ -688,13 +571,95 @@
           }
         })
         .catch(error => {
-          console.error('Error updating argument:', error);
           Toast.fire({
             icon: 'error',
             title: 'Error updating argument'
           });
         });
     });
+
+    $('#functionName, #functionArgsBody').on('input', function () {
+      this.value = this.value.replace(/[^a-zA-Z0-9]/g, '_');
+    });
+
+    // Ensure function argument names are alphanumeric in both add and edit modals
+    $('#functionArgumentsContainer, #editFunctionModal').on('input', '.arg-name', function () {
+      this.value = this.value.replace(/[^a-zA-Z0-9]/g, '_');
+    });
+
+    // Add Argument button functionality for the add form
+    $('#addArgumentBtn').on('click', function () {
+      const newArg = {
+        id: 'new_' + Date.now(),
+        name: '',
+        type: 'string',
+        description: '',
+        required: false,
+        enum: '',
+        default: ''
+      };
+      $('#functionArgumentsContainer').append(createArgRow(newArg));
+    });
+
+    $('#saveEditFunction').on('click', function () {
+      const functionId = $('#editFunctionId').val();
+      const metaData = $('#editFunctionMetaData').val();
+
+      if (metaData && !isValidJSON(metaData)) {
+        alert('Please enter valid JSON in the Meta Data field.');
+        return;
+      }
+
+      const data = {
+        purpose: $('#editFunctionPurpose').val(),
+        web_hook_url: $('#editFunctionWebhookUrl').val(),
+        wait_file: $('#editFunctionWaitFile').val(),
+        wait_file_loops: $('#editFunctionWaitFileLoops').val(),
+        fillers: $('#editFunctionFillers').val(),
+        meta_data: JSON.parse(metaData || '{}'),
+        meta_data_token: $('#editFunctionMetaDataToken').val(),
+        active: $('#editFunctionActiveToggle').is(':checked'),
+        arguments: []
+      };
+
+      $('#functionArgsBody tr').each(function () {
+        const $row = $(this);
+        data.arguments.push({
+          name: $row.find('input[name="arg_name"]').val(),
+          type: $row.find('select[name="arg_type"]').val(),
+          description: $row.find('input[name="arg_description"]').val(),
+          required: $row.find('input.toggle-required').is(':checked'),
+          enum: $row.find('input[name="arg_enum"]').val(),
+          default: $row.find('input[name="arg_default"]').val()
+        });
+      });
+
+      fetch(`/functions/${functionId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(data)
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.message === 'Function updated successfully') {
+            Toast.fire({
+              icon: 'success',
+              title: 'Function updated successfully'
+            });
+            $('#editFunctionModal').modal('hide');
+            $('#functionTable').DataTable().ajax.reload();
+          } else {
+            Swal.fire('Error', 'Error updating function', 'error');
+          }
+        })
+        .catch(error => {
+          Swal.fire('Error', 'Error updating function', 'error');
+        });
+    });
   });
 </script>
 {% endblock %}
+

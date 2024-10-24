@@ -184,12 +184,13 @@ def functions():
     if not selected_agent_id:
         return jsonify({'message': 'Agent ID not found in cookies'}), 400
 
+
     if request.method == 'GET':
         if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
             functions = AIFunctions.query.filter_by(user_id=current_user.id, agent_id=selected_agent_id).all()
             function_list = [{
                 'id': f.id,
-                'name': f.name,
+                'name': f.name.lower(),
                 'purpose': f.purpose,
                 'active': f.active,
                 'web_hook_url': f.web_hook_url,
@@ -207,7 +208,7 @@ def functions():
         try:
             data = request.get_json()
             new_function = AIFunctions(
-                name=data['name'],
+                name=data['name'].lower(),
                 purpose=data['purpose'],
                 user_id=current_user.id,
                 agent_id=selected_agent_id,
@@ -236,7 +237,7 @@ def functions():
                     function_id=new_function.id,
                     user_id=current_user.id,  # Ensure user_id is set
                     agent_id=selected_agent_id,  # Ensure agent_id is set
-                    name=arg['name'],
+                    name=arg['name'].lower(),
                     type=arg['type'],
                     description=arg['description'],
                     required=arg['required'],
@@ -352,21 +353,39 @@ def add_function_arg(function_id):
     
     if function_entry.user_id != current_user.id:
         return jsonify({'message': 'Permission denied'}), 403
+    try:
+        data = request.get_json()
+        new_arg = AIFunctionArgs(
+            function_id=function_id,
+            user_id=current_user.id,
+            agent_id=selected_agent_id,
+            name=data['name'],
+            type=data['type'],
+            required=data.get('required', False),
+            enum=data.get('enum'),
+            default=data.get('default')
+        )
+        db.session.add(new_arg)
+        db.session.commit()
+        return jsonify({'message': 'Function argument added successfully'}), 201
+    except IntegrityError as e:
+        db.session.rollback()
+        if 'Key (user_id, function_id, name)' in str(e.orig):
+            return jsonify({'message': 'Arguments must be unique'}), 200
+        else:
+            return jsonify({'message': 'An error occurred while adding arguments'}), 500
 
-    data = request.get_json()
-    new_arg = AIFunctionArgs(
-        function_id=function_id,
-        user_id=current_user.id,
-        agent_id=selected_agent_id,
-        name=data['name'],
-        type=data['type'],
-        required=data.get('required', False),
-        enum=data.get('enum'),
-        default=data.get('default')
-    )
-    db.session.add(new_arg)
-    db.session.commit()
-    return jsonify({'message': 'Function argument added successfully'}), 201
+@app.route('/functions/names', methods=['GET'])
+@login_required
+def get_function_names():
+    selected_agent_id = request.cookies.get('selectedAgentId')
+    if not selected_agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
+    functions = AIFunctions.query.filter_by(agent_id=selected_agent_id).all()
+    function_names = [function.name for function in functions]
+
+    return jsonify(function_names), 200
 
 @app.route('/functions/<int:function_id>/args', methods=['GET'])
 @login_required
