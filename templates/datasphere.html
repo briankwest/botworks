@@ -7,94 +7,92 @@
 {% include 'sidebar.html' %}
 
 <div class="content-wrapper">
-    <section class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-6">
-                    <h1 class="m-0">DataSphere Documents</h1>
-                </div>
-            </div>
+  <section class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-6">
+          <h1 class="m-0">DataSphere Documents</h1>
         </div>
-    </section>
+      </div>
+    </div>
+  </section>
 
-    <section class="content">
-        <div class="container-fluid">
-            <div class="card">
-                <div class="card-header bg-primary">
-                    <h3 class="card-title">Document List</h3>
-                </div>
-                <div class="card-body">
-                    <table id="datasphereTable" class="table table-striped w-100">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Filename</th>
-                                <th>Status</th>
-                                <th>Tags</th>
-                                <th>Created At</th>
-                                <th>Updated At</th>
-                                <th>Number of Chunks</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="card mt-3">
-                <div class="card-header bg-success">
-                    <h3 class="card-title">Add New Document</h3>
-                </div>
-                <div class="card-body">
-                    <form id="addDocumentForm">
-                        <div class="form-group">
-                            <label for="documentUrl">Document URL</label>
-                            <input type="url" class="form-control" id="documentUrl" placeholder="Enter document URL"
-                                required>
-                        </div>
-                        <div class="form-group">
-                            <label for="chunkingStrategy">Chunking Strategy</label>
-                            <select class="form-control" id="chunkingStrategy" required>
-                                <option value="sentence">Sentence</option>
-                                <option value="sliding">Sliding</option>
-                                <option value="paragraph">Paragraph</option>
-                                <option value="page" selected>Page</option> <!-- Set default to page -->
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="tags">Tags (comma separated)</label>
-                            <input type="text" class="form-control" id="tags" placeholder="Enter tags">
-                        </div>
-                        <div id="sentenceOptions" class="chunking-options" style="display: none;">
-                            <div class="form-group">
-                                <label for="maxSentencesPerChunk">Max Sentences Per Chunk</label>
-                                <input type="number" class="form-control" id="maxSentencesPerChunk"
-                                    placeholder="Enter max sentences per chunk">
-                            </div>
-                            <div class="form-group">
-                                <label for="splitNewlines">Split Newlines</label>
-                                <input type="checkbox" id="splitNewlines">
-                            </div>
-                        </div>
-                        <div id="slidingOptions" class="chunking-options" style="display: none;">
-                            <div class="form-group">
-                                <label for="chunkSize">Chunk Size</label>
-                                <input type="number" class="form-control" id="chunkSize" placeholder="Enter chunk size">
-                            </div>
-                            <div class="form-group">
-                                <label for="overlapSize">Overlap Size</label>
-                                <input type="number" class="form-control" id="overlapSize"
-                                    placeholder="Enter overlap size">
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-success">Add Document</button>
-                    </form>
-                </div>
-            </div>
+  <section class="content">
+    <div class="container-fluid">
+      <div class="card">
+        <div class="card-header bg-primary">
+          <h3 class="card-title">Document List</h3>
         </div>
-    </section>
+        <div class="card-body">
+          <table id="datasphereTable" class="table table-striped w-100">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Filename</th>
+                <th>Status</th>
+                <th>Tags</th>
+                <th>Created At</th>
+                <th>Updated At</th>
+                <th>Number of Chunks</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card mt-3">
+        <div class="card-header bg-success">
+          <h3 class="card-title">Add New Document</h3>
+        </div>
+        <div class="card-body">
+          <form id="addDocumentForm">
+            <div class="form-group">
+              <label for="documentUrl">Document URL</label>
+              <input type="url" class="form-control" id="documentUrl" placeholder="Enter document URL" required>
+            </div>
+            <div class="form-group">
+              <label for="chunkingStrategy">Chunking Strategy</label>
+              <select class="form-control" id="chunkingStrategy" required>
+                <option value="sentence">Sentence</option>
+                <option value="sliding">Sliding</option>
+                <option value="paragraph">Paragraph</option>
+                <option value="page" selected>Page</option> <!-- Set default to page -->
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="tags">Tags (comma separated)</label>
+              <input type="text" class="form-control" id="tags" placeholder="Enter tags">
+            </div>
+            <div id="sentenceOptions" class="chunking-options" style="display: none;">
+              <div class="form-group">
+                <label for="maxSentencesPerChunk">Max Sentences Per Chunk</label>
+                <input type="number" class="form-control" id="maxSentencesPerChunk"
+                  placeholder="Enter max sentences per chunk">
+              </div>
+              <div class="form-group">
+                <label for="splitNewlines">Split Newlines</label>
+                <input type="checkbox" id="splitNewlines">
+              </div>
+            </div>
+            <div id="slidingOptions" class="chunking-options" style="display: none;">
+              <div class="form-group">
+                <label for="chunkSize">Chunk Size</label>
+                <input type="number" class="form-control" id="chunkSize" placeholder="Enter chunk size">
+              </div>
+              <div class="form-group">
+                <label for="overlapSize">Overlap Size</label>
+                <input type="number" class="form-control" id="overlapSize" placeholder="Enter overlap size">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-success">Add Document</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
 </div>
 
 {% include 'footer.html' %}
@@ -103,356 +101,356 @@
 {% block scripts %}
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.min.css">
 <script type="text/javascript" charset="utf8"
-    src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+  src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
 
 <script>
-    $(document).ready(function () {
-        $('#datasphereTable').DataTable({
-            "ajax": {
-                "url": "{{ url_for('datasphere') }}",
-                "dataSrc": "data",
-                "headers": {
-                    "Accept": "application/json",
-                    "Content-Type": "application/json"
-                },
-                "error": function (xhr, error, thrown) {
-                    if (xhr.status === 401 && xhr.responseJSON && xhr.responseJSON.error === 'SignalWire credentials missing') {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'SignalWire Error',
-                            html: 'SignalWire credentials are not set up.<br> Please configure them on the SignalWire tab.',
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'An error occurred while fetching data.',
-                        });
-                    }
-                }
-            },
-            "columns": [
-                { "data": "id" },
-                { "data": "filename" },
-                { "data": "status" },
-                { "data": "tags", "render": function (data) { return data.join(', '); } },
-                { "data": "created_at" },
-                { "data": "updated_at" },
-                { "data": "number_of_chunks" },
-                {
-                    "data": null,
-                    "render": function (data, type, row) {
-                        return `
+  $(document).ready(function () {
+    $('#datasphereTable').DataTable({
+      "ajax": {
+        "url": "{{ url_for('datasphere') }}",
+        "dataSrc": "data",
+        "headers": {
+          "Accept": "application/json",
+          "Content-Type": "application/json"
+        },
+        "error": function (xhr, error, thrown) {
+          if (xhr.status === 401 && xhr.responseJSON && xhr.responseJSON.error === 'SignalWire credentials missing') {
+            Swal.fire({
+              icon: 'error',
+              title: 'SignalWire Error',
+              html: 'SignalWire credentials are not set up.<br> Please configure them on the SignalWire tab.',
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'An error occurred while fetching data.',
+            });
+          }
+        }
+      },
+      "columns": [
+        { "data": "id" },
+        { "data": "filename" },
+        { "data": "status" },
+        { "data": "tags", "render": function (data) { return data.join(', '); } },
+        { "data": "created_at" },
+        { "data": "updated_at" },
+        { "data": "number_of_chunks" },
+        {
+          "data": null,
+          "render": function (data, type, row) {
+            return `
                             <div class="btn-group" role="group">
                                 <button class="btn btn-primary btn-sm edit-btn" data-id="${row.id}" style="margin-right: 5px;">Edit</button>
                                 <button class="btn btn-danger btn-sm delete-btn" data-id="${row.id}" style="margin-right: 5px;">Delete</button>
                                 <button class="btn btn-success btn-sm query-btn" data-id="${row.id}" data-chunks="${row.number_of_chunks}">Query</button>
                             </div>
                         `;
-                    }
-                }
-            ],
-            "responsive": true,
-            "autoWidth": false
-        });
-
-        const Toast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
-            didOpen: (toast) => {
-                toast.addEventListener('mouseenter', Swal.stopTimer)
-                toast.addEventListener('mouseleave', Swal.resumeTimer)
-            }
-        });
-
-        $('#datasphereTable').on('click', '.edit-btn', function () {
-            var docId = $(this).data('id');
-
-            var rowData = $('#datasphereTable').DataTable().row($(this).parents('tr')).data();
-
-            $('#editTags').val(rowData.tags.join(', '));
-
-            $('#editDocumentModal').data('docId', docId);
-
-            $('#editDocumentModal').modal('show');
-        });
-
-        $('#datasphereTable').on('click', '.delete-btn', function () {
-            var docId = $(this).data('id');
-
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: "/datasphere/documents/" + docId,
-                        type: 'DELETE',
-                        success: function (result) {
-                            Toast.fire({
-                                icon: 'success',
-                                title: 'Document deleted successfully!'
-                            });
-                            $('#datasphereTable').DataTable().ajax.reload();
-                        },
-                        error: function (err) {
-                            Toast.fire({
-                                icon: 'error',
-                                title: 'Failed to delete document.'
-                            });
-                        }
-                    });
-                }
-            });
-        });
-
-        $('#chunkingStrategy').change(function () {
-            var strategy = $(this).val();
-            $('.chunking-options').hide();
-            if (strategy === 'sentence') {
-                $('#sentenceOptions').show();
-            } else if (strategy === 'sliding') {
-                $('#slidingOptions').show();
-            }
-        });
-
-        $('#addDocumentForm').on('submit', function (event) {
-            event.preventDefault();
-
-            var documentUrl = $('#documentUrl').val();
-            var chunkingStrategy = $('#chunkingStrategy').val();
-            var tags = $('#tags').val().split(',').map(tag => tag.trim());
-
-            var additionalOptions = {};
-            if (chunkingStrategy === 'sentence') {
-                additionalOptions.max_sentences_per_chunk = $('#maxSentencesPerChunk').val();
-                additionalOptions.split_newlines = $('#splitNewlines').is(':checked');
-            } else if (chunkingStrategy === 'sliding') {
-                additionalOptions.chunk_size = $('#chunkSize').val();
-                additionalOptions.overlap_size = $('#overlapSize').val();
-            }
-
-            $.ajax({
-                url: "{{ url_for('datasphere') }}",
-                type: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                data: JSON.stringify({
-                    url: documentUrl,
-                    chunking_strategy: chunkingStrategy,
-                    tags: tags,
-                    ...additionalOptions
-                }),
-                success: function (response) {
-                    Toast.fire({
-                        icon: 'success',
-                        title: 'Document added successfully!'
-                    });
-                    $('#datasphereTable').DataTable().ajax.reload();
-                },
-                error: function (err) {
-                    Toast.fire({
-                        icon: 'error',
-                        title: 'Failed to add document.'
-                    });
-                }
-            });
-        });
-
-        $('#editDocumentForm').on('submit', function (event) {
-            event.preventDefault();
-
-            var docId = $('#editDocumentModal').data('docId');
-            var updatedTags = $('#editTags').val().split(',').map(tag => tag.trim());
-
-            $.ajax({
-                url: "/datasphere/documents/" + docId,
-                type: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                data: JSON.stringify({
-                    tags: updatedTags
-                }),
-                success: function (response) {
-                    Toast.fire({
-                        icon: 'success',
-                        title: 'Document updated successfully!'
-                    });
-                    $('#editDocumentModal').modal('hide');
-                    $('#datasphereTable').DataTable().ajax.reload();
-                },
-                error: function (err) {
-                    Toast.fire({
-                        icon: 'error',
-                        title: 'Failed to update document.'
-                    });
-                }
-            });
-        });
-
-        $('#datasphereTable').on('click', '.query-btn', function () {
-            var docId = $(this).data('id');
-            var numberOfChunks = $(this).data('chunks');
-
-            $('#queryNumberOfChunks').text(numberOfChunks);
-
-            $('#queryDocumentModal').data('docId', docId);
-
-            $('#queryDocumentModal').modal('show');
-        });
-
-        function debounce(func, wait) {
-            let timeout;
-            return function (...args) {
-                const context = this;
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(context, args), wait);
-            };
+          }
         }
-
-        function performQuery() {
-            var query = $('#queryInput').val();
-            var docId = $('#queryDocumentModal').data('docId');
-
-            var tags = $('#queryTags').val();
-            var distance = $('#queryDistance').val();
-            var count = $('#queryCount').val();
-            var language = $('#queryLanguage').val();
-            var posToExpand = $('#queryPosToExpand').val();
-            var maxSynonyms = $('#queryMaxSynonyms').val();
-
-            var data = { query_string: query };
-            if (tags) data.tags = tags.split(',').map(tag => tag.trim());
-            if (distance) data.distance = parseFloat(distance);
-            if (count) data.count = parseInt(count);
-            if (language) data.language = language;
-            if (posToExpand) data.pos_to_expand = posToExpand.split(',').map(pos => pos.trim());
-            if (maxSynonyms) data.max_synonyms = parseInt(maxSynonyms);
-
-            if (query.length > 0) {
-                $.ajax({
-                    url: "/datasphere/search/" + docId,
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify(data),
-                    success: function (response) {
-                        var results = response.chunks.map(chunk => `<div class="chunk-result"><p>${chunk.text}</p></div>`).join('');
-                        $('#queryResults').html(results);
-                    },
-                    error: function (err) {
-                        $('#queryResults').html('<p class="text-danger">Failed to fetch results.</p>');
-                    }
-                });
-            } else {
-                $('#queryResults').empty();
-            }
-        }
-
-        const debouncedPerformQuery = debounce(performQuery, 300);
-
-        $('#queryInput').on('input', debouncedPerformQuery);
-
-        $('#queryTags, #queryDistance, #queryCount, #queryLanguage, #queryPosToExpand, #queryMaxSynonyms').on('input change', debouncedPerformQuery);
+      ],
+      "responsive": true,
+      "autoWidth": false
     });
+
+    const Toast = Swal.mixin({
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+      didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer)
+        toast.addEventListener('mouseleave', Swal.resumeTimer)
+      }
+    });
+
+    $('#datasphereTable').on('click', '.edit-btn', function () {
+      var docId = $(this).data('id');
+
+      var rowData = $('#datasphereTable').DataTable().row($(this).parents('tr')).data();
+
+      $('#editTags').val(rowData.tags.join(', '));
+
+      $('#editDocumentModal').data('docId', docId);
+
+      $('#editDocumentModal').modal('show');
+    });
+
+    $('#datasphereTable').on('click', '.delete-btn', function () {
+      var docId = $(this).data('id');
+
+      Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          $.ajax({
+            url: "/datasphere/documents/" + docId,
+            type: 'DELETE',
+            success: function (result) {
+              Toast.fire({
+                icon: 'success',
+                title: 'Document deleted successfully!'
+              });
+              $('#datasphereTable').DataTable().ajax.reload();
+            },
+            error: function (err) {
+              Toast.fire({
+                icon: 'error',
+                title: 'Failed to delete document.'
+              });
+            }
+          });
+        }
+      });
+    });
+
+    $('#chunkingStrategy').change(function () {
+      var strategy = $(this).val();
+      $('.chunking-options').hide();
+      if (strategy === 'sentence') {
+        $('#sentenceOptions').show();
+      } else if (strategy === 'sliding') {
+        $('#slidingOptions').show();
+      }
+    });
+
+    $('#addDocumentForm').on('submit', function (event) {
+      event.preventDefault();
+
+      var documentUrl = $('#documentUrl').val();
+      var chunkingStrategy = $('#chunkingStrategy').val();
+      var tags = $('#tags').val().split(',').map(tag => tag.trim());
+
+      var additionalOptions = {};
+      if (chunkingStrategy === 'sentence') {
+        additionalOptions.max_sentences_per_chunk = $('#maxSentencesPerChunk').val();
+        additionalOptions.split_newlines = $('#splitNewlines').is(':checked');
+      } else if (chunkingStrategy === 'sliding') {
+        additionalOptions.chunk_size = $('#chunkSize').val();
+        additionalOptions.overlap_size = $('#overlapSize').val();
+      }
+
+      $.ajax({
+        url: "{{ url_for('datasphere') }}",
+        type: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        data: JSON.stringify({
+          url: documentUrl,
+          chunking_strategy: chunkingStrategy,
+          tags: tags,
+          ...additionalOptions
+        }),
+        success: function (response) {
+          Toast.fire({
+            icon: 'success',
+            title: 'Document added successfully!'
+          });
+          $('#datasphereTable').DataTable().ajax.reload();
+        },
+        error: function (err) {
+          Toast.fire({
+            icon: 'error',
+            title: 'Failed to add document.'
+          });
+        }
+      });
+    });
+
+    $('#editDocumentForm').on('submit', function (event) {
+      event.preventDefault();
+
+      var docId = $('#editDocumentModal').data('docId');
+      var updatedTags = $('#editTags').val().split(',').map(tag => tag.trim());
+
+      $.ajax({
+        url: "/datasphere/documents/" + docId,
+        type: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        data: JSON.stringify({
+          tags: updatedTags
+        }),
+        success: function (response) {
+          Toast.fire({
+            icon: 'success',
+            title: 'Document updated successfully!'
+          });
+          $('#editDocumentModal').modal('hide');
+          $('#datasphereTable').DataTable().ajax.reload();
+        },
+        error: function (err) {
+          Toast.fire({
+            icon: 'error',
+            title: 'Failed to update document.'
+          });
+        }
+      });
+    });
+
+    $('#datasphereTable').on('click', '.query-btn', function () {
+      var docId = $(this).data('id');
+      var numberOfChunks = $(this).data('chunks');
+
+      $('#queryNumberOfChunks').text(numberOfChunks);
+
+      $('#queryDocumentModal').data('docId', docId);
+
+      $('#queryDocumentModal').modal('show');
+    });
+
+    function debounce(func, wait) {
+      let timeout;
+      return function (...args) {
+        const context = this;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), wait);
+      };
+    }
+
+    function performQuery() {
+      var query = $('#queryInput').val();
+      var docId = $('#queryDocumentModal').data('docId');
+
+      var tags = $('#queryTags').val();
+      var distance = $('#queryDistance').val();
+      var count = $('#queryCount').val();
+      var language = $('#queryLanguage').val();
+      var posToExpand = $('#queryPosToExpand').val();
+      var maxSynonyms = $('#queryMaxSynonyms').val();
+
+      var data = { query_string: query };
+      if (tags) data.tags = tags.split(',').map(tag => tag.trim());
+      if (distance) data.distance = parseFloat(distance);
+      if (count) data.count = parseInt(count);
+      if (language) data.language = language;
+      if (posToExpand) data.pos_to_expand = posToExpand.split(',').map(pos => pos.trim());
+      if (maxSynonyms) data.max_synonyms = parseInt(maxSynonyms);
+
+      if (query.length > 0) {
+        $.ajax({
+          url: "/datasphere/search/" + docId,
+          type: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify(data),
+          success: function (response) {
+            var results = response.chunks.map(chunk => `<div class="chunk-result"><p>${chunk.text}</p></div>`).join('');
+            $('#queryResults').html(results);
+          },
+          error: function (err) {
+            $('#queryResults').html('<p class="text-danger">Failed to fetch results.</p>');
+          }
+        });
+      } else {
+        $('#queryResults').empty();
+      }
+    }
+
+    const debouncedPerformQuery = debounce(performQuery, 300);
+
+    $('#queryInput').on('input', debouncedPerformQuery);
+
+    $('#queryTags, #queryDistance, #queryCount, #queryLanguage, #queryPosToExpand, #queryMaxSynonyms').on('input change', debouncedPerformQuery);
+  });
 </script>
 
 <!-- Edit Document Modal -->
 <div class="modal fade" id="editDocumentModal" tabindex="-1" role="dialog" aria-labelledby="editDocumentModalLabel"
-    aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editDocumentModalLabel">Edit Document</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="editDocumentForm">
-                    <div class="form-group">
-                        <label for="editTags">Tags (comma separated)</label>
-                        <input type="text" class="form-control" id="editTags" placeholder="Enter tags">
-                    </div>
-                    <button type="submit" class="btn btn-primary">Save changes</button>
-                </form>
-            </div>
-        </div>
+  aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editDocumentModalLabel">Edit Document</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="editDocumentForm">
+          <div class="form-group">
+            <label for="editTags">Tags (comma separated)</label>
+            <input type="text" class="form-control" id="editTags" placeholder="Enter tags">
+          </div>
+          <button type="submit" class="btn btn-primary">Save changes</button>
+        </form>
+      </div>
     </div>
+  </div>
 </div>
 
 <!-- Query Document Modal -->
 <div class="modal fade" id="queryDocumentModal" tabindex="-1" role="dialog" aria-labelledby="queryDocumentModalLabel"
-    aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="queryDocumentModalLabel">Query Document</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="queryDocumentForm">
-                    <div class="form-group">
-                        <label for="queryInput">Query</label>
-                        <input type="text" class="form-control" id="queryInput" placeholder="Enter your query">
-                    </div>
-                    <div class="form-group">
-                        <label for="queryTags">Tags</label>
-                        <input type="text" class="form-control" id="queryTags"
-                            placeholder="Only documents tagged with 'Drinks' and 'Bar' will be searched.">
-                    </div>
-                    <div class="form-group">
-                        <label for="queryDistance">Distance</label>
-                        <input type="number" class="form-control" id="queryDistance"
-                            placeholder="A distance of 15.0 will allow moderate flexibility in matching search results.">
-                    </div>
-                    <div class="form-group">
-                        <label for="queryCount">Count</label>
-                        <input type="number" class="form-control" id="queryCount" value="3" min="1"
-                            placeholder="The search will return a maximum of 3 results.">
-                    </div>
-                    <div class="form-group">
-                        <label for="queryLanguage">Language</label>
-                        <input type="text" class="form-control" id="queryLanguage" value="en"
-                            placeholder="The search is limited to documents in English ('en').">
-                    </div>
-                    <div class="form-group">
-                        <label for="queryPosToExpand">POS to Expand</label>
-                        <input type="text" class="form-control" id="queryPosToExpand"
-                            placeholder="Synonym expansion will only happen for nouns and verbs.">
-                    </div>
-                    <div class="form-group">
-                        <label for="queryMaxSynonyms">Max Synonyms</label>
-                        <input type="number" class="form-control" id="queryMaxSynonyms"
-                            placeholder="A maximum of 5 synonyms will be used for each word in the query.">
-                    </div>
-                    <div class="form-group">
-                        <label>Number of Chunks</label>
-                        <p id="queryNumberOfChunks"></p>
-                    </div>
-                    <div id="queryResults" class="form-group">
-                        <!-- Results will be displayed here -->
-                    </div>
-                    <div class="text-center">
-                        <button type="button" class="btn bg-secondary" data-dismiss="modal">Close</button>
-                    </div>
-                </form>
-            </div>
-        </div>
+  aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="queryDocumentModalLabel">Query Document</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="queryDocumentForm">
+          <div class="form-group">
+            <label for="queryInput">Query</label>
+            <input type="text" class="form-control" id="queryInput" placeholder="Enter your query">
+          </div>
+          <div class="form-group">
+            <label for="queryTags">Tags</label>
+            <input type="text" class="form-control" id="queryTags"
+              placeholder="Only documents tagged with 'Drinks' and 'Bar' will be searched.">
+          </div>
+          <div class="form-group">
+            <label for="queryDistance">Distance</label>
+            <input type="number" class="form-control" id="queryDistance"
+              placeholder="A distance of 15.0 will allow moderate flexibility in matching search results.">
+          </div>
+          <div class="form-group">
+            <label for="queryCount">Count</label>
+            <input type="number" class="form-control" id="queryCount" value="3" min="1"
+              placeholder="The search will return a maximum of 3 results.">
+          </div>
+          <div class="form-group">
+            <label for="queryLanguage">Language</label>
+            <input type="text" class="form-control" id="queryLanguage" value="en"
+              placeholder="The search is limited to documents in English ('en').">
+          </div>
+          <div class="form-group">
+            <label for="queryPosToExpand">POS to Expand</label>
+            <input type="text" class="form-control" id="queryPosToExpand"
+              placeholder="Synonym expansion will only happen for nouns and verbs.">
+          </div>
+          <div class="form-group">
+            <label for="queryMaxSynonyms">Max Synonyms</label>
+            <input type="number" class="form-control" id="queryMaxSynonyms"
+              placeholder="A maximum of 5 synonyms will be used for each word in the query.">
+          </div>
+          <div class="form-group">
+            <label>Number of Chunks</label>
+            <p id="queryNumberOfChunks"></p>
+          </div>
+          <div id="queryResults" class="form-group">
+            <!-- Results will be displayed here -->
+          </div>
+          <div class="text-center">
+            <button type="button" class="btn bg-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </form>
+      </div>
     </div>
+  </div>
 </div>
 
 {% endblock %}
