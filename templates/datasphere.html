@@ -346,15 +346,16 @@
           contentType: 'application/json',
           data: JSON.stringify(data),
           success: function (response) {
-            var results = response.chunks.map(chunk => `<div class="chunk-result"><p>${chunk.text}</p></div>`).join('');
-            $('#queryResults').html(results);
+            var results = response.chunks.map(chunk => [chunk.text]);
+            $('#queryResultsTable').DataTable().clear().rows.add(results).draw();
           },
           error: function (err) {
-            $('#queryResults').html('<p class="text-danger">Failed to fetch results.</p>');
+            $('#queryResultsTable').DataTable().clear().draw();
+            $('#queryResultsTable').after('<p class="text-danger">Failed to fetch results.</p>');
           }
         });
       } else {
-        $('#queryResults').empty();
+        $('#queryResultsTable').DataTable().clear().draw();
       }
     }
 
@@ -363,6 +364,14 @@
     $('#queryInput').on('input', debouncedPerformQuery);
 
     $('#queryTags, #queryDistance, #queryCount, #queryLanguage, #queryPosToExpand, #queryMaxSynonyms').on('input change', debouncedPerformQuery);
+
+    $('#queryResultsTable').DataTable({
+      "responsive": true,
+      "autoWidth": false,
+      "columns": [
+        { "title": "Chunk Text" }
+      ]
+    });
   });
 </script>
 
@@ -394,7 +403,7 @@
 <div class="modal fade" id="queryDocumentModal" tabindex="-1" role="dialog" aria-labelledby="queryDocumentModalLabel"
   aria-hidden="true">
   <div class="modal-dialog" role="document">
-    <div class="modal-content">
+    <div class="modal-content modal-lg">
       <div class="modal-header">
         <h5 class="modal-title" id="queryDocumentModalLabel">Query Document</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -441,8 +450,17 @@
             <label>Number of Chunks</label>
             <p id="queryNumberOfChunks"></p>
           </div>
-          <div id="queryResults" class="form-group">
-            <!-- Results will be displayed here -->
+          <div class="form-group">
+            <table id="queryResultsTable" class="table table-striped w-100">
+              <thead>
+                <tr>
+                  <th>Chunk Text</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Results will be populated here -->
+              </tbody>
+            </table>
           </div>
           <div class="text-center">
             <button type="button" class="btn bg-secondary" data-dismiss="modal">Close</button>
