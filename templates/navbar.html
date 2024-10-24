@@ -141,22 +141,21 @@
 
   async function refreshToken() {
     const refreshToken = getCookie('refresh_token');
-    if (!refreshToken) {
-      console.error('Refresh token is missing');
-      return;
-    }
-
+    
     const refreshResponse = await fetch('/refresh', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ refresh_token: refreshToken })
+      body: JSON.stringify({ refresh_token: refreshToken || '' }) // Pass empty string if refreshToken is blank
     });
 
     if (refreshResponse.ok) {
       const refreshData = await refreshResponse.json();
       document.cookie = `access_token=${refreshData.access_token}; path=/; samesite=Strict`;
+      if (refreshData.refresh_token) {
+        document.cookie = `refresh_token=${refreshData.refresh_token}; path=/; samesite=Strict`;
+      }
       setRefreshTimer(refreshData.expires_in);
     } else {
       console.error('Failed to refresh token');

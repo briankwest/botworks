@@ -712,10 +712,25 @@ def params():
         return jsonify({'message': 'Params entry created successfully'}), 201
 
 @app.route('/refresh', methods=['POST'])
+@login_required
 def refresh():
     refresh_token = request.json.get('refresh_token')
     if not refresh_token:
-        return jsonify({'message': 'Refresh token is missing'}), 400
+        # Generate new tokens if refresh token is missing
+        new_access_token = jwt.encode({
+            'user_id': current_user.id,
+            'exp': datetime.utcnow() + timedelta(minutes=60)
+        }, app.config['ACCESS_SECRET_KEY'], algorithm='HS256')
+
+        new_refresh_token = jwt.encode({
+            'user_id': current_user.id,
+            'exp': datetime.utcnow() + timedelta(days=30)
+        }, app.config['REFRESH_SECRET_KEY'], algorithm='HS256')
+
+        response = jsonify({'message': 'New tokens issued due to missing refresh token'})
+        response.set_cookie('access_token', new_access_token, httponly=True, samesite='Strict')
+        response.set_cookie('refresh_token', new_refresh_token, httponly=True, samesite='Strict')
+        return response, 200
 
     try:
         data = jwt.decode(refresh_token, app.config['REFRESH_SECRET_KEY'], algorithms=['HS256'])
@@ -726,7 +741,15 @@ def refresh():
             'exp': datetime.utcnow() + timedelta(minutes=60)
         }, app.config['ACCESS_SECRET_KEY'], algorithm='HS256')
 
-        return jsonify({'access_token': new_access_token, 'expires_in': 3600}), 200
+        new_refresh_token = jwt.encode({
+            'user_id': user_id,
+            'exp': datetime.utcnow() + timedelta(days=30)
+        }, app.config['REFRESH_SECRET_KEY'], algorithm='HS256')
+
+        response = jsonify({'access_token': new_access_token, 'refresh_token': new_refresh_token, 'expires_in': 3600})
+        response.set_cookie('access_token', new_access_token, httponly=True, samesite='Strict')
+        response.set_cookie('refresh_token', new_refresh_token, httponly=True, samesite='Strict')
+        return response, 200
 
     except jwt.ExpiredSignatureError:
         return jsonify({'message': 'Refresh token expired'}), 401
