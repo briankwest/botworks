@@ -227,9 +227,8 @@
   }
 
   $(document).ready(function () {
-    // Initialize EasyMDE for the add form
     var addPromptEditor = new EasyMDE({
-      element: document.getElementById('newPromptText'), // Ensure this ID is correct
+      element: document.getElementById('newPromptText'),
       toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview"],
       status: false,
       minHeight: "300px",
@@ -237,9 +236,8 @@
       autoRefresh: true
     });
 
-    // Initialize EasyMDE for the edit modal
     var editPromptEditor = new EasyMDE({
-      element: document.getElementById('editPromptText'), // Ensure this ID is correct
+      element: document.getElementById('editPromptText'),
       toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen"],
       status: false,
       minHeight: "300px",
@@ -317,9 +315,8 @@
           $('#editPromptId').val(data.id);
           $('#editPromptType').val(data.prompt_type);
 
-          // Set the value of the EasyMDE editor for the edit modal
           editPromptEditor.value(data.prompt_text);
-          editPromptEditor.codemirror.refresh(); // Refresh the editor to ensure proper display
+          editPromptEditor.codemirror.refresh();
 
           $('#editTopP').val(data.top_p);
           $('#editTemperature').val(data.temperature);
@@ -368,11 +365,9 @@
       }
     });
 
-    // Handle form submission for adding a new prompt
     $('#addPromptForm').submit(function (event) {
-      event.preventDefault(); // Prevent default form submission
+      event.preventDefault();
 
-      // Validate EasyMDE content for the add form
       if (addPromptEditor.value().trim() === '') {
         showToast('error', 'Prompt text is required.');
         return;
@@ -380,7 +375,7 @@
 
       const formData = {
         prompt_type: $('#newPromptType').val(),
-        prompt_text: addPromptEditor.value(), // Use EasyMDE value for new prompt
+        prompt_text: addPromptEditor.value(),
         top_p: parseFloat($('#newTopP').val()),
         temperature: parseFloat($('#newTemperature').val()),
         max_tokens: parseInt($('#newMaxTokens').val()),
@@ -391,13 +386,12 @@
 
       $.ajax({
         type: 'POST',
-        url: "{{ url_for('prompt') }}", // Ensure this URL is correct
+        url: "{{ url_for('prompt') }}",
         contentType: 'application/json',
         dataType: 'json',
         data: JSON.stringify(formData),
         success: function (response) {
           showToast('success', 'New prompt added successfully');
-          // Reload the table data
           $.ajax({
             type: 'GET',
             url: "{{ url_for('prompt') }}",
@@ -414,8 +408,8 @@
             }
           });
 
-          $('#addPromptForm')[0].reset(); // Reset the form
-          addPromptEditor.value(''); // Clear EasyMDE content for new prompt
+          $('#addPromptForm')[0].reset();
+          addPromptEditor.value('');
         },
         error: function (xhr, status, error) {
           showToast('error', 'Error adding new prompt: ' + xhr.responseText);
@@ -424,15 +418,14 @@
     });
 
     $('#editPromptForm').on('submit', function(event) {
-      event.preventDefault(); // Prevent default form submission
+      event.preventDefault();
     });
 
-    // Handle save button click for editing a prompt
     $('#saveEditPrompt').click(function () {
       event.preventDefault();
       const formData = {
         prompt_type: $('#editPromptType').val(),
-        prompt_text: editPromptEditor.value(), // Use EasyMDE value for editing prompt
+        prompt_text: editPromptEditor.value(),
         top_p: parseFloat($('#editTopP').val()),
         temperature: parseFloat($('#editTemperature').val()),
         max_tokens: parseInt($('#editMaxTokens').val()),
@@ -494,4 +487,3 @@
   });
 </script>
 {% endblock %}
-

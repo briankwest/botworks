@@ -716,7 +716,6 @@ def params():
 def refresh():
     refresh_token = request.json.get('refresh_token')
     if not refresh_token:
-        # Generate new tokens if refresh token is missing
         new_access_token = jwt.encode({
             'user_id': current_user.id,
             'exp': datetime.utcnow() + timedelta(minutes=60)
@@ -727,7 +726,7 @@ def refresh():
             'exp': datetime.utcnow() + timedelta(days=30)
         }, app.config['REFRESH_SECRET_KEY'], algorithm='HS256')
 
-        response = jsonify({'message': 'New tokens issued due to missing refresh token'})
+        response = jsonify({'access_token': new_access_token, 'refresh_token': new_refresh_token, 'expires_in': 3600})
         response.set_cookie('access_token', new_access_token, httponly=True, samesite='Strict')
         response.set_cookie('refresh_token', new_refresh_token, httponly=True, samesite='Strict')
         return response, 200

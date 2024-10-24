@@ -156,7 +156,12 @@
       if (refreshData.refresh_token) {
         document.cookie = `refresh_token=${refreshData.refresh_token}; path=/; samesite=Strict`;
       }
-      setRefreshTimer(refreshData.expires_in);
+
+      if (refreshData.expires_in && !isNaN(refreshData.expires_in)) {
+        setRefreshTimer(refreshData.expires_in);
+      } else {
+        console.error('Invalid expires_in value:', refreshData.expires_in);
+      }
     } else {
       console.error('Failed to refresh token');
     }
@@ -167,8 +172,13 @@
       clearTimeout(refreshTimerId);
     }
 
+    // Ensure refreshInterval is a positive number
     const refreshInterval = (expiresIn / 2) * 1000;
-    refreshTimerId = setTimeout(refreshToken, refreshInterval);
+    if (refreshInterval > 0) {
+      refreshTimerId = setTimeout(refreshToken, refreshInterval);
+    } else {
+      console.error('Invalid refresh interval:', refreshInterval);
+    }
   }
 
   const tokenExpiresIn = 30;
