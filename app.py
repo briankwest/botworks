@@ -749,8 +749,10 @@ def login():
         password = request.form.get('password')
         user = AIUser.query.filter_by(username=username).first()
         if user and check_password_hash(user.password, password):
+            response = make_response(redirect(url_for('dashboard')))
+            
             login_user(user)
-
+            
             default_agent_name = "BotWorks"
             default_agent = AIAgent.query.filter_by(name=default_agent_name, user_id=user.id).first()
             if default_agent is None:
@@ -765,9 +767,10 @@ def login():
                 agent_id = default_agent.id
 
             if not request.cookies.get('selectedAgentId'):
-                response = make_response(redirect(url_for('dashboard')))
-                response.set_cookie('selectedAgentId', str(agent_id), samesite='Strict')
-                return response
+                first_agent = AIAgent.query.filter_by(user_id=user.id).first()
+                if first_agent:
+                    agent_id = first_agent.id
+                    response.set_cookie('selectedAgentId', str(agent_id), samesite='Strict')
             
             setup_default_agent_and_params(user_id=user.id)
 
@@ -780,9 +783,9 @@ def login():
                 'user_id': user.id,
                 'exp': datetime.utcnow() + timedelta(days=7)
             }, app.config['REFRESH_SECRET_KEY'], algorithm='HS256')
+            
             response.set_cookie('access_token', access_token, httponly=True, samesite='Strict')
             response.set_cookie('refresh_token', refresh_token, httponly=True, samesite='Strict')
-            response = make_response(redirect(url_for('dashboard')))
 
             return response
 
