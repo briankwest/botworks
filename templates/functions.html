@@ -470,12 +470,12 @@
           $('#functionArgumentsContainer tr').each(function () {
             const $row = $(this);
             data.arguments.push({
-              name: $row.find('input[name="arg_name[]"]').val(),
-              type: $row.find('select[name="arg_type[]"]').val(),
-              description: $row.find('input[name="arg_description[]"]').val(),
-              required: $row.find('input[name="arg_required[]"]').is(':checked'),
-              enum: $row.find('select[name="arg_type[]"]').val() === 'array' ? $row.find('input[name="arg_enum[]"]').val() : undefined,
-              default: $row.find('input[name="arg_default[]"]').val()
+              name: $row.find('input[name="arg_name"]').val(),
+              type: $row.find('select[name="arg_type"]').val(),
+              description: $row.find('input[name="arg_description"]').val(),
+              required: $row.find('input.toggle-required').is(':checked'),
+              enum: $row.find('input[name="arg_enum"]').val(),
+              default: $row.find('input[name="arg_default"]').val()
             });
           });
 

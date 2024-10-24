@@ -190,7 +190,7 @@ def functions():
             functions = AIFunctions.query.filter_by(user_id=current_user.id, agent_id=selected_agent_id).all()
             function_list = [{
                 'id': f.id,
-                'name': f.name.lower(),
+                'name': f.name,
                 'purpose': f.purpose,
                 'active': f.active,
                 'web_hook_url': f.web_hook_url,
@@ -208,7 +208,7 @@ def functions():
         try:
             data = request.get_json()
             new_function = AIFunctions(
-                name=data['name'].lower(),
+                name=data['name'],
                 purpose=data['purpose'],
                 user_id=current_user.id,
                 agent_id=selected_agent_id,
@@ -233,11 +233,15 @@ def functions():
             # Save the arguments associated with the function
             arguments = data.get('arguments', [])
             for arg in arguments:
+                # Check if 'name' key exists in the argument
+                if 'name' not in arg:
+                    return jsonify({'message': 'Argument name is required'}), 400
+
                 new_argument = AIFunctionArgs(
                     function_id=new_function.id,
                     user_id=current_user.id,  # Ensure user_id is set
                     agent_id=selected_agent_id,  # Ensure agent_id is set
-                    name=arg['name'].lower(),
+                    name=arg['name'],
                     type=arg['type'],
                     description=arg['description'],
                     required=arg['required'],
