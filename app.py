@@ -780,10 +780,10 @@ def login():
                 'user_id': user.id,
                 'exp': datetime.utcnow() + timedelta(days=7)
             }, app.config['REFRESH_SECRET_KEY'], algorithm='HS256')
-            
+            response.set_cookie('access_token', access_token, httponly=True, samesite='Strict')
+            response.set_cookie('refresh_token', refresh_token, httponly=True, samesite='Strict')
             response = make_response(redirect(url_for('dashboard')))
-            response.set_cookie('access_token', access_token, samesite='Strict')
-            response.set_cookie('refresh_token', refresh_token, samesite='Strict')
+
             return response
 
         else:
