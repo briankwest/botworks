@@ -262,7 +262,9 @@
               buttons += `<button class="btn btn-sm btn-danger delete-agent mr-2" data-id="${row.id}">Delete</button>`;
             }
             buttons += `<button class="btn btn-success btn-sm clone-agent mr-2" data-id="${row.id}">Clone</button>`;
-            buttons += `<button class="btn btn-info btn-sm call-agent" data-number="${row.number}">Call</button>`;
+            if (row.number) { // Check if the phone number is defined
+              buttons += `<button class="btn btn-info btn-sm call-agent" data-number="${row.number}">Call</button>`;
+            }
             return buttons;
           }
         }
