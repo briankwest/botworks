@@ -26,9 +26,9 @@
           </a>
         </li>
         <li
-          class="nav-item has-treeview {{ 'menu-open' if request.endpoint in ['agents', 'prompt', 'conversations', 'pronounce', 'language', 'hints', 'params', 'includes', 'aifeatures', 'functions', 'swmlrequests', 'livedebug', 'debuglogs', 'translate', 'transcribe'] else '' }}">
+          class="nav-item has-treeview {{ 'menu-open' if request.endpoint in ['agents', 'prompt', 'conversations', 'pronounce', 'language', 'hints', 'params', 'includes', 'aifeatures', 'functions', 'swmlrequests', 'livedebug', 'debuglogs', 'translate', 'transcribe', 'context'] else '' }}">
           <a href="#"
-            class="nav-link {{ 'active' if request.endpoint in ['agents', 'prompt', 'conversations', 'pronounce', 'language', 'hints', 'params', 'includes', 'aifeatures', 'functions', 'swmlrequests', 'livedebug', 'debuglogs', 'translate', 'transcribe' ] else '' }}">
+            class="nav-link {{ 'active' if request.endpoint in ['agents', 'prompt', 'conversations', 'pronounce', 'language', 'hints', 'params', 'includes', 'aifeatures', 'functions', 'swmlrequests', 'livedebug', 'debuglogs', 'translate', 'transcribe', 'context'] else '' }}">
             <i class="nav-icon fas fa-robot"></i>
             <p>
               AI Agents
@@ -67,6 +67,13 @@
                 class="nav-link {{ 'active' if request.endpoint == 'language' else '' }}">
                 <i class="nav-icon fas fa-language"></i>
                 <p>Language</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{{ url_for('get_contexts') }}"
+              class="nav-link {{ 'active' if request.endpoint == 'context' else '' }}">
+                <i class="nav-icon fas fa-sitemap"></i>
+                <p>Contexts</p>
               </a>
             </li>
             <li class="nav-item">

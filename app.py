@@ -16,7 +16,7 @@ from flask_migrate import Migrate
 from dotenv import load_dotenv
 from urllib.parse import urlparse
 from modules.signalwireml import SignalWireML
-from modules.models import db, AIAgent, AIUser, AISignalWireParams, AIFeatures, AIFunctions, AIIncludes, AIConversation, AISWMLRequest, AIParams, AIFunctionArgs, AIPrompt, AIPronounce, AILanguage, AIHints, AIIncludes, AISWMLRequest, AIDebugLogs
+from modules.models import db, AIAgent, AIUser, AISignalWireParams, AIFeatures, AIFunctions, AIIncludes, AIConversation, AISWMLRequest, AIParams, AIFunctionArgs, AIPrompt, AIPronounce, AILanguage, AIHints, AIIncludes, AISWMLRequest, AIDebugLogs, AIContext, AISteps
 from modules.swml_generator import generate_swml_response
 from modules.utils import (
     generate_random_password, get_signal_wire_param, 
@@ -2105,12 +2105,161 @@ def phone_authenticate():
     else:
         return jsonify({'error': 'Authentication failed'}), response.status_code
 
-
-
 @app.route('/phone', methods=['GET'])
 @login_required
 def phone():
     return render_template('phone.html', user=current_user)
+
+
+@app.route('/context', methods=['GET'])
+@login_required
+def get_contexts():
+    agent_id = request.cookies.get('selectedAgentId')
+    if not agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
+    if request.headers.get('Accept') == 'application/json':
+        contexts = AIContext.query.filter_by(agent_id=agent_id).all()
+        return jsonify([context.to_dict() for context in contexts])
+    else:
+        return render_template('contexts.html', user=current_user)
+
+@app.route('/step', methods=['GET'])
+@login_required
+def get_steps():
+    agent_id = request.cookies.get('selectedAgentId')
+    if not agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
+    steps = AISteps.query.join(AIContext).filter(AIContext.agent_id == agent_id).all()
+    return jsonify([step.to_dict() for step in steps])
+
+@app.route('/context/<int:context_id>', methods=['GET'])
+@login_required
+def get_context(context_id):
+    agent_id = request.cookies.get('selectedAgentId')
+    if not agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+    
+    context = AIContext.query.filter_by(id=context_id, agent_id=agent_id).first_or_404()
+
+    print(f"Context: {context.context_name} {context.id}, {context.agent_id}")
+    
+
+    return jsonify(context.to_dict()), 200
+
+@app.route('/context/<int:context_id>', methods=['PUT'])
+@login_required
+def update_context(context_id):
+    data = request.json
+    context = AIContext.query.get(context_id)
+    if not context:
+        return jsonify({'message': 'Context not found'}), 404
+
+    if 'context_name' in data:
+        context.context_name = data['context_name']
+    
+    db.session.commit()
+    return jsonify(context.to_dict()), 200
+
+@app.route('/context/<int:context_id>', methods=['DELETE'])
+@login_required
+def delete_context(context_id):
+    context = AIContext.query.get(context_id)
+    if not context:
+        return jsonify({'message': 'Context not found'}), 404
+
+    db.session.delete(context)
+    db.session.commit()
+    return jsonify({'message': 'Context deleted successfully'}), 200
+
+@app.route('/context', methods=['POST'])
+@login_required
+def context():
+    agent_id = request.cookies.get('selectedAgentId')
+    if not agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
+    data = request.json
+    new_context = AIContext(agent_id=agent_id, context_name=data['context_name'])
+    db.session.add(new_context)
+    db.session.commit()
+    return jsonify(new_context.to_dict()), 201
+
+@app.route('/step/<int:step_id>', methods=['GET'])
+@login_required
+def get_step(step_id):
+    agent_id = request.cookies.get('selectedAgentId')
+    if not agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+    
+    step = AISteps.query.filter_by(id=step_id).join(AIContext).filter(AIContext.agent_id == agent_id).first_or_404()
+
+    print(f"Step: {step.name} {step.id}, Context ID: {step.context_id}")
+    
+    return jsonify(step.to_dict()), 200
+
+@app.route('/step/<int:step_id>', methods=['PUT'])
+@login_required
+def update_step(step_id):
+    data = request.json
+    step = AISteps.query.get(step_id)
+    if not step:
+        return jsonify({'message': 'Step not found'}), 404
+
+    if 'name' in data:
+        step.name = data['name']
+    if 'text' in data:
+        step.text = data['text']
+    if 'step_criteria' in data:
+        step.step_criteria = data['step_criteria']
+    if 'valid_steps' in data:
+        step.valid_steps = data['valid_steps']
+    if 'valid_contexts' in data:
+        step.valid_contexts = data['valid_contexts']
+    if 'end' in data:
+        step.end = data['end']
+    if 'functions' in data:
+        step.functions = data['functions']
+    if 'skip_user_turn' in data:
+        step.skip_user_turn = data['skip_user_turn']
+
+    db.session.commit()
+    return jsonify(step.to_dict()), 200
+
+@app.route('/step/<int:step_id>', methods=['DELETE'])
+@login_required
+def delete_step(step_id):
+    step = AISteps.query.get(step_id)
+    if not step:
+        return jsonify({'message': 'Step not found'}), 404
+
+    db.session.delete(step)
+    db.session.commit()
+    return jsonify({'message': 'Step deleted successfully'}), 200
+
+@app.route('/step', methods=['POST'])
+@login_required
+def step():
+    agent_id = request.cookies.get('selectedAgentId')
+    if not agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
+    data = request.json
+    new_step = AISteps(
+        context_id=data['context_id'],
+        name=data['name'],
+        text=data['text'],
+        step_criteria=data.get('step_criteria'),
+        valid_steps=data.get('valid_steps', []),
+        valid_contexts=data.get('valid_contexts', []),
+        end=data.get('end', False),
+        functions=data.get('functions', []),
+        skip_user_turn=data.get('skip_user_turn', False)
+    )
+    db.session.add(new_step)
+    db.session.commit()
+    return jsonify(new_step.to_dict()), 201
 
 if __name__ == '__main__':
     with app.app_context():

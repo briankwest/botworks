@@ -24,6 +24,7 @@ class AIAgent(db.Model):
     ai_conversation = db.relationship('AIConversation', back_populates='agent', cascade='all, delete-orphan', lazy=True)
     ai_params = db.relationship('AIParams', back_populates='agent', cascade='all, delete-orphan', lazy=True)
     ai_features = db.relationship('AIFeatures', back_populates='agent', cascade='all, delete-orphan', lazy=True)
+    ai_context_list = db.relationship('AIContext', backref='agent', lazy=True, cascade='all, delete-orphan')
 
     def __repr__(self):
         return f'<AIAgent {self.name}>'
@@ -272,3 +273,49 @@ class AIIncludes(db.Model):
 
     def __repr__(self):
         return f'<AIIncludes {self.url}>'
+    
+class AIContext(db.Model):
+    __tablename__ = 'ai_contexts'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
+    context_name = db.Column(db.String(100), nullable=False)
+
+    # Change the backref name here to avoid conflict
+    ai_steps = db.relationship('AISteps', backref='ai_context', lazy=True, cascade='all, delete-orphan')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'agent_id': self.agent_id,
+            'context_name': self.context_name
+        }
+
+class AISteps(db.Model):
+    __tablename__ = 'ai_steps'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    context_id = db.Column(db.Integer, db.ForeignKey('ai_contexts.id', ondelete='CASCADE'), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    text = db.Column(db.Text, nullable=False)
+    step_criteria = db.Column(db.Text, nullable=True)
+    valid_steps = db.Column(db.ARRAY(db.String), nullable=True)
+    valid_contexts = db.Column(db.ARRAY(db.String), nullable=True)
+    end = db.Column(db.Boolean, nullable=False, default=False)
+    functions = db.Column(db.ARRAY(db.String), nullable=True)
+    skip_user_turn = db.Column(db.Boolean, nullable=False, default=False)
+
+    def __repr__(self):
+        return f'<AISteps {self.name}>'
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'context_id': self.context_id,
+            'name': self.name,
+            'text': self.text,
+            'step_criteria': self.step_criteria,
+            'valid_steps': self.valid_steps,
+            'valid_contexts': self.valid_contexts,
+            'end': self.end,
+            'functions': self.functions,
+            'skip_user_turn': self.skip_user_turn
+        }

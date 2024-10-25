@@ -1,0 +1,903 @@
+{% extends 'base.html' %}
+
+{% block title %}Contexts and Steps{% endblock %}
+
+{% block content %}
+{% include 'navbar.html' %}
+{% include 'sidebar.html' %}
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-6">
+                    <h1 class="m-0">Contexts and Steps</h1>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-primary">
+                            <h3 class="card-title">AI Contexts</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table id="contextTable" class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Context Name</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-info">
+                            <h3 class="card-title">Add AI Context</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="addContextForm">
+                                <div class="form-group">
+                                    <label for="contextName">Context Name</label>
+                                    <input type="text" class="form-control" id="contextName" name="context_name"
+                                        required>
+                                </div>
+                                <button type="submit" class="btn btn-success">Add AI Context</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row steps-section">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-secondary">
+                            <h3 class="card-title">AI Steps</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table id="stepsTable" class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Context</th>
+                                            <th>Step Name</th>
+                                            <th>End</th>
+                                            <th>Skip User Turn</th> <!-- Moved this column next to End -->
+                                            <th>Functions</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row add-step-section">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-info">
+                            <h3 class="card-title">Add AI Step</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="addStepForm">
+                                <div class="form-group">
+                                    <label for="stepContextId">Context</label>
+                                    <select class="form-control" id="stepContextId" name="context_id" required>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="stepName">Step Name</label>
+                                    <input type="text" class="form-control" id="stepName" name="name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="stepText">Step Text</label>
+                                    <textarea class="form-control" id="stepText" name="text" required></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="stepCriteria">Step Criteria</label>
+                                    <textarea class="form-control" id="stepCriteria" name="step_criteria"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="validSteps">Valid Steps</label><br>
+                                    <select class="form-control" id="validSteps" name="valid_steps" multiple>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="validContexts">Valid Contexts</label><br>
+                                    <select class="form-control" id="validContexts" name="valid_contexts" multiple>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="functions">Functions</label><br>
+                                    <select class="form-control" id="functions" name="functions" multiple>
+                                    </select>
+                                </div>
+                                <div class="custom-control custom-switch">
+                                    <input class="custom-control-input toggle-required" type="checkbox" id="end"
+                                        name="end">
+                                    <label class="custom-control-label" for="end">End Step</label>
+                                </div>
+                                <div class="custom-control custom-switch">
+                                    <input class="custom-control-input toggle-required" type="checkbox"
+                                        id="skipUserTurn" name="skip_user_turn">
+                                    <label class="custom-control-label" for="skipUserTurn">Skip User Turn</label>
+                                </div>
+                                <button type="submit" class="btn btn-success">Add AI Step</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+</div>
+
+<div class="modal fade" id="editContextModal" tabindex="-1" role="dialog" aria-labelledby="editContextModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editContextModalLabel">Edit AI Context</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editContextForm">
+                    <div class="form-group">
+                        <label for="editContextName">Context Name</label>
+                        <input type="text" class="form-control" id="editContextName" name="context_name" required>
+                    </div>
+                    <input type="hidden" id="editContextId" name="context_id">
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editStepModal" tabindex="-1" role="dialog" aria-labelledby="editStepModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editStepModalLabel">Edit AI Step</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editStepForm">
+                    <div class="form-group">
+                        <label for="editStepContextId">Context</label>
+                        <select class="form-control" id="editStepContextId" name="context_id" required>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editStepName">Step Name</label>
+                        <input type="text" class="form-control" id="editStepName" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editStepText">Step Text</label>
+                        <textarea class="form-control" id="editStepText" name="text" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="editStepCriteria">Step Criteria</label>
+                        <textarea class="form-control" id="editStepCriteria" name="step_criteria"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="editValidSteps">Valid Steps</label><br>
+                        <select class="form-control" id="editValidSteps" name="valid_steps" multiple>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editValidContexts">Valid Contexts</label><br>
+                        <select class="form-control" id="editValidContexts" name="valid_contexts" multiple>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editFunctions">Functions</label><br>
+                        <select class="form-control" id="editFunctions" name="functions" multiple>
+                        </select>
+                    </div>
+                    <div class="custom-control custom-switch">
+                        <input class="custom-control-input toggle-required" type="checkbox" id="editEnd" name="end">
+                        <label class="custom-control-label" for="editEnd">End Step</label>
+                    </div>
+                    <div class="custom-control custom-switch">
+                        <input class="custom-control-input toggle-required" type="checkbox" id="editSkipUserTurn"
+                            name="skip_user_turn">
+                        <label class="custom-control-label" for="editSkipUserTurn">Skip User Turn</label>
+                    </div>
+                    <input type="hidden" id="editStepId" name="step_id">
+                    <div class="d-flex justify-content-end mt-3">
+                        <button type="button" class="btn btn-secondary mr-2" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include 'footer.html' %}
+
+{% endblock %}
+
+{% block scripts %}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
+<script type="text/javascript" src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+<script type="text/javascript" src="https://unpkg.com/@signalwire/js@^1"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $('.steps-section, .add-step-section').hide();
+
+        function checkContextsAndToggleSteps() {
+            $.ajax({
+                type: 'GET',
+                url: "{{ url_for('context') }}",
+                contentType: 'application/json',
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                success: function (data) {
+                    if (Array.isArray(data) && data.length > 0) {
+                        $('.steps-section, .add-step-section').show();
+                    } else {
+                        $('.steps-section, .add-step-section').hide();
+                    }
+                },
+                error: function (error) {
+                    console.error('Error fetching contexts:', error);
+                    showToast('error', 'Error fetching contexts');
+                }
+            });
+        }
+
+        checkContextsAndToggleSteps();
+
+        $('#contextTable').DataTable({
+            "responsive": true,
+            "autoWidth": false,
+            "ajax": {
+                "url": "{{ url_for('context') }}",
+                "type": "GET",
+                "dataSrc": "",
+                "headers": {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                }
+            },
+            "columns": [
+                { "data": "id" },
+                { "data": "context_name" },
+                {
+                    "data": null,
+                    "render": function (data, type, row) {
+                        return `<button class="btn btn-sm btn-primary edit-context mr-2" data-id="${row.id}">Edit</button>
+                    <button class="btn btn-sm btn-danger delete-context" data-id="${row.id}">Delete</button>`;
+                    }
+                }
+            ]
+        });
+
+        let contextMap = {};
+
+        function fetchContexts() {
+            return $.ajax({
+                type: 'GET',
+                url: "{{ url_for('context') }}",
+                contentType: 'application/json',
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                success: function (data) {
+                    if (Array.isArray(data)) {
+                        contextMap = {};
+                        data.forEach(function (context) {
+                            contextMap[context.id] = context.context_name;
+                        });
+                    }
+                },
+                error: function (error) {
+                    console.error('Error fetching contexts:', error);
+                    showToast('error', 'Error fetching contexts');
+                }
+            });
+        }
+
+        let functionMap = {};
+
+        function fetchFunctions() {
+            return $.ajax({
+                type: 'GET',
+                url: "{{ url_for('functions') }}",
+                contentType: 'application/json',
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                success: function (data) {
+                    if (Array.isArray(data)) {
+                        functionMap = {};
+                        data.forEach(function (func) {
+                            functionMap[func.id] = func.name;
+                        });
+                    }
+                },
+                error: function (error) {
+                    console.error('Error fetching functions:', error);
+                    showToast('error', 'Error fetching functions');
+                }
+            });
+        }
+
+        fetchContexts().then(fetchFunctions).then(function () {
+            $('#stepsTable').DataTable({
+                "responsive": true,
+                "autoWidth": false,
+                "ajax": {
+                    "url": "{{ url_for('step') }}",
+                    "type": "GET",
+                    "dataSrc": "",
+                    "headers": {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    }
+                },
+                "columns": [
+                    { "data": "id" },
+                    {
+                        "data": "context_id",
+                        "render": function (data, type, row) {
+                            return contextMap[data] || 'Unknown Context';
+                        }
+                    },
+                    { "data": "name" },
+                    {
+                        "data": "end",
+                        "render": function (data, type, row) {
+                            return `<div class="d-flex justify-content-center">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input toggle-end" id="toggleEnd${row.id}" data-id="${row.id}" ${data ? 'checked' : ''}>
+                                    <label class="custom-control-label" for="toggleEnd${row.id}"></label>
+                                </div>
+                            </div>`;
+                        }
+                    },
+                    {
+                        "data": "skip_user_turn",
+                        "render": function (data, type, row) {
+                            return `<div class="d-flex justify-content-center">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input toggle-skip-user-turn" id="toggleSkipUserTurn${row.id}" data-id="${row.id}" ${data ? 'checked' : ''}>
+                                    <label class="custom-control-label" for="toggleSkipUserTurn${row.id}"></label>
+                                </div>
+                            </div>`;
+                        }
+                    },
+                    {
+                        "data": "functions",
+                        "render": function (data, type, row) {
+                            if (Array.isArray(data)) {
+                                return data.map(function (funcId) {
+                                    return functionMap[funcId] || 'Unknown Function';
+                                }).join(', ');
+                            }
+                            return 'No Functions';
+                        }
+                    },
+                    {
+                        "data": null,
+                        "render": function (data, type, row) {
+                            return `<button class="btn btn-sm btn-primary edit-step mr-2" data-id="${row.id}">Edit</button>
+                        <button class="btn btn-sm btn-danger delete-step" data-id="${row.id}">Delete</button>`;
+                        }
+                    }
+                ]
+            });
+        });
+
+        function populateContextDropdown() {
+            $.ajax({
+                type: 'GET',
+                url: "{{ url_for('context') }}",
+                contentType: 'application/json',
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                success: function (data) {
+                    console.log('Response data:', data);
+                    if (Array.isArray(data)) {
+                        const contextDropdown = $('#stepContextId');
+                        contextDropdown.empty();
+                        data.forEach(function (context) {
+                            contextDropdown.append(new Option(context.context_name, context.id));
+                        });
+                    } else {
+                        console.error('Expected an array but got:', data);
+                        showToast('error', 'Unexpected response format');
+                    }
+                },
+                error: function (error) {
+                    console.error('Error fetching contexts:', error);
+                    showToast('error', 'Error fetching contexts');
+                }
+            });
+        }
+
+        populateContextDropdown();
+
+        function populateContextDropdown() {
+            $.ajax({
+                type: 'GET',
+                url: "{{ url_for('context') }}",
+                contentType: 'application/json',
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                success: function (data) {
+                    const contextDropdowns = $('#stepContextId, #editStepContextId, #validContexts, #editValidContexts');
+                    contextDropdowns.empty();
+                    data.forEach(function (context) {
+                        contextDropdowns.append(new Option(context.context_name, context.id));
+                    });
+                    contextDropdowns.trigger('change');
+                },
+                error: function (error) {
+                    console.error('Error fetching contexts:', error);
+                    showToast('error', 'Error fetching contexts');
+                }
+            });
+        }
+
+        populateContextDropdown();
+
+        $('#addContextForm').submit(function (e) {
+            e.preventDefault();
+            const formData = {
+                context_name: $('#contextName').val()
+            };
+
+            $.ajax({
+                type: 'POST',
+                url: "{{ url_for('context') }}",
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function (response) {
+                    $('#contextTable').DataTable().ajax.reload();
+                    $('#addContextForm')[0].reset();
+                    showToast('success', 'AI Context created successfully');
+                    checkContextsAndToggleSteps();
+                    populateContextDropdown();
+                    fetchContexts();
+                },
+                error: function (error) {
+                    showToast('error', 'Error creating AI Context');
+                }
+            });
+        });
+
+        $('#validSteps, #validContexts, #functions').select2();
+
+        $('#addStepForm').submit(function (e) {
+            e.preventDefault();
+            const formData = {
+                context_id: $('#stepContextId').val(),
+                name: $('#stepName').val(),
+                text: $('#stepText').val(),
+                step_criteria: $('#stepCriteria').val() || null,
+                valid_steps: $('#validSteps').val() || [],
+                valid_contexts: $('#validContexts').val() || [],
+                functions: $('#functions').val() || [],
+                end: $('#end').is(':checked'),
+                skip_user_turn: $('#skipUserTurn').is(':checked')
+            };
+
+            console.log('Form Data:', formData);
+
+            $.ajax({
+                type: 'POST',
+                url: "{{ url_for('step') }}",
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function (response) {
+                    $('#stepsTable').DataTable().ajax.reload();
+                    $('#addStepForm')[0].reset();
+                    $('#validSteps, #validContexts, #functions').val(null).trigger('change');
+                    showToast('success', 'AI Step created successfully');
+                    populateContextDropdown();
+                },
+                error: function (error) {
+                    showToast('error', 'Error creating AI Step');
+                }
+            });
+        });
+
+        $('#contextTable').on('click', '.edit-context', function () {
+            const contextId = $(this).data('id');
+            $.ajax({
+                type: 'GET',
+                url: `{{ url_for('context') }}/${contextId}`,
+                success: function (data) {
+                    $('#editContextId').val(data.id);
+                    $('#editContextName').val(data.context_name);
+                    $('#editContextModal').modal('show');
+                },
+                error: function (error) {
+                    showToast('error', 'Error fetching context details');
+                }
+            });
+        });
+
+        $('#editContextForm').submit(function (e) {
+            e.preventDefault();
+            const contextId = $('#editContextId').val();
+            const formData = {
+                context_name: $('#editContextName').val()
+            };
+
+            $.ajax({
+                type: 'PUT',
+                url: `{{ url_for('context') }}/${contextId}`,
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function (response) {
+                    $('#contextTable').DataTable().ajax.reload();
+                    $('#editContextModal').modal('hide');
+                    showToast('success', 'AI Context updated successfully');
+                },
+                error: function (error) {
+                    showToast('error', 'Error updating AI Context');
+                }
+            });
+        });
+
+        $('#contextTable').on('click', '.delete-context', function () {
+            const contextId = $(this).data('id');
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type: 'DELETE',
+                        url: `{{ url_for('context') }}/${contextId}`,
+                        success: function (response) {
+                            $('#contextTable').DataTable().ajax.reload();
+                            $('#stepsTable').DataTable().ajax.reload();
+                            showToast('success', 'AI Context deleted successfully');
+                            checkContextsAndToggleSteps();
+                            populateContextDropdown();
+                            fetchContexts();
+                        },
+                        error: function (error) {
+                            showToast('error', 'Error deleting AI Context');
+                        }
+                    });
+                }
+            });
+        });
+
+        function populateEditContextDropdown(selectedContextId) {
+            $.ajax({
+                type: 'GET',
+                url: "{{ url_for('context') }}",
+                contentType: 'application/json',
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                success: function (data) {
+                    if (Array.isArray(data)) {
+                        const contextDropdown = $('#editStepContextId');
+                        contextDropdown.empty();
+                        data.forEach(function (context) {
+                            contextDropdown.append(new Option(context.context_name, context.id));
+                        });
+                        contextDropdown.val(selectedContextId);
+                    } else {
+                        console.error('Expected an array but got:', data);
+                        showToast('error', 'Unexpected response format');
+                    }
+                },
+                error: function (error) {
+                    console.error('Error fetching contexts:', error);
+                    showToast('error', 'Error fetching contexts');
+                }
+            });
+        }
+
+        $('#stepsTable').on('click', '.edit-step', function () {
+            const stepId = $(this).data('id');
+            $.ajax({
+                type: 'GET',
+                url: `{{ url_for('step') }}/${stepId}`,
+                success: function (data) {
+                    $('#editStepId').val(data.id);
+                    $('#editStepName').val(data.name);
+                    $('#editStepText').val(data.text);
+                    $('#editStepCriteria').val(data.step_criteria || '');
+                    $('#editValidSteps').val(data.valid_steps).trigger('change');
+                    $('#editValidContexts').val(data.valid_contexts).trigger('change');
+                    $('#editFunctions').val(data.functions).trigger('change');
+                    $('#editEnd').prop('checked', data.end || false);
+                    $('#editSkipUserTurn').prop('checked', data.skip_user_turn || false);
+                    populateEditContextDropdown(data.context_id);
+                    $('#editStepModal').modal('show');
+                },
+                error: function (error) {
+                    showToast('error', 'Error fetching step details');
+                }
+            });
+        });
+
+        $('#editStepForm').submit(function (e) {
+            e.preventDefault();
+            const stepId = $('#editStepId').val();
+            const formData = {
+                name: $('#editStepName').val(),
+                text: $('#editStepText').val(),
+                step_criteria: $('#editStepCriteria').val() || null,
+                valid_steps: $('#editValidSteps').val() || null,
+                valid_contexts: $('#editValidContexts').val() || null,
+                functions: $('#editFunctions').val() || null,
+                end: $('#editEnd').is(':checked'),
+                skip_user_turn: $('#editSkipUserTurn').is(':checked')
+            };
+
+            $.ajax({
+                type: 'PUT',
+                url: `{{ url_for('step') }}/${stepId}`,
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function (response) {
+                    $('#stepsTable').DataTable().ajax.reload();
+                    $('#editStepModal').modal('hide');
+                    showToast('success', 'AI Step updated successfully');
+                },
+                error: function (error) {
+                    showToast('error', 'Error updating AI Step');
+                }
+            });
+        });
+
+        $('#stepsTable').on('click', '.delete-step', function () {
+            const stepId = $(this).data('id');
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type: 'DELETE',
+                        url: `{{ url_for('step') }}/${stepId}`,
+                        success: function (response) {
+                            handlePutOrDeleteSuccess();
+                        },
+                        error: function (error) {
+                            showToast('error', 'Error deleting AI Step');
+                        }
+                    });
+                }
+            });
+        });
+
+        function showToast(icon, title) {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            });
+
+            Toast.fire({
+                icon: icon,
+                title: title
+            });
+        }
+
+        $('#validSteps, #validContexts, #functions, #editValidSteps, #editValidContexts, #editFunctions').select2();
+
+        function populateStepsDropdown() {
+            $.ajax({
+                type: 'GET',
+                url: "{{ url_for('step') }}",
+                contentType: 'application/json',
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                success: function (data) {
+                    const stepsDropdown = $('#validSteps, #editValidSteps');
+                    stepsDropdown.empty();
+                    data.forEach(function (step) {
+                        stepsDropdown.append(new Option(step.name, step.id));
+                    });
+                },
+                error: function (error) {
+                    console.error('Error fetching steps:', error);
+                    showToast('error', 'Error fetching steps');
+                }
+            });
+        }
+
+        function populateFunctionsDropdown() {
+            $.ajax({
+                type: 'GET',
+                url: "{{ url_for('functions') }}",
+                contentType: 'application/json',
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                success: function (data) {
+                    const functionsDropdown = $('#functions, #editFunctions');
+                    functionsDropdown.empty();
+                    data.forEach(function (func) {
+                        functionsDropdown.append(new Option(func.name, func.id));
+                    });
+                },
+                error: function (error) {
+                    console.error('Error fetching functions:', error);
+                    showToast('error', 'Error fetching functions');
+                }
+            });
+        }
+
+        populateFunctionsDropdown();
+
+        populateContextDropdown();
+        populateStepsDropdown();
+
+        function refreshMultiSelects() {
+            $.ajax({
+                type: 'GET',
+                url: "{{ url_for('context') }}",
+                contentType: 'application/json',
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                success: function (data) {
+                    const contextDropdowns = $('#validContexts, #editValidContexts');
+                    contextDropdowns.empty();
+                    data.forEach(function (context) {
+                        contextDropdowns.append(new Option(context.context_name, context.id));
+                    });
+                    contextDropdowns.trigger('change');
+                },
+                error: function (error) {
+                    console.error('Error fetching contexts:', error);
+                    showToast('error', 'Error fetching contexts');
+                }
+            });
+
+            $.ajax({
+                type: 'GET',
+                url: "{{ url_for('step') }}",
+                contentType: 'application/json',
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                success: function (data) {
+                    const stepsDropdowns = $('#validSteps, #editValidSteps');
+                    stepsDropdowns.empty();
+                    data.forEach(function (step) {
+                        stepsDropdowns.append(new Option(step.name, step.id));
+                    });
+                    stepsDropdowns.trigger('change');
+                },
+                error: function (error) {
+                    console.error('Error fetching steps:', error);
+                    showToast('error', 'Error fetching steps');
+                }
+            });
+
+            $.ajax({
+                type: 'GET',
+                url: "{{ url_for('functions') }}",
+                contentType: 'application/json',
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                success: function (data) {
+                    const functionsDropdowns = $('#functions, #editFunctions');
+                    functionsDropdowns.empty();
+                    data.forEach(function (func) {
+                        functionsDropdowns.append(new Option(func.name, func.id));
+                    });
+                    functionsDropdowns.trigger('change');
+                },
+                error: function (error) {
+                    console.error('Error fetching functions:', error);
+                    showToast('error', 'Error fetching functions');
+                }
+            });
+        }
+
+        function handlePutOrDeleteSuccess() {
+            $('#stepsTable').DataTable().ajax.reload();
+            showToast('success', 'Operation successful');
+            refreshMultiSelects();
+        }
+
+        $('#stepsTable').on('change', '.toggle-end', function () {
+            const stepId = $(this).data('id');
+            const isChecked = $(this).is(':checked');
+            updateStepField(stepId, 'end', isChecked);
+        });
+
+        $('#stepsTable').on('change', '.toggle-skip-user-turn', function () {
+            const stepId = $(this).data('id');
+            const isChecked = $(this).is(':checked');
+            updateStepField(stepId, 'skip_user_turn', isChecked);
+        });
+
+        function updateStepField(stepId, field, value) {
+            const formData = {};
+            formData[field] = value;
+
+            $.ajax({
+                type: 'PUT',
+                url: `{{ url_for('step') }}/${stepId}`,
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function (response) {
+                    showToast('success', `AI Step ${field} updated successfully`);
+                },
+                error: function (error) {
+                    showToast('error', `Error updating AI Step ${field}`);
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -606,6 +606,11 @@
       $('#functionArgumentsContainer').append(createArgRow(newArg));
     });
 
+    // Add event listener for delete argument button in the add form
+    $('#functionArgumentsContainer').on('click', '.delete-arg', function () {
+      $(this).closest('tr').remove();
+    });
+
     $('#saveEditFunction').on('click', function () {
       const functionId = $('#editFunctionId').val();
       const metaData = $('#editFunctionMetaData').val();
