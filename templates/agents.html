@@ -25,18 +25,20 @@
               <h3 class="card-title">AI Agents</h3>
             </div>
             <div class="card-body">
-              <table id="agentTable" class="table table-striped">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Phone Number</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                </tbody>
-              </table>
+              <div class="table-responsive"> <!-- Added this wrapper -->
+                <table id="agentTable" class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Name</th>
+                      <th>Phone Number</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+              </div> <!-- Closing the wrapper -->
             </div>
           </div>
         </div>
@@ -262,7 +264,7 @@
               buttons += `<button class="btn btn-sm btn-danger delete-agent mr-2" data-id="${row.id}">Delete</button>`;
             }
             buttons += `<button class="btn btn-success btn-sm clone-agent mr-2" data-id="${row.id}">Clone</button>`;
-            if (row.number) { // Check if the phone number is defined
+            if (row.number) {
               buttons += `<button class="btn btn-info btn-sm call-agent" data-number="${row.number}">Call</button>`;
             }
             return buttons;
@@ -391,11 +393,10 @@
       });
     });
 
-    // New: Call button click event
-    $('#agentTable').on('click', '.call-agent', function () {
+        $('#agentTable').on('click', '.call-agent', function () {
       const number = $(this).data('number');
-      $('#number').val(number); // Prefill the phone number in the modal
-      $('#phoneModal').modal('show'); // Show the modal
+      $('#number').val(number);
+      $('#phoneModal').modal('show');
     });
 
     function refreshAgentsDropdown() {
@@ -434,7 +435,6 @@
       });
     }
 
-    // Phone Modal JavaScript
     let client;
     let currentCall = null;
     let projectID = '';
@@ -530,12 +530,10 @@
       }
     }
 
-    // Define makeCall as a global function
     window.makeCall = function() {
       const destinationNumber = document.getElementById('number').value;
       const callerNumber = document.getElementById('numberFrom').value;
 
-      // Validate required fields
       if (!destinationNumber) {
         Swal.fire({
           toast: true,
@@ -594,12 +592,12 @@
       })
       .then(response => response.json())
       .then(data => {
-        if (data.project_id && data.jwt_token) { // Ensure both fields are present
+        if (data.project_id && data.jwt_token) {
           projectID = data.project_id;
           jwtToken = data.jwt_token;
-          document.getElementById('project').value = projectID; // Populate the input field
-          document.getElementById('token').value = jwtToken; // Populate the input field
-          connect(); // Automatically connect once the project and token are filled
+          document.getElementById('project').value = projectID;
+          document.getElementById('token').value = jwtToken;
+          connect();
           setTimeout(authenticatePhone, (data.expires_in / 2) * 1000);
         } else {
           console.error('Authentication failed:', data.error);
@@ -608,10 +606,8 @@
       .catch(error => console.error('Error:', error));
     }
 
-    // Initialize phone modal on page load
     authenticatePhone();
 
-    // Add event listener for modal close to hang up the call
     $('#phoneModal').on('hidden.bs.modal', function () {
       hangup();
     });

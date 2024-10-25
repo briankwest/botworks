@@ -25,39 +25,41 @@
               <h3 class="card-title">Prompts</h3>
             </div>
             <div class="card-body">
-              <table id="promptTable" class="table table-striped w-100">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Type</th>
-                    <th>Top P</th>
-                    <th>Temperature</th>
-                    <th>Max Tokens</th>
-                    <th>Confidence</th>
-                    <th>Frequency Penalty</th>
-                    <th>Presence Penalty</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for prompt in prompts %}
-                  <tr>
-                    <td>{{ prompt.id }}</td>
-                    <td>{{ prompt.prompt_type }}</td>
-                    <td>{{ prompt.top_p }}</td>
-                    <td>{{ prompt.temperature }}</td>
-                    <td>{{ prompt.max_tokens }}</td>
-                    <td>{{ prompt.confidence }}</td>
-                    <td>{{ prompt.frequency_penalty }}</td>
-                    <td>{{ prompt.presence_penalty }}</td>
-                    <td>
-                      <button class="btn btn-sm btn-primary edit-btn" data-id="{{ prompt.id }}">Edit</button>
-                      <button class="btn btn-sm btn-danger delete-btn" data-id="{{ prompt.id }}">Delete</button>
-                    </td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
+              <div class="table-responsive">
+                <table id="promptTable" class="table table-striped w-100">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Type</th>
+                      <th>Top P</th>
+                      <th>Temperature</th>
+                      <th>Max Tokens</th>
+                      <th>Confidence</th>
+                      <th>Frequency Penalty</th>
+                      <th>Presence Penalty</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for prompt in prompts %}
+                    <tr>
+                      <td>{{ prompt.id }}</td>
+                      <td>{{ prompt.prompt_type }}</td>
+                      <td>{{ prompt.top_p }}</td>
+                      <td>{{ prompt.temperature }}</td>
+                      <td>{{ prompt.max_tokens }}</td>
+                      <td>{{ prompt.confidence }}</td>
+                      <td>{{ prompt.frequency_penalty }}</td>
+                      <td>{{ prompt.presence_penalty }}</td>
+                      <td>
+                        <button class="btn btn-sm btn-primary edit-btn" data-id="{{ prompt.id }}">Edit</button>
+                        <button class="btn btn-sm btn-danger delete-btn" data-id="{{ prompt.id }}">Delete</button>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
 
@@ -487,3 +489,4 @@
   });
 </script>
 {% endblock %}
+
