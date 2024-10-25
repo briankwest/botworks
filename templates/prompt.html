@@ -294,7 +294,10 @@
           "info": true,
           "ordering": false,
           "searching": false,
-          "dom": 't'
+          "dom": 't',
+          "columnDefs": [
+            { "targets": -1, "className": "text-nowrap" }
+          ]
         });
 
         const promptTypeSelect = $('#newPromptType');

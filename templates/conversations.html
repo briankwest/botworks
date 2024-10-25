@@ -136,7 +136,10 @@
         console.log('DataTables error: ', error);
         console.log('DataTables error details: ', thrown);
         console.log('Response text: ', xhr.responseText);
-      }
+      },
+      "columnDefs": [
+        { "targets": -1, "className": "text-nowrap" }
+      ]
     });
 
     function showToast(icon, title) {
@@ -651,3 +654,4 @@
 </script>
 
 {% endblock %}
+

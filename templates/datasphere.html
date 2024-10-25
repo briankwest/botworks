@@ -153,7 +153,10 @@
         }
       ],
       "responsive": true,
-      "autoWidth": false
+      "autoWidth": false,
+      "columnDefs": [
+        { "targets": -1, "className": "text-nowrap" }
+      ],
     });
 
     const Toast = Swal.mixin({
@@ -474,3 +477,4 @@
 </div>
 
 {% endblock %}
+
