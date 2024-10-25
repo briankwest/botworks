@@ -2,7 +2,7 @@ import json, base64
 from flask import request, jsonify
 from modules.models import (
     AIPrompt, AIParams, AIUser, AIHints, AILanguage, AIPronounce, 
-    AIFunctions, AIFunctionArgs, AIIncludes, AISWMLRequest
+    AIFunctions, AIFunctionArgs, AIIncludes, AISWMLRequest, AISteps, AIContext
 )
 from modules.utils import get_feature, get_signal_wire_param
 from modules.signalwireml import SignalWireML
@@ -214,6 +214,64 @@ def generate_swml_response(user_id, agent_id, request_body):
         }
 
         swml.add_aiinclude(function_dict)
+    
+    
+    context_steps = (
+        db.session.query(AISteps, AIContext)
+        .join(AIContext, AISteps.context_id == AIContext.id)
+        .filter(AIContext.agent_id == agent_id)
+        .all()
+    )
+    context_step_groups = {}
+    for step, context in context_steps:
+        try:
+            # Resolve valid_steps to step names
+            valid_steps = []
+            if step.valid_steps:
+                valid_step_ids = json.loads(step.valid_steps) if isinstance(step.valid_steps, str) else step.valid_steps
+                valid_steps = [s.name for s in AISteps.query.filter(AISteps.id.in_(valid_step_ids)).all()]
+
+            # Resolve valid_contexts to context names
+            valid_contexts = []
+            if step.valid_contexts:
+                valid_context_ids = json.loads(step.valid_contexts) if isinstance(step.valid_contexts, str) else step.valid_contexts
+                valid_contexts = [c.context_name for c in AIContext.query.filter(AIContext.id.in_(valid_context_ids)).all()]
+
+            # Resolve functions to function names
+            functions = []
+            if step.functions:
+                function_ids = json.loads(step.functions) if isinstance(step.functions, str) else step.functions
+                functions = [f.name for f in AIFunctions.query.filter(AIFunctions.id.in_(function_ids)).all()]
+
+            step_dict = {
+                'name': step.name,
+                'step_criteria': step.step_criteria,
+                'text': step.text,
+                'skip_user_turn': step.skip_user_turn,
+            }
+            
+            if step.end:
+                step_dict['end'] = True
+                if functions:
+                    step_dict['functions'] = functions
+            else:
+                if functions:
+                    step_dict['functions'] = functions
+                if valid_steps:
+                    step_dict['valid_steps'] = valid_steps
+                if valid_contexts:
+                    step_dict['valid_contexts'] = valid_contexts
+
+            # Filter out None or empty string values
+            step_dict = {k: v for k, v in step_dict.items() if v is not None and v != ''}
+            context_step_groups.setdefault(context.context_name, []).append(step_dict)
+        except Exception as e:
+            print(f"Error processing step {step.id}: {str(e)}")
+            continue
+    
+
+    for context_name, steps in context_step_groups.items():
+        swml.add_context_steps(context_name, steps)
 
     enable_transfer_feature = get_feature(agent_id, 'ENABLE_TRANSFER')
 
@@ -528,3 +586,8 @@ def generate_swml_response(user_id, agent_id, request_body):
     db.session.commit()
 
     return swml_response
+
+
+
+
+

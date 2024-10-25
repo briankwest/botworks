@@ -2113,7 +2113,7 @@ def phone():
 
 @app.route('/context', methods=['GET'])
 @login_required
-def get_contexts():
+def context():
     agent_id = request.cookies.get('selectedAgentId')
     if not agent_id:
         return jsonify({'message': 'Agent ID not found in cookies'}), 400
@@ -2175,7 +2175,7 @@ def delete_context(context_id):
 
 @app.route('/context', methods=['POST'])
 @login_required
-def context():
+def post_context():
     agent_id = request.cookies.get('selectedAgentId')
     if not agent_id:
         return jsonify({'message': 'Agent ID not found in cookies'}), 400
@@ -2207,6 +2207,8 @@ def update_step(step_id):
     if not step:
         return jsonify({'message': 'Step not found'}), 404
 
+    if 'context_id' in data:
+        step.context_id = data['context_id']
     if 'name' in data:
         step.name = data['name']
     if 'text' in data:
