@@ -235,7 +235,12 @@
         "dataSrc": ""
       },
       "columns": [
-        { "data": "id" },
+        {
+          "data": "id",
+          "render": function (data, type, row) {
+            return row.name === data ? '' : data;
+          }
+        },
         { "data": "name" },
         { "data": "purpose" },
         {

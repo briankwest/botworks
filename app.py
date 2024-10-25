@@ -207,9 +207,9 @@ def functions():
             includes = AIIncludes.query.filter_by(agent_id=selected_agent_id).all()
             for include in includes:
                 included_functions = json.loads(include.functions)
-                for func in included_functions:
+                for i, func in enumerate(included_functions):
                     function_list.append({
-                        'id': -1,
+                        'id': func,
                         'name': func,
                         'purpose': 'Included Function',
                         'active': True,
