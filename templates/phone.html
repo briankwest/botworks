@@ -1,0 +1,349 @@
+{% extends 'base.html' %}
+
+{% block title %}Signalwire Call Harness{% endblock %}
+
+{% block content %}
+{% include 'navbar.html' %}
+{% include 'sidebar.html' %}
+
+<div class="content-wrapper">
+  <section class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-6">
+          <h1 class="m-0">Phone</h1>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header bg-success">
+              <h3 class="card-title">Video</h3>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-6">
+                  <h5>Local Video</h5>
+                  <video id="localVideo" autoplay="true" class="w-100" style="background-color: #000; border: 1px solid #ccc; border-radius: 5px;"></video>
+                </div>
+                <div class="col-6">
+                  <h5>Remote Video</h5>
+                  <video id="remoteVideo" autoplay="true" class="w-100" playsinline style="background-color: #000; border: 1px solid #ccc; border-radius: 5px;"></video>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header bg-info">
+              <h3 class="card-title">Call Options</h3>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label for="number">Call To:</label>
+                <input type="text" class="form-control" id="number" placeholder="Enter Resource or Number to Dial">
+                <label for="numberFrom">Call From:</label>
+                <input type="text" class="form-control" id="numberFrom" placeholder="Enter Source number to Call From">
+              </div>
+
+              <div>Call Options:</div>
+              <div class="form-check">
+                <div class="custom-control custom-switch">
+                  <input type="checkbox" class="custom-control-input" id="audio" value="1" checked>
+                  <label class="custom-control-label" for="audio">Include Audio</label>
+                </div>
+              </div>
+              <div class="form-check">
+                <div class="custom-control custom-switch">
+                  <input type="checkbox" class="custom-control-input" id="video" value="1">
+                  <label class="custom-control-label" for="video">Include Video</label>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <input type="hidden" class="form-control" id="project" placeholder="Enter Project ID">
+                </div>
+                <div class="form-group">
+                  <input type="hidden" class="form-control" id="token" placeholder="JWT will be automatically filled">
+                </div>
+                <div class="text-center mt-3 text-muted">
+                  <small>Status: <span id='connectStatus'>Not Connected</span></small>
+                </div>
+                <div class="text-center mt-3 text-muted">
+                  <small>Call Status: <span id='callStatus'>Idle</span></small>
+                </div>
+                <div class="form-group">
+                  <input type="hidden" class="form-control" id="project" placeholder="Enter Project ID">
+                </div>
+                <div class="form-group">
+                  <input type="hidden" class="form-control" id="token" placeholder="JWT will be automatically filled">
+                </div>    
+              </div>
+              <div class="button-group mt-4">
+                <button id="startCall" type="button" class="btn btn-primary btn-flat" onClick="makeCall()" disabled="true">Call</button>
+                <button id="hangupCall" type="button" class="btn btn-danger btn-flat d-none" onClick="hangup()" disabled="true">Hang up</button>
+                <button id="btnDisconnect" type="button" class="btn btn-warning btn-flat d-none" onclick="disconnect()">Disconnect</button>
+                <button id="btnConnect" type="button" class="btn btn-success btn-flat" onclick="connect()">Connect</button>
+              </div>
+              <div class="form-group text-center" id="dtmfKeys" hidden="false">
+                <div class="dtmf-grid">
+                  <div>
+                    <button id="dtmf_1" type="button" class="btn btn-primary btn-flat" onClick="dtmf(event)">1</button>
+                    <button id="dtmf_2" type="button" class="btn btn-primary btn-flat" onClick="dtmf(event)">2</button>
+                    <button id="dtmf_3" type="button" class="btn btn-primary btn-flat" onClick="dtmf(event)">3</button>
+                    <button id="dtmf_a" type="button" class="btn btn-primary btn-flat" onClick="dtmf(event)">A</button>
+                  </div>
+                  <div>
+                    <button id="dtmf_4" type="button" class="btn btn-primary btn-flat" onClick="dtmf(event)">4</button>
+                    <button id="dtmf_5" type="button" class="btn btn-primary btn-flat" onClick="dtmf(event)">5</button>
+                    <button id="dtmf_6" type="button" class="btn btn-primary btn-flat" onClick="dtmf(event)">6</button>
+                    <button id="dtmf_b" type="button" class="btn btn-primary btn-flat" onClick="dtmf(event)">B</button>
+                  </div>
+                  <div>
+                    <button id="dtmf_7" type="button" class="btn btn-primary btn-flat" onClick="dtmf(event)">7</button>
+                    <button id="dtmf_8" type="button" class="btn btn-primary btn-flat" onClick="dtmf(event)">8</button>
+                    <button id="dtmf_9" type="button" class="btn btn-primary btn-flat" onClick="dtmf(event)">9</button>
+                    <button id="dtmf_c" type="button" class="btn btn-primary btn-flat" onClick="dtmf(event)">C</button>
+                  </div>
+                  <div>
+                    <button id="dtmf_star" type="button" class="btn btn-primary btn-flat" onClick="dtmf(event)">*</button>
+                    <button id="dtmf_0" type="button" class="btn btn-primary btn-flat" onClick="dtmf(event)">0</button>
+                    <button id="dtmf_hash" type="button" class="btn btn-primary btn-flat" onClick="dtmf(event)">#</button>
+                    <button id="dtmf_d" type="button" class="btn btn-primary btn-flat" onClick="dtmf(event)">D</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</div>
+
+{% include 'footer.html' %}
+{% endblock %}
+{% block scripts %}
+<script type="text/javascript" src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+<script type="text/javascript" src="https://unpkg.com/@signalwire/js@^1"></script>
+<script type="text/javascript">
+  let client;
+  let currentCall = null;
+  let projectID = '';
+  let jwtToken = '';
+
+  function connect() {
+    client = new Relay({
+      project: projectID,
+      token: jwtToken
+    });
+
+    client.remoteElement = 'remoteVideo';
+    client.localElement = 'localVideo';
+
+    if (document.getElementById('audio').checked) {
+      client.enableMicrophone();
+    } else {
+      client.disableMicrophone();
+    }
+
+    if (document.getElementById('video').checked) {
+      client.enableWebcam();
+    } else {
+      client.disableWebcam();
+    }
+
+    client.on('signalwire.ready', () => {
+      document.getElementById('btnConnect').classList.add('d-none');
+      document.getElementById('btnDisconnect').classList.remove('d-none');
+      document.getElementById('connectStatus').innerHTML = 'Connected';
+      document.getElementById('startCall').disabled = false;
+    });
+
+    client.on('signalwire.socket.close', () => {
+      document.getElementById('btnConnect').classList.remove('d-none');
+      document.getElementById('btnDisconnect').classList.add('d-none');
+      document.getElementById('connectStatus').innerHTML = 'Disconnected';
+    });
+
+    client.on('signalwire.error', (error) => {
+      console.error("SignalWire error:", error);
+    });
+
+    client.on('signalwire.notification', handleNotification);
+
+    document.getElementById('connectStatus').innerHTML = 'Connecting...';
+    client.connect();
+  }
+
+  function disconnect() {
+    document.getElementById('connectStatus').innerHTML = 'Disconnecting...';
+    client.disconnect();
+  }
+
+  function handleNotification(notification) {
+    console.log("notification", notification.type, notification);
+    switch (notification.type) {
+      case 'callUpdate':
+        handleCallUpdate(notification.call);
+        break;
+      case 'userMediaError':
+        console.error('User media error:', notification);
+        break;
+    }
+  }
+
+  function handleCallUpdate(call) {
+    currentCall = call;
+    console.log("Call State: ", call.state);
+    document.getElementById('callStatus').innerHTML = `${call.prevState} -> ${call.state}`;
+
+    switch (call.state) {
+      case 'trying':
+      case 'active':
+        document.getElementById('startCall').classList.add('d-none');
+        document.getElementById('hangupCall').classList.remove('d-none');
+        document.getElementById('hangupCall').disabled = false;
+        document.getElementById('dtmfKeys').hidden = false;
+        break;
+      case 'hangup':
+        document.getElementById('startCall').classList.remove('d-none');
+        document.getElementById('hangupCall').classList.add('d-none');
+        document.getElementById('hangupCall').disabled = true;
+        document.getElementById('dtmfKeys').hidden = true;
+        break;
+      case 'destroy':
+        currentCall = null;
+        break;
+    }
+  }
+
+  function makeCall() {
+    const destinationNumber = document.getElementById('number').value;
+    const callerNumber = document.getElementById('numberFrom').value;
+
+    // Validate required fields
+    if (!destinationNumber) {
+      Swal.fire({
+        toast: true,
+        icon: 'error',
+        title: 'Please enter a destination number.',
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+      });
+      return;
+    }
+
+    const params = {
+      destinationNumber: destinationNumber,
+      callerNumber: callerNumber,
+      audio: document.getElementById('audio').checked,
+      video: document.getElementById('video').checked ? { aspectRatio: 16 / 9 } : false,
+    };
+
+    try {
+      currentCall = client.newCall(params);
+    } catch (error) {
+      console.error('Error making call:', error);
+      Swal.fire({
+        toast: true,
+        icon: 'error',
+        title: 'Failed to make call. Check console for details.',
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+      });
+    }
+  }
+
+  function dtmf(event) {
+    if (currentCall) {
+      const dtmfKey = event.target.id.replace('dtmf_', '');
+      currentCall.dtmf(dtmfKey);
+    }
+  }
+
+  function hangup() {
+    if (currentCall) {
+      currentCall.hangup();
+    }
+  }
+
+  function authenticatePhone() {
+    fetch('/phone/authenticate', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.project_id && data.jwt_token) { // Ensure both fields are present
+        projectID = data.project_id;
+        jwtToken = data.jwt_token;
+        document.getElementById('project').value = projectID; // Populate the input field
+        document.getElementById('token').value = jwtToken; // Populate the input field
+        connect(); // Automatically connect once the project and token are filled
+        setTimeout(authenticatePhone, (data.expires_in / 2) * 1000);
+      } else {
+        console.error('Authentication failed:', data.error);
+      }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    authenticatePhone();
+
+    document.getElementById('number').addEventListener('keypress', function(event) {
+      if (event.key === 'Enter') {
+        document.getElementById('startCall').click();
+        this.blur();
+      }
+    });
+
+    document.addEventListener('keydown', function(event) {
+      const dtmfKeys = {
+        '1': 'dtmf_1',
+        '2': 'dtmf_2',
+        '3': 'dtmf_3',
+        '4': 'dtmf_4',
+        '5': 'dtmf_5',
+        '6': 'dtmf_6',
+        '7': 'dtmf_7',
+        '8': 'dtmf_8',
+        '9': 'dtmf_9',
+        '0': 'dtmf_0',
+        '*': 'dtmf_star',
+        '#': 'dtmf_hash',
+        'a': 'dtmf_a',
+        'b': 'dtmf_b',
+        'c': 'dtmf_c',
+        'd': 'dtmf_d'
+      };
+
+      const dtmfKey = dtmfKeys[event.key.toLowerCase()];
+      if (dtmfKey) {
+        document.getElementById(dtmfKey).click();
+      }
+
+      if (event.key.toLowerCase() === 'h') {
+        hangup();
+      }
+    });
+  });
+</script>
+{% endblock %}
+
