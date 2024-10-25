@@ -243,6 +243,14 @@
 
 {% endblock %}
 
+{% block styles %}
+<style>
+  .select2-container--default .select2-results__option {
+    color: black;
+  }
+</style>
+{% endblock %}
+
 {% block scripts %}
 <script type="text/javascript" src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
 <script type="text/javascript" src="https://unpkg.com/@signalwire/js@^1"></script>
@@ -665,7 +673,7 @@
           $('#editFunctions').val(data.functions).trigger('change');
           $('#editEnd').prop('checked', data.end || false);
           $('#editSkipUserTurn').prop('checked', data.skip_user_turn || false);
-          populateEditContextDropdown(data.context_id); // Populate dropdown with the current context
+          populateEditContextDropdown(data.context_id);
           $('#editStepModal').modal('show');
         },
         error: function (error) {
@@ -677,11 +685,11 @@
     $('#editStepForm').submit(function (e) {
       e.preventDefault();
       const stepId = $('#editStepId').val();
-      const selectedContextId = $('#editStepContextId').val(); // Capture the selected value
-      console.log('Selected Context ID:', selectedContextId); // Log the selected value
+      const selectedContextId = $('#editStepContextId').val();
+      console.log('Selected Context ID:', selectedContextId);
 
       const formData = {
-        context_id: selectedContextId, // Use the captured value
+        context_id: selectedContextId,
         name: sanitizeInput($('#editStepName').val()),
         text: $('#editStepText').val(),
         step_criteria: $('#editStepCriteria').val() || null,
@@ -698,7 +706,7 @@
         contentType: 'application/json',
         data: JSON.stringify(formData),
         success: function (response) {
-          $('#stepsTable').DataTable().ajax.reload(); // Reload the steps DataTable
+          $('#stepsTable').DataTable().ajax.reload();
           $('#editStepModal').modal('hide');
           showToast('success', 'AI Step updated successfully');
         },
@@ -753,7 +761,18 @@
       });
     }
 
-    $('#validSteps, #validContexts, #functions, #editValidSteps, #editValidContexts, #editFunctions').select2();
+    $('#validSteps, #validContexts, #functions, #editValidSteps, #editValidContexts, #editFunctions').select2({
+      templateResult: function (data) {
+        if (!data.id) {
+          return data.text;
+        }
+        var $result = $('<span style="color: black;">' + data.text + '</span>');
+        return $result;
+      },
+      templateSelection: function (data) {
+        return $('<span style="color: black;">' + data.text + '</span>');
+      }
+    });
 
     function populateStepsDropdown() {
       $.ajax({
@@ -913,4 +932,3 @@
   });
 </script>
 {% endblock %}
-
