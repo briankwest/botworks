@@ -28,8 +28,8 @@
             </div>
             <div class="card-body">
               <input id="channel" type="hidden" placeholder="Enter channel name" class="form-control mb-2">
-              <button class="btn btn-primary" onclick="joinChannel()">Join Channel</button>
-              <button class="btn btn-secondary" onclick="leaveChannel()">Leave Channel</button>
+              <button class="btn btn-primary" onclick="joinChannel()">Join</button>
+              <button class="btn btn-secondary" onclick="leaveChannel()">Leave</button>
               <button class="btn btn-info" onclick="connectSocket()">Connect</button>
               <button class="btn btn-warning" onclick="disconnectSocket()">Disconnect</button>
 
@@ -44,11 +44,15 @@
               <input id="message" type="text" placeholder="Enter message to inject into the AI conversation"
                 class="form-control mb-2">
               <div class="d-flex align-items-center mb-2">
-                <button class="btn btn-success mr-2" onclick="sendMessage()">Send Message</button>
-                <button class="btn btn-danger" onclick="clearMessages()">Clear Messages</button>
+                <button class="btn btn-success mr-2" onclick="sendMessage()">Send</button>
+                <button class="btn btn-danger" onclick="clearMessages()">Clear</button>
                 <div class="ml-auto status-container">
-                  <div id="connection-status">connected: false</div>
-                  <div id="join-status">joined: false</div>
+                  <div class="status-indicator">
+                    <span id="connection-status" class="status-circle"></span> Connection
+                  </div>
+                  <div class="status-indicator">
+                    <span id="join-status" class="status-circle"></span> Join
+                  </div>
                 </div>
               </div>
             </div>
@@ -75,14 +79,14 @@
     function updateConnectionStatus(connected) {
       const connectionStatus = document.getElementById('connection-status');
       if (connectionStatus) {
-        connectionStatus.textContent = `connected: ${connected}`;
+        connectionStatus.style.backgroundColor = connected ? 'green' : 'red';
       }
     }
 
     function updateJoinStatus(joined) {
       const joinStatus = document.getElementById('join-status');
       if (joinStatus) {
-        joinStatus.textContent = `joined: ${joined}`;
+        joinStatus.style.backgroundColor = joined ? 'green' : 'red';
       }
     }
 
@@ -226,4 +230,22 @@
     });
   });
 </script>
+<style>
+  .status-indicator {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+  }
+
+  .status-circle {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px;
+    background-color: red;
+    /* Default to red */
+  }
+</style>
 {% endblock %}
+
