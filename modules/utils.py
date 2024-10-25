@@ -109,6 +109,18 @@ def get_swaig_includes(url):
         "version": "2.0",
         "content_type": "text/swaig"
     }
-    response = requests.post(url, json=payload, headers=headers)
-    print(response.json())  
-    return response.json()
+
+    try:
+        response = requests.post(url, json=payload, headers=headers)
+        response.raise_for_status()  # Raises an HTTPError for bad responses
+
+        # Check if the response is JSON
+        if response.headers.get('Content-Type') == 'application/json':
+            return response.json()
+        else:
+            print("Response is not JSON.")
+            return None
+
+    except requests.exceptions.RequestException as e:
+        print(f"Request failed: {e}")
+        return None
