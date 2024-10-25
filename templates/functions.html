@@ -241,21 +241,35 @@
         {
           "data": "active",
           "render": function (data, type, row) {
-            return `
+            if (row.included) {
+              return `
                 <div class="custom-control custom-switch">
-                  <input type="checkbox" class="custom-control-input toggle-active" id="toggleActive${row.id}" ${data ? 'checked' : ''} data-id="${row.id}">
+                  <input type="checkbox" class="custom-control-input" id="toggleActive${row.id}" checked disabled>
                   <label class="custom-control-label" for="toggleActive${row.id}"></label>
                 </div>
               `;
+            }
+            return `
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input toggle-active" id="toggleActive${row.id}" ${data ? 'checked' : ''} data-id="${row.id}">
+                <label class="custom-control-label" for="toggleActive${row.id}"></label>
+              </div>
+            `;
           }
         },
         {
           "data": null,
           "render": function (data, type, row) {
-            return `
-                <button class="btn btn-primary btn-sm edit-function" data-id="${row.id}">Edit</button>
-                <button class="btn btn-danger btn-sm delete-function" data-id="${row.id}">Delete</button>
+            if (row.included) {
+              return `
+                <button class="btn btn-primary btn-sm edit-function" data-id="${row.id}" disabled>Edit</button>
+                <button class="btn btn-danger btn-sm delete-function" data-id="${row.id}" disabled>Delete</button>
               `;
+            }
+            return `
+              <button class="btn btn-primary btn-sm edit-function" data-id="${row.id}">Edit</button>
+              <button class="btn btn-danger btn-sm delete-function" data-id="${row.id}">Delete</button>
+            `;
           }
         }
       ],
