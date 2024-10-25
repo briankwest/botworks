@@ -266,7 +266,8 @@ def generate_swml_response(user_id, agent_id, request_body):
             step_dict = {k: v for k, v in step_dict.items() if v is not None and v != ''}
             context_step_groups.setdefault(context.context_name, []).append(step_dict)
         except Exception as e:
-            print(f"Error processing step {step.id}: {str(e)}")
+            db.session.rollback()  # Rollback the transaction
+            print(f"Error processing step {step.id}: {str(e)}")  # Log the error
             continue
     
 
@@ -586,6 +587,7 @@ def generate_swml_response(user_id, agent_id, request_body):
     db.session.commit()
 
     return swml_response
+
 
 
 

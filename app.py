@@ -208,8 +208,10 @@ def functions():
             for include in includes:
                 included_functions = json.loads(include.functions)
                 for i, func in enumerate(included_functions):
+                    function_id = include.id
+                    prepended_id = int(f"{function_id}{90000000 + i}")
                     function_list.append({
-                        'id': func,
+                        'id': prepended_id,
                         'name': func,
                         'purpose': 'Included Function',
                         'active': True,
