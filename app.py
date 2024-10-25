@@ -40,7 +40,8 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 app.config['REDIS_URL'] = os.environ.get('REDIS_URL')
 app.config['ACCESS_SECRET_KEY'] = os.environ.get('ACCESS_SECRET_KEY')
 app.config['REFRESH_SECRET_KEY'] = os.environ.get('REFRESH_SECRET_KEY')
-app.config['MAX_CONTENT_LENGTH'] = 128 * 1024 * 1024
+app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024
+app.config['DEBUG'] = True if os.getenv('DEBUG') == 'True' else False
 
 db.init_app(app)
 
@@ -2115,4 +2116,4 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
         create_admin_user()
-    socketio.run(app, host='0.0.0.0', port=5000, debug=os.getenv('DEBUG'))
+    socketio.run(app, host='0.0.0.0', port=5000, debug=app.config['DEBUG'])

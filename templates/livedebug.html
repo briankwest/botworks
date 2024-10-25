@@ -116,6 +116,7 @@
         leaveChannel();
         socket.disconnect();
         updateConnectionStatus(false);
+        updateJoinStatus(false); 
         console.log('Socket disconnected');
 
         Swal.fire({
