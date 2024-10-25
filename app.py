@@ -2054,6 +2054,63 @@ def get_includes_post():
 def includes():
     return render_template('includes.html', user=current_user)
 
+@app.route('/phone/authenticate', methods=['GET'])
+@login_required
+def phone_authenticate():
+    import requests
+    import random
+    import string
+    selected_agent_id = request.cookies.get('selectedAgentId')
+    if not selected_agent_id:
+        return jsonify({'message': 'Agent ID not found in cookies'}), 400
+
+    identifier = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
+
+    space_name = get_signal_wire_param(current_user.id, selected_agent_id, 'SPACE_NAME')
+    project_id = get_signal_wire_param(current_user.id, selected_agent_id, 'PROJECT_ID')
+    auth_token = get_signal_wire_param(current_user.id, selected_agent_id, 'AUTH_TOKEN')
+    url = f"https://{space_name}/api/relay/rest/jwt"
+    auth = (project_id, auth_token)
+    headers = {"Content-Type": "application/json"}
+    data = {
+        "expires_in": 3600,
+        "resource": identifier
+    }
+    encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
+    authorization = f'Basic {encoded_credentials}'
+
+    headers = {
+        'Authorization': authorization,
+        'Accept': 'application/json'
+    }
+    
+    response = requests.post(url, headers=headers, json=data)
+
+    if response.status_code == 200:
+        response_json = response.json()
+        jwt_token = response_json.get('jwt_token')
+        refresh_token = response_json.get('refresh_token')
+
+        resp = jsonify({
+            'message': 'Authenticated successfully',
+            'jwt_token': jwt_token,
+            'refresh_token': refresh_token,
+            'identifier': identifier,
+            'project_id': project_id,
+            'expires_in': 3600
+        })
+        resp.set_cookie('resource_id', identifier)
+        return resp, 200
+    else:
+        return jsonify({'error': 'Authentication failed'}), response.status_code
+
+
+
+@app.route('/phone', methods=['GET'])
+@login_required
+def phone():
+    return render_template('phone.html', user=current_user)
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
