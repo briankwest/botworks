@@ -202,21 +202,6 @@ def functions():
                 'meta_data_token': f.meta_data_token,
                 'created': f.created.isoformat()
             } for f in functions]
-            
-            # Fetch functions from AIIncludes and add them to the function list
-            includes = AIIncludes.query.filter_by(agent_id=selected_agent_id).all()
-            for include in includes:
-                included_functions = json.loads(include.functions)
-                for i, func in enumerate(included_functions):
-                    function_id = include.id
-                    prepended_id = int(f"{function_id}{90000000 + i}")
-                    function_list.append({
-                        'id': prepended_id,
-                        'name': func,
-                        'purpose': 'Included Function',
-                        'active': True,
-                        'included': True
-                    })
             return jsonify(function_list), 200
         else:
             return render_template('functions.html', user=current_user)

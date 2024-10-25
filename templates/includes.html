@@ -114,6 +114,9 @@
 
     initializeIncludesTable(selectedAgentId);
 
+    // Debounce the fetchIncludes function
+    const debouncedFetchIncludes = debounce(fetchIncludes, 1000);
+
     function fetchIncludes(url) {
       $.ajax({
         url: `/includes/${selectedAgentId}`,
@@ -128,9 +131,10 @@
       });
     }
 
+    // Use the debounced function for the URL input
     $('#includeUrl').on('input', function () {
       const url = $(this).val();
-      fetchIncludes(url);
+      debouncedFetchIncludes(url);
     });
 
     function debounce(func, wait) {
