@@ -7,38 +7,6 @@
   <title>Sign Up</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.1.0/css/adminlte.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script>
-    $(document).ready(function () {
-      $('form').on('submit', function (e) {
-        e.preventDefault();
-        var password = $('input[name="password"]').val();
-        var confirmPassword = $('input[name="confirm_password"]').val();
-        if (password !== confirmPassword) {
-          alert('Passwords do not match. Please try again.');
-          return;
-        }
-        $.ajax({
-          type: 'POST',
-          url: '/signup',
-          contentType: 'application/json',
-          data: JSON.stringify({
-            full_name: $('input[name="full_name"]').val(),
-            email: $('input[name="email"]').val(),
-            username: $('input[name="username"]').val(),
-            password: $('input[name="password"]').val()
-          }),
-          success: function (response) {
-            alert('Registration successful!');
-            window.location.href = '/login'; // Redirect to login page
-          },
-          error: function (error) {
-            alert('Registration failed. Please try again.');
-          }
-        });
-      });
-    });
-  </script>
 </head>
 
 <body class="hold-transition login-page">
@@ -106,6 +74,37 @@
   </div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.1.0/js/adminlte.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      $('form').on('submit', function (e) {
+        e.preventDefault();
+        var password = $('input[name="password"]').val();
+        var confirmPassword = $('input[name="confirm_password"]').val();
+        if (password !== confirmPassword) {
+          alert('Passwords do not match. Please try again.');
+          return;
+        }
+        $.ajax({
+          type: 'POST',
+          url: '/signup',
+          contentType: 'application/json',
+          data: JSON.stringify({
+            full_name: $('input[name="full_name"]').val(),
+            email: $('input[name="email"]').val(),
+            username: $('input[name="username"]').val(),
+            password: $('input[name="password"]').val()
+          }),
+          success: function (response) {
+            alert('Registration successful!');
+            window.location.href = '/login'; // Redirect to login page
+          },
+          error: function (error) {
+            alert('Registration failed. Please try again.');
+          }
+        });
+      });
+    });
+  </script>
 </body>
 
 </html>
