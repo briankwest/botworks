@@ -30,8 +30,8 @@
               <input id="channel" type="hidden" placeholder="Enter channel name" class="form-control mb-2">
               <button class="btn btn-primary" onclick="joinChannel()">Join</button>
               <button class="btn btn-secondary" onclick="leaveChannel()">Leave</button>
-              <button class="btn btn-info" onclick="connectSocket()">Connect</button>
-              <button class="btn btn-warning" onclick="disconnectSocket()">Disconnect</button>
+              <button class="btn btn-success" onclick="connectSocket()">Connect</button>
+              <button class="btn btn-danger" onclick="disconnectSocket()">Disconnect</button>
 
               <h2>Messages:</h2>
               <textarea id="messages" class="form-control mb-2" rows="10" readonly></textarea>
@@ -78,16 +78,24 @@
 
     function updateConnectionStatus(connected) {
       const connectionStatus = document.getElementById('connection-status');
+      const connectButton = document.querySelector('button[onclick="connectSocket()"]');
+      const disconnectButton = document.querySelector('button[onclick="disconnectSocket()"]');
       if (connectionStatus) {
         connectionStatus.style.backgroundColor = connected ? 'green' : 'red';
       }
+      connectButton.style.display = connected ? 'none' : 'inline-block';
+      disconnectButton.style.display = connected ? 'inline-block' : 'none';
     }
 
     function updateJoinStatus(joined) {
       const joinStatus = document.getElementById('join-status');
+      const joinButton = document.querySelector('button[onclick="joinChannel()"]');
+      const leaveButton = document.querySelector('button[onclick="leaveChannel()"]');
       if (joinStatus) {
         joinStatus.style.backgroundColor = joined ? 'green' : 'red';
       }
+      joinButton.style.display = joined ? 'none' : 'inline-block';
+      leaveButton.style.display = joined ? 'inline-block' : 'none';
     }
 
     function connectSocket() {
