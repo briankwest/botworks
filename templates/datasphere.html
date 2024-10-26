@@ -347,11 +347,14 @@
           contentType: 'application/json',
           data: JSON.stringify(data),
           success: function (response) {
+            $('#queryResultsTable').next('p.text-danger').remove();
+
             var results = response.chunks.map(chunk => [chunk.text]);
             $('#queryResultsTable').DataTable().clear().rows.add(results).draw();
           },
           error: function (err) {
             $('#queryResultsTable').DataTable().clear().draw();
+            $('#queryResultsTable').next('p.text-danger').remove();
             $('#queryResultsTable').after('<p class="text-danger">Failed to fetch results.</p>');
           }
         });
@@ -403,8 +406,8 @@
 <!-- Query Document Modal -->
 <div class="modal fade" id="queryDocumentModal" tabindex="-1" role="dialog" aria-labelledby="queryDocumentModalLabel"
   aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content modal-lg">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="queryDocumentModalLabel">Query Document</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
