@@ -1781,15 +1781,62 @@ def handle_message(data):
             disconnect()
             return
 
-        message = data['message']
-        channel = data['channel']
-        redis_client.publish(channel, message)
+        # Extract the JSON string from the 'data' key and parse it
+        if 'data' in data:
+            parsed_data = json.loads(data['data'])
+        else:
+            emit('error', {'message': 'Invalid data format'}, namespace='/')
+            return
+
+        # Access the nested data
+        channel = parsed_data.get('channel')
+        call_id = parsed_data.get('call_info', {}).get('call_id')
+        content = parsed_data.get('conversation_add', {}).get('content')
+
+        if not call_id or not content or not channel:
+            emit('error', {'message': 'Invalid data format'}, namespace='/')
+            return
+
+        # Parse agent_id from the channel name
+        agent_id = int(channel.rsplit('_', 1)[-1])
+
+        # Construct the message in the required format
+        message = {
+            "call_info": {"call_id": call_id},
+            "conversation_add": {"content": f"{content}"}
+        }
+        
+        space_name = get_signalwire_param(agent_id, 'SPACE_NAME')
+        auth_token = get_signalwire_param(agent_id, 'AUTH_TOKEN')
+        project_id = get_signalwire_param(agent_id, 'PROJECT_ID')
+        encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
+        url = f"https://{space_name}/api/calling/calls"
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Basic {encoded_credentials}"
+        }
+        payload = {
+            "id": call_id,
+            "command": "calling.ai_message",
+            "params": {
+                "role": "user",
+                "message_text": f"{content}"
+            }
+        }
+        response = requests.put(url, headers=headers, data=json.dumps(payload))
+        print("response:", response)
+        print("payload:", payload)
+
+        
 
     except jwt.ExpiredSignatureError:
         emit('error', {'message': 'Access token expired'}, namespace='/')
         disconnect()
     except jwt.InvalidTokenError:
         emit('error', {'message': 'Invalid access token'}, namespace='/')
+        disconnect()
+    except json.JSONDecodeError:
+        emit('error', {'message': 'Invalid JSON format'}, namespace='/')
         disconnect()
 
 @app.route('/debugwebhook/<int:agent_id>', methods=['POST'])
@@ -2160,7 +2207,7 @@ def update_phone_number(phone_number_id):
     project_id = get_signalwire_param(agent_id, 'PROJECT_ID')
     auth_token = get_signalwire_param(agent_id, 'AUTH_TOKEN')
     auth_user = current_user.username
-    swml_url = f"https://{auth_user}:{auth_pass}@{request.host}/swml/{current_user.id}/{agent_id}"  
+    swml_url = f"https://{auth_user}:{auth_pass}@{request.host}/swml/{agent_id}"  
     
     encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
     url = f'https://{space_name}/api/relay/rest/phone_numbers/{phone_number_id}'

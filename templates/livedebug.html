@@ -34,6 +34,11 @@
               <button class="btn btn-danger" onclick="disconnectSocket()">Disconnect</button>
 
               <h2>Messages:</h2>
+
+              <select id="callIdDropdown" class="form-control mb-2" onchange="filterMessagesByCallId()">
+                <option value="">Select Call ID</option>
+              </select>
+              
               <textarea id="messages" class="form-control mb-2" rows="10" readonly></textarea>
 
               <div class="table-responsive">
@@ -75,6 +80,8 @@
     let socket;
     let currentChannel = '{{ channel }}';
     document.getElementById('channel').value = currentChannel;
+
+    let messagesByCallId = {};
 
     function updateConnectionStatus(connected) {
       const connectionStatus = document.getElementById('connection-status');
@@ -139,18 +146,37 @@
         updateConnectionStatus(false);
         updateJoinStatus(false);
       });
-
+      
       socket.on('send_message', function (data) {
         updateMessagesList(`Sent: ${data.message}`);
       });
 
       socket.on('response', function (data) {
-        if (data instanceof ArrayBuffer) {
-          const decoder = new TextDecoder('utf-8');
-          const decodedMessage = decoder.decode(data);
-          updateMessagesList(`${decodedMessage}`);
-        } else {
-          updateMessagesList(`${data.data}`);
+        console.log('Received response:', data);
+        if (typeof data === 'string') {
+          data = JSON.parse(data);
+        }
+        if (data.data) {
+          const parsedData = JSON.parse(data.data);
+          if (parsedData.call_info && parsedData.conversation_add) {
+            const callId = parsedData.call_info.call_id;
+            const messageContent = parsedData.conversation_add.content;
+            console.log('Parsed callId:', callId);
+            console.log('Parsed messageContent:', messageContent);
+            
+            if (!messagesByCallId[callId]) {
+              messagesByCallId[callId] = [];
+              console.log('New callId detected, initializing storage:', callId);
+            }
+            messagesByCallId[callId].push(messageContent);
+            console.log('Updated messagesByCallId:', messagesByCallId);
+            addCallIdToDropdown(callId);
+            
+            const selectedCallId = document.getElementById('callIdDropdown').value;
+            if (selectedCallId === callId) {
+              updateMessagesList(messageContent);
+            }
+          }
         }
       });
 
@@ -170,6 +196,41 @@
       const messagesTextarea = document.getElementById('messages');
       messagesTextarea.value += message + '\n';
       messagesTextarea.scrollTop = messagesTextarea.scrollHeight;
+      console.log('Updated messages list with:', message);
+    }
+
+    function addCallIdToDropdown(callId) {
+      const dropdown = document.getElementById('callIdDropdown');
+      const wasEmpty = dropdown.options.length === 1; // Only the default option is present
+      const currentSelection = dropdown.value;
+      if (![...dropdown.options].some(option => option.value === callId)) {
+        const option = document.createElement('option');
+        option.value = callId;
+        option.textContent = callId;
+        dropdown.appendChild(option);
+        console.log('Added callId to dropdown:', callId);
+      }
+      if (wasEmpty) {
+        dropdown.value = callId; // Automatically select the first UUID added
+        filterMessagesByCallId(); // Update the messages display
+        sendButton.disabled = false; // Enable the send button
+      } else {
+        dropdown.value = currentSelection;
+      }
+      console.log('Current dropdown selection:', dropdown.value);
+    }
+
+    function filterMessagesByCallId() {
+      const selectedCallId = document.getElementById('callIdDropdown').value;
+      console.log('Filtering messages for callId:', selectedCallId);
+      const messagesTextarea = document.getElementById('messages');
+      messagesTextarea.value = '';
+      if (selectedCallId && messagesByCallId[selectedCallId]) {
+        messagesByCallId[selectedCallId].forEach(message => {
+          messagesTextarea.value += message + '\n';
+        });
+        console.log('Displayed messages for callId:', selectedCallId);
+      }
     }
 
     function joinChannel() {
@@ -205,15 +266,25 @@
 
     function sendMessage() {
       const message = document.getElementById('message').value;
-      if (socket && socket.connected && currentChannel && message) {
+      const selectedCallId = document.getElementById('callIdDropdown').value;
+
+      if (socket && socket.connected && selectedCallId && message) {
         const messageData = {
-          channel: currentChannel,
-          message: message
+          data: JSON.stringify({
+            channel: currentChannel,
+            call_info: {
+              call_id: selectedCallId
+            },
+            conversation_add: {
+              content: message
+            }
+          })
         };
         socket.emit('send_message', messageData);
         document.getElementById('message').value = '';
+        console.log('Sent message with call_id:', selectedCallId);
       } else {
-        console.error('Cannot send message: socket not connected or channel/message is empty');
+        console.error('Cannot send message: socket not connected or call_id/message is empty');
       }
     }
 
@@ -229,6 +300,16 @@
     window.connectSocket = connectSocket;
     window.disconnectSocket = disconnectSocket;
 
+    const sendButton = document.querySelector('button[onclick="sendMessage()"]');
+    const callIdDropdown = document.getElementById('callIdDropdown');
+
+    callIdDropdown.addEventListener('change', function () {
+      sendButton.disabled = !callIdDropdown.value;
+    });
+
+    // Initial state of the send button
+    sendButton.disabled = !callIdDropdown.value;
+
     connectSocket();
     joinChannel();
 
@@ -237,6 +318,20 @@
         sendMessage();
       }
     });
+
+    // Expose functions to the global scope
+    window.filterMessagesByCallId = function() {
+      const selectedCallId = document.getElementById('callIdDropdown').value;
+      console.log('Filtering messages for callId:', selectedCallId);
+      const messagesTextarea = document.getElementById('messages');
+      messagesTextarea.value = '';
+      if (selectedCallId && messagesByCallId[selectedCallId]) {
+        messagesByCallId[selectedCallId].forEach(message => {
+          messagesTextarea.value += message + '\n';
+        });
+        console.log('Displayed messages for callId:', selectedCallId);
+      }
+    };
   });
 </script>
 <style>
@@ -257,4 +352,3 @@
   }
 </style>
 {% endblock %}
-
