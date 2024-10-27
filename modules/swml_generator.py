@@ -4,7 +4,7 @@ from modules.models import (
     AIPrompt, AIParams, AIUser, AIHints, AILanguage, AIPronounce, 
     AIFunctions, AIFunctionArgs, AIIncludes, AISWMLRequest, AISteps, AIContext
 )
-from modules.utils import get_feature, get_signal_wire_param
+from modules.utils import get_feature, get_signalwire_param
 from modules.signalwireml import SignalWireML
 from modules.db import db
 
@@ -79,7 +79,7 @@ def generate_swml_response(user_id, agent_id, request_body):
     swml.set_aiparams(params_dict)
 
     auth_user = AIUser.query.filter_by(id=user_id).first().username
-    auth_pass = get_signal_wire_param(user_id, agent_id, 'HTTP_PASSWORD')
+    auth_pass = get_signalwire_param(agent_id, 'HTTP_PASSWORD')
     
     post_prompt_url = f"https://{request.host}/postprompt/{user_id}/{agent_id}"
     if auth_user and auth_pass:
@@ -531,9 +531,9 @@ def generate_swml_response(user_id, agent_id, request_body):
     if enable_datasphere_feature and enable_datasphere_feature.enabled:
         document_id = enable_datasphere_feature.value
 
-        space_name = get_signal_wire_param(user_id, agent_id, 'SPACE_NAME')
-        project_id = get_signal_wire_param(user_id, agent_id, 'PROJECT_ID')
-        auth_token = get_signal_wire_param(user_id, agent_id, 'AUTH_TOKEN')
+        space_name = get_signalwire_param(agent_id, 'SPACE_NAME')
+        project_id = get_signalwire_param(agent_id, 'PROJECT_ID')
+        auth_token = get_signalwire_param(agent_id, 'AUTH_TOKEN')
 
         encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
         url = f"https://{space_name}/api/datasphere/documents/search"

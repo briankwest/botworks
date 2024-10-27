@@ -31,17 +31,17 @@ class AIAgent(db.Model):
     def __repr__(self):
         return f'<AIAgent {self.name}>'
 
+    shared_access = db.relationship('SharedAccess', back_populates='agent', cascade='all, delete-orphan', lazy='dynamic')
+
 class AIDebugLogs(db.Model):
     __tablename__ = 'ai_debug_logs'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
     agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
     data = db.Column(db.JSON, nullable=False)
     ip_address = db.Column(db.String(45), nullable=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    user = db.relationship('AIUser', backref=db.backref('ai_debug_logs', lazy=True))
     agent = db.relationship('AIAgent', back_populates='ai_debug_logs')
 
     def __repr__(self):
@@ -50,14 +50,12 @@ class AIDebugLogs(db.Model):
 class AISignalWireParams(db.Model):
     __tablename__ = 'ai_signalwire_params'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
     agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
     name = db.Column(db.String(100), nullable=False)
     value = db.Column(db.String(255), nullable=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow) 
     
-    user = db.relationship('AIUser', backref=db.backref('ai_signalwire_params', lazy=True))
     agent = db.relationship('AIAgent', back_populates='ai_signalwire_params')
 
     def __repr__(self):
@@ -66,7 +64,6 @@ class AISignalWireParams(db.Model):
 class AISWMLRequest(db.Model):
     __tablename__ = 'ai_swml_requests'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
     agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
     request = db.Column(db.JSON, nullable=False)
     response = db.Column(db.JSON, nullable=False)
@@ -74,7 +71,6 @@ class AISWMLRequest(db.Model):
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    user = db.relationship('AIUser', backref=db.backref('ai_swml_requests', lazy=True))
     agent = db.relationship('AIAgent', back_populates='ai_swml_requests')
 
     def __repr__(self):
@@ -83,7 +79,6 @@ class AISWMLRequest(db.Model):
 class AIFunctions(db.Model):
     __tablename__ = 'ai_functions'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
     agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
     name = db.Column(db.Text, nullable=True)
     purpose = db.Column(db.Text, nullable=True)
@@ -97,10 +92,9 @@ class AIFunctions(db.Model):
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    user = db.relationship('AIUser', backref=db.backref('ai_functions', lazy=True))
     agent = db.relationship('AIAgent', back_populates='ai_functions')
     
-    __table_args__ = (db.UniqueConstraint('user_id', 'agent_id', 'name'),)
+    __table_args__ = (db.UniqueConstraint('agent_id', 'name'),)
     
     ai_function_args = db.relationship('AIFunctionArgs', back_populates='function', cascade='all, delete-orphan', lazy=True)
 
@@ -110,7 +104,6 @@ class AIFunctions(db.Model):
 class AIFunctionArgs(db.Model):
     __tablename__ = 'ai_function_argument'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
     agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
     function_id = db.Column(db.Integer, db.ForeignKey('ai_functions.id', ondelete='CASCADE'), nullable=False)
     name = db.Column(db.Text, nullable=False)
@@ -124,10 +117,9 @@ class AIFunctionArgs(db.Model):
     updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     function = db.relationship('AIFunctions', back_populates='ai_function_args')
-    user = db.relationship('AIUser', backref=db.backref('ai_function_argument', lazy=True))
     agent = db.relationship('AIAgent', back_populates='ai_function_argument')
 
-    __table_args__ = (db.UniqueConstraint('user_id', 'function_id', 'name'),)
+    __table_args__ = (db.UniqueConstraint('function_id', 'name'),)
 
     def __repr__(self):
         return f'<AIFunctionArgs {self.name}>'
@@ -135,13 +127,11 @@ class AIFunctionArgs(db.Model):
 class AIHints(db.Model):
     __tablename__ = 'ai_hints'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
     agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
     hint = db.Column(db.Text, nullable=False)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    user = db.relationship('AIUser', backref=db.backref('ai_hints', lazy=True))
     agent = db.relationship('AIAgent', back_populates='ai_hints')
 
     def __repr__(self):
@@ -150,7 +140,6 @@ class AIHints(db.Model):
 class AIPronounce(db.Model):
     __tablename__ = 'ai_pronounce'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
     agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     ignore_case = db.Column(db.Boolean, nullable=False, default=False)
@@ -159,7 +148,6 @@ class AIPronounce(db.Model):
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    user = db.relationship('AIUser', backref=db.backref('ai_pronounce', lazy=True))
     agent = db.relationship('AIAgent', back_populates='ai_pronounce')
 
     def __repr__(self):
@@ -168,7 +156,6 @@ class AIPronounce(db.Model):
 class AIPrompt(db.Model):
     __tablename__ = 'ai_prompt'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
     agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
     prompt_type = db.Column(db.Enum('prompt', 'post_prompt', 'outbound_prompt', 'outbound_post_prompt', name='prompt_type_enum'), nullable=False)
     prompt_text = db.Column(db.Text, nullable=True)
@@ -181,7 +168,6 @@ class AIPrompt(db.Model):
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    user = db.relationship('AIUser', backref=db.backref('ai_prompt', lazy=True))
     agent = db.relationship('AIAgent', back_populates='ai_prompt')
 
     def __repr__(self):
@@ -190,7 +176,6 @@ class AIPrompt(db.Model):
 class AILanguage(db.Model):
     __tablename__ = 'ai_language'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
     agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
     code = db.Column(db.Text, nullable=True)
     name = db.Column(db.Text, nullable=True)
@@ -201,7 +186,6 @@ class AILanguage(db.Model):
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    user = db.relationship('AIUser', backref=db.backref('ai_language', lazy=True))
     agent = db.relationship('AIAgent', back_populates='ai_language')
 
     def __repr__(self):
@@ -210,13 +194,11 @@ class AILanguage(db.Model):
 class AIConversation(db.Model):
     __tablename__ = 'ai_conversation'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
-    data = db.Column(db.JSON, nullable=True)
     agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
+    data = db.Column(db.JSON, nullable=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    user = db.relationship('AIUser', backref=db.backref('ai_conversation', lazy=True))
     agent = db.relationship('AIAgent', back_populates='ai_conversation')
 
     def __repr__(self):
@@ -225,14 +207,12 @@ class AIConversation(db.Model):
 class AIParams(db.Model):
     __tablename__ = 'ai_params'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
     agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
     name = db.Column(db.String(100), nullable=False)
     value = db.Column(db.String(255), nullable=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    user = db.relationship('AIUser', backref=db.backref('ai_params', lazy=True))
     agent = db.relationship('AIAgent', back_populates='ai_params')
 
     def __repr__(self):
@@ -241,7 +221,6 @@ class AIParams(db.Model):
 class AIFeatures(db.Model):
     __tablename__ = 'ai_features'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
     agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
     name = db.Column(db.String(100), nullable=False)
     value = db.Column(db.String(255), nullable=True)
@@ -250,7 +229,6 @@ class AIFeatures(db.Model):
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    user = db.relationship('AIUser', backref=db.backref('ai_features', lazy=True))
     agent = db.relationship('AIAgent', back_populates='ai_features')
 
     def __repr__(self):
@@ -266,20 +244,26 @@ class AIUser(UserMixin, db.Model):
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    shared_access = db.relationship(
+        'SharedAccess',
+        back_populates='user',
+        cascade='all, delete-orphan',
+        lazy='dynamic',
+        primaryjoin="AIUser.id == SharedAccess.shared_with_user_id"
+    )
+
     def __repr__(self):
         return f'<AIUser {self.username}>'
-    
+
 class AIIncludes(db.Model):
     __tablename__ = 'ai_includes'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
     agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
     url = db.Column(db.String(255), nullable=False)
     functions = db.Column(db.JSON, nullable=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    user = db.relationship('AIUser', backref=db.backref('ai_includes', lazy=True))
     agent = db.relationship('AIAgent', backref=db.backref('ai_includes', lazy=True))
 
     def __repr__(self):
@@ -288,13 +272,11 @@ class AIIncludes(db.Model):
 class AIContext(db.Model):
     __tablename__ = 'ai_contexts'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
     agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
     context_name = db.Column(db.String(100), nullable=False)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    user = db.relationship('AIUser', backref=db.backref('ai_contexts', lazy=True))
     agent = db.relationship('AIAgent', back_populates='ai_contexts')
     ai_steps = db.relationship('AISteps', back_populates='context', cascade='all, delete-orphan', lazy=True)
 
@@ -308,7 +290,6 @@ class AIContext(db.Model):
 class AISteps(db.Model):
     __tablename__ = 'ai_steps'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
     agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
     context_id = db.Column(db.Integer, db.ForeignKey('ai_contexts.id', ondelete='CASCADE'), nullable=False)
     name = db.Column(db.String(100), nullable=False)
@@ -322,7 +303,6 @@ class AISteps(db.Model):
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    user = db.relationship('AIUser', backref=db.backref('ai_steps', lazy=True))
     agent = db.relationship('AIAgent', back_populates='ai_steps')   
     context = db.relationship('AIContext', back_populates='ai_steps')
     
@@ -346,7 +326,6 @@ class AISteps(db.Model):
 class AIHooks(db.Model):
     __tablename__ = 'ai_hooks'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
     agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -360,7 +339,6 @@ class AIHooks(db.Model):
     
     hook_type = db.Column(db.Enum(HookType), nullable=False)
 
-    user = db.relationship('AIUser', backref=db.backref('ai_hooks', lazy=True))
     agent = db.relationship('AIAgent', backref=db.backref('ai_hooks', lazy=True))
 
     def __repr__(self):
@@ -376,4 +354,16 @@ class AIHooks(db.Model):
             'data': self.data,
             'hook_type': self.hook_type.value
         }
+
+class SharedAccess(db.Model):
+    __tablename__ = 'shared_access'
+    id = db.Column(db.Integer, primary_key=True)
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
+    shared_with_user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
+    permissions = db.Column(db.String(50), nullable=False)
+    created = db.Column(db.DateTime, default=datetime.utcnow)
+    updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    user = db.relationship('AIUser', back_populates='shared_access')
+    agent = db.relationship('AIAgent', back_populates='shared_access')
 

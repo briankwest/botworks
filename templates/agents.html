@@ -228,6 +228,57 @@
       </div>
     </div>
   </div>
+
+  <!-- Share Agent Modal -->
+  <div class="modal fade" id="shareAgentModal" tabindex="-1" role="dialog" aria-labelledby="shareAgentModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="shareAgentModalLabel">Share AI Agent</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="shareAgentForm">
+            <div class="form-group">
+              <label for="userSelect">Select User</label>
+              <select class="form-control" id="userSelect" required>
+                <!-- Options will be populated dynamically -->
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="permissions">Permissions</label>
+              <select class="form-control" id="permissions">
+                <option value="view">View</option>
+                <option value="edit">Edit</option>
+              </select>
+            </div>
+          </form>
+          <hr>
+          <h5>Shared With</h5>
+          <div class="table-responsive">
+            <table class="table table-striped" id="sharedWithTable">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Permissions</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Shared users will be populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="shareButton">Share</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 {% include 'footer.html' %}
@@ -266,8 +317,9 @@
             }
             buttons += `<button class="btn btn-success btn-sm clone-agent mr-2" data-id="${row.id}">Clone</button>`;
             if (row.number) {
-              buttons += `<button class="btn btn-info btn-sm call-agent" data-number="${row.number}">Call</button>`;
+              buttons += `<button class="btn btn-info btn-sm call-agent mr-2" data-number="${row.number}">Call</button>`;
             }
+            buttons += `<button class="btn btn-warning btn-sm share-agent mr-2" data-id="${row.id}">Share</button>`; // New share button
             return buttons;
           }
         }
@@ -614,6 +666,111 @@
 
     $('#phoneModal').on('hidden.bs.modal', function () {
       hangup();
+    });
+
+    // Fetch users and populate the select dropdown
+    function fetchUsers() {
+      $.ajax({
+        type: 'GET',
+        url: '/users',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        success: function (users) {
+          const userSelect = $('#userSelect');
+          userSelect.empty();
+          users.forEach(user => {
+            const optionText = `${user.full_name} (${user.username})`;
+            userSelect.append(new Option(optionText, user.id));
+          });
+        },
+        error: function (error) {
+          console.error('Error fetching users:', error);
+        }
+      });
+    }
+
+    // Open the share modal
+    $('#agentTable').on('click', '.share-agent', function () {
+      const agentId = $(this).data('id');
+      $('#shareAgentModal').data('agent-id', agentId).modal('show');
+      fetchUsers();
+      fetchSharedUsers(agentId); // Fetch and display shared users
+    });
+
+    // Fetch shared users and populate the table
+    function fetchSharedUsers(agentId) {
+      $.ajax({
+        type: 'GET',
+        url: `/agents/${agentId}/share`,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        success: function (sharedUsers) {
+          console.log('Shared Users:', sharedUsers); // Log the response to verify
+          const sharedWithTableBody = $('#sharedWithTable tbody');
+          sharedWithTableBody.empty();
+          sharedUsers.forEach(sharedUser => {
+            const row = `<tr>
+              <td>${sharedUser.full_name} (${sharedUser.username})</td>
+              <td>${sharedUser.permissions}</td>
+              <td>
+                <button class="btn btn-sm btn-danger delete-shared-user" data-shared-user-id="${sharedUser.id}">Delete</button>
+              </td>
+            </tr>`;
+            sharedWithTableBody.append(row);
+          });
+        },
+        error: function (error) {
+          console.error('Error fetching shared users:', error);
+        }
+      });
+    }
+
+    // Handle the share button click
+    $('#shareButton').click(function () {
+      const agentId = $('#shareAgentModal').data('agent-id');
+      const userId = $('#userSelect').val();
+      const permissions = $('#permissions').val();
+
+      $.ajax({
+        type: 'POST',
+        url: `/agents/${agentId}/share`,
+        contentType: 'application/json',
+        data: JSON.stringify({ user_id: userId, permissions: permissions }),
+        success: function (response) {
+          $('#shareAgentModal').modal('hide');
+          showToast('success', 'Agent shared successfully');
+        },
+        error: function (error) {
+          showToast('error', 'Error sharing agent');
+        }
+      });
+    });
+
+    $('#sharedWithTable').on('click', '.delete-shared-user', function () {
+      const sharedUserId = $(this).data('shared-user-id');
+      const agentId = $('#shareAgentModal').data('agent-id');
+
+      if (sharedUserId === undefined) {
+        console.error('Shared user ID is undefined');
+        return;
+      }
+
+      $.ajax({
+        type: 'DELETE',
+        url: `/agents/${agentId}/share/${sharedUserId}`,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        success: function (response) {
+          fetchSharedUsers(agentId);
+          showToast('success', 'Shared user removed successfully');
+        },
+        error: function (error) {
+          showToast('error', 'Error removing shared user');
+        }
+      });
     });
   });
 </script>

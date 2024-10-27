@@ -4,10 +4,11 @@ import random
 import requests
 import os
 from urllib.parse import urlparse
-from flask import g, request
+from flask import g, request, make_response, jsonify
+from flask_login import current_user
 from werkzeug.security import generate_password_hash
 from modules.db import db
-from modules.models import AIFeatures, AIUser, AISignalWireParams, AIAgent
+from modules.models import AIFeatures, AIUser, AISignalWireParams, AIAgent, SharedAccess
 
 def generate_random_password(length=16):
     characters = string.ascii_letters + string.digits
@@ -22,8 +23,8 @@ def get_feature(agent_id, feature_name):
     feature = AIFeatures.query.filter_by(agent_id=agent_id, name=feature_name, user_id=user_id).first()
     return feature
 
-def get_signal_wire_param(user_id, agent_id, param_name):
-    param = AISignalWireParams.query.filter_by(user_id=user_id, agent_id=agent_id, name=param_name).first()
+def get_signalwire_param(agent_id, param_name):
+    param = AISignalWireParams.query.filter_by(agent_id=agent_id, name=param_name).first()
     return param.value if param else None
 
 def extract_agent_id(f):
@@ -56,9 +57,8 @@ def setup_default_agent_and_params(user_id):
     }
 
     for param_name, default_value in params_to_check.items():
-        if not get_signal_wire_param(user_id, agent_id, param_name):
+        if not get_signalwire_param(agent_id, param_name):
             new_param = AISignalWireParams(
-                user_id=user_id,
                 agent_id=agent_id,
                 name=param_name,
                 value=default_value
@@ -124,3 +124,21 @@ def get_swaig_includes(url):
     except requests.exceptions.RequestException as e:
         print(f"Request failed: {e}")
         return None
+
+def user_has_access_to_agent(agent_id):
+    owns_agent = AIAgent.query.filter_by(id=agent_id, user_id=current_user.id).first()
+    has_shared_access = SharedAccess.query.filter_by(agent_id=agent_id, shared_with_user_id=current_user.id).first()
+    return owns_agent or has_shared_access
+
+def get_or_set_selected_agent_id():
+    selected_agent_id = request.cookies.get('selectedAgentId')
+    if not selected_agent_id:
+        first_agent = AIAgent.query.filter_by(user_id=current_user.id).first()
+        if first_agent:
+            selected_agent_id = first_agent.id
+            response = make_response()
+            response.set_cookie('selectedAgentId', str(selected_agent_id), samesite='Strict')
+            return selected_agent_id, response
+        else:
+            return None, jsonify({'message': 'No agents found for the user'}), 400
+    return selected_agent_id, None
