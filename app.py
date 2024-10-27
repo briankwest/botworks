@@ -1375,10 +1375,10 @@ def agents():
         db.session.commit()
 
         default_params = [
-            {'name': 'HTTP_PASSWORD', 'value': generate_random_password()},
-            {'name': 'SPACE_NAME', 'value': 'subdomain.signalwire.com'},
-            {'name': 'AUTH_TOKEN', 'value': 'PTb4d1.....'},
-            {'name': 'PROJECT_ID', 'value': '5f1c4418-.....'}
+            {'name': 'HTTP_PASSWORD', 'value': os.environ.get('HTTP_PASSWORD', generate_random_password())},
+            {'name': 'SPACE_NAME', 'value': os.environ.get('SPACE_NAME', 'subdomain.signalwire.com')},
+            {'name': 'AUTH_TOKEN', 'value': os.environ.get('AUTH_TOKEN', 'PTb4d1.....')},
+            {'name': 'PROJECT_ID', 'value': os.environ.get('PROJECT_ID', '5f1c4418-.....')}
         ]
 
         for param in default_params:
@@ -1986,7 +1986,7 @@ def release_phone_number(phone_number_id):
 @login_required
 def create_or_update_include(agent_id):
     data = request.get_json()
-    url = data.get('url')
+    url = data.get('url').strip()
     functions = data.get('functions', [])
 
     include_entry = AIIncludes.query.filter_by(user_id=current_user.id, url=url, agent_id=agent_id).first()
@@ -1999,7 +1999,6 @@ def create_or_update_include(agent_id):
 
     db.session.commit()
     return jsonify({'message': 'Include entry saved successfully'}), 200
-
 @app.route('/includes/<int:agent_id>', methods=['GET'])
 @login_required
 def get_includes_agent(agent_id):
@@ -2262,6 +2261,14 @@ def step():
     db.session.add(new_step)
     db.session.commit()
     return jsonify(new_step.to_dict()), 201
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    db.session.rollback()
+    return render_template('500.html'), 500
 
 if __name__ == '__main__':
     with app.app_context():

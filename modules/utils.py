@@ -49,10 +49,10 @@ def setup_default_agent_and_params(user_id):
         print("Default agent 'BotWorks' already exists.")
 
     params_to_check = {
-        'HTTP_PASSWORD': generate_random_password(),
-        'SPACE_NAME': 'subdomain.signalwire.com',
-        'AUTH_TOKEN': 'PTb4d1.....',
-        'PROJECT_ID': '5f1c4418-.....'
+        'HTTP_PASSWORD': os.environ.get('HTTP_PASSWORD', generate_random_password()),
+        'SPACE_NAME': os.environ.get('SPACE_NAME', 'subdomain.signalwire.com'),
+        'AUTH_TOKEN': os.environ.get('AUTH_TOKEN', 'PTb4d1.....'),
+        'PROJECT_ID': os.environ.get('PROJECT_ID', '5f1c4418-.....')
     }
 
     for param_name, default_value in params_to_check.items():
