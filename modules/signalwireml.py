@@ -120,11 +120,33 @@ class SignalWireML:
     def swaig_response_json(self, response):
         return json.dumps(response, indent=4, ensure_ascii=False)
 
+    def clean_empty_items(self):
+        self._pronounce = [item for item in self._pronounce if item]
+        self._languages = [item for item in self._languages if item]
+
+        self._SWAIG['defaults'] = {k: v for k, v in self._SWAIG['defaults'].items() if v}
+        self._SWAIG['functions'] = [func for func in self._SWAIG['functions'] if func]
+        self._SWAIG['includes'] = [include for include in self._SWAIG['includes'] if include]
+        self._SWAIG['native_functions'] = [native for native in self._SWAIG['native_functions'] if native]
+
+        def remove_empty(d):
+            if isinstance(d, dict):
+                return {k: remove_empty(v) for k, v in d.items() if v or isinstance(v, (int, float))}
+            elif isinstance(d, list):
+                return [remove_empty(v) for v in d if v]
+            else:
+                return d
+
+        self._content = remove_empty(self._content)
+
     def render(self):
+        self.clean_empty_items()
         return self._content
 
     def render_json(self):
+        self.clean_empty_items()
         return json.dumps(self._content, indent=4, ensure_ascii=False)
 
     def render_yaml(self):
+        self.clean_empty_items()
         return yaml.dump(self._content)
