@@ -852,11 +852,12 @@ def get_yaml(id, agent_id):
     
     return response
 
+
 @app.route('/swaig/<int:user_id>/<int:agent_id>', methods=['POST'])
 @auth.login_required
 def swaig(user_id, agent_id):
     data = request.get_json()
-    hook_type_value = data.get('hook_type', '').lower()
+    hook_type_value = data.get('function', '').lower()
 
     if hook_type_value in ['hangup_hook', 'startup_hook', 'summarize_conversation']:
         hook_type = AIHooks.HookType(hook_type_value)
@@ -2278,6 +2279,36 @@ def step():
     db.session.add(new_step)
     db.session.commit()
     return jsonify(new_step.to_dict()), 201
+
+@app.route('/hooks', methods=['GET'])
+@login_required
+def get_hooks():
+    if request.headers.get('Accept') == 'application/json':
+        hooks = AIHooks.query.filter_by(user_id=current_user.id).all()
+        hooks_list = [{
+            'id': hook.id,
+            'user_id': hook.user_id,
+            'agent_id': hook.agent_id,
+            'created': hook.created,
+            'updated': hook.updated,
+            'data': hook.data,
+            'hook_type': hook.hook_type.name  # Convert HookType to string
+        } for hook in hooks]
+        return jsonify(hooks_list), 200
+    else:
+        return render_template('hooks.html')
+
+@app.route('/hooks/<int:hook_id>', methods=['DELETE'])
+@login_required
+def delete_hook(hook_id):
+    hook = AIHooks.query.filter_by(id=hook_id, user_id=current_user.id).first()
+    if not hook:
+        return jsonify({'message': 'Hook not found'}), 404
+
+    db.session.delete(hook)
+    db.session.commit()
+    return jsonify({'message': 'Hook deleted successfully'}), 200
+
 @app.errorhandler(404)
 def not_found_error(error):
     return render_template('404.html'), 404

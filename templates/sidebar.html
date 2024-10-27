@@ -26,9 +26,9 @@
           </a>
         </li>
         <li
-          class="nav-item has-treeview {{ 'menu-open' if request.endpoint in ['agents', 'prompt', 'conversations', 'pronounce', 'language', 'hints', 'params', 'includes', 'aifeatures', 'functions', 'swmlrequests', 'livedebug', 'debuglogs', 'translate', 'transcribe', 'context'] else '' }}">
+          class="nav-item has-treeview {{ 'menu-open' if request.endpoint in ['agents', 'prompt', 'hooks', 'conversations', 'pronounce', 'language', 'hints', 'params', 'includes', 'aifeatures', 'functions', 'swmlrequests', 'livedebug', 'debuglogs', 'translate', 'transcribe', 'context'] else '' }}">
           <a href="#"
-            class="nav-link {{ 'active' if request.endpoint in ['agents', 'prompt', 'conversations', 'pronounce', 'language', 'hints', 'params', 'includes', 'aifeatures', 'functions', 'swmlrequests', 'livedebug', 'debuglogs', 'translate', 'transcribe', 'context'] else '' }}">
+            class="nav-link {{ 'active' if request.endpoint in ['agents', 'prompt', 'hooks', 'conversations', 'pronounce', 'language', 'hints', 'params', 'includes', 'aifeatures', 'functions', 'swmlrequests', 'livedebug', 'debuglogs', 'translate', 'transcribe', 'context'] else '' }}">
             <i class="nav-icon fas fa-robot"></i>
             <p>
               AI Agents
@@ -46,6 +46,12 @@
               <a href="{{ url_for('prompt') }}" class="nav-link {{ 'active' if request.endpoint == 'prompt' else '' }}">
                 <i class="nav-icon fas fa-edit"></i>
                 <p>Prompt</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{{ url_for('get_hooks') }}" class="nav-link {{ 'active' if request.endpoint == 'hooks' else '' }}">
+                <i class="nav-icon fas fa-link"></i>
+                <p>Hooks</p>
               </a>
             </li>
             <li class="nav-item">

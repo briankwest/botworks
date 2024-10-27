@@ -592,16 +592,18 @@
         });
     });
 
-    $('#functionName, #functionArgsBody').on('input', function () {
+    $('#functionName').on('input', function () {
       this.value = this.value.replace(/[^a-zA-Z0-9]/g, '_');
     });
 
-    // Ensure function argument names are alphanumeric in both add and edit modals
-    $('#functionArgumentsContainer, #editFunctionModal').on('input', '.arg-name', function () {
+    $('#functionArgumentsContainer').on('input', '.arg-name', function () {
       this.value = this.value.replace(/[^a-zA-Z0-9]/g, '_');
     });
 
-    // Add Argument button functionality for the add form
+    $('#functionArgsBody').on('input', '.arg-name', function () {
+      this.value = this.value.replace(/[^a-zA-Z0-9]/g, '_');
+    });
+
     $('#addArgumentBtn').on('click', function () {
       const newArg = {
         id: 'new_' + Date.now(),
@@ -615,7 +617,6 @@
       $('#functionArgumentsContainer').append(createArgRow(newArg));
     });
 
-    // Add event listener for delete argument button in the add form
     $('#functionArgumentsContainer').on('click', '.delete-arg', function () {
       $(this).closest('tr').remove();
     });
@@ -629,7 +630,7 @@
         return;
       }
 
-      const data = {
+      const functionData = {
         purpose: $('#editFunctionPurpose').val(),
         web_hook_url: $('#editFunctionWebhookUrl').val(),
         wait_file: $('#editFunctionWaitFile').val(),
@@ -637,21 +638,8 @@
         fillers: $('#editFunctionFillers').val(),
         meta_data: JSON.parse(metaData || '{}'),
         meta_data_token: $('#editFunctionMetaDataToken').val(),
-        active: $('#editFunctionActiveToggle').is(':checked'),
-        arguments: []
+        active: $('#editFunctionActiveToggle').is(':checked')
       };
-
-      $('#functionArgsBody tr').each(function () {
-        const $row = $(this);
-        data.arguments.push({
-          name: $row.find('input[name="arg_name"]').val(),
-          type: $row.find('select[name="arg_type"]').val(),
-          description: $row.find('input[name="arg_description"]').val(),
-          required: $row.find('input.toggle-required').is(':checked'),
-          enum: $row.find('input[name="arg_enum"]').val(),
-          default: $row.find('input[name="arg_default"]').val()
-        });
-      });
 
       fetch(`/functions/${functionId}`, {
         method: 'PATCH',
@@ -659,17 +647,12 @@
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify(functionData)
       })
         .then(response => response.json())
         .then(data => {
           if (data.message === 'Function updated successfully') {
-            Toast.fire({
-              icon: 'success',
-              title: 'Function updated successfully'
-            });
-            $('#editFunctionModal').modal('hide');
-            $('#functionTable').DataTable().ajax.reload();
+            processArguments(functionId);
           } else {
             Swal.fire('Error', 'Error updating function', 'error');
           }
@@ -678,7 +661,85 @@
           Swal.fire('Error', 'Error updating function', 'error');
         });
     });
+
+    function processArguments(functionId) {
+      const newArguments = [];
+      const existingArguments = [];
+      const deletedArgumentIds = [];
+
+      const currentArgIds = new Set();
+
+      $('#functionArgsBody tr').each(function () {
+        const $row = $(this);
+        const argId = $row.data('arg-id');
+        const argData = {
+          name: $row.find('input[name="arg_name"]').val(),
+          type: $row.find('select[name="arg_type"]').val(),
+          description: $row.find('input[name="arg_description"]').val(),
+          required: $row.find('input.toggle-required').is(':checked'),
+          enum: $row.find('input[name="arg_enum"]').val(),
+          default: $row.find('input[name="arg_default"]').val()
+        };
+
+        if (!argId || argId.toString().startsWith('new_')) {
+          newArguments.push(argData);
+        } else {
+          argData.id = argId;
+          existingArguments.push(argData);
+          currentArgIds.add(argId);
+        }
+      });
+
+      const originalArgIds = new Set(window.originalArgumentIds || []);
+      originalArgIds.forEach(argId => {
+        if (!currentArgIds.has(argId)) {
+          deletedArgumentIds.push(argId);
+        }
+      });
+
+      const updateExistingArgs = existingArguments.map(arg => {
+        return fetch(`/functions/${functionId}/args/${arg.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(arg)
+        });
+      });
+
+      const createNewArgs = newArguments.map(arg => {
+        return fetch(`/functions/${functionId}/args`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(arg)
+        });
+      });
+
+      const deleteArgs = deletedArgumentIds.map(argId => {
+        return fetch(`/functions/${functionId}/args/${argId}`, {
+          method: 'DELETE'
+        });
+      });
+
+      Promise.all([...updateExistingArgs, ...createNewArgs, ...deleteArgs])
+        .then(responses => Promise.all(responses.map(res => res.json())))
+        .then(results => {
+          Toast.fire({
+            icon: 'success',
+            title: 'Function and arguments updated successfully'
+          });
+          $('#editFunctionModal').modal('hide');
+          $('#functionTable').DataTable().ajax.reload();
+        })
+        .catch(error => {
+          Swal.fire('Error', 'Error updating function arguments', 'error');
+        });
+    }
+
   });
 </script>
 {% endblock %}
-

@@ -1,0 +1,274 @@
+{% extends 'base.html' %}
+
+{% block title %}Transcribe{% endblock %}
+
+{% block content %}
+{% include 'navbar.html' %}
+{% include 'sidebar.html' %}
+
+<div class="content-wrapper">
+  <section class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-6">
+          <h1 class="m-0">Transcribe</h1>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header bg-primary">
+              <h3 class="card-title">Transcription List</h3>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table id="hooksTable" class="table table-striped w-100">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Hook Type</th>
+                      <th>Arguments</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header bg-success">
+              <h3 class="card-title">Add Transcription</h3>
+            </div>
+            <div class="card-body">
+              <form id="addTranscriptionForm">
+                <div class="form-group">
+                  <label for="transcriptionText">Transcription Text</label>
+                  <input type="text" class="form-control" id="transcriptionText" name="transcription" required>
+                </div>
+                <button type="submit" class="btn btn-success">Add Transcription</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="modal fade" id="editTranscriptionModal" tabindex="-1" role="dialog"
+    aria-labelledby="editTranscriptionModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editTranscriptionModalLabel">Edit Transcription Entry</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="editTranscriptionForm">
+            <input type="hidden" id="editId" name="id">
+            <div class="form-group">
+              <label for="editTranscriptionText">Transcription Text</label>
+              <input type="text" class="form-control" id="editTranscriptionText" name="transcription" required>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="saveEditButton">Save changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% include 'footer.html' %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  $(document).ready(function () {
+    $('#hooksTable').DataTable({
+      "responsive": true,
+      "autoWidth": false,
+      "ajax": {
+        "url": "{{ url_for('get_hooks') }}",
+        "headers": {
+          "Accept": "application/json"
+        },
+        "dataSrc": function (json) {
+          return json.map(function (item) {
+            console.log('Item:', item); // Log the entire item for debugging
+
+            const data = item.data || {};
+            const argumentDesc = data.argument_desc || {};
+            const parsedArguments = data.argument.parsed || [];
+            console.log('Argument Description:', argumentDesc); // Log argument description
+            console.log('Parsed Arguments:', parsedArguments); // Log parsed arguments
+
+            const properties = argumentDesc.properties || {};
+            let formattedArgs = '<ul>';
+
+            for (const [key, value] of Object.entries(properties)) {
+              const type = value.type ? ` (type: ${value.type})` : '';
+              const description = value.description ? ` - ${value.description}` : '';
+              const parsedValue = parsedArguments.length > 0 ? ` - Value: ${parsedArguments[0][key]}` : '';
+              formattedArgs += `<li><strong>${key}:</strong> ${type}${description}${parsedValue}</li>`;
+            }
+            formattedArgs += '</ul>';
+
+            console.log('Formatted Arguments:', formattedArgs); // Debugging line
+
+            return {
+              id: item.id,
+              hook_type: item.hook_type,
+              arguments: formattedArgs  // Use formatted arguments
+            };
+          });
+        }
+      },
+      "columns": [
+        { "data": "id", "title": "ID" },
+        { "data": "hook_type", "title": "Hook Type" },
+        { "data": "arguments", "title": "Arguments" },  // New column for arguments
+        {
+          "data": null,
+          "render": function (data, type, row) {
+            return `
+                <button class="btn btn-primary btn-sm edit-hook" data-id="${row.id}">Edit</button>
+                <button class="btn btn-danger btn-sm delete-hook" data-id="${row.id}">Delete</button>
+              `;
+          }
+        }
+      ],
+      "columnDefs": [
+        { "targets": -1, "className": "text-nowrap" }
+      ]
+    });
+
+    function showToast(icon, title) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+          toast.addEventListener('mouseenter', Swal.stopTimer)
+          toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+      });
+
+      Toast.fire({
+        icon: icon,
+        title: title
+      });
+    }
+
+    $('#addTranscriptionForm').submit(function (e) {
+      e.preventDefault();
+      const formData = {
+        transcription: $('#transcriptionText').val()
+      };
+
+      $.ajax({
+        type: 'POST',
+        url: "{{ url_for('transcribe') }}",
+        contentType: 'application/json',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        data: JSON.stringify(formData),
+        success: function (response) {
+          $('#hooksTable').DataTable().ajax.reload();
+          $('#addTranscriptionForm')[0].reset();
+          showToast('success', 'Transcription entry created successfully');
+        },
+        error: function (error) {
+          showToast('error', 'Error creating transcription entry');
+        }
+      });
+    });
+
+    $('#hooksTable').on('click', '.delete-hook', function () {
+      const id = $(this).data('id');
+      Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          $.ajax({
+            type: 'DELETE',
+            url: "/hooks/" + id,
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            success: function (response) {
+              $('#hooksTable').DataTable().ajax.reload();
+              showToast('success', 'Transcription entry deleted successfully');
+            },
+            error: function (error) {
+              showToast('error', 'Error deleting transcription entry');
+            }
+          });
+        }
+      });
+    });
+
+    $('#hooksTable').on('click', '.edit-hook', function () {
+      const id = $(this).data('id');
+      // Implement edit functionality here
+    });
+
+    $('#editTranscriptionForm').on('submit', function (e) {
+      e.preventDefault();
+    });
+
+    $('#saveEditButton').click(function () {
+      const id = $('#editId').val();
+      const formData = {
+        transcription: $('#editTranscriptionText').val()
+      };
+
+      $.ajax({
+        type: 'PUT',
+        url: "/transcribe/" + id,
+        contentType: 'application/json',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        data: JSON.stringify(formData),
+        success: function (response) {
+          $('#hooksTable').DataTable().ajax.reload();
+          $('#editTranscriptionModal').modal('hide');
+          showToast('success', 'Transcription entry updated successfully');
+        },
+        error: function (error) {
+          showToast('error', 'Error updating transcription entry');
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}
