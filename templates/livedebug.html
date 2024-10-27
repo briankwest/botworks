@@ -158,7 +158,10 @@
         }
         if (data.data) {
           const parsedData = JSON.parse(data.data);
-          if (parsedData.call_info && parsedData.conversation_add) {
+          if (parsedData.command === "conversation_ended") {
+            const callId = parsedData.call_info.call_id;
+            removeCallIdFromDropdown(callId);
+          } else if (parsedData.call_info && parsedData.conversation_add) {
             const callId = parsedData.call_info.call_id;
             const messageContent = parsedData.conversation_add.content;
             console.log('Parsed callId:', callId);
@@ -201,7 +204,7 @@
 
     function addCallIdToDropdown(callId) {
       const dropdown = document.getElementById('callIdDropdown');
-      const wasEmpty = dropdown.options.length === 1; // Only the default option is present
+      const wasEmpty = dropdown.options.length === 1;
       const currentSelection = dropdown.value;
       if (![...dropdown.options].some(option => option.value === callId)) {
         const option = document.createElement('option');
@@ -211,9 +214,9 @@
         console.log('Added callId to dropdown:', callId);
       }
       if (wasEmpty) {
-        dropdown.value = callId; // Automatically select the first UUID added
-        filterMessagesByCallId(); // Update the messages display
-        sendButton.disabled = false; // Enable the send button
+        dropdown.value = callId;
+        filterMessagesByCallId();
+        sendButton.disabled = false;
       } else {
         dropdown.value = currentSelection;
       }
@@ -307,7 +310,6 @@
       sendButton.disabled = !callIdDropdown.value;
     });
 
-    // Initial state of the send button
     sendButton.disabled = !callIdDropdown.value;
 
     connectSocket();
@@ -319,7 +321,6 @@
       }
     });
 
-    // Expose functions to the global scope
     window.filterMessagesByCallId = function() {
       const selectedCallId = document.getElementById('callIdDropdown').value;
       console.log('Filtering messages for callId:', selectedCallId);
@@ -332,6 +333,19 @@
         console.log('Displayed messages for callId:', selectedCallId);
       }
     };
+
+    function removeCallIdFromDropdown(callId) {
+      const dropdown = document.getElementById('callIdDropdown');
+      const options = Array.from(dropdown.options);
+      const optionToRemove = options.find(option => option.value === callId);
+      if (optionToRemove) {
+        dropdown.removeChild(optionToRemove);
+        console.log('Removed callId from dropdown:', callId);
+      }
+      
+      const sendButton = document.querySelector('button[onclick="sendMessage()"]');
+      sendButton.disabled = dropdown.options.length <= 1;
+    }
   });
 </script>
 <style>

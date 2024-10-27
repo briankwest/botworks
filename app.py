@@ -951,6 +951,16 @@ def postprompt(agent_id):
     )
     db.session.add(new_conversation)
     db.session.commit()
+
+    call_id = data.get('call_id')
+    
+    message = {
+        "command": "conversation_ended",
+        "call_info": {"call_id": f"{call_id}"},
+        "conversation_add": {"content": f"call has ended"}
+    }
+    
+    redis_client.publish(f"debug_channel_{agent_id}", json.dumps(message))
     return jsonify({'message': 'Conversation entry created successfully'}), 201
 
 @app.route('/pronounce/<int:id>', methods=['PUT'])
@@ -1781,14 +1791,12 @@ def handle_message(data):
             disconnect()
             return
 
-        # Extract the JSON string from the 'data' key and parse it
         if 'data' in data:
             parsed_data = json.loads(data['data'])
         else:
             emit('error', {'message': 'Invalid data format'}, namespace='/')
             return
 
-        # Access the nested data
         channel = parsed_data.get('channel')
         call_id = parsed_data.get('call_info', {}).get('call_id')
         content = parsed_data.get('conversation_add', {}).get('content')
@@ -1797,24 +1805,20 @@ def handle_message(data):
             emit('error', {'message': 'Invalid data format'}, namespace='/')
             return
 
-        # Parse agent_id from the channel name
-        agent_id = int(channel.rsplit('_', 1)[-1])
+        agent_id = int(channel.rsplit('_', 1)[-1])     
 
-        # Construct the message in the required format
-        message = {
-            "call_info": {"call_id": call_id},
-            "conversation_add": {"content": f"{content}"}
-        }
-        
         space_name = get_signalwire_param(agent_id, 'SPACE_NAME')
         auth_token = get_signalwire_param(agent_id, 'AUTH_TOKEN')
         project_id = get_signalwire_param(agent_id, 'PROJECT_ID')
+
         encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
         url = f"https://{space_name}/api/calling/calls"
+
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Basic {encoded_credentials}"
         }
+
         payload = {
             "id": call_id,
             "command": "calling.ai_message",
@@ -1823,11 +1827,10 @@ def handle_message(data):
                 "message_text": f"{content}"
             }
         }
+
         response = requests.put(url, headers=headers, data=json.dumps(payload))
         print("response:", response)
         print("payload:", payload)
-
-        
 
     except jwt.ExpiredSignatureError:
         emit('error', {'message': 'Access token expired'}, namespace='/')
@@ -2669,24 +2672,22 @@ def hooks():
     else:
         return render_template('hooks.html')
 
-@app.route('/hooks/<int:hook_id>', methods=['DELETE'])
+@app.route('/hooks/<int:agent_id>', methods=['DELETE'])
 @login_required
-def delete_hook(hook_id):
+def delete_all_hooks(agent_id):
     selected_agent_id, response = get_or_set_selected_agent_id()
     if not selected_agent_id:
         return response
 
     if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
+        return jsonify({'message': 'Permission denied1'}), 403
 
-    hook = AIHooks.query.filter_by(id=hook_id, agent_id=selected_agent_id).first()
-
-    if not hook:
-        return jsonify({'message': 'Hook not found or access denied'}), 404
-
-    db.session.delete(hook)
+    hooks = AIHooks.query.filter_by(agent_id=selected_agent_id).all()
+    for hook in hooks:
+        db.session.delete(hook)
     db.session.commit()
-    return jsonify({'message': 'Hook deleted successfully'}), 200
+
+    return jsonify({'message': 'All hooks deleted successfully'}), 200
 
 @app.route('/agents/<int:agent_id>/share/<int:user_id>', methods=['DELETE'])
 @login_required

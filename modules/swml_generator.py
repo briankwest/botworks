@@ -127,8 +127,6 @@ def generate_swml_response(agent_id, request_body):
             "function": function.name,
             "purpose": function.purpose,
         }
-        print(f"Function URL: {function.web_hook_url}")
-        print(f"Web Hook URL Debug: {web_hook_url}")
 
         function_data = {
             **({"web_hook_url": web_hook_url} if function.web_hook_url else {}),
@@ -141,6 +139,7 @@ def generate_swml_response(agent_id, request_body):
                 "properties": {}
             }
         }
+
         function_args = AIFunctionArgs.query.filter_by(function_id=function.id, agent_id=agent_id).all()
         for arg in function_args:
             function_data["argument"]["properties"][arg.name] = {

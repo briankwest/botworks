@@ -33,7 +33,6 @@
                       <th>ID</th>
                       <th>Hook Type</th>
                       <th>Arguments</th>
-                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -48,17 +47,11 @@
       <div class="row">
         <div class="col-12">
           <div class="card">
-            <div class="card-header bg-success">
-              <h3 class="card-title">Add Transcription</h3>
+            <div class="card-header bg-warning">
+              <h3 class="card-title">Actions</h3>
             </div>
-            <div class="card-body">
-              <form id="addTranscriptionForm">
-                <div class="form-group">
-                  <label for="transcriptionText">Transcription Text</label>
-                  <input type="text" class="form-control" id="transcriptionText" name="transcription" required>
-                </div>
-                <button type="submit" class="btn btn-success">Add Transcription</button>
-              </form>
+            <div class="card-body text-center">
+              <button id="deleteAllHooks" class="btn btn-danger mt-3">Delete All Hooks</button>
             </div>
           </div>
         </div>
@@ -145,16 +138,7 @@
       "columns": [
         { "data": "id", "title": "ID" },
         { "data": "hook_type", "title": "Hook Type" },
-        { "data": "arguments", "title": "Arguments" },  // New column for arguments
-        {
-          "data": null,
-          "render": function (data, type, row) {
-            return `
-                <button class="btn btn-primary btn-sm edit-hook" data-id="${row.id}">Edit</button>
-                <button class="btn btn-danger btn-sm delete-hook" data-id="${row.id}">Delete</button>
-              `;
-          }
-        }
+        { "data": "arguments", "title": "Arguments" }
       ],
       "columnDefs": [
         { "targets": -1, "className": "text-nowrap" }
@@ -206,37 +190,6 @@
       });
     });
 
-    $('#hooksTable').on('click', '.delete-hook', function () {
-      const id = $(this).data('id');
-      Swal.fire({
-        title: 'Are you sure?',
-        text: "You won't be able to revert this!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, delete it!'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          $.ajax({
-            type: 'DELETE',
-            url: "/hooks/" + id,
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json'
-            },
-            success: function (response) {
-              $('#hooksTable').DataTable().ajax.reload();
-              showToast('success', 'Transcription entry deleted successfully');
-            },
-            error: function (error) {
-              showToast('error', 'Error deleting transcription entry');
-            }
-          });
-        }
-      });
-    });
-
     $('#hooksTable').on('click', '.edit-hook', function () {
       const id = $(this).data('id');
       // Implement edit functionality here
@@ -268,6 +221,42 @@
         },
         error: function (error) {
           showToast('error', 'Error updating transcription entry');
+        }
+      });
+    });
+
+    $('#deleteAllHooks').click(function () {
+      Swal.fire({
+        title: 'Are you sure?',
+        text: "This will delete all hooks and cannot be undone!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete all!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const selected_agent_id = getCookie('selectedAgentId');
+
+          if (selected_agent_id) {
+            $.ajax({
+              type: 'DELETE',
+              url: "/hooks/" + selected_agent_id,
+              headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+              },
+              success: function (response) {
+                $('#hooksTable').DataTable().ajax.reload();
+                showToast('success', 'All hooks deleted successfully');
+              },
+              error: function (error) {
+                showToast('error', 'Error deleting all hooks');
+              }
+            });
+          } else {
+            showToast('error', 'Agent ID not found');
+          }
         }
       });
     });
