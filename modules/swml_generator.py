@@ -8,7 +8,7 @@ from modules.utils import get_feature, get_signalwire_param
 from modules.signalwireml import SignalWireML
 from modules.db import db
 
-def generate_swml_response(user_id, agent_id, request_body):
+def generate_swml_response(agent_id, request_body):
     request_body = request_body or {}
     swml = SignalWireML(version="1.0.0")
     
@@ -23,15 +23,14 @@ def generate_swml_response(user_id, agent_id, request_body):
         })  
     
     if outbound:
-        prompt = AIPrompt.query.filter_by(user_id=user_id, agent_id=agent_id, prompt_type='outbound_prompt').first()
-        post_prompt = AIPrompt.query.filter_by(user_id=user_id, agent_id=agent_id, prompt_type='outbound_post_prompt').first()
+        prompt = AIPrompt.query.filter_by(agent_id=agent_id, prompt_type='outbound_prompt').first()
+        post_prompt = AIPrompt.query.filter_by(agent_id=agent_id, prompt_type='outbound_post_prompt').first()
     else:
-        prompt = AIPrompt.query.filter_by(user_id=user_id, agent_id=agent_id, prompt_type='prompt').first()
-        post_prompt = AIPrompt.query.filter_by(user_id=user_id, agent_id=agent_id, prompt_type='post_prompt').first()
+        prompt = AIPrompt.query.filter_by(agent_id=agent_id, prompt_type='prompt').first()
+        post_prompt = AIPrompt.query.filter_by(agent_id=agent_id, prompt_type='post_prompt').first()
 
     if not prompt:
         prompt = AIPrompt(
-            user_id=user_id,
             agent_id=agent_id,
             prompt_type='outbound_prompt' if outbound else 'prompt',
             prompt_text="You are a helpful assistant.",
@@ -74,32 +73,32 @@ def generate_swml_response(user_id, agent_id, request_body):
 
         swml.set_aipost_prompt(post_prompt_data)
     
-    ai_params = AIParams.query.filter_by(user_id=user_id, agent_id=agent_id).all()
+    ai_params = AIParams.query.filter_by(agent_id=agent_id).all()
     params_dict = {param.name: param.value for param in ai_params}
     swml.set_aiparams(params_dict)
 
-    auth_user = AIUser.query.filter_by(id=user_id).first().username
+    auth_user = get_signalwire_param(agent_id, 'HTTP_USERNAME')
     auth_pass = get_signalwire_param(agent_id, 'HTTP_PASSWORD')
     
-    post_prompt_url = f"https://{request.host}/postprompt/{user_id}/{agent_id}"
+    post_prompt_url = f"https://{request.host}/postprompt/{agent_id}"
     if auth_user and auth_pass:
-        post_prompt_url = f"https://{auth_user}:{auth_pass}@{request.host}/postprompt/{user_id}/{agent_id}"
+        post_prompt_url = f"https://{auth_user}:{auth_pass}@{request.host}/postprompt/{agent_id}"
         swml.set_aipost_prompt_url({"post_prompt_url": post_prompt_url})
 
-    web_hook_url = f"https://{request.host}/swaig/{user_id}/{agent_id}"
+    web_hook_url = f"https://{request.host}/swaig/{agent_id}"
     if auth_user and auth_pass:
-        web_hook_url = f"https://{auth_user}:{auth_pass}@{request.host}/swaig/{user_id}/{agent_id}"
+        web_hook_url = f"https://{auth_user}:{auth_pass}@{request.host}/swaig/{agent_id}"
         swml.add_aiswaigdefaults({"web_hook_url": web_hook_url})
 
-    debug_webhook_url = f"https://{request.host}/debugwebhook/{user_id}/{agent_id}"
+    debug_webhook_url = f"https://{request.host}/debugwebhook/{agent_id}"
     if auth_user and auth_pass:
-        debug_webhook_url = f"https://{auth_user}:{auth_pass}@{request.host}/debugwebhook/{user_id}/{agent_id}"
+        debug_webhook_url = f"https://{auth_user}:{auth_pass}@{request.host}/debugwebhook/{agent_id}"
         swml.add_aiparams({"debug_webhook_url": debug_webhook_url})
 
-    hints = AIHints.query.filter_by(user_id=user_id, agent_id=agent_id).all()
+    hints = AIHints.query.filter_by(agent_id=agent_id).all()
     swml.add_aihints([hint.hint for hint in hints])
             
-    languages = AILanguage.query.filter_by(user_id=user_id, agent_id=agent_id).order_by(AILanguage.language_order.asc()).all()
+    languages = AILanguage.query.filter_by(agent_id=agent_id).order_by(AILanguage.language_order.asc()).all()
     for language in languages:
         language_data = {
             "language": language.name,
@@ -114,7 +113,7 @@ def generate_swml_response(user_id, agent_id, request_body):
 
         swml.add_ailanguage(language_data)
 
-    pronounces = AIPronounce.query.filter_by(user_id=user_id, agent_id=agent_id).all()
+    pronounces = AIPronounce.query.filter_by(agent_id=agent_id).all()
     for pronounce in pronounces:
         swml.add_aipronounce({
             "replace_this": pronounce.replace_this,
@@ -122,7 +121,7 @@ def generate_swml_response(user_id, agent_id, request_body):
             "ignore_case": pronounce.ignore_case
         })
 
-    functions = AIFunctions.query.filter_by(user_id=user_id, agent_id=agent_id).all()
+    functions = AIFunctions.query.filter_by(agent_id=agent_id).all()
     for function in functions:
         function_data = {
             "function": function.name,
@@ -213,7 +212,7 @@ def generate_swml_response(user_id, agent_id, request_body):
             }
         })
 
-    ai_includes = AIIncludes.query.filter_by(user_id=user_id, agent_id=agent_id).all()
+    ai_includes = AIIncludes.query.filter_by(agent_id=agent_id).all()
     for ai_include in ai_includes:
         function_dict = {
             "url": ai_include.url,
@@ -579,7 +578,6 @@ def generate_swml_response(user_id, agent_id, request_body):
     ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
 
     new_swml_request = AISWMLRequest(
-        user_id=user_id,
         agent_id=agent_id,
         request=jsonify(request_body).json,
         response=jsonify(swml_response).json,

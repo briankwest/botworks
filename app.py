@@ -71,7 +71,7 @@ def verify_password(username, password):
     g.agent_id = agent_id
     user = AIUser.query.filter_by(username=username).first()
     if user:
-        http_password = get_signalwire_param(user.id, agent_id, 'HTTP_PASSWORD')
+        http_password = get_signalwire_param(agent_id, 'HTTP_PASSWORD')
         if user.username == username and http_password == password:
             return user
     return None
@@ -903,9 +903,9 @@ def get_yaml(id, agent_id):
     return response
 
 
-@app.route('/swaig/<int:user_id>/<int:agent_id>', methods=['POST'])
+@app.route('/swaig/<int:agent_id>', methods=['POST'])
 @auth.login_required
-def swaig(user_id, agent_id):
+def swaig(agent_id):
     data = request.get_json()
     hook_type_value = data.get('function', '').lower()
 
@@ -915,7 +915,6 @@ def swaig(user_id, agent_id):
         hook_type = AIHooks.HookType.other
 
     new_hook = AIHooks(
-        user_id=user_id,
         agent_id=agent_id,
         data=data,
         hook_type=hook_type
@@ -926,28 +925,27 @@ def swaig(user_id, agent_id):
 
     return jsonify({'response': 'Data received successfully'}), 201
 
-@app.route('/swml/<int:user_id>/<int:agent_id>', methods=['POST', 'GET'])
+@app.route('/swml/<int:agent_id>', methods=['POST', 'GET'])
 @auth.login_required
 @extract_agent_id
-def swml(user_id, agent_id):
+def swml(agent_id):
     if request.method == 'POST':
         data = request.get_json()
     else:
         data = request.args.to_dict()
 
-    response_data = generate_swml_response(user_id, agent_id, request_body=data)
+    response_data = generate_swml_response(agent_id, request_body=data)
 
     response = make_response(jsonify(response_data))
     response.headers['Content-Type'] = 'application/json'
     
     return response
 
-@app.route('/postprompt/<int:id>/<int:agent_id>', methods=['POST'])
+@app.route('/postprompt/<int:agent_id>', methods=['POST'])
 @auth.login_required
-def postprompt(id, agent_id):
+def postprompt(agent_id):
     data = request.get_json()
     new_conversation = AIConversation(
-        user_id=id,
         agent_id=agent_id,
         data=data
     )
@@ -1531,6 +1529,7 @@ def agents():
 
         default_params = [
             {'name': 'HTTP_PASSWORD', 'value': os.environ.get('HTTP_PASSWORD', generate_random_password())},
+            {'name': 'HTTP_USERNAME', 'value': os.environ.get('HTTP_USERNAME', generate_random_password())},
             {'name': 'SPACE_NAME', 'value': os.environ.get('SPACE_NAME', 'subdomain.signalwire.com')},
             {'name': 'AUTH_TOKEN', 'value': os.environ.get('AUTH_TOKEN', 'PTb4d1.....')},
             {'name': 'PROJECT_ID', 'value': os.environ.get('PROJECT_ID', '5f1c4418-.....')}
@@ -1618,9 +1617,7 @@ def livedebug():
     if not user_has_access_to_agent(selected_agent_id):
         return jsonify({'message': 'Permission denied'}), 403
     
-    user_id = current_user.id
-
-    channel = f'debug_channel_{user_id}_{selected_agent_id}'
+    channel = f'debug_channel_{selected_agent_id}'
 
     return render_template('livedebug.html', channel=channel)
 
@@ -1795,18 +1792,17 @@ def handle_message(data):
         emit('error', {'message': 'Invalid access token'}, namespace='/')
         disconnect()
 
-@app.route('/debugwebhook/<int:user_id>/<int:agent_id>', methods=['POST'])
+@app.route('/debugwebhook/<int:agent_id>', methods=['POST'])
 @auth.login_required
-def create_debuglog(user_id, agent_id):
+def create_debuglog(agent_id):
     data = json.loads(request.get_data().decode('utf-8'))
     ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
     
-    channel_name = f'debug_channel_{user_id}_{agent_id}'
+    channel_name = f'debug_channel_{agent_id}'
 
     redis_client.publish(channel_name, json.dumps(data).encode('utf-8'))
 
     new_log = AIDebugLogs(
-        user_id=user_id,
         agent_id=agent_id,
         data=data,
         ip_address=ip_address
@@ -2616,7 +2612,6 @@ def hooks():
 
         hooks_list = [{
             'id': hook.id,
-            'user_id': hook.user_id,
             'agent_id': hook.agent_id,
             'created': hook.created,
             'updated': hook.updated,

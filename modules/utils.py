@@ -19,8 +19,8 @@ def get_feature(agent_id, feature_name):
     parsed_url = urlparse(full_url)
     path_segments = parsed_url.path.split('/')
     agent_id = path_segments[-1]
-    user_id = path_segments[-2]
-    feature = AIFeatures.query.filter_by(agent_id=agent_id, name=feature_name, user_id=user_id).first()
+
+    feature = AIFeatures.query.filter_by(agent_id=agent_id, name=feature_name).first()
     return feature
 
 def get_signalwire_param(agent_id, param_name):
@@ -51,6 +51,7 @@ def setup_default_agent_and_params(user_id):
 
     params_to_check = {
         'HTTP_PASSWORD': os.environ.get('HTTP_PASSWORD', generate_random_password()),
+        'HTTP_USERNAME': os.environ.get('HTTP_USERNAME', generate_random_password()),
         'SPACE_NAME': os.environ.get('SPACE_NAME', 'subdomain.signalwire.com'),
         'AUTH_TOKEN': os.environ.get('AUTH_TOKEN', 'PTb4d1.....'),
         'PROJECT_ID': os.environ.get('PROJECT_ID', '5f1c4418-.....')
