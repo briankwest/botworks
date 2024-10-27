@@ -245,6 +245,7 @@ class AIFeatures(db.Model):
     agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
     name = db.Column(db.String(100), nullable=False)
     value = db.Column(db.String(255), nullable=True)
+    data = db.Column(db.JSON, nullable=True)
     enabled = db.Column(db.Boolean, nullable=False, default=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)

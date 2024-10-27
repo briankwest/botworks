@@ -105,7 +105,7 @@
       "responsive": true,
       "autoWidth": false,
       "ajax": {
-        "url": "{{ url_for('get_hooks') }}",
+        "url": "{{ url_for('hooks') }}",
         "headers": {
           "Accept": "application/json"
         },
@@ -125,7 +125,9 @@
             for (const [key, value] of Object.entries(properties)) {
               const type = value.type ? ` (type: ${value.type})` : '';
               const description = value.description ? ` - ${value.description}` : '';
-              const parsedValue = parsedArguments.length > 0 ? ` - Value: ${parsedArguments[0][key]}` : '';
+              const parsedValue = parsedArguments.length > 0 && parsedArguments[0][key] !== undefined 
+                                  ? ` - Value: ${parsedArguments[0][key]}` 
+                                  : ' - Status: Missing';
               formattedArgs += `<li><strong>${key}:</strong> ${type}${description}${parsedValue}</li>`;
             }
             formattedArgs += '</ul>';

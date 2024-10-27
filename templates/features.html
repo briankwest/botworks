@@ -70,6 +70,10 @@
                     <label class="custom-control-label" for="featureEnabled"></label>
                   </div>
                 </div>
+                <div class="form-group">
+                  <label for="featureData">Data</label>
+                  <textarea id="addFeatureDataEditor" style="display: none;"></textarea>
+                </div>
                 <button type="submit" class="btn btn-success">Add Feature</button>
               </form>
             </div>
@@ -83,9 +87,41 @@
 {% endblock %}
 
 {% block scripts %}
+<!-- Add these in your HTML head or before the closing body tag -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/javascript/javascript.min.js"></script>
 <script>
   $(document).ready(function () {
     var selectedAgentId = getCookie('selectedAgentId');
+
+    var addFeatureDataEditor = CodeMirror.fromTextArea(document.getElementById('addFeatureDataEditor'), {
+      mode: 'application/json',
+      lineNumbers: true,
+      theme: 'default',
+      autoCloseBrackets: true,
+      matchBrackets: true
+    });
+
+    var editFeatureDataEditor;
+
+    $('#editFeatureModal').on('shown.bs.modal', function () {
+      if (!editFeatureDataEditor) {
+        editFeatureDataEditor = CodeMirror.fromTextArea(document.getElementById('editFeatureDataEditor'), {
+          mode: 'application/json',
+          lineNumbers: true,
+          theme: 'default',
+          autoCloseBrackets: true,
+          matchBrackets: true
+        });
+      }
+      // Ensure the editor is refreshed and the value is set
+      const featureId = $('#editFeatureId').val();
+      $.get(`/aifeatures/${selectedAgentId}/${featureId}`, function (data) {
+        editFeatureDataEditor.setValue(JSON.stringify(data.data, null, 2));
+        setTimeout(() => editFeatureDataEditor.refresh(), 1);
+      });
+    });
 
     initializeFeaturesTable(selectedAgentId);
 
@@ -94,15 +130,17 @@
       const name = $('#featureName').val();
       const value = $('#featureValue').val();
       const enabled = $('#featureEnabled').is(':checked');
+      const data = JSON.parse(addFeatureDataEditor.getValue());
 
       $.ajax({
         url: `/aifeatures/${selectedAgentId}`,
         type: 'POST',
         contentType: 'application/json',
-        data: JSON.stringify({ name, value, enabled }),
+        data: JSON.stringify({ name, value, enabled, data }),
         success: function () {
           $('#featuresTable').DataTable().ajax.reload();
           $('#addFeatureForm')[0].reset();
+          addFeatureDataEditor.setValue('{}');
           Swal.fire({
             icon: 'success',
             title: 'Success!',
@@ -127,6 +165,11 @@
         $('#editFeatureValue').val(data.value);
         $('#editFeatureEnabled').prop('checked', data.enabled);
         $('#editFeatureModal').modal('show');
+
+        if (editFeatureDataEditor) {
+          editFeatureDataEditor.setValue(JSON.stringify(data.data, null, 2));
+          setTimeout(() => editFeatureDataEditor.refresh(), 1);
+        }
       });
     });
 
@@ -136,12 +179,13 @@
       const name = $('#editFeatureName').val();
       const value = $('#editFeatureValue').val();
       const enabled = $('#editFeatureEnabled').is(':checked');
+      const data = JSON.parse(editFeatureDataEditor.getValue());
 
       $.ajax({
         url: `/aifeatures/${selectedAgentId}/${id}`,
         type: 'PUT',
         contentType: 'application/json',
-        data: JSON.stringify({ name, value, enabled }),
+        data: JSON.stringify({ name, value, enabled, data }),
         success: function () {
           $('#featuresTable').DataTable().ajax.reload();
           $('#editFeatureModal').modal('hide');
@@ -289,7 +333,7 @@
 
 <div class="modal fade" id="editFeatureModal" tabindex="-1" role="dialog" aria-labelledby="editFeatureModalLabel"
   aria-hidden="true">
-  <div class="modal-dialog" role="document">
+  <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="editFeatureModalLabel">Edit Feature</h5>
@@ -307,6 +351,10 @@
           <div class="form-group">
             <label for="editFeatureValue">Value</label>
             <input type="text" class="form-control" id="editFeatureValue">
+          </div>
+          <div class="form-group">
+            <label for="editFeatureData">Data</label>
+            <textarea id="editFeatureDataEditor" style="display: none;"></textarea>
           </div>
           <button type="submit" class="btn btn-primary">Save changes</button>
         </form>

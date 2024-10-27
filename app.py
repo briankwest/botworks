@@ -1696,6 +1696,8 @@ def patch_aifeature(agent_id, feature_id):
         feature.value = data['value']
     if 'enabled' in data:
         feature.enabled = data['enabled']
+    if 'data' in data:
+        feature.data = data['data']
 
     db.session.commit()
     return jsonify({'message': 'Feature patched successfully'}), 200
@@ -1711,6 +1713,7 @@ def manage_aifeature(agent_id, feature_id):
             'name': feature.name,
             'value': feature.value,
             'enabled': feature.enabled,
+            'data': feature.data,
             'created': feature.created
         }), 200
 
@@ -1719,6 +1722,7 @@ def manage_aifeature(agent_id, feature_id):
         feature.name = data.get('name', feature.name)
         feature.value = data.get('value', feature.value)
         feature.enabled = data.get('enabled', feature.enabled)
+        feature.data = data.get('data', feature.data)
         db.session.commit()
         return jsonify({'message': 'Feature updated successfully'}), 200
 
@@ -1735,6 +1739,7 @@ def add_aifeature(agent_id):
         name=data['name'],
         value=data['value'],
         enabled=data['enabled'],
+        data=data.get('data'),
         user_id=current_user.id,
         agent_id=agent_id
     )
@@ -1759,6 +1764,7 @@ def aifeatures_agent(agent_id):
             'agent_id': feature.agent_id,
             'value': feature.value,
             'enabled': feature.enabled,
+            'data': feature.data,
             'created': feature.created
         } for feature in features]
         return jsonify(features_data), 200
@@ -2282,7 +2288,7 @@ def step():
 
 @app.route('/hooks', methods=['GET'])
 @login_required
-def get_hooks():
+def hooks():
     if request.headers.get('Accept') == 'application/json':
         hooks = AIHooks.query.filter_by(user_id=current_user.id).all()
         hooks_list = [{
@@ -2292,7 +2298,7 @@ def get_hooks():
             'created': hook.created,
             'updated': hook.updated,
             'data': hook.data,
-            'hook_type': hook.hook_type.name  # Convert HookType to string
+            'hook_type': hook.hook_type.name
         } for hook in hooks]
         return jsonify(hooks_list), 200
     else:
