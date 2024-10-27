@@ -68,41 +68,6 @@
         </div>
       </div>
       <div class="row">
-        <div class="col-12">
-          <div class="card">
-            <div class="card-header bg-success">
-              <h3 class="card-title">Service URLs</h3>
-            </div>
-            <div class="card-body table-responsive">
-              <table class="table no-border">
-                <thead>
-                  <tr>
-                    <th>Type</th>
-                    <th>URL</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>JSON URL</td>
-                    <td><span id="swmlUrl">{{ swml_url }}</span></td>
-                    <td><button class="copy-btn" onclick="copyToClipboard('swmlUrl')">Copy</button></td>
-                  </tr>
-                  <tr>
-                    <td>YAML URL</td>
-                    <td><span id="yamlUrl">{{ yaml_url }}</span></td>
-                    <td><button class="copy-btn" onclick="copyToClipboard('yamlUrl')">Copy</button></td>
-                  </tr>
-                  <tr>
-                    <td>Debug Webhook URL</td>
-                    <td><span id="debugWebhookUrl">{{ debugwebhook_url }}</span></td>
-                    <td><button class="copy-btn" onclick="copyToClipboard('debugWebhookUrl')">Copy</button></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
         <div class="col-lg-3 col-6">
           <div class="small-box bg-info">
             <div class="inner">
@@ -126,6 +91,30 @@
             </div>
             <a href="{{ url_for('conversations') }}" class="small-box-footer">More info <i
                 class="fas fa-arrow-circle-right"></i></a>
+          </div>
+        </div>
+        <div class="col-lg-3 col-6">
+          <div class="small-box bg-warning">
+            <div class="inner">
+              <h3>{{ number_of_functions }}</h3>
+              <p>Number of Functions</p>
+            </div>
+            <div class="icon">
+              <i class="ion ion-code-working"></i>
+            </div>
+            <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+          </div>
+        </div>
+        <div class="col-lg-3 col-6">
+          <div class="small-box bg-danger">
+            <div class="inner">
+              <h3>{{ number_of_agents }}</h3>
+              <p>Number of Agents</p>
+            </div>
+            <div class="icon">
+              <i class="ion ion-person-stalker"></i>
+            </div>
+            <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
           </div>
         </div>
       </div>

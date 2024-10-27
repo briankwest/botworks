@@ -107,17 +107,13 @@ def dashboard():
     if not agent_id:
         first_agent = AIAgent.query.filter_by(user_id=current_user.id).first()
         agent_id = first_agent.id if first_agent else None
-    auth_user = current_user.username
-    auth_pass = get_signal_wire_param(current_user.id, agent_id, 'HTTP_PASSWORD')
-
-    swml_url = f"https://{auth_user}:{auth_pass}@{request.host}/swml/{current_user.id}/{agent_id}"
-    yaml_url = f"https://{auth_user}:{auth_pass}@{request.host}/yaml/{current_user.id}/{agent_id}"
-    debugwebhook_url = f"https://{auth_user}:{auth_pass}@{request.host}/debugwebhook/{current_user.id}/{agent_id}"
 
     number_of_requests = AISWMLRequest.query.filter_by(user_id=current_user.id, agent_id=agent_id).count()
     number_of_conversations = AIConversation.query.filter_by(user_id=current_user.id, agent_id=agent_id).count()
+    number_of_functions = AIFunctions.query.filter_by(user_id=current_user.id, agent_id=agent_id).count()
+    number_of_agents = AIAgent.query.filter_by(user_id=current_user.id).count()
 
-    return render_template('dashboard.html', user=current_user, swml_url=swml_url, yaml_url=yaml_url, debugwebhook_url=debugwebhook_url, number_of_requests=number_of_requests, number_of_conversations=number_of_conversations)
+    return render_template('dashboard.html', user=current_user, number_of_requests=number_of_requests, number_of_conversations=number_of_conversations, number_of_functions=number_of_functions, number_of_agents=number_of_agents)
 
 @app.route('/swmlrequests/<int:agent_id>', methods=['DELETE'])
 @login_required
