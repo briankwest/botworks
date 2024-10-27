@@ -127,7 +127,12 @@ def generate_swml_response(user_id, agent_id, request_body):
         function_data = {
             "function": function.name,
             "purpose": function.purpose,
-            **({"web_hook_url": function.web_hook_url} if function.web_hook_url else {}),
+        }
+        print(f"Function URL: {function.web_hook_url}")
+        print(f"Web Hook URL Debug: {web_hook_url}")
+
+        function_data = {
+            **({"web_hook_url": web_hook_url} if function.web_hook_url else {}),
             **({"wait_file": function.wait_file} if function.wait_file else {}),
             **({"wait_file_loops": function.wait_file_loops} if function.wait_file_loops else {}),
             **({"fillers": function.fillers} if function.fillers else {}),
@@ -142,6 +147,7 @@ def generate_swml_response(user_id, agent_id, request_body):
             function_data["argument"]["properties"][arg.name] = {
                 "type": arg.type,
                 "description": arg.description,
+                "type": arg.type if arg.type in ['integer', 'number', 'boolean', 'string', 'array', 'object'] else 'string',
                 **({"default": (int(arg.default) if arg.type == 'integer' else 
                                float(arg.default) if arg.type == 'number' else 
                                bool(arg.default) if arg.type == 'boolean' else 
@@ -154,13 +160,14 @@ def generate_swml_response(user_id, agent_id, request_body):
         function_data["argument"]["type"] = "object"
 
         function_payload = {
-            "name": function.name,
+            "function": function.name,
             "purpose": function.purpose,
-            "arguments": function_data["argument"],
+            "argument": function_data["argument"],
             "required": [arg.name for arg in function_args if arg.required]
         }
         if not function.active:
             function_payload["active"] = function.active
+
         swml.add_aiswaigfunction(function_payload)
 
     enable_message_feature = get_feature(agent_id, 'ENABLE_MESSAGE')
@@ -225,19 +232,16 @@ def generate_swml_response(user_id, agent_id, request_body):
     context_step_groups = {}
     for step, context in context_steps:
         try:
-            # Resolve valid_steps to step names
             valid_steps = []
             if step.valid_steps:
                 valid_step_ids = json.loads(step.valid_steps) if isinstance(step.valid_steps, str) else step.valid_steps
                 valid_steps = [s.name for s in AISteps.query.filter(AISteps.id.in_(valid_step_ids)).all()]
 
-            # Resolve valid_contexts to context names
             valid_contexts = []
             if step.valid_contexts:
                 valid_context_ids = json.loads(step.valid_contexts) if isinstance(step.valid_contexts, str) else step.valid_contexts
                 valid_contexts = [c.context_name for c in AIContext.query.filter(AIContext.id.in_(valid_context_ids)).all()]
 
-            # Resolve functions to function names
             functions = []
             if step.functions:
                 function_ids = json.loads(step.functions) if isinstance(step.functions, str) else step.functions
@@ -262,15 +266,13 @@ def generate_swml_response(user_id, agent_id, request_body):
                 if valid_contexts:
                     step_dict['valid_contexts'] = valid_contexts
 
-            # Filter out None or empty string values
             step_dict = {k: v for k, v in step_dict.items() if v is not None and v != ''}
             context_step_groups.setdefault(context.context_name, []).append(step_dict)
         except Exception as e:
-            db.session.rollback()  # Rollback the transaction
-            print(f"Error processing step {step.id}: {str(e)}")  # Log the error
+            db.session.rollback()
+            print(f"Error processing step {step.id}: {str(e)}")
             continue
     
-
     for context_name, steps in context_step_groups.items():
         swml.add_context_steps(context_name, steps)
 
@@ -587,6 +589,7 @@ def generate_swml_response(user_id, agent_id, request_body):
     db.session.commit()
 
     return swml_response
+
 
 
 

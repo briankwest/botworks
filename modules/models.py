@@ -1,6 +1,7 @@
 from modules.db import db
 from flask_login import UserMixin
 from datetime import datetime
+import enum
 
 class AIAgent(db.Model):
     __tablename__ = 'ai_agents'
@@ -339,5 +340,39 @@ class AISteps(db.Model):
             'end': self.end,
             'functions': self.functions,
             'skip_user_turn': self.skip_user_turn
+        }
+        
+class AIHooks(db.Model):
+    __tablename__ = 'ai_hooks'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
+    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
+    created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    data = db.Column(db.JSON, nullable=False)
+    
+    class HookType(enum.Enum):
+        hangup_hook = "hangup_hook"
+        startup_hook = "startup_hook"
+        summarize_conversation = "summarize_conversation"
+        other = "other"
+    
+    hook_type = db.Column(db.Enum(HookType), nullable=False)
+
+    user = db.relationship('AIUser', backref=db.backref('ai_hooks', lazy=True))
+    agent = db.relationship('AIAgent', backref=db.backref('ai_hooks', lazy=True))
+
+    def __repr__(self):
+        return f'<AIHooks {self.hook_type}>'
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'agent_id': self.agent_id,
+            'created': self.created,
+            'updated': self.updated,
+            'data': self.data,
+            'hook_type': self.hook_type.value
         }
 

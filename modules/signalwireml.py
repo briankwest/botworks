@@ -71,7 +71,7 @@ class SignalWireML:
     def add_aihints(self, hints):
         seen = set(self._hints)
         self._hints.extend([hint for hint in hints if hint not in seen])
-        self._hints = list(dict.fromkeys(self._hints))  # To remove duplicates while maintaining order
+        self._hints = list(dict.fromkeys(self._hints))
 
     def add_aiswaigdefaults(self, SWAIG):
         for k, v in SWAIG.items():

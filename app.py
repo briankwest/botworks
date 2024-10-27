@@ -16,7 +16,7 @@ from flask_migrate import Migrate
 from dotenv import load_dotenv
 from urllib.parse import urlparse
 from modules.signalwireml import SignalWireML
-from modules.models import db, AIAgent, AIUser, AISignalWireParams, AIFeatures, AIFunctions, AIIncludes, AIConversation, AISWMLRequest, AIParams, AIFunctionArgs, AIPrompt, AIPronounce, AILanguage, AIHints, AIIncludes, AISWMLRequest, AIDebugLogs, AIContext, AISteps
+from modules.models import db, AIAgent, AIUser, AISignalWireParams, AIFeatures, AIFunctions, AIIncludes, AIConversation, AISWMLRequest, AIParams, AIFunctionArgs, AIPrompt, AIPronounce, AILanguage, AIHints, AIIncludes, AISWMLRequest, AIDebugLogs, AIContext, AISteps, AIHooks
 from modules.swml_generator import generate_swml_response
 from modules.utils import (
     generate_random_password, get_signal_wire_param, 
@@ -148,35 +148,31 @@ def swmlrequests():
 @app.route('/dashboard/completed', methods=['GET'])
 @login_required
 def dashboard_completed():
-    end_time = datetime.utcnow().replace(minute=0, second=0, microsecond=0)
+    end_time = (datetime.utcnow() + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
     start_time = end_time - timedelta(hours=23)
 
-    # Initialize hourly counts for the past 24 hours
     hourly_counts = {start_time + timedelta(hours=i): 0 for i in range(24)}
 
     selected_agent_id = request.cookies.get('selectedAgentId')
     if not selected_agent_id:
         return jsonify({'message': 'Agent ID not found in cookies'}), 400
 
-    # Query to get the count of conversations grouped by hour
     completed_conversations = db.session.query(
         db.func.date_trunc('hour', AIConversation.created).label('hour'),
         db.func.count(AIConversation.id).label('count')
     ).filter(
         AIConversation.created >= start_time,
-        AIConversation.created <= end_time,
+        AIConversation.created < end_time,
         AIConversation.user_id == current_user.id,
         AIConversation.agent_id == selected_agent_id
     ).group_by('hour').order_by('hour').all()
 
-    # Update the hourly counts with the results from the query
     for hour, count in completed_conversations:
         if hour in hourly_counts:
             hourly_counts[hour] = count
 
-    # Generate labels and counts for the response
     labels = [(start_time + timedelta(hours=i)).strftime('%H:00') for i in range(24)]
-    counts = [hourly_counts[hour] for hour in sorted(hourly_counts.keys())]
+    counts = [hourly_counts[start_time + timedelta(hours=i)] for i in range(24)]
 
     return jsonify({'labels': labels, 'counts': counts}), 200
 
@@ -233,17 +229,15 @@ def functions():
                 return jsonify({'message': 'An error occurred while creating the function'}), 500
         
         try:
-            # Save the arguments associated with the function
             arguments = data.get('arguments', [])
             for arg in arguments:
-                # Check if 'name' key exists in the argument
                 if 'name' not in arg:
                     return jsonify({'message': 'Argument name is required'}), 400
 
                 new_argument = AIFunctionArgs(
                     function_id=new_function.id,
-                    user_id=current_user.id,  # Ensure user_id is set
-                    agent_id=selected_agent_id,  # Ensure agent_id is set
+                    user_id=current_user.id,
+                    agent_id=selected_agent_id,
                     name=arg['name'],
                     type=arg['type'],
                     description=arg['description'],
@@ -436,7 +430,6 @@ def patch_function_arg(function_id, arg_id):
         if not data:
             return jsonify({'message': 'No data provided'}), 400
 
-        # Update fields if they are present in the request
         arg_entry.name = data.get('name', arg_entry.name)
         arg_entry.type = data.get('type', arg_entry.type)
         arg_entry.description = data.get('description', arg_entry.description)
@@ -764,7 +757,7 @@ def logout():
     logout_user()
     flash('You have been logged out successfully.', 'success')
     response = make_response(redirect(url_for('login')))
-    response.set_cookie('selectedAgentId', '', expires=0)  # Clear the selectedAgentId cookie
+    response.set_cookie('selectedAgentId', '', expires=0)
     return response
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -858,6 +851,29 @@ def get_yaml(id, agent_id):
     response.headers['Content-Type'] = 'text/x-yaml'
     
     return response
+
+@app.route('/swaig/<int:user_id>/<int:agent_id>', methods=['POST'])
+@auth.login_required
+def swaig(user_id, agent_id):
+    data = request.get_json()
+    hook_type_value = data.get('hook_type', '').lower()
+
+    if hook_type_value in ['hangup_hook', 'startup_hook', 'summarize_conversation']:
+        hook_type = AIHooks.HookType(hook_type_value)
+    else:
+        hook_type = AIHooks.HookType.other
+
+    new_hook = AIHooks(
+        user_id=user_id,
+        agent_id=agent_id,
+        data=data,
+        hook_type=hook_type
+    )
+
+    db.session.add(new_hook)
+    db.session.commit()
+
+    return jsonify({'response': 'Data received successfully'}), 201
 
 @app.route('/swml/<int:user_id>/<int:agent_id>', methods=['POST', 'GET'])
 @auth.login_required
@@ -1051,7 +1067,6 @@ def patch_language(id):
         if not data:
             return jsonify({'message': 'No data provided'}), 400
 
-        # Update fields if they are present in the request
         language_entry.name = data.get('name', language_entry.name)
         language_entry.code = data.get('code', language_entry.code)
         language_entry.voice = data.get('voice', language_entry.voice)
