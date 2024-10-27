@@ -33,6 +33,7 @@
               <button class="btn btn-success" onclick="connectSocket()">Connect</button>
               <button class="btn btn-danger" onclick="disconnectSocket()">Disconnect</button>
 
+
               <h2>Messages:</h2>
 
               <select id="callIdDropdown" class="form-control mb-2" onchange="filterMessagesByCallId()">
@@ -49,8 +50,14 @@
               <input id="message" type="text" placeholder="Enter message to inject into the AI conversation"
                 class="form-control mb-2">
               <div class="d-flex align-items-center mb-2">
+
                 <button class="btn btn-success mr-2" onclick="sendMessage()">Send</button>
-                <button class="btn btn-danger" onclick="clearMessages()">Clear</button>
+                <button class="btn btn-danger mr-2" onclick="clearMessages()">Clear</button>
+                <button class="btn btn-warning mr-2" onclick="hangup()">Hangup</button>
+                <div class="custom-control custom-switch mr-2">
+                  <input type="checkbox" class="custom-control-input" id="roleToggle">
+                  <label class="custom-control-label" for="roleToggle">Send as System</label>
+                </div>
                 <div class="ml-auto status-container">
                   <div class="status-indicator">
                     <span id="connection-status" class="status-circle"></span> Connection
@@ -217,6 +224,7 @@
         dropdown.value = callId;
         filterMessagesByCallId();
         sendButton.disabled = false;
+        hangupButton.disabled = false;
       } else {
         dropdown.value = currentSelection;
       }
@@ -270,6 +278,8 @@
     function sendMessage() {
       const message = document.getElementById('message').value;
       const selectedCallId = document.getElementById('callIdDropdown').value;
+      const isSystemRole = document.getElementById('roleToggle').checked;
+      const role = isSystemRole ? 'system' : 'user';
 
       if (socket && socket.connected && selectedCallId && message) {
         const messageData = {
@@ -279,13 +289,14 @@
               call_id: selectedCallId
             },
             conversation_add: {
-              content: message
+              content: message,
+              role: role
             }
           })
         };
         socket.emit('send_message', messageData);
         document.getElementById('message').value = '';
-        console.log('Sent message with call_id:', selectedCallId);
+        console.log('Sent message with call_id:', selectedCallId, 'and role:', role);
       } else {
         console.error('Cannot send message: socket not connected or call_id/message is empty');
       }
@@ -296,21 +307,49 @@
       messagesTextarea.value = '';
     }
 
+    function hangup() {
+      const selectedCallId = document.getElementById('callIdDropdown').value;
+      if (socket && socket.connected && selectedCallId) {
+        const messageData = {
+          data: JSON.stringify({
+            command: 'hangup',
+            channel: currentChannel,
+            call_info: {
+              call_id: selectedCallId
+            },
+            conversation_add: {
+              content: 'hangup',
+              role: 'system'
+            }
+          })
+        };
+        socket.emit('send_message', messageData);
+        console.log('Sent hangup command for call_id:', selectedCallId);
+      } else {
+        console.error('Cannot send hangup command: socket not connected or call_id is empty');
+      }
+    }
+
     window.joinChannel = joinChannel;
     window.leaveChannel = leaveChannel;
     window.sendMessage = sendMessage;
     window.clearMessages = clearMessages;
     window.connectSocket = connectSocket;
     window.disconnectSocket = disconnectSocket;
+    window.hangup = hangup;
 
     const sendButton = document.querySelector('button[onclick="sendMessage()"]');
+    const hangupButton = document.querySelector('button[onclick="hangup()"]');
     const callIdDropdown = document.getElementById('callIdDropdown');
 
     callIdDropdown.addEventListener('change', function () {
-      sendButton.disabled = !callIdDropdown.value;
+      const isCallIdSelected = !!callIdDropdown.value;
+      sendButton.disabled = !isCallIdSelected;
+      hangupButton.disabled = !isCallIdSelected;
     });
 
     sendButton.disabled = !callIdDropdown.value;
+    hangupButton.disabled = !callIdDropdown.value;
 
     connectSocket();
     joinChannel();
@@ -345,6 +384,7 @@
       
       const sendButton = document.querySelector('button[onclick="sendMessage()"]');
       sendButton.disabled = dropdown.options.length <= 1;
+      hangupButton.disabled = dropdown.options.length <= 1;
     }
   });
 </script>

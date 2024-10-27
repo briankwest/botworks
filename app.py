@@ -1797,9 +1797,11 @@ def handle_message(data):
             emit('error', {'message': 'Invalid data format'}, namespace='/')
             return
 
-        channel = parsed_data.get('channel')
+        command = parsed_data.get('command', {})
+        channel = parsed_data.get('channel', {} )
         call_id = parsed_data.get('call_info', {}).get('call_id')
         content = parsed_data.get('conversation_add', {}).get('content')
+        role = parsed_data.get('conversation_add', {}).get('role')
 
         if not call_id or not content or not channel:
             emit('error', {'message': 'Invalid data format'}, namespace='/')
@@ -1819,18 +1821,32 @@ def handle_message(data):
             "Authorization": f"Basic {encoded_credentials}"
         }
 
-        payload = {
-            "id": call_id,
-            "command": "calling.ai_message",
-            "params": {
-                "role": "user",
-                "message_text": f"{content}"
-            }
-        }
+        payload = {}
 
+        if command == 'hangup':
+            payload = {
+                "id": call_id,
+                "command": "calling.end",
+                "params": {
+                    "reason": "hangup",
+                }
+            }
+        else:
+            payload = {
+                "id": call_id,
+                "command": "calling.ai_message",
+                "params": {
+                    "role": role,
+                    "message_text": f"{content}"
+                }
+            }
+        
         response = requests.put(url, headers=headers, data=json.dumps(payload))
-        print("response:", response)
-        print("payload:", payload)
+
+        if response.status_code != 200:
+            emit('error', {'message': f'Failed to send command: {response.text}'}, namespace='/')
+        else:
+            emit('status', {'message': 'Command sent successfully'}, namespace='/')
 
     except jwt.ExpiredSignatureError:
         emit('error', {'message': 'Access token expired'}, namespace='/')
@@ -1841,6 +1857,8 @@ def handle_message(data):
     except json.JSONDecodeError:
         emit('error', {'message': 'Invalid JSON format'}, namespace='/')
         disconnect()
+    except Exception as e:
+        emit('error', {'message': f'An unexpected error occurred: {str(e)}'}, namespace='/')
 
 @app.route('/debugwebhook/<int:agent_id>', methods=['POST'])
 @auth.login_required
