@@ -30,11 +30,7 @@ logging.getLogger('werkzeug').setLevel(logging.WARNING)
 load_dotenv()
 
 app = Flask(__name__)
-database_url = os.environ.get('DATABASE_URL')
-if database_url and database_url.startswith('postgres://'):
-    database_url = database_url.replace('postgres://', 'postgresql://', 1)
-
-app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL').replace('postgres://', 'postgresql://', 1)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = os.environ.get('SQLALCHEMY_TRACK_MODIFICATIONS')
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 app.config['REDIS_URL'] = os.environ.get('REDIS_URL')
@@ -45,7 +41,12 @@ app.config['DEBUG'] = True if os.getenv('DEBUG') == 'True' else False
 
 db.init_app(app)
 
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app, resources={
+    r"/*": {
+        "origins": os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',')
+    }
+})
+
 socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")
 
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
@@ -147,15 +148,17 @@ def swmlrequests():
 @app.route('/dashboard/completed', methods=['GET'])
 @login_required
 def dashboard_completed():
-    end_time = datetime.utcnow()
-    start_time = end_time - timedelta(hours=24)
+    end_time = datetime.utcnow().replace(minute=0, second=0, microsecond=0)
+    start_time = end_time - timedelta(hours=23)
 
+    # Initialize hourly counts for the past 24 hours
     hourly_counts = {start_time + timedelta(hours=i): 0 for i in range(24)}
 
     selected_agent_id = request.cookies.get('selectedAgentId')
     if not selected_agent_id:
         return jsonify({'message': 'Agent ID not found in cookies'}), 400
 
+    # Query to get the count of conversations grouped by hour
     completed_conversations = db.session.query(
         db.func.date_trunc('hour', AIConversation.created).label('hour'),
         db.func.count(AIConversation.id).label('count')
@@ -166,11 +169,14 @@ def dashboard_completed():
         AIConversation.agent_id == selected_agent_id
     ).group_by('hour').order_by('hour').all()
 
+    # Update the hourly counts with the results from the query
     for hour, count in completed_conversations:
-        hourly_counts[hour] = count
+        if hour in hourly_counts:
+            hourly_counts[hour] = count
 
-    labels = [hour.strftime('%H:00') for hour in hourly_counts.keys()]
-    counts = [count for count in hourly_counts.values()]
+    # Generate labels and counts for the response
+    labels = [(start_time + timedelta(hours=i)).strftime('%H:00') for i in range(24)]
+    counts = [hourly_counts[hour] for hour in sorted(hourly_counts.keys())]
 
     return jsonify({'labels': labels, 'counts': counts}), 200
 
@@ -1337,7 +1343,7 @@ def clone_agent(agent_id):
             db.session.add(new_item)
 
     relationships = [
-        'ai_signalwire_params', 'ai_functions', 'ai_function_argument', 'ai_hints', 'ai_pronounce', 'ai_prompt', 'ai_language', 'ai_params', 'ai_features'
+        'ai_signalwire_params', 'ai_functions', 'ai_function_argument', 'ai_hints', 'ai_pronounce', 'ai_prompt', 'ai_language', 'ai_params', 'ai_features', 'ai_includes', 'ai_contexts', 'ai_steps'
     ]
 
     for relationship in relationships:
