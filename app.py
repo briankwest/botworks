@@ -248,9 +248,6 @@ def functions(selected_agent_id):
 def patch_function(selected_agent_id, id):
     function_entry = AIFunctions.query.filter_by(id=id, agent_id=selected_agent_id).first_or_404()
 
-    if function_entry.user_id != current_user.id:
-        return jsonify({'message': 'Permission denied'}), 403
-
     data = request.get_json()
     try:
         if 'name' in data:
@@ -284,9 +281,6 @@ def patch_function(selected_agent_id, id):
 @check_agent_access
 def manage_function(selected_agent_id, id):
     function_entry = AIFunctions.query.filter_by(id=id, agent_id=selected_agent_id).first_or_404()
-
-    if function_entry.user_id != current_user.id:
-        return jsonify({'message': 'Permission denied'}), 403
 
     if request.method == 'GET':
         return jsonify({
@@ -327,9 +321,6 @@ def manage_function(selected_agent_id, id):
 def add_function_arg(selected_agent_id, function_id):
     function_entry = AIFunctions.query.filter_by(id=function_id, agent_id=selected_agent_id).first_or_404()
     
-    if function_entry.user_id != current_user.id:
-        return jsonify({'message': 'Permission denied'}), 403
-
     try:
         data = request.get_json()
         new_arg = AIFunctionArgs(
@@ -413,9 +404,6 @@ def manage_function_arg(selected_agent_id, function_id, arg_id):
     function_entry = AIFunctions.query.filter_by(id=function_id, agent_id=selected_agent_id).first_or_404()
     arg_entry = AIFunctionArgs.query.filter_by(id=arg_id, function_id=function_id, agent_id=selected_agent_id).first_or_404()
     
-    if function_entry.user_id != current_user.id or arg_entry.function_id != function_id:
-        return jsonify({'message': 'Permission denied'}), 403
-
     if request.method == 'PUT':
         data = request.get_json()
         arg_entry.name = data.get('name', arg_entry.name)
