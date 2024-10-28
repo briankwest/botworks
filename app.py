@@ -325,7 +325,6 @@ def add_function_arg(selected_agent_id, function_id):
         data = request.get_json()
         new_arg = AIFunctionArgs(
             function_id=function_id,
-            user_id=current_user.id,
             agent_id=selected_agent_id,
             name=data['name'],
             type=data['type'],
