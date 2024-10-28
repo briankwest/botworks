@@ -1149,6 +1149,29 @@ def search_datasphere(selected_agent_id, document_id):
     else:
         return jsonify({'error': 'An error occurred while searching the document'}), response.status_code
 
+@app.route('/datasphere', methods=['POST'])
+@login_required
+@check_agent_access
+def create_datasphere(selected_agent_id):
+    data = request.get_json()
+    space_name = get_signalwire_param(selected_agent_id, 'SPACE_NAME')
+    project_id = get_signalwire_param(selected_agent_id, 'PROJECT_ID')
+    auth_token = get_signalwire_param(selected_agent_id, 'AUTH_TOKEN')
+    
+    url = f'https://{space_name}/api/datasphere/documents'
+    headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    }
+    response = requests.post(url, headers=headers, json=data, auth=(project_id, auth_token))
+    
+    if response.status_code == 201:
+        return jsonify(response.json()), 201
+    elif response.status_code == 401:
+        return jsonify({'error': 'SignalWire credentials missing'}), 401
+    else:
+        return jsonify({'error': 'Failed to create datasphere'}), response.status_code
+
 @app.route('/datasphere/documents/<uuid:datasphere_id>', methods=['PATCH'])
 @login_required
 @check_agent_access
