@@ -70,12 +70,12 @@ def verify_password(username, password):
     path_segments = parsed_url.path.split('/')
     agent_id = path_segments[-1]
     g.agent_id = agent_id
-    user = AIUser.query.filter_by(username=username).first()
-    if user:
-        http_password = get_signalwire_param(agent_id, 'HTTP_PASSWORD')
-        if user.username == username and http_password == password:
-            return user
-    return None
+    http_username = get_signalwire_param(agent_id, 'HTTP_USERNAME')
+    http_password = get_signalwire_param(agent_id, 'HTTP_PASSWORD')
+
+    if username == http_username and password == http_password:
+        return True
+    return False
 
 with app.app_context():
     pass
