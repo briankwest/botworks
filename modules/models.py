@@ -27,11 +27,10 @@ class AIAgent(db.Model):
     ai_features = db.relationship('AIFeatures', back_populates='agent', cascade='all, delete-orphan', lazy=True)
     ai_contexts = db.relationship('AIContext', back_populates='agent', cascade='all, delete-orphan', lazy=True)
     ai_steps = db.relationship('AISteps', back_populates='agent', cascade='all, delete-orphan', lazy=True)
+    shared_access = db.relationship('SharedAccess', back_populates='agent', cascade='all, delete-orphan', lazy='dynamic')
 
     def __repr__(self):
         return f'<AIAgent {self.name}>'
-
-    shared_access = db.relationship('SharedAccess', back_populates='agent', cascade='all, delete-orphan', lazy='dynamic')
 
 class AIDebugLogs(db.Model):
     __tablename__ = 'ai_debug_logs'
