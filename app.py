@@ -20,9 +20,8 @@ from modules.models import db, AIAgent, AIUser, AISignalWireParams, AIFeatures, 
 from modules.swml_generator import generate_swml_response
 from modules.utils import (
     generate_random_password, get_signalwire_param, 
-    extract_agent_id, setup_default_agent_and_params, create_admin_user,
-    get_swaig_includes, get_or_set_selected_agent_id, user_has_access_to_agent,
-    check_agent_access
+    setup_default_agent_and_params, create_admin_user,
+    get_swaig_includes, check_agent_access
 )
 
 logging.basicConfig(level=logging.DEBUG)
@@ -117,7 +116,7 @@ def dashboard(selected_agent_id):
 @login_required
 @check_agent_access
 def delete_swmlrequests(selected_agent_id, agent_id):
-    AISWMLRequest.query.filter_by(agent_id=selected_agent_id).delete()
+    AISWMLRequest.query.filter_by(agent_id=agent_id).delete()
     db.session.commit()
     return jsonify({'message': 'All SWML requests for the agent deleted successfully'}), 200
 
@@ -805,7 +804,6 @@ def swaig(agent_id):
 
 @app.route('/swml/<int:agent_id>', methods=['POST', 'GET'])
 @auth.login_required
-@extract_agent_id
 def swml(agent_id):
     if request.method == 'POST':
         data = request.get_json()
