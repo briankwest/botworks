@@ -133,6 +133,9 @@ def user_has_access_to_agent(agent_id):
     return owns_agent or has_shared_access
 
 def get_or_set_selected_agent_id():
+    if not current_user or not hasattr(current_user, 'id'):
+        raise ValueError("User is not authenticated or current_user is not set.")
+
     selected_agent_id = request.cookies.get('selectedAgentId')
     if not selected_agent_id:
         first_agent = AIAgent.query.filter_by(user_id=current_user.id).first()

@@ -785,8 +785,7 @@ def get_yaml(selected_agent_id, id, agent_id):
 
 @app.route('/swaig/<int:agent_id>', methods=['POST'])
 @auth.login_required
-@check_agent_access
-def swaig(selected_agent_id, agent_id):
+def swaig(agent_id):
     data = request.get_json()
     hook_type_value = data.get('function', '').lower()
 
@@ -809,8 +808,7 @@ def swaig(selected_agent_id, agent_id):
 @app.route('/swml/<int:agent_id>', methods=['POST', 'GET'])
 @auth.login_required
 @extract_agent_id
-@check_agent_access
-def swml(selected_agent_id, agent_id):
+def swml(agent_id):
     if request.method == 'POST':
         data = request.get_json()
     else:
@@ -825,8 +823,7 @@ def swml(selected_agent_id, agent_id):
 
 @app.route('/postprompt/<int:agent_id>', methods=['POST'])
 @auth.login_required
-@check_agent_access
-def postprompt(selected_agent_id, agent_id):
+def postprompt(agent_id):
     data = request.get_json()
     new_conversation = AIConversation(
         agent_id=agent_id,
@@ -1588,8 +1585,7 @@ def handle_message(data):
 
 @app.route('/debugwebhook/<int:agent_id>', methods=['POST'])
 @auth.login_required
-@check_agent_access
-def create_debuglog(selected_agent_id, agent_id):
+def create_debuglog(agent_id):
     data = json.loads(request.get_data().decode('utf-8'))
     ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
     
