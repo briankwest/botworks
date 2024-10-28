@@ -1271,13 +1271,12 @@ def agents(selected_agent_id):
             
             return jsonify(agents_data), 200
         else:
-            space_name = os.environ.get('SPACE_NAME')
-            if space_name.endswith('swire.io'):
+            space_name = get_signalwire_param(selected_agent_id, 'SPACE_NAME')
+            if space_name and space_name.endswith('swire.io'):
                 hostname = 'relay.swire.io'
             else:
                 hostname = 'relay.signalwire.com'
             return render_template('agents.html', user=current_user, relay_hostname=hostname)
-
     elif request.method == 'POST':
         data = request.get_json()
         name = data.get('name')
