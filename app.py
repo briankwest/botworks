@@ -5,13 +5,11 @@ from datetime import datetime, timedelta, timezone
 from flask import Flask, flash, make_response, jsonify, redirect, render_template, request, url_for, g
 from flask_socketio import SocketIO, join_room, leave_room, emit, disconnect
 from flask_cors import CORS
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.middleware.proxy_fix import ProxyFix
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from dotenv import load_dotenv
 from urllib.parse import urlparse
@@ -143,7 +141,8 @@ def swmlrequests(selected_agent_id):
 @login_required
 @check_agent_access
 def dashboard_completed(selected_agent_id):
-    end_time = (datetime.now(timezone.utc) + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
+    # Use utcnow() to ensure the time is in UTC
+    end_time = (datetime.utcnow() + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
     start_time = end_time - timedelta(hours=23)
 
     hourly_counts = {start_time + timedelta(hours=i): 0 for i in range(24)}
@@ -626,7 +625,7 @@ def refresh(selected_agent_id):
     if not refresh_token:
         new_access_token = jwt.encode({
             'user_id': current_user.id,
-            'exp': datetime.now(timezone.utc) + timedelta(minutes=60)
+            'exp': datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(minutes=60)
         }, app.config['ACCESS_SECRET_KEY'], algorithm='HS256')
 
         new_refresh_token = jwt.encode({
