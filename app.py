@@ -679,7 +679,7 @@ def refresh(selected_agent_id):
     
 @app.route('/logout')
 @login_required
-def logout(selected_agent_id):
+def logout():
     logout_user()
     flash('You have been logged out successfully.', 'success')
     response = make_response(redirect(url_for('login')))
@@ -687,7 +687,7 @@ def logout(selected_agent_id):
     return response
 
 @app.route('/login', methods=['GET', 'POST'])
-def login(selected_agent_id):
+def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
