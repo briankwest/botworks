@@ -101,7 +101,7 @@ def redis_listener(channel):
 def load_user(user_id):
     return db.session.get(AIUser, int(user_id))
 
-@app.route('/dashboard')
+@app.route('/')
 @login_required
 @check_agent_access
 def dashboard(selected_agent_id):
