@@ -502,6 +502,7 @@
 
     function connect() {
       client = new Relay({
+        host: '{{relay_hostname}}',
         project: projectID,
         token: jwtToken
       });

@@ -1285,7 +1285,12 @@ def agents(selected_agent_id):
             
             return jsonify(agents_data), 200
         else:
-            return render_template('agents.html', user=current_user)
+            space_name = os.environ.get('SPACE_NAME')
+            if space_name.endswith('swire.io'):
+                hostname = 'relay.swire.io'
+            else:
+                hostname = 'relay.signalwire.com'
+            return render_template('agents.html', user=current_user, relay_hostname=hostname)
 
     elif request.method == 'POST':
         data = request.get_json()
@@ -2100,7 +2105,6 @@ def phone_authenticate(selected_agent_id):
 def phone(selected_agent_id):
     return render_template('phone.html', user=current_user)
 
-
 @app.route('/context', methods=['GET'])
 @login_required
 @check_agent_access
@@ -2125,7 +2129,6 @@ def get_context(selected_agent_id, context_id):
     context = AIContext.query.filter_by(id=context_id, agent_id=selected_agent_id).first_or_404()
 
     print(f"Context: {context.context_name} {context.id}, {context.agent_id}")
-    
 
     return jsonify(context.to_dict()), 200
 
