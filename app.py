@@ -21,7 +21,8 @@ from modules.swml_generator import generate_swml_response
 from modules.utils import (
     generate_random_password, get_signalwire_param, 
     extract_agent_id, setup_default_agent_and_params, create_admin_user,
-    get_swaig_includes, get_or_set_selected_agent_id, user_has_access_to_agent
+    get_swaig_includes, get_or_set_selected_agent_id, user_has_access_to_agent,
+    check_agent_access
 )
 
 logging.basicConfig(level=logging.DEBUG)
@@ -101,18 +102,12 @@ def redis_listener(channel):
 def load_user(user_id):
     return db.session.get(AIUser, int(user_id))
 
-@app.route('/')
+@app.route('/dashboard')
 @login_required
-def dashboard():
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def dashboard(selected_agent_id):
     number_of_requests = AISWMLRequest.query.filter_by(agent_id=selected_agent_id).count()
-    number_of_conversations = AIConversation.query.filter_by( agent_id=selected_agent_id).count()
+    number_of_conversations = AIConversation.query.filter_by(agent_id=selected_agent_id).count()
     number_of_functions = AIFunctions.query.filter_by(agent_id=selected_agent_id).count()
     number_of_agents = AIAgent.query.filter_by(user_id=current_user.id).count()
 
@@ -120,28 +115,16 @@ def dashboard():
 
 @app.route('/swmlrequests/<int:agent_id>', methods=['DELETE'])
 @login_required
-def delete_swmlrequests(agent_id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def delete_swmlrequests(selected_agent_id, agent_id):
     AISWMLRequest.query.filter_by(agent_id=selected_agent_id).delete()
     db.session.commit()
     return jsonify({'message': 'All SWML requests for the agent deleted successfully'}), 200
 
 @app.route('/swmlrequests', methods=['GET'])
 @login_required
-def swmlrequests():
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def swmlrequests(selected_agent_id):
     if request.headers.get('Accept') == 'application/json':
         swml_requests = AISWMLRequest.query.filter_by(agent_id=selected_agent_id).all()
 
@@ -159,14 +142,8 @@ def swmlrequests():
 
 @app.route('/dashboard/completed', methods=['GET'])
 @login_required
-def dashboard_completed():
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def dashboard_completed(selected_agent_id):
     end_time = (datetime.utcnow() + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
     start_time = end_time - timedelta(hours=23)
 
@@ -192,14 +169,8 @@ def dashboard_completed():
 
 @app.route('/functions', methods=['GET', 'POST'])
 @login_required
-def functions():
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def functions(selected_agent_id):
     if request.method == 'GET':
         if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
             functions = AIFunctions.query.filter_by(agent_id=selected_agent_id).all()
@@ -274,14 +245,8 @@ def functions():
 
 @app.route('/functions/<int:id>', methods=['PATCH'])
 @login_required
-def patch_function(id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def patch_function(selected_agent_id, id):
     function_entry = AIFunctions.query.filter_by(id=id, agent_id=selected_agent_id).first_or_404()
 
     if function_entry.user_id != current_user.id:
@@ -317,14 +282,8 @@ def patch_function(id):
 
 @app.route('/functions/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 @login_required
-def manage_function(id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def manage_function(selected_agent_id, id):
     function_entry = AIFunctions.query.filter_by(id=id, agent_id=selected_agent_id).first_or_404()
 
     if function_entry.user_id != current_user.id:
@@ -365,14 +324,8 @@ def manage_function(id):
 
 @app.route('/functions/<int:function_id>/args', methods=['POST'])
 @login_required
-def add_function_arg(function_id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def add_function_arg(selected_agent_id, function_id):
     function_entry = AIFunctions.query.filter_by(id=function_id, agent_id=selected_agent_id).first_or_404()
     
     if function_entry.user_id != current_user.id:
@@ -402,14 +355,8 @@ def add_function_arg(function_id):
 
 @app.route('/functions/names', methods=['GET'])
 @login_required
-def get_function_names():
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def get_function_names(selected_agent_id):
     functions = AIFunctions.query.filter_by(agent_id=selected_agent_id).all()
     function_names = [function.name for function in functions]
 
@@ -417,14 +364,8 @@ def get_function_names():
 
 @app.route('/functions/<int:function_id>/args', methods=['GET'])
 @login_required
-def get_function_args(function_id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def get_function_args(selected_agent_id, function_id):
     function_entry = AIFunctions.query.filter_by(id=function_id, agent_id=selected_agent_id).first_or_404()
       
     args = AIFunctionArgs.query.filter_by(function_id=function_id, agent_id=selected_agent_id).order_by(AIFunctionArgs.name.asc()).all()
@@ -441,14 +382,8 @@ def get_function_args(function_id):
 
 @app.route('/functions/<int:function_id>/args/<int:arg_id>', methods=['PATCH'])
 @login_required
-def patch_function_arg(function_id, arg_id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def patch_function_arg(selected_agent_id, function_id, arg_id):
     function_entry = AIFunctions.query.filter_by(id=function_id, agent_id=selected_agent_id).first_or_404()
     arg_entry = AIFunctionArgs.query.filter_by(id=arg_id, function_id=function_id, agent_id=selected_agent_id).first_or_404()
 
@@ -474,14 +409,8 @@ def patch_function_arg(function_id, arg_id):
 
 @app.route('/functions/<int:function_id>/args/<int:arg_id>', methods=['PUT', 'DELETE'])
 @login_required
-def manage_function_arg(function_id, arg_id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def manage_function_arg(selected_agent_id, function_id, arg_id):
     function_entry = AIFunctions.query.filter_by(id=function_id, agent_id=selected_agent_id).first_or_404()
     arg_entry = AIFunctionArgs.query.filter_by(id=arg_id, function_id=function_id, agent_id=selected_agent_id).first_or_404()
     
@@ -506,28 +435,16 @@ def manage_function_arg(function_id, arg_id):
 
 @app.route('/conversation/view/<int:id>', methods=['GET'])
 @login_required
-def view_conversation(id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def view_conversation(selected_agent_id, id):
     conversation = AIConversation.query.filter_by(id=id, agent_id=selected_agent_id).first_or_404()
     
     return render_template('conversation.html', id=id, user=current_user)
 
 @app.route('/conversations')
 @login_required
-def conversations():
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def conversations(selected_agent_id):
     if request.method == 'GET':
         if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
             conversations = AIConversation.query.filter_by(agent_id=selected_agent_id).all()
@@ -542,14 +459,8 @@ def conversations():
 
 @app.route('/conversations/<int:id>', methods=['GET', 'DELETE'])
 @login_required
-def get_or_delete_conversation(id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def get_or_delete_conversation(selected_agent_id, id):
     conversation = AIConversation.query.filter_by(id=id, agent_id=selected_agent_id).first_or_404()
 
     if request.method == 'GET':
@@ -578,14 +489,8 @@ def get_or_delete_conversation(id):
 
 @app.route('/hints', methods=['GET', 'POST'])
 @login_required
-def hints():
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def hints(selected_agent_id):
     if request.method == 'GET':
         if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
             hints = AIHints.query.filter_by(agent_id=selected_agent_id).all()
@@ -608,14 +513,8 @@ def hints():
 
 @app.route('/hints/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 @login_required
-def hint(id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def hint(selected_agent_id, id):
     hint_entry = AIHints.query.filter_by(id=id, agent_id=selected_agent_id).first_or_404()
     
     if request.method == 'GET':
@@ -635,14 +534,8 @@ def hint(id):
 
 @app.route('/signalwire/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 @login_required
-def manage_signalwire(id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def manage_signalwire(selected_agent_id, id):
     signalwire_entry = AISignalWireParams.query.filter_by(id=id, agent_id=selected_agent_id).first_or_404()
     
     if request.method == 'GET':
@@ -665,14 +558,8 @@ def manage_signalwire(id):
 
 @app.route('/signalwire', methods=['GET', 'POST'])
 @login_required
-def signalwire():
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def signalwire(selected_agent_id):
     if request.method == 'GET':
         if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
             params = AISignalWireParams.query.filter_by(agent_id=selected_agent_id).all()
@@ -697,14 +584,8 @@ def signalwire():
 
 @app.route('/params/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 @login_required
-def manage_params(id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def manage_params(selected_agent_id, id):
     params_entry = AIParams.query.filter_by(id=id, agent_id=selected_agent_id).first_or_404()
     
     if request.method == 'GET':
@@ -727,14 +608,8 @@ def manage_params(id):
 
 @app.route('/params', methods=['GET', 'POST'])
 @login_required
-def params():
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def params(selected_agent_id):
     if request.method == 'GET':
         if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
             params = AIParams.query.filter_by(agent_id=selected_agent_id).all()
@@ -759,7 +634,8 @@ def params():
 
 @app.route('/refresh', methods=['POST'])
 @login_required
-def refresh():
+@check_agent_access
+def refresh(selected_agent_id):
     refresh_token = request.json.get('refresh_token')
     if not refresh_token:
         new_access_token = jwt.encode({
@@ -803,7 +679,8 @@ def refresh():
     
 @app.route('/logout')
 @login_required
-def logout():
+@check_agent_access
+def logout(selected_agent_id):
     logout_user()
     flash('You have been logged out successfully.', 'success')
     response = make_response(redirect(url_for('login')))
@@ -811,7 +688,8 @@ def logout():
     return response
 
 @app.route('/login', methods=['GET', 'POST'])
-def login():
+@check_agent_access
+def login(selected_agent_id):
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
@@ -862,7 +740,8 @@ def login():
     return render_template('login.html')
 
 @app.route('/signup', methods=['POST', 'GET'])
-def signup():
+@check_agent_access
+def signup(selected_agent_id):
     if request.method == 'POST':
         data = request.get_json()
         username = data.get('username')
@@ -889,7 +768,8 @@ def signup():
 
 @app.route('/yaml/<int:id>/<int:agent_id>', methods=['POST', 'GET'])
 @auth.login_required
-def get_yaml(id, agent_id):
+@check_agent_access
+def get_yaml(selected_agent_id, id, agent_id):
     if request.method == 'POST':
         data = request.get_json()
     else:
@@ -905,7 +785,8 @@ def get_yaml(id, agent_id):
 
 @app.route('/swaig/<int:agent_id>', methods=['POST'])
 @auth.login_required
-def swaig(agent_id):
+@check_agent_access
+def swaig(selected_agent_id, agent_id):
     data = request.get_json()
     hook_type_value = data.get('function', '').lower()
 
@@ -928,7 +809,8 @@ def swaig(agent_id):
 @app.route('/swml/<int:agent_id>', methods=['POST', 'GET'])
 @auth.login_required
 @extract_agent_id
-def swml(agent_id):
+@check_agent_access
+def swml(selected_agent_id, agent_id):
     if request.method == 'POST':
         data = request.get_json()
     else:
@@ -943,7 +825,8 @@ def swml(agent_id):
 
 @app.route('/postprompt/<int:agent_id>', methods=['POST'])
 @auth.login_required
-def postprompt(agent_id):
+@check_agent_access
+def postprompt(selected_agent_id, agent_id):
     data = request.get_json()
     new_conversation = AIConversation(
         agent_id=agent_id,
@@ -965,15 +848,8 @@ def postprompt(agent_id):
 
 @app.route('/pronounce/<int:id>', methods=['PUT'])
 @login_required
-def update_pronounce(id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
-    data = request.get_json()
+@check_agent_access
+def update_pronounce(selected_agent_id, id):
     pronounce_entry = AIPronounce.query.get_or_404(id)
     
     pronounce_entry.replace_this = data.get('replace_this', pronounce_entry.replace_this)
@@ -985,14 +861,8 @@ def update_pronounce(id):
 
 @app.route('/pronounce', methods=['GET', 'POST'])
 @login_required
-def pronounce():
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def pronounce(selected_agent_id):
     if request.method == 'GET':
         if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
             pronounces = AIPronounce.query.filter_by(agent_id=selected_agent_id).all()
@@ -1019,14 +889,8 @@ def pronounce():
 
 @app.route('/pronounce/<int:id>', methods=['DELETE'])
 @login_required
-def delete_pronounce(id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def delete_pronounce(selected_agent_id, id):
     pronounce_entry = AIPronounce.query.get_or_404(id)
     db.session.delete(pronounce_entry)
     db.session.commit()
@@ -1034,14 +898,8 @@ def delete_pronounce(id):
 
 @app.route('/prompt', methods=['GET', 'POST'])
 @login_required
-def prompt():
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def prompt(selected_agent_id):
     if request.method == 'GET':
         if request.headers.get('Accept') == 'application/json':
             prompt_entries = AIPrompt.query.filter_by(agent_id=selected_agent_id).all()
@@ -1103,14 +961,8 @@ def prompt():
 
 @app.route('/prompt/<int:id>', methods=['DELETE'])
 @login_required
-def delete_prompt(id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def delete_prompt(selected_agent_id, id):
     prompt_entry = AIPrompt.query.get_or_404(id)
         
     db.session.delete(prompt_entry)
@@ -1119,14 +971,8 @@ def delete_prompt(id):
 
 @app.route('/prompt/<int:id>', methods=['PUT'])
 @login_required
-def update_prompt(id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def update_prompt(selected_agent_id, id):
     prompt_entry = AIPrompt.query.get_or_404(id)
     
     data = request.get_json()
@@ -1144,14 +990,8 @@ def update_prompt(id):
 
 @app.route('/language/<int:id>', methods=['PATCH'])
 @login_required
-def patch_language(id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def patch_language(selected_agent_id, id):
     language_entry = AILanguage.query.filter_by(id=id).first_or_404()
     
     try:
@@ -1177,14 +1017,8 @@ def patch_language(id):
 
 @app.route('/language/<int:id>', methods=['PUT'])
 @login_required
-def update_language(id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def update_language(selected_agent_id, id):
     data = request.get_json()
     language_entry = AILanguage.query.filter_by(id=id).first_or_404()
     
@@ -1200,14 +1034,8 @@ def update_language(id):
 
 @app.route('/language/<int:id>', methods=['GET'])
 @login_required
-def get_language_by_id(id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def get_language_by_id(selected_agent_id, id):
     language_entry = AILanguage.query.filter_by(id=id).first_or_404()
     return jsonify({
         'id': language_entry.id,
@@ -1221,14 +1049,8 @@ def get_language_by_id(id):
 
 @app.route('/language/<int:id>', methods=['DELETE'])
 @login_required
-def delete_language(id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def delete_language(selected_agent_id, id):
     language_entry = AILanguage.query.get_or_404(id)
     db.session.delete(language_entry)
     db.session.commit()
@@ -1236,14 +1058,8 @@ def delete_language(id):
 
 @app.route('/language', methods=['GET', 'POST', 'PUT'])
 @login_required
-def language():
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def language(selected_agent_id):
     if request.method == 'GET':
         if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
             languages = AILanguage.query.filter_by(agent_id=selected_agent_id).order_by(AILanguage.language_order.asc()).all()
@@ -1291,14 +1107,8 @@ def language():
 
 @app.route('/datasphere/search/<uuid:document_id>', methods=['POST'])
 @login_required
-def search_datasphere(document_id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def search_datasphere(selected_agent_id, document_id):
     data = request.get_json()
     query_string = data.get('query_string', '')
 
@@ -1344,14 +1154,8 @@ def search_datasphere(document_id):
 
 @app.route('/datasphere/documents/<uuid:datasphere_id>', methods=['PATCH'])
 @login_required
-def update_datasphere(datasphere_id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-    
+@check_agent_access
+def update_datasphere(selected_agent_id, datasphere_id):
     data = request.get_json()
     space_name = get_signalwire_param(selected_agent_id, 'SPACE_NAME')
     project_id = get_signalwire_param(selected_agent_id, 'PROJECT_ID')
@@ -1371,14 +1175,8 @@ def update_datasphere(datasphere_id):
 
 @app.route('/datasphere', methods=['GET'])
 @login_required
-def datasphere():
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def datasphere(selected_agent_id):
     if request.method == 'GET':
         if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
             space_name = get_signalwire_param(selected_agent_id, 'SPACE_NAME')
@@ -1396,46 +1194,10 @@ def datasphere():
         else:   
             return render_template('datasphere.html', user=current_user)
 
-@app.route('/datasphere', methods=['POST'])
-@login_required
-def create_datasphere():
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-        return jsonify({'message': 'Agent ID not found in cookies'}), 400
-
-    data = request.get_json()
-    space_name = get_signalwire_param(selected_agent_id, 'SPACE_NAME')
-    project_id = get_signalwire_param(selected_agent_id, 'PROJECT_ID')
-    auth_token = get_signalwire_param(selected_agent_id, 'AUTH_TOKEN')
-    
-    url = f'https://{space_name}/api/datasphere/documents'
-    headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-    }
-    response = requests.post(url, headers=headers, json=data, auth=(project_id, auth_token))
-    
-    if response.status_code == 201:
-        return jsonify(response.json()), 201
-    elif response.status_code == 401:
-        return jsonify({'error': 'SignalWire credentials missing'}), 401
-    else:
-        return jsonify({'error': 'Failed to create datasphere'}), response.status_code
-
 @app.route('/datasphere/documents/<uuid:datasphere_id>', methods=['DELETE'])
 @login_required
-def delete_datasphere(datasphere_id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def delete_datasphere(selected_agent_id, datasphere_id):
     space_name = get_signalwire_param(selected_agent_id, 'SPACE_NAME')
     project_id = get_signalwire_param(selected_agent_id, 'PROJECT_ID')
     auth_token = get_signalwire_param(selected_agent_id, 'AUTH_TOKEN')
@@ -1453,14 +1215,8 @@ def delete_datasphere(datasphere_id):
 
 @app.route('/agents/clone/<int:agent_id>', methods=['POST'])
 @login_required
-def clone_agent(agent_id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def clone_agent(selected_agent_id, agent_id):
     original_agent = AIAgent.query.get_or_404(agent_id)
 
     random_bits = generate_random_password(4)
@@ -1494,14 +1250,8 @@ def clone_agent(agent_id):
 
 @app.route('/agents', methods=['GET', 'POST'])
 @login_required
-def agents():
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def agents(selected_agent_id):
     if request.method == 'GET':
         if request.headers.get('Accept') == 'application/json':
             # Query for agents owned by the current user
@@ -1559,14 +1309,8 @@ def agents():
     
 @app.route('/agents/<int:id>', methods=['GET'])
 @login_required
-def get_agent(id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def get_agent(selected_agent_id, id):
     agent = AIAgent.query.get_or_404(id)
 
     agent_data = {
@@ -1580,14 +1324,8 @@ def get_agent(id):
 
 @app.route('/agents/<int:id>', methods=['DELETE'])
 @login_required
-def delete_agent(id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def delete_agent(selected_agent_id, id):
     agent = AIAgent.query.get_or_404(id)
 
     if agent.name == "BotWorks":
@@ -1600,14 +1338,8 @@ def delete_agent(id):
 
 @app.route('/agents/<int:id>', methods=['PUT'])
 @login_required
-def update_agent(id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def update_agent(selected_agent_id, id):
     agent = AIAgent.query.get_or_404(id)
 
     data = request.get_json()
@@ -1619,14 +1351,8 @@ def update_agent(id):
 
 @app.route('/livedebug', methods=['GET'])
 @login_required
-def livedebug():
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-    
+@check_agent_access
+def livedebug(selected_agent_id):
     channel = f'debug_channel_{selected_agent_id}'
 
     return render_template('livedebug.html', channel=channel)
@@ -1862,7 +1588,8 @@ def handle_message(data):
 
 @app.route('/debugwebhook/<int:agent_id>', methods=['POST'])
 @auth.login_required
-def create_debuglog(agent_id):
+@check_agent_access
+def create_debuglog(selected_agent_id, agent_id):
     data = json.loads(request.get_data().decode('utf-8'))
     ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
     
@@ -1882,14 +1609,8 @@ def create_debuglog(agent_id):
 
 @app.route('/debuglogs/<int:agent_id>', methods=['GET', 'DELETE'])
 @login_required
-def get_debuglogs(agent_id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def get_debuglogs(selected_agent_id, agent_id):
     if request.method == 'GET':
         logs = AIDebugLogs.query.filter_by(agent_id=selected_agent_id).all()
         logs_data = [{'id': log.id, 'created': log.created, 'data': log.data, 'ip_address': log.ip_address} for log in logs]
@@ -1902,19 +1623,14 @@ def get_debuglogs(agent_id):
 
 @app.route('/debuglogs', methods=['GET'])
 @login_required
-def debuglogs():
+@check_agent_access
+def debuglogs(selected_agent_id):
     return render_template('debuglog.html', user=current_user)
 
 @app.route('/aifeatures/<int:agent_id>/<int:feature_id>', methods=['PATCH'])
 @login_required
-def patch_aifeature(agent_id, feature_id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def patch_aifeature(selected_agent_id, agent_id, feature_id):
     feature = AIFeatures.query.filter_by(id=feature_id, agent_id=selected_agent_id).first_or_404()
     data = request.get_json()
 
@@ -1932,14 +1648,8 @@ def patch_aifeature(agent_id, feature_id):
 
 @app.route('/aifeatures/<int:agent_id>/<int:feature_id>', methods=['GET', 'PUT', 'DELETE'])
 @login_required
-def manage_aifeature(agent_id, feature_id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def manage_aifeature(selected_agent_id, agent_id, feature_id):
     feature = AIFeatures.query.filter_by(id=feature_id, agent_id=selected_agent_id).first_or_404()
 
     if request.method == 'GET':
@@ -1968,14 +1678,8 @@ def manage_aifeature(agent_id, feature_id):
 
 @app.route('/aifeatures/<int:agent_id>', methods=['POST'])
 @login_required
-def add_aifeature(agent_id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def add_aifeature(selected_agent_id, agent_id):
     data = request.get_json()
     new_feature = AIFeatures(
         name=data['name'],
@@ -1991,26 +1695,8 @@ def add_aifeature(agent_id):
 
 @app.route('/aifeatures', methods=['GET'])
 @login_required
-def aifeatures():
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
-    return render_template('features.html', user=current_user)
-
-@app.route('/aifeatures/<int:agent_id>', methods=['GET'])
-@login_required
-def aifeatures_agent(agent_id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def aifeatures(selected_agent_id):
     if request.headers.get('Accept') == 'application/json':
         features = AIFeatures.query.filter_by(agent_id=selected_agent_id).all()
         features_data = [{
@@ -2023,17 +1709,32 @@ def aifeatures_agent(agent_id):
             'created': feature.created
         } for feature in features]
         return jsonify(features_data), 200
+    else:
+        return render_template('features.html', user=current_user)
+
+@app.route('/aifeatures/<int:agent_id>', methods=['GET'])
+@login_required
+@check_agent_access
+def aifeatures_agent(selected_agent_id, agent_id):
+    if request.headers.get('Accept') == 'application/json':
+        features = AIFeatures.query.filter_by(agent_id=selected_agent_id).all()
+        features_data = [{
+            'id': feature.id,
+            'name': feature.name,
+            'agent_id': feature.agent_id,
+            'value': feature.value,
+            'enabled': feature.enabled,
+            'data': feature.data,
+            'created': feature.created
+        } for feature in features]
+        return jsonify(features_data), 200
+    else:
+        return render_template('features.html', user=current_user)
 
 @app.route('/translate', methods=['GET'])
 @login_required
-def translate():
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def translate(selected_agent_id):
     if request.headers.get('Accept') == 'application/json':
         return jsonify([]), 200
     else:
@@ -2041,14 +1742,8 @@ def translate():
 
 @app.route('/transcribe', methods=['GET'])
 @login_required
-def transcribe():
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def transcribe(selected_agent_id):
     if request.headers.get('Accept') == 'application/json':
         return jsonify([]), 200
     else:
@@ -2056,14 +1751,8 @@ def transcribe():
 
 @app.route('/phone_numbers', methods=['GET'])
 @login_required
-def list_phone_numbers():
-    selected_agent_id = request.cookies.get('selectedAgentId')
-    if not selected_agent_id:
-        return jsonify({'message': 'Agent ID not found in cookies'}), 400
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def list_phone_numbers(selected_agent_id):
     if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
         space_name = get_signalwire_param(selected_agent_id, 'SPACE_NAME')
         project_id = get_signalwire_param(selected_agent_id, 'PROJECT_ID')
@@ -2123,14 +1812,8 @@ def list_phone_numbers():
     
 @app.route('/phone_numbers/search', methods=['GET'])
 @login_required
-def search_phone_numbers():
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def search_phone_numbers(selected_agent_id):
     space_name = get_signalwire_param(selected_agent_id, 'SPACE_NAME')
     project_id = get_signalwire_param(selected_agent_id, 'PROJECT_ID')
     auth_token = get_signalwire_param(selected_agent_id, 'AUTH_TOKEN')
@@ -2171,14 +1854,8 @@ def search_phone_numbers():
     
 @app.route('/phone_numbers', methods=['POST'])
 @login_required
-def purchase_phone_number():
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def purchase_phone_number(selected_agent_id):
     space_name = get_signalwire_param(selected_agent_id, 'SPACE_NAME')
     project_id = get_signalwire_param(selected_agent_id, 'PROJECT_ID')
     auth_token = get_signalwire_param(selected_agent_id, 'AUTH_TOKEN')
@@ -2211,14 +1888,8 @@ def purchase_phone_number():
 
 @app.route('/phone_numbers/<uuid:phone_number_id>', methods=['PUT'])
 @login_required
-def update_phone_number(phone_number_id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def update_phone_number(selected_agent_id, phone_number_id):
     data = request.get_json()
     phone_number = data.get('phone_number')
     agent_id = data.get('agent_id')
@@ -2261,14 +1932,8 @@ def update_phone_number(phone_number_id):
     
 @app.route('/phone_numbers/<uuid:phone_number_id>', methods=['DELETE'])
 @login_required
-def release_phone_number(phone_number_id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def release_phone_number(selected_agent_id, phone_number_id):
     space_name = get_signalwire_param(selected_agent_id, 'SPACE_NAME')
     project_id = get_signalwire_param(selected_agent_id, 'PROJECT_ID')
     auth_token = get_signalwire_param(selected_agent_id, 'AUTH_TOKEN')
@@ -2291,14 +1956,8 @@ def release_phone_number(phone_number_id):
 
 @app.route('/includes/<int:agent_id>', methods=['POST'])
 @login_required
-def create_or_update_include(agent_id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def create_or_update_include(selected_agent_id, agent_id):
     data = request.get_json()
     url = data.get('url').strip()
     functions = data.get('functions', [])
@@ -2315,14 +1974,8 @@ def create_or_update_include(agent_id):
     return jsonify({'message': 'Include entry saved successfully'}), 200
 @app.route('/includes/<int:agent_id>', methods=['GET'])
 @login_required
-def get_includes_agent(agent_id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def get_includes_agent(selected_agent_id, agent_id):
     includes_entries = AIIncludes.query.filter_by(agent_id=selected_agent_id).all()
     return jsonify([{
         'id': entry.id,
@@ -2332,14 +1985,8 @@ def get_includes_agent(agent_id):
 
 @app.route('/includes/<int:agent_id>/<int:include_id>', methods=['GET'])
 @login_required
-def get_include_agent(agent_id, include_id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def get_include_agent(selected_agent_id, agent_id, include_id):
     include_entry = AIIncludes.query.filter_by(id=include_id, agent_id=selected_agent_id).first_or_404()
     return jsonify({
         'id': include_entry.id,
@@ -2349,14 +1996,8 @@ def get_include_agent(agent_id, include_id):
 
 @app.route('/includes/<int:agent_id>/<int:include_id>', methods=['PUT'])
 @login_required
-def update_include(agent_id, include_id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def update_include(selected_agent_id, agent_id, include_id):
     include_entry = AIIncludes.query.filter_by(id=include_id, agent_id=selected_agent_id).first_or_404()
     data = request.get_json()
     include_entry.url = data.get('url', include_entry.url)
@@ -2366,14 +2007,8 @@ def update_include(agent_id, include_id):
 
 @app.route('/includes/<int:agent_id>/<int:include_id>', methods=['DELETE'])
 @login_required
-def delete_include(agent_id, include_id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def delete_include(selected_agent_id, agent_id, include_id):
     include_entry = AIIncludes.query.filter_by(id=include_id, agent_id=selected_agent_id).first_or_404()
     db.session.delete(include_entry)
     db.session.commit()
@@ -2381,14 +2016,8 @@ def delete_include(agent_id, include_id):
 
 @app.route('/includes', methods=['POST'])
 @login_required
-def get_includes_post():
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def get_includes_post(selected_agent_id):
     if request.headers.get('Accept') == 'application/json':
         url = request.get_json().get('url')
         if not url:
@@ -2400,23 +2029,17 @@ def get_includes_post():
 
 @app.route('/includes', methods=['GET'])
 @login_required
-def includes():
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def includes(selected_agent_id):
     return render_template('includes.html', user=current_user)
 
 @app.route('/phone/authenticate', methods=['GET'])
 @login_required
-def phone_authenticate():
+@check_agent_access
+def phone_authenticate(selected_agent_id):
     import requests
     import random
     import string
-    selected_agent_id = request.cookies.get('selectedAgentId')
     if not selected_agent_id:
         return jsonify({'message': 'Agent ID not found in cookies'}), 400
 
@@ -2462,20 +2085,15 @@ def phone_authenticate():
 
 @app.route('/phone', methods=['GET'])
 @login_required
-def phone():
+@check_agent_access
+def phone(selected_agent_id):
     return render_template('phone.html', user=current_user)
 
 
 @app.route('/context', methods=['GET'])
 @login_required
-def context():
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def context(selected_agent_id):
     if request.headers.get('Accept') == 'application/json':
         contexts = AIContext.query.filter_by(agent_id=selected_agent_id).all()
         return jsonify([context.to_dict() for context in contexts])
@@ -2484,27 +2102,15 @@ def context():
 
 @app.route('/step', methods=['GET'])
 @login_required
-def get_steps():
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def get_steps(selected_agent_id):
     steps = AISteps.query.join(AIContext).filter(AIContext.agent_id == selected_agent_id).all()
     return jsonify([step.to_dict() for step in steps])
 
 @app.route('/context/<int:context_id>', methods=['GET'])
 @login_required
-def get_context(context_id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-    
+@check_agent_access
+def get_context(selected_agent_id, context_id):
     context = AIContext.query.filter_by(id=context_id, agent_id=selected_agent_id).first_or_404()
 
     print(f"Context: {context.context_name} {context.id}, {context.agent_id}")
@@ -2514,14 +2120,8 @@ def get_context(context_id):
 
 @app.route('/context/<int:context_id>', methods=['PUT'])
 @login_required
-def update_context(context_id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def update_context(selected_agent_id, context_id):
     data = request.json
     context = AIContext.query.get(context_id)
     if not context:
@@ -2535,14 +2135,8 @@ def update_context(context_id):
 
 @app.route('/context/<int:context_id>', methods=['DELETE'])
 @login_required
-def delete_context(context_id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def delete_context(selected_agent_id, context_id):
     context = AIContext.query.get(context_id)
     if not context:
         return jsonify({'message': 'Context not found'}), 404
@@ -2553,14 +2147,8 @@ def delete_context(context_id):
 
 @app.route('/context', methods=['POST'])
 @login_required
-def post_context():
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def post_context(selected_agent_id):
     data = request.json
     new_context = AIContext(agent_id=selected_agent_id, context_name=data['context_name'])
     db.session.add(new_context)
@@ -2569,14 +2157,8 @@ def post_context():
 
 @app.route('/step/<int:step_id>', methods=['GET'])
 @login_required
-def get_step(step_id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-    
+@check_agent_access
+def get_step(selected_agent_id, step_id):
     step = AISteps.query.filter_by(id=step_id).join(AIContext).filter(AIContext.agent_id == selected_agent_id).first_or_404()
 
     print(f"Step: {step.name} {step.id}, Context ID: {step.context_id}")
@@ -2585,14 +2167,8 @@ def get_step(step_id):
 
 @app.route('/step/<int:step_id>', methods=['PUT'])
 @login_required
-def update_step(step_id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def update_step(selected_agent_id, step_id):
     data = request.json
     step = AISteps.query.get(step_id)
     if not step:
@@ -2622,14 +2198,8 @@ def update_step(step_id):
 
 @app.route('/step/<int:step_id>', methods=['DELETE'])
 @login_required
-def delete_step(step_id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def delete_step(selected_agent_id, step_id):
     step = AISteps.query.get(step_id)
     if not step:
         return jsonify({'message': 'Step not found'}), 404
@@ -2640,14 +2210,8 @@ def delete_step(step_id):
 
 @app.route('/step', methods=['POST'])
 @login_required
-def step():
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def step(selected_agent_id):
     data = request.json
     new_step = AISteps(
         context_id=data['context_id'],
@@ -2666,15 +2230,8 @@ def step():
 
 @app.route('/hooks', methods=['GET'])
 @login_required
-def hooks():
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
-
+@check_agent_access
+def hooks(selected_agent_id):
     if request.headers.get('Accept') == 'application/json':
         hooks = AIHooks.query.filter_by(agent_id=selected_agent_id).all()
 
@@ -2692,14 +2249,8 @@ def hooks():
 
 @app.route('/hooks/<int:agent_id>', methods=['DELETE'])
 @login_required
-def delete_all_hooks(agent_id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied1'}), 403
-
+@check_agent_access
+def delete_all_hooks(selected_agent_id, agent_id):
     hooks = AIHooks.query.filter_by(agent_id=selected_agent_id).all()
     for hook in hooks:
         db.session.delete(hook)
@@ -2709,14 +2260,8 @@ def delete_all_hooks(agent_id):
 
 @app.route('/agents/<int:agent_id>/share/<int:user_id>', methods=['DELETE'])
 @login_required
-def revoke_share(agent_id, user_id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def revoke_share(selected_agent_id, agent_id, user_id):
     shared_access = SharedAccess.query.filter_by(agent_id=selected_agent_id, shared_with_user_id=user_id).all()
     for sa in shared_access:
         db.session.delete(sa)
@@ -2725,14 +2270,8 @@ def revoke_share(agent_id, user_id):
 
 @app.route('/agents/<int:agent_id>/share', methods=['GET'])
 @login_required
-def get_shared_users(agent_id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def get_shared_users(selected_agent_id, agent_id):
     shared_access_list = SharedAccess.query.filter_by(agent_id=selected_agent_id).all()
     shared_users_data = []
 
@@ -2750,14 +2289,8 @@ def get_shared_users(agent_id):
 
 @app.route('/agents/<int:agent_id>/share', methods=['POST'])
 @login_required
-def share_agent(agent_id):
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
-    if not user_has_access_to_agent(selected_agent_id):
-        return jsonify({'message': 'Permission denied'}), 403
-
+@check_agent_access
+def share_agent(selected_agent_id, agent_id):
     data = request.get_json()
     shared_with_user_id = data.get('user_id')
     permissions = data.get('permissions', 'view')
@@ -2772,11 +2305,8 @@ def share_agent(agent_id):
 
 @app.route('/users', methods=['GET'])
 @login_required
-def get_users():
-    selected_agent_id, response = get_or_set_selected_agent_id()
-    if not selected_agent_id:
-        return response
-
+@check_agent_access
+def get_users(selected_agent_id):
     users = AIUser.query.filter(AIUser.id != current_user.id).all()
     users_data = [{'id': user.id, 'username': user.username, 'full_name': user.full_name} for user in users]
     return jsonify(users_data), 200

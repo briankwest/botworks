@@ -9,6 +9,7 @@ from flask_login import current_user
 from werkzeug.security import generate_password_hash
 from modules.db import db
 from modules.models import AIFeatures, AIUser, AISignalWireParams, AIAgent, SharedAccess
+from functools import wraps
 
 def generate_random_password(length=16):
     characters = string.ascii_letters + string.digits
@@ -143,3 +144,16 @@ def get_or_set_selected_agent_id():
         else:
             return None, jsonify({'message': 'No agents found for the user'}), 400
     return selected_agent_id, None
+
+def check_agent_access(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        selected_agent_id, response = get_or_set_selected_agent_id()
+        if not selected_agent_id:
+            return response
+
+        if not user_has_access_to_agent(selected_agent_id):
+            return jsonify({'message': 'Permission denied'}), 403
+
+        return f(selected_agent_id, *args, **kwargs)
+    return decorated_function
