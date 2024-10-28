@@ -128,7 +128,7 @@ def delete_swmlrequests(agent_id):
     if not user_has_access_to_agent(selected_agent_id):
         return jsonify({'message': 'Permission denied'}), 403
 
-    AISWMLRequest.query.filter_by(user_id=current_user.id, agent_id=selected_agent_id).delete()
+    AISWMLRequest.query.filter_by(agent_id=selected_agent_id).delete()
     db.session.commit()
     return jsonify({'message': 'All SWML requests for the agent deleted successfully'}), 200
 
