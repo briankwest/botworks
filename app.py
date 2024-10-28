@@ -737,8 +737,7 @@ def login():
     return render_template('login.html')
 
 @app.route('/signup', methods=['POST', 'GET'])
-@check_agent_access
-def signup(selected_agent_id):
+def signup():
     if request.method == 'POST':
         data = request.get_json()
         username = data.get('username')
