@@ -40,7 +40,7 @@
                 <option value="">Select Call ID</option>
               </select>
               
-              <textarea id="messages" class="form-control mb-2" rows="10" readonly></textarea>
+              <textarea id="messages" class="form-control mb-2" rows="25" readonly></textarea>
 
               <div class="table-responsive">
                 <table class="table">
@@ -54,9 +54,15 @@
                 <button class="btn btn-success mr-2" onclick="sendMessage()">Send</button>
                 <button class="btn btn-danger mr-2" onclick="clearMessages()">Clear</button>
                 <button class="btn btn-warning mr-2" onclick="hangup()">Hangup</button>
-                <div class="custom-control custom-switch mr-2">
-                  <input type="checkbox" class="custom-control-input" id="roleToggle">
-                  <label class="custom-control-label" for="roleToggle">Send as System</label>
+                <div class="d-flex flex-column align-items-start mb-2">
+                  <div class="custom-control custom-switch">
+                    <input type="checkbox" class="custom-control-input" id="roleToggle">
+                    <label class="custom-control-label" for="roleToggle">Send as System</label>
+                  </div>
+                  <div class="custom-control custom-switch">
+                    <input type="checkbox" class="custom-control-input" id="rawEventsToggle">
+                    <label class="custom-control-label" for="rawEventsToggle">Show Raw Events</label>
+                  </div>
                 </div>
                 <div class="ml-auto status-container">
                   <div class="status-indicator">
@@ -163,12 +169,13 @@
         if (typeof data === 'string') {
           data = JSON.parse(data);
         }
+        const showRawEvents = document.getElementById('rawEventsToggle').checked; 
         if (data.data) {
           const parsedData = JSON.parse(data.data);
           if (parsedData.command === "conversation_ended") {
             const callId = parsedData.call_info.call_id;
             removeCallIdFromDropdown(callId);
-          } else if (parsedData.call_info && parsedData.conversation_add) {
+          } else if (!showRawEvents && parsedData.call_info && parsedData.conversation_add) {
             const callId = parsedData.call_info.call_id;
             const messageContent = parsedData.conversation_add.content;
             console.log('Parsed callId:', callId);
@@ -186,7 +193,10 @@
             if (selectedCallId === callId) {
               updateMessagesList(messageContent);
             }
-          }
+          } else if (parsedData && showRawEvents) {
+            const jsonData = JSON.stringify(parsedData, null, 2);
+            updateMessagesList(`Raw Event: ${jsonData}`);
+          } 
         }
       });
 
