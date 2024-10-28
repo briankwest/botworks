@@ -125,7 +125,7 @@ def generate_swml_response(agent_id, request_body):
     for function in functions:
         function_data = {
             "function": function.name,
-            "purpose": function.purpose,
+            "description": function.purpose,
         }
 
         function_data = {
@@ -135,14 +135,14 @@ def generate_swml_response(agent_id, request_body):
             **({"fillers": function.fillers} if function.fillers else {}),
             **({"meta_data": function.meta_data} if function.meta_data else {}),
             **({"meta_data_token": function.meta_data_token} if function.meta_data_token else {}),
-            "argument": {
+            "parameters": {
                 "properties": {}
             }
         }
 
         function_args = AIFunctionArgs.query.filter_by(function_id=function.id, agent_id=agent_id).all()
         for arg in function_args:
-            function_data["argument"]["properties"][arg.name] = {
+            function_data["parameters"]["properties"][arg.name] = {
                 "type": arg.type,
                 "description": arg.description,
                 "type": arg.type if arg.type in ['integer', 'number', 'boolean', 'string', 'array', 'object'] else 'string',
@@ -153,14 +153,14 @@ def generate_swml_response(agent_id, request_body):
                     } if arg.default else {})
             }
             if arg.enum and arg.type == 'array':
-                function_data["argument"]["properties"][arg.name]["enum"] = arg.enum.split(',')
+                function_data["parameters"]["properties"][arg.name]["enum"] = arg.enum.split(',')
 
-        function_data["argument"]["type"] = "object"
+        function_data["parameters"]["type"] = "object"
 
         function_payload = {
             "function": function.name,
-            "purpose": function.purpose,
-            "argument": function_data["argument"],
+            "description": function.purpose,
+            "parameters": function_data["parameters"],
             "required": [arg.name for arg in function_args if arg.required]
         }
         if not function.active:
@@ -184,8 +184,8 @@ def generate_swml_response(agent_id, request_body):
         swml.add_aiswaigfunction({
             "function": "send_message",
             **({"active": False} if enable_message_inactive and enable_message_inactive.enabled else {}),
-            "purpose": "use to send text a message to the user",
-            "argument": {
+            "description": "use to send text a message to the user",
+            "parameters": {
                 "type": "object",
                 "properties": {
                     "message": {
@@ -295,11 +295,11 @@ def generate_swml_response(agent_id, request_body):
         swml.add_aiswaigfunction({
             "function": "transfer",
             **({"active": False} if enable_transfer_inactive and enable_transfer_inactive.enabled else {}),
-            "purpose": "use to transfer to a target",
+            "description": "use to transfer to a target",
             "meta_data": {
                 "table": transfer_hash
             },
-            "argument": {
+            "parameters": {
                 "type": "object",
                 "properties": {
                     "target": {
@@ -338,8 +338,8 @@ def generate_swml_response(agent_id, request_body):
         if api_ninjas_weather_feature and api_ninjas_weather_feature.enabled:
             swml.add_aiswaigfunction({
                 "function": "get_weather",
-                "purpose": "latest weather information for any city",
-                "argument": {
+                "description": "latest weather information for any city",
+                "parameters": {
                     "type": "object",
                     "properties": {
                         "city": {
@@ -378,8 +378,8 @@ def generate_swml_response(agent_id, request_body):
 
             swml.add_aiswaigfunction({
                 "function": "get_joke",
-                "purpose": "tell a joke",
-                "argument": {
+                "description": "tell a joke",
+                "parameters": {
                     "type": "object",
                     "properties": {
                         "type": {
@@ -408,8 +408,8 @@ def generate_swml_response(agent_id, request_body):
         if api_ninjas_trivia_feature and api_ninjas_trivia_feature.enabled:
             swml.add_aiswaigfunction({
                 "function": "get_trivia",
-                "purpose": "get a trivia question",
-                "argument": {
+                "description": "get a trivia question",
+                "parameters": {
                     "type": "object",
                     "properties": {
                         "category": {
@@ -436,7 +436,7 @@ def generate_swml_response(agent_id, request_body):
         if api_ninjas_facts_feature and api_ninjas_facts_feature.enabled:
             swml.add_aiswaigfunction({
                 "function": "get_fact",
-                "purpose": "provide a random interesting fact",
+                "description": "provide a random interesting fact",
                 "data_map": {
                     "webhooks": [{
                         "url": f'https://api.api-ninjas.com/v1/facts',
@@ -456,8 +456,8 @@ def generate_swml_response(agent_id, request_body):
         if api_ninjas_quotes_feature and api_ninjas_quotes_feature.enabled:
             swml.add_aiswaigfunction({
                 "function": "get_quote",
-                "purpose": "provide a random quote",
-                "argument": {
+                "description": "provide a random quote",
+                "parameters": {
                     "type": "object",
                     "properties": {
                         "category": {
@@ -497,8 +497,8 @@ def generate_swml_response(agent_id, request_body):
         if api_ninjas_cocktails_feature and api_ninjas_cocktails_feature.enabled:
             swml.add_aiswaigfunction({
                 "function": "get_cocktail",
-                "purpose": "fetch cocktail recipes by name or ingredients",
-                "argument": {
+                "description": "fetch cocktail recipes by name or ingredients",
+                "parameters": {
                     "type": "object",
                     "properties": {
                         "name": {
@@ -559,8 +559,8 @@ def generate_swml_response(agent_id, request_body):
                     }
                 ]
             },
-            "purpose": "The question the user will ask",
-            "argument": {
+            "description": "The question the user will ask",
+            "parameters": {
                 "properties": {
                     "user_question": {
                         "type": "string",

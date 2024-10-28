@@ -87,8 +87,8 @@
                       </div>
                     </th>
                     <th>Function</th>
-                    <th>Arguments</th>
-                    <th>Purpose</th>
+                    <th>Parameters</th>
+                    <th>Description</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -215,10 +215,11 @@
         },
         { "data": "function" },
         {
-          "data": "arguments",
+          "data": "parameters",
           "render": function (data, type, row) {
             try {
               const args = JSON.parse(data);
+              console.log('Args:', args);
               if (args.properties) {
                 let formattedArgs = '<ul>';
                 const requiredFields = args.required || [];
@@ -239,7 +240,7 @@
           },
           "defaultContent": ""
         },
-        { "data": "purpose", "defaultContent": "" }
+        { "data": "description", "defaultContent": "" }
       ],
       "pageLength": -1,
       "lengthMenu": [[-1], ["All"]],
@@ -280,8 +281,8 @@
         data.forEach(item => {
           swaigTable.row.add({
             "function": item.function,
-            "arguments": JSON.stringify(item.argument || ""),
-            "purpose": item.purpose || ""
+            "parameters": JSON.stringify(item.parameters || ""),
+            "description": item.description || ""
           }).draw();
         });
       } else {
@@ -506,8 +507,8 @@
               "orderable": false
             },
             { "data": "function" },
-            { "data": "arguments", "defaultContent": "" },
-            { "data": "purpose", "defaultContent": "" }
+            { "data": "parameters", "defaultContent": "" },
+            { "data": "description", "defaultContent": "" }
           ],
           "pageLength": -1,
           "lengthMenu": [[-1], ["All"]],

@@ -1,7 +1,7 @@
 import eventlet
 eventlet.monkey_patch()
 import os, jwt, base64, json, redis, yaml, requests, logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from flask import Flask, flash, make_response, jsonify, redirect, render_template, request, url_for, g
 from flask_socketio import SocketIO, join_room, leave_room, emit, disconnect
 from flask_cors import CORS
@@ -143,7 +143,7 @@ def swmlrequests(selected_agent_id):
 @login_required
 @check_agent_access
 def dashboard_completed(selected_agent_id):
-    end_time = (datetime.utcnow() + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
+    end_time = (datetime.now(timezone.utc) + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
     start_time = end_time - timedelta(hours=23)
 
     hourly_counts = {start_time + timedelta(hours=i): 0 for i in range(24)}
@@ -639,12 +639,12 @@ def refresh(selected_agent_id):
     if not refresh_token:
         new_access_token = jwt.encode({
             'user_id': current_user.id,
-            'exp': datetime.utcnow() + timedelta(minutes=60)
+            'exp': datetime.now(timezone.utc) + timedelta(minutes=60)
         }, app.config['ACCESS_SECRET_KEY'], algorithm='HS256')
 
         new_refresh_token = jwt.encode({
             'user_id': current_user.id,
-            'exp': datetime.utcnow() + timedelta(days=30)
+            'exp': datetime.now(timezone.utc) + timedelta(days=30)
         }, app.config['REFRESH_SECRET_KEY'], algorithm='HS256')
 
         response = jsonify({'access_token': new_access_token, 'refresh_token': new_refresh_token, 'expires_in': 3600})
@@ -658,12 +658,12 @@ def refresh(selected_agent_id):
 
         new_access_token = jwt.encode({
             'user_id': user_id,
-            'exp': datetime.utcnow() + timedelta(minutes=60)
+            'exp': datetime.now(timezone.utc) + timedelta(minutes=60)
         }, app.config['ACCESS_SECRET_KEY'], algorithm='HS256')
 
         new_refresh_token = jwt.encode({
             'user_id': user_id,
-            'exp': datetime.utcnow() + timedelta(days=30)
+            'exp': datetime.now(timezone.utc) + timedelta(days=30)
         }, app.config['REFRESH_SECRET_KEY'], algorithm='HS256')
 
         response = jsonify({'access_token': new_access_token, 'refresh_token': new_refresh_token, 'expires_in': 3600})
@@ -719,12 +719,12 @@ def login():
 
             access_token = jwt.encode({
                 'user_id': user.id,
-                'exp': datetime.utcnow() + timedelta(minutes=60)
+                'exp': datetime.now(timezone.utc) + timedelta(minutes=60)
             }, app.config['ACCESS_SECRET_KEY'], algorithm='HS256')
 
             refresh_token = jwt.encode({
                 'user_id': user.id,
-                'exp': datetime.utcnow() + timedelta(days=7)
+                'exp': datetime.now(timezone.utc) + timedelta(days=7)
             }, app.config['REFRESH_SECRET_KEY'], algorithm='HS256')
             
             response.set_cookie('access_token', access_token, httponly=True, samesite='Strict')
@@ -751,7 +751,7 @@ def signup():
                 return jsonify({'error': 'Email already in use. Please choose a different email.'}), 409
 
         new_user = AIUser(
-            username=username,
+            username=username.lower(),
             password=generate_password_hash(data.get('password'), method='pbkdf2:sha256'),
             full_name=data.get('full_name'),
             email=email
