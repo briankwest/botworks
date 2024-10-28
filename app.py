@@ -338,7 +338,7 @@ def add_function_arg(selected_agent_id, function_id):
         return jsonify({'message': 'Function argument added successfully'}), 201
     except IntegrityError as e:
         db.session.rollback()
-        if 'Key (user_id, function_id, name)' in str(e.orig):
+        if 'Key (function_id, name)' in str(e.orig):
             return jsonify({'message': 'Arguments must be unique'}), 200
         else:
             return jsonify({'message': 'An error occurred while adding arguments'}), 500
