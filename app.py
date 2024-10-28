@@ -1912,7 +1912,7 @@ def update_phone_number(selected_agent_id, phone_number_id):
     space_name = get_signalwire_param(agent_id, 'SPACE_NAME')
     project_id = get_signalwire_param(agent_id, 'PROJECT_ID')
     auth_token = get_signalwire_param(agent_id, 'AUTH_TOKEN')
-    auth_user = current_user.username
+    auth_user = get_signalwire_param(agent_id, 'HTTP_USERNAME')
     swml_url = f"https://{auth_user}:{auth_pass}@{request.host}/swml/{agent_id}"  
     
     encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
