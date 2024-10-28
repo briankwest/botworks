@@ -1254,7 +1254,7 @@ def clone_agent(selected_agent_id, agent_id):
         for item in related_items:
             new_item = item.__class__(**{col.name: getattr(item, col.name) for col in item.__table__.columns if col.name != 'id'})
             new_item.agent_id = new.id
-            new_item.user_id = current_user.id  # Ensure the cloned item uses current_user.id
+            new_item.user_id = current_user.id
             db.session.add(new_item)
 
     relationships = [
@@ -1274,14 +1274,11 @@ def clone_agent(selected_agent_id, agent_id):
 def agents(selected_agent_id):
     if request.method == 'GET':
         if request.headers.get('Accept') == 'application/json':
-            # Query for agents owned by the current user
             owned_agents = AIAgent.query.filter_by(user_id=current_user.id).all()
             
-            # Query for agents shared with the current user
             shared_agent_ids = db.session.query(SharedAccess.agent_id).filter_by(shared_with_user_id=current_user.id).all()
             shared_agents = AIAgent.query.filter(AIAgent.id.in_([id for id, in shared_agent_ids])).all()
             
-            # Combine both owned and shared agents
             all_agents = owned_agents + shared_agents
             
             agents_data = [{
