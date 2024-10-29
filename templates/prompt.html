@@ -280,7 +280,16 @@
             { data: 'presence_penalty' },
             {
               data: null,
-              defaultContent: '<button class="btn btn-sm btn-primary edit-btn">Edit</button> <button class="btn btn-sm btn-danger delete-btn">Delete</button>',
+              render: function (data, type, row) {
+                return `
+                  <button class="btn btn-sm btn-primary edit-btn" data-id="${row.id}">
+                    <i class="fas fa-edit"></i> Edit
+                  </button>
+                  <button class="btn btn-sm btn-danger delete-btn" data-id="${row.id}">
+                    <i class="fas fa-trash-alt"></i> Delete
+                  </button>
+                `;
+              },
               orderable: false
             }
           ],

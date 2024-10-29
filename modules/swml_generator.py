@@ -217,8 +217,8 @@ def generate_swml_response(agent_id, request_body):
             "url": ai_include.url,
             "functions": json.loads(ai_include.functions)
         }
-
-        swml.add_aiinclude(function_dict)
+        if function_dict["functions"]:
+            swml.add_aiinclude(function_dict)
     
     
     context_steps = (
@@ -365,7 +365,7 @@ def generate_swml_response(agent_id, request_body):
                             "X-Api-Key": api_ninjas_key
                         },
                         "output": {
-                            "response": 'Say the temperature in Fahrenheit. The weather in %{input.args.city} %{temp}C, Humidity: %{humidity}%, High: %{max_temp}C, Low: %{min_temp}C Wind Direction: %{wind_degrees} (say cardinal direction), Clouds: %{cloud_pct}%, Feels Like: %{feels_like}C.'
+                            "response": 'You must say any temprature in Fahrenheit. The weather in %{input.args.city} %{temp}C, Humidity: %{humidity}%, High: %{max_temp}C, Low: %{min_temp}C Wind Direction: %{wind_degrees} (say cardinal direction), Clouds: %{cloud_pct}%, Feels Like: %{feels_like}C.'
                         }
                     }]
                 }
@@ -573,17 +573,6 @@ def generate_swml_response(agent_id, request_body):
 
     swml.add_aiapplication("main")
     swml_response = swml.render()
-
-    ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
-
-    new_swml_request = AISWMLRequest(
-        agent_id=agent_id,
-        request=jsonify(request_body).json,
-        response=jsonify(swml_response).json,
-        ip_address=ip_address
-    )
-    db.session.add(new_swml_request)
-    db.session.commit()
 
     return swml_response
 

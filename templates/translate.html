@@ -1,245 +1,509 @@
 {% extends 'base.html' %}
 
-{% block title %}Translate{% endblock %}
+{% block title %}Translators{% endblock %}
 
 {% block content %}
 {% include 'navbar.html' %}
 {% include 'sidebar.html' %}
 
 <div class="content-wrapper">
-  <section class="content-header">
-    <div class="container-fluid">
-      <div class="row mb-2">
-        <div class="col-6">
-          <h1 class="m-0">Translate</h1>
-        </div>
-      </div>
-    </div>
-  </section>
+    <section class="content-header">
+        <h1>Manage Translators</h1>
+    </section>
 
-  <section class="content">
-    <div class="container-fluid">
-      <div class="row">
-        <div class="col-12">
-          <div class="card">
-            <div class="card-header bg-primary">
-              <h3 class="card-title">Translate</h3>
-            </div>
-            <div class="card-body table-responsive">
-              <table id="translationTable" class="table table-striped w-100">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Translation Text</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col-12">
-          <div class="card">
-            <div class="card-header bg-success">
-              <h3 class="card-title">Add Translation</h3>
-            </div>
-            <div class="card-body">
-              <form id="addTranslationForm">
-                <div class="form-group">
-                  <label for="translationText">Translation Text</label>
-                  <input type="text" class="form-control" id="translationText" name="translation" required>
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-primary">
+                            <h3 class="card-title">Existing Translators</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped" id="translatorsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>From Language</th>
+                                            <th>To Languagdit</th>
+                                            <th>From Filter</th>
+                                            <th>To Filter</th>
+                                            <th>From Voice</th>
+                                            <th>To Voice</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <button type="submit" class="btn btn-success">Add Translation</button>
-              </form>
             </div>
-          </div>
-        </div>
-      </div>
 
-    </div>
-  </section>
-
-  <div class="modal fade" id="editTranslationModal" tabindex="-1" role="dialog"
-    aria-labelledby="editTranslationModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="editTranslationModalLabel">Edit Translation Entry</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          <form id="editTranslationForm">
-            <input type="hidden" id="editId" name="id">
-            <div class="form-group">
-              <label for="editTranslationText">Translation Text</label>
-              <input type="text" class="form-control" id="editTranslationText" name="translation" required>
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-success">
+                            <h3 class="card-title">Add Translator</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="translatorForm">
+                                <input type="hidden" id="translatorId" name="translatorId">
+                                <div class="form-group">
+                                    <label for="fromLanguage">From Language</label>
+                                    <select class="form-control" id="fromLanguage" name="from_language" required>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="toLanguage">To Language</label>
+                                    <select class="form-control" id="toLanguage" name="to_language" required>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="fromFilter">From Filter</label>
+                                    <select class="form-control" id="fromFilter" name="from_filter">
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="toFilter">To Filter</label>
+                                    <select class="form-control" id="toFilter" name="to_filter">
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="fromVoice">From Voice</label>
+                                    <select class="form-control" id="fromVoice" name="from_voice">
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="toVoice">To Voice</label>
+                                    <select class="form-control" id="toVoice" name="to_voice">
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="callerIdNumber">Caller ID Number</label>
+                                    <input type="text" class="form-control" id="callerIdNumber" name="caller_id_number">
+                                </div>
+                                <div class="box-footer">
+                                    <button type="submit" class="btn btn-success">Save Translator</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </form>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary" id="saveEditButton">Save changes</button>
-        </div>
-      </div>
-    </div>
-  </div>
+    </section>
 </div>
 
-{% include 'footer.html' %}
+<div class="modal fade" id="editTranslatorModal" tabindex="-1" aria-labelledby="editTranslatorModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editTranslatorModalLabel">Edit Translator</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <form id="editTranslatorForm">
+                    <input type="hidden" id="editTranslatorId" name="translatorId">
+                    <div class="mb-3">
+                        <label for="editFromLanguage" class="form-label">From Language</label>
+                        <select class="form-control w-100" id="editFromLanguage" name="from_language" required>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editToLanguage" class="form-label">To Language</label>
+                        <select class="form-control w-100" id="editToLanguage" name="to_language" required>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editFromFilter" class="form-label">From Filter</label>
+                        <select class="form-control w-100" id="editFromFilter" name="from_filter">
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editToFilter" class="form-label">To Filter</label>
+                        <select class="form-control w-100" id="editToFilter" name="to_filter">
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editFromVoice" class="form-label">From Voice</label>
+                        <select class="form-control w-100" id="editFromVoice" name="from_voice">
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editToVoice" class="form-label">To Voice</label>
+                        <select class="form-control w-100" id="editToVoice" name="to_voice">
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editCallerIdNumber" class="form-label">Caller ID Number</label>
+                        <input type="text" class="form-control w-100" id="editCallerIdNumber" name="caller_id_number">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="submit" form="editTranslatorForm" class="btn btn-primary">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-  $(document).ready(function () {
-    $('#translationTable').DataTable({
-      "responsive": true,
-      "autoWidth": false,
-      "ajax": {
-        "url": "{{ url_for('translate') }}",
-        "headers": {
-          "Accept": "application/json"
-        },
-        "dataSrc": ""
-      },
-      "columns": [
-        { "data": "id" },
-        { "data": "translation" },
-        {
-          "data": null,
-          "render": function (data, type, row) {
-            return `
-                <button class="btn btn-primary btn-sm edit-translation" data-id="${row.id}">Edit</button>
-                <button class="btn btn-danger btn-sm delete-translation" data-id="${row.id}">Delete</button>
-              `;
-          }
-        }
-      ],
-      "columnDefs": [
-        { "targets": -1, "className": "text-nowrap" }
-      ]
-    });
+$(document).ready(function() {
+    loadTranslators();
+    populateLanguageDropdowns();
+    loadVoices();
+    loadFilters();
 
-    function showToast(icon, title) {
-      const Toast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-        didOpen: (toast) => {
-          toast.addEventListener('mouseenter', Swal.stopTimer)
-          toast.addEventListener('mouseleave', Swal.resumeTimer)
-        }
-      });
+    function loadTranslators() {
+        $('#translatorsTable').DataTable({
+            "responsive": true,
+            "autoWidth": false,
+            "processing": true,
+            "serverSide": false,
+            "ajax": {
+                "url": "/translators",
+                "dataSrc": "",
+                "headers": {
+                    "Accept": "application/json"
+                }
+            },
+            "columns": [
+                { "data": "from_language" },
+                { "data": "to_language" },
+                { "data": "from_filter" },
+                { "data": "to_filter" },
+                { "data": "from_voice" },
+                { "data": "to_voice" },
+                {
+                    "data": null,
+                    "render": function(data, type, row) {
+                        return `
+                            <button class="btn btn-primary btn-sm edit-translator" data-id="${row.id}">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-danger btn-sm delete-translator" data-id="${row.id}">
+                                <i class="fas fa-trash-alt"></i> Delete
+                            </button>
+                        `;
+                    }
+                }
+            ]
+        });
 
-      Toast.fire({
-        icon: icon,
-        title: title
-      });
+        $('#translatorsTable').on('click', '.edit-translator', function(e) {
+            e.preventDefault();
+            const id = $(this).data('id');
+            
+            $.ajax({
+                url: `/translators/${id}`,
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json'
+                },
+                success: function(data) {
+                    console.log('Data from server:', data);
+                    $('#editTranslatorId').val(data.id);
+                    $('#editCallerIdNumber').val(data.caller_id_number);
+
+                    $.getJSON('/static/js/language.json', function(languages) {
+                        populateDropdowns(languages.languages, '#editFromLanguage', data.from_language);
+                        populateDropdowns(languages.languages, '#editToLanguage', data.to_language);
+                    });
+
+                    $.getJSON('/static/js/filters.json', function(filters) {
+                        populateDropdowns(filters, '#editFromFilter', data.from_filter);
+                        populateDropdowns(filters, '#editToFilter', data.to_filter);
+                    });
+
+                    const providers = ['elevenlabs'];
+                    const voiceDropdowns = ['#editFromVoice', '#editToVoice'];
+
+                    voiceDropdowns.forEach(dropdownId => {
+                        $(dropdownId).empty();
+                    });
+
+                    let voicesLoaded = 0;
+                    const totalProviders = providers.length;
+
+                    providers.forEach(provider => {
+                        $.getJSON(`/static/js/${provider}.json`, function(voices) {
+                            const optgroup = $('<optgroup>').attr('label', provider.charAt(0).toUpperCase() + provider.slice(1));
+                            voices.forEach(voice => {
+                                const value = `${provider}.${voice.name}`;
+                                const option = $('<option>').val(value).text(voice.name);
+                                optgroup.append(option);
+                            });
+
+                            voiceDropdowns.forEach(dropdownId => {
+                                $(dropdownId).append(optgroup.clone());
+                            });
+
+                            voicesLoaded++;
+                            if (voicesLoaded === totalProviders) {
+                                console.log('Setting from_voice:', data.from_voice);
+                                console.log('Setting to_voice:', data.to_voice);
+                                $('#editFromVoice').val(data.from_voice).change();
+                                $('#editToVoice').val(data.to_voice).change();
+                            }
+                        });
+                    });
+
+                    const modalElement = document.getElementById('editTranslatorModal');
+                    if (modalElement) {
+                        const editModal = new bootstrap.Modal(modalElement);
+                        editModal.show();
+                    } else {
+                        console.error('Modal element not found');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error fetching translator:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to load translator data'
+                    });
+                }
+            });
+        });
     }
 
-    $('#addTranslationForm').submit(function (e) {
-      e.preventDefault();
-      const formData = {
-        translation: $('#translationText').val()
-      };
+    function populateLanguageDropdowns() {
+        $.getJSON('/static/js/language.json', function(data) {
+            const languages = data.languages;
+            const languageDropdowns = $('#fromLanguage, #toLanguage');
 
-      $.ajax({
-        type: 'POST',
-        url: "{{ url_for('translate') }}",
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        data: JSON.stringify(formData),
-        success: function (response) {
-          $('#translationTable').DataTable().ajax.reload();
-          $('#addTranslationForm')[0].reset();
-          showToast('success', 'Translation entry created successfully');
-        },
-        error: function (error) {
-          showToast('error', 'Error creating translation entry');
-        }
-      });
-    });
+            languageDropdowns.empty();
 
-    $('#translationTable').on('click', '.delete-translation', function () {
-      const id = $(this).data('id');
-      Swal.fire({
-        title: 'Are you sure?',
-        text: "You won't be able to revert this!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, delete it!'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          $.ajax({
-            type: 'DELETE',
-            url: "/translate/" + id,
-            success: function (response) {
-              $('#translationTable').DataTable().ajax.reload();
-              showToast('success', 'Translation entry deleted successfully');
+            $.each(languages, function(index, language) {
+                const option = $('<option></option>').attr('value', language.code).text(language.name);
+                languageDropdowns.append(option);
+            });
+
+            languageDropdowns.val('en-US');
+        });
+    }
+
+    function loadVoices() {
+        const providers = ['elevenlabs'];
+        const voiceDropdowns = ['#fromVoice', '#toVoice'];
+
+        voiceDropdowns.forEach(dropdownId => {
+            $(dropdownId).empty();
+        });
+
+        providers.forEach(provider => {
+            $.getJSON(`/static/js/${provider}.json`, function(data) {
+                const optgroup = $('<optgroup>').attr('label', provider.charAt(0).toUpperCase() + provider.slice(1));
+                data.forEach(voice => {
+                    const value = `${provider}.${voice.name}`;
+                    optgroup.append($('<option>').val(value).text(voice.name));
+                });
+
+                voiceDropdowns.forEach(dropdownId => {
+                    $(dropdownId).append(optgroup.clone());
+                });
+            });
+        });
+    }
+
+    function loadFilters() {
+        $.getJSON('/static/js/filters.json', function(data) {
+            const filterDropdowns = $('#fromFilter, #toFilter');
+
+            filterDropdowns.empty();
+
+            const placeholderOption = $('<option></option>').attr('value', '');
+            filterDropdowns.append(placeholderOption);
+
+            $.each(data, function(index, filter) {
+                const option = $('<option></option>').attr('value', filter.code).text(filter.name);
+                filterDropdowns.append(option);
+            });
+        }).fail(function() {
+            console.error("Failed to load filters.json");
+        });
+    }
+
+    $('#translatorForm').submit(function(e) {
+        e.preventDefault();
+        const translatorId = $('#translatorId').val();
+        const formData = {
+            from_language: $('#fromLanguage').val(),
+            to_language: $('#toLanguage').val(),
+            from_filter: $('#fromFilter').val(),
+            to_filter: $('#toFilter').val(),
+            from_voice: $('#fromVoice').val(),
+            to_voice: $('#toVoice').val(),
+            caller_id_number: $('#callerIdNumber').val()
+        };
+
+        const url = translatorId ? `/translators/${translatorId}` : '/translators';
+        const method = translatorId ? 'PUT' : 'POST';
+
+        $.ajax({
+            type: method,
+            url: url,
+            contentType: 'application/json',
+            data: JSON.stringify(formData),
+            headers: {
+                'Accept': 'application/json'
             },
-            error: function (error) {
-              showToast('error', 'Error deleting translation entry');
+            success: function(response) {
+                $('#translatorsTable').DataTable().ajax.reload();
+                $('#translatorForm')[0].reset();
+                $('#translatorId').val('');
+                Swal.fire({
+                    icon: 'success',
+                    title: translatorId ? 'Translator updated successfully' : 'Translator added successfully',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+            },
+            error: function(error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: translatorId ? 'Error updating translator' : 'Error adding translator',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
             }
-          });
-        }
-      });
+        });
     });
 
-    $('#translationTable').on('click', '.edit-translation', function () {
-      const id = $(this).data('id');
-      $.ajax({
-        type: 'GET',
-        url: "/translation/" + id,
-        headers: {
-          'Accept': 'application/json'
-        },
-        success: function (data) {
-          $('#editId').val(data.id);
-          $('#editTranslationText').val(data.translation);
-          $('#editTranslationModal').modal('show');
-        },
-        error: function (error) {
-          showToast('error', 'Error fetching translation entry');
-        }
-      });
+    $('#translatorsTable').on('click', '.delete-translator', function() {
+        const id = $(this).data('id');
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    type: 'DELETE',
+                    url: `/translators/${id}`,
+                    headers: {
+                        'Accept': 'application/json'
+                    },
+                    success: function(response) {
+                        $('#translatorsTable').DataTable().ajax.reload();
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Translator deleted successfully',
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true
+                        });
+                    },
+                    error: function(error) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error deleting translator',
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true
+                        });
+                    }
+                });
+            }
+        });
     });
 
-    $('#saveEditButton').click(function () {
-      const id = $('#editId').val();
-      const formData = {
-        translation: $('#editTranslationText').val()
-      };
+    $('#editTranslatorForm').submit(function(e) {
+        e.preventDefault();
+        const translatorId = $('#editTranslatorId').val();
+        const formData = $(this).serialize();
 
-      $.ajax({
-        type: 'PUT',
-        url: "/translate/" + id,
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        data: JSON.stringify(formData),
-        success: function (response) {
-          $('#translationTable').DataTable().ajax.reload();
-          $('#editTranslationModal').modal('hide');
-          showToast('success', 'Translation entry updated successfully');
-        },
-        error: function (error) {
-          showToast('error', 'Error updating translation entry');
-        }
-      });
+        $.ajax({
+            type: 'PUT',
+            url: `/translators/${translatorId}`,
+            data: formData,
+            headers: {
+                'Accept': 'application/json'
+            },
+            success: function(response) {
+                $('#editTranslatorModal').modal('hide');
+                $('#translatorsTable').DataTable().ajax.reload();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Translator updated successfully',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+            },
+            error: function(error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error updating translator',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+            }
+        });
     });
-  });
+
+    $('body').append(`
+        <button id="testModalButton" class="btn btn-primary">
+            Test Modal
+        </button>
+    `);
+    
+    $('#testModalButton').click(function() {
+        const editModal = new bootstrap.Modal(document.getElementById('editTranslatorModal'));
+        editModal.show();
+    });
+
+    $('#translatorsTable').on('click', '.edit-translator', function() {
+        console.log('Edit button clicked');
+    });
+
+    $('#editTranslatorModal').on('show.bs.modal', function () {
+        console.log('Modal is about to show');
+    });
+
+    $('#editTranslatorModal').on('shown.bs.modal', function () {
+        console.log('Modal has been shown');
+    });
+
+    function populateDropdowns(data, dropdownId, selectedValue) {
+        const dropdown = $(dropdownId);
+        dropdown.empty();
+
+        dropdown.append($('<option></option>').attr('value', ''));
+
+        $.each(data, function(index, item) {
+            const option = $('<option></option>').attr('value', item.code).text(item.name);
+            dropdown.append(option);
+        });
+
+        dropdown.val(selectedValue);
+    }
+});
 </script>
 {% endblock %}

@@ -304,8 +304,14 @@
         {
           "data": null,
           "render": function (data, type, row) {
-            return `<button class="btn btn-sm btn-primary edit-context mr-2" data-id="${row.id}">Edit</button>
-                    <button class="btn btn-sm btn-danger delete-context" data-id="${row.id}">Delete</button>`;
+            return `
+              <button class="btn btn-sm btn-primary edit-context mr-2" data-id="${row.id}">
+                <i class="fas fa-edit"></i> Edit
+              </button>
+              <button class="btn btn-sm btn-danger delete-context" data-id="${row.id}">
+                <i class="fas fa-trash-alt"></i> Delete
+              </button>
+            `;
           }
         }
       ]
@@ -421,8 +427,14 @@
           {
             "data": null,
             "render": function (data, type, row) {
-              return `<button class="btn btn-sm btn-primary edit-step mr-2" data-id="${row.id}">Edit</button>
-                        <button class="btn btn-sm btn-danger delete-step" data-id="${row.id}">Delete</button>`;
+              return `
+                <button class="btn btn-sm btn-primary edit-step mr-2" data-id="${row.id}">
+                  <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="btn btn-sm btn-danger delete-step" data-id="${row.id}">
+                  <i class="fas fa-trash-alt"></i> Delete
+                </button>
+              `;
             }
           }
         ]

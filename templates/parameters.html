@@ -122,8 +122,12 @@
             "data": null,
             "render": function(data, type, row) {
               return `
-                <button class="btn btn-primary btn-sm edit-param" data-id="${row.id}">Edit</button>
-                <button class="btn btn-danger btn-sm delete-param" data-id="${row.id}">Delete</button>
+                <button class="btn btn-primary btn-sm edit-param" data-id="${row.id}">
+                  <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="btn btn-danger btn-sm delete-param" data-id="${row.id}">
+                  <i class="fas fa-trash-alt"></i> Delete
+                </button>
               `;
             }
           }

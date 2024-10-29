@@ -14,7 +14,7 @@ from flask_migrate import Migrate
 from dotenv import load_dotenv
 from urllib.parse import urlparse
 from modules.signalwireml import SignalWireML
-from modules.models import db, AIAgent, AIUser, AISignalWireParams, AIFeatures, AIFunctions, AIIncludes, AIConversation, AISWMLRequest, AIParams, AIFunctionArgs, AIPrompt, AIPronounce, AILanguage, AIHints, AIIncludes, AISWMLRequest, AIDebugLogs, AIContext, AISteps, AIHooks, SharedAccess
+from modules.models import db, AIAgent, AIUser, AISignalWireParams, AIFeatures, AIFunctions, AIIncludes, AIConversation, AISWMLRequest, AIParams, AIFunctionArgs, AIPrompt, AIPronounce, AILanguage, AIHints, AIIncludes, AISWMLRequest, AIDebugLogs, AIContext, AISteps, AIHooks, SharedAccess, AITranslate
 from modules.swml_generator import generate_swml_response
 from modules.utils import (
     generate_random_password, get_signalwire_param, 
@@ -28,6 +28,8 @@ logging.getLogger('werkzeug').setLevel(logging.WARNING)
 load_dotenv()
 
 app = Flask(__name__)
+app.debug = False
+app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL').replace('postgres://', 'postgresql://', 1)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = os.environ.get('SQLALCHEMY_TRACK_MODIFICATIONS')
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
@@ -35,7 +37,7 @@ app.config['REDIS_URL'] = os.environ.get('REDIS_URL')
 app.config['ACCESS_SECRET_KEY'] = os.environ.get('ACCESS_SECRET_KEY')
 app.config['REFRESH_SECRET_KEY'] = os.environ.get('REFRESH_SECRET_KEY')
 app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024
-app.config['DEBUG'] = True if os.getenv('DEBUG') == 'True' else False
+app.config['DEBUG'] = os.getenv('DEBUG', False)
 
 db.init_app(app)
 
@@ -109,6 +111,143 @@ def dashboard(selected_agent_id):
     number_of_agents = AIAgent.query.filter_by(user_id=current_user.id).count()
 
     return render_template('dashboard.html', user=current_user, number_of_requests=number_of_requests, number_of_conversations=number_of_conversations, number_of_functions=number_of_functions, number_of_agents=number_of_agents)
+
+@app.route('/import_swml', methods=['POST'])
+@login_required
+@check_agent_access
+def import_swml(selected_agent_id):
+    data = request.get_json()
+
+    version = data.get('version')
+    sections = data.get('sections', {})
+    main_section = sections.get('main', [])
+
+    new_agent = AIAgent(
+        user_id=current_user.id,
+        name=f"Imported Agent {version}",
+        number=None
+    )
+    db.session.add(new_agent)
+    db.session.commit()
+
+    for section in main_section:
+        if 'ai' in section:
+            ai_data = section['ai']
+            process_ai_data(new_agent.id, ai_data)
+
+    return jsonify({'message': 'SWML imported successfully', 'agent_id': new_agent.id}), 201
+
+def process_ai_data(agent_id, ai_data):
+    params = ai_data.get('params', {})
+    for key, value in params.items():
+        new_param = AIParams(
+            agent_id=agent_id,
+            name=key,
+            value=value
+        )
+        db.session.add(new_param)
+
+    swaig = ai_data.get('SWAIG', {})
+    functions = swaig.get('functions', [])
+    for function in functions:
+        purpose = function.get('purpose') or function.get('description')
+        new_function = AIFunctions(
+            agent_id=agent_id,
+            name=function.get('function'),
+            purpose=purpose,
+            active=True
+        )
+        db.session.add(new_function)
+        db.session.commit()
+
+        argument = function.get('argument') or function.get('parameters', {}).get('properties')
+        if argument:
+            for prop, details in argument.items():
+                new_argument = AIFunctionArgs(
+                    function_id=new_function.id,
+                    agent_id=agent_id,
+                    name=prop,
+                    type=details.get('type'),
+                    description=details.get('description'),
+                    required=prop in function.get('parameters', {}).get('required', [])
+                )
+                db.session.add(new_argument)
+
+        data_map = function.get('data_map', {})
+        webhooks = data_map.get('webhooks', [])
+        for webhook in webhooks:
+            new_hook = AIHooks(
+                agent_id=agent_id,
+                data=webhook,
+                hook_type=AIHooks.HookType.other
+            )
+            db.session.add(new_hook)
+
+    includes = swaig.get('includes', [])
+    for include in includes:
+        new_include = AIIncludes(
+            agent_id=agent_id,
+            url=include.get('url'),
+            functions=include.get('functions')
+        )
+        db.session.add(new_include)
+
+    prompt = ai_data.get('prompt', {})
+    new_prompt = AIPrompt(
+        agent_id=agent_id,
+        prompt_type='prompt',
+        prompt_text=prompt.get('text'),
+        top_p=prompt.get('top_p'),
+        temperature=prompt.get('temperature')
+    )
+    db.session.add(new_prompt)
+
+    languages = ai_data.get('languages', [])
+    for language in languages:
+        new_language = AILanguage(
+            agent_id=agent_id,
+            name=language.get('name'),
+            code=language.get('code'),
+            voice=language.get('voice')
+        )
+        db.session.add(new_language)
+        db.session.commit()
+
+        for filler in language.get('function_fillers', []):
+            new_filler = AILanguageFiller(
+                language_id=new_language.id,
+                text=filler
+            )
+            db.session.add(new_filler)
+
+    post_prompt = ai_data.get('post_prompt', {})
+    new_post_prompt = AIPostPrompt(
+        agent_id=agent_id,
+        text=post_prompt.get('text'),
+        top_p=post_prompt.get('top_p'),
+        temperature=post_prompt.get('temperature')
+    )
+    db.session.add(new_post_prompt)
+
+    hints = ai_data.get('hints', [])
+    for hint in hints:
+        new_hint = AIHints(
+            agent_id=agent_id,
+            hint=hint
+        )
+        db.session.add(new_hint)
+
+    pronounce = ai_data.get('pronounce', [])
+    for entry in pronounce:
+        new_pronounce = AIPronounce(
+            agent_id=agent_id,
+            replace_this=entry.get('replace_this'),
+            replace_with=entry.get('replace_with'),
+            ignore_case=entry.get('ignore_case', False)
+        )
+        db.session.add(new_pronounce)
+
+    db.session.commit()
 
 @app.route('/swmlrequests/<int:agent_id>', methods=['DELETE'])
 @login_required
@@ -787,6 +926,26 @@ def swaig(agent_id):
 
     return jsonify({'response': 'Data received successfully'}), 201
 
+@app.route('/status/<int:agent_id>', methods=['POST'])
+@auth.login_required
+def status(agent_id):
+    data = request.get_json()
+    ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
+
+    response = {'response': 'Status updated successfully'}
+
+    new_swml_request = AISWMLRequest(
+        agent_id=agent_id,
+        request=jsonify(data).json,
+        response=jsonify(response).json,
+        ip_address=ip_address
+    )
+    
+    db.session.add(new_swml_request)
+    db.session.commit()
+    
+    return jsonify({'response': 'Status updated successfully'}), 200
+
 @app.route('/swml/<int:agent_id>', methods=['POST', 'GET'])
 @auth.login_required
 def swml(agent_id):
@@ -797,6 +956,17 @@ def swml(agent_id):
 
     response_data = generate_swml_response(agent_id, request_body=data)
 
+    ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
+
+    new_swml_request = AISWMLRequest(
+        agent_id=agent_id,
+        request=jsonify(data).json,
+        response=jsonify(response_data).json,
+        ip_address=ip_address
+    )
+    db.session.add(new_swml_request)
+    db.session.commit()
+    
     response = make_response(jsonify(response_data))
     response.headers['Content-Type'] = 'application/json'
     
@@ -2213,6 +2383,7 @@ def delete_step(selected_agent_id, step_id):
 def step(selected_agent_id):
     data = request.json
     new_step = AISteps(
+        agent_id=selected_agent_id,
         context_id=data['context_id'],
         name=data['name'],
         text=data['text'],
@@ -2309,6 +2480,91 @@ def get_users(selected_agent_id):
     users = AIUser.query.filter(AIUser.id != current_user.id).all()
     users_data = [{'id': user.id, 'username': user.username, 'full_name': user.full_name} for user in users]
     return jsonify(users_data), 200
+
+@app.route('/translators', methods=['GET'])
+@login_required
+@check_agent_access
+def get_translators(selected_agent_id):
+    if request.headers.get('Accept') == 'application/json': 
+        translators = AITranslate.query.all()
+        return jsonify([{
+            'id': translator.id,
+            'from_language': translator.from_language,
+            'to_language': translator.to_language,
+            'from_filter': translator.from_filter,  # Ensure this field is included
+            'to_filter': translator.to_filter,      # Ensure this field is included
+            'from_voice': translator.from_voice,
+            'to_voice': translator.to_voice,
+            'caller_id_number': translator.caller_id_number
+        } for translator in translators])
+    else:
+        return render_template('translate.html', user=current_user)
+
+@app.route('/translators', methods=['POST'])
+@login_required
+@check_agent_access
+def add_translator(selected_agent_id):
+    try:
+        data = request.get_json()
+        new_translator = AITranslate(
+            user_id=current_user.id,
+            from_language=data['from_language'],
+            to_language=data['to_language'],
+            from_filter=data.get('from_filter'),
+            to_filter=data.get('to_filter'),
+            from_voice=data.get('from_voice'),
+            to_voice=data.get('to_voice'),
+            caller_id_number=data.get('caller_id_number')
+        )
+        db.session.add(new_translator)
+        db.session.commit()
+
+        return jsonify(new_translator.to_dict()), 201
+    except Exception as e:
+        app.logger.error(f"Error adding translator: {e}")
+        return jsonify({'error': 'Failed to add translator'}), 500
+
+@app.route('/translators/<int:id>', methods=['GET'])
+@login_required
+@check_agent_access
+def get_translator(selected_agent_id, id):
+    translator = AITranslate.query.get_or_404(id)
+    return jsonify({
+        'id': translator.id,
+        'from_language': translator.from_language,
+        'to_language': translator.to_language,
+        'from_filter': translator.from_filter,
+        'to_filter': translator.to_filter,
+        'from_voice': translator.from_voice,
+        'to_voice': translator.to_voice,
+        'caller_id_number': translator.caller_id_number
+    }), 200
+
+@app.route('/translators/<int:id>', methods=['PUT'])
+@login_required
+@check_agent_access
+def update_translator(selected_agent_id, id):
+    translator = AITranslate.query.get_or_404(id)
+    data = request.get_json()
+    translator.from_language = data['from_language']
+    translator.to_language = data['to_language']
+    translator.from_filter = data.get('from_filter')
+    translator.to_filter = data.get('to_filter')
+    translator.from_voice = data.get('from_voice')
+    translator.to_voice = data.get('to_voice')
+    translator.caller_id_number = data.get('caller_id_number')
+    db.session.commit()
+    return jsonify(translator.to_dict())
+
+@app.route('/translators/<int:id>', methods=['DELETE'])
+@login_required
+@check_agent_access
+def delete_translator(selected_agent_id, id):
+    translator = AITranslate.query.get_or_404(id)
+    db.session.delete(translator)
+    db.session.commit()
+    return jsonify({'message': 'Translator deleted successfully'})
+
 
 @app.errorhandler(404)
 def not_found_error(error):

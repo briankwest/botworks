@@ -28,10 +28,18 @@
             </div>
             <div class="card-body">
               <input id="channel" type="hidden" placeholder="Enter channel name" class="form-control mb-2">
-              <button class="btn btn-primary" onclick="joinChannel()">Join</button>
-              <button class="btn btn-secondary" onclick="leaveChannel()">Leave</button>
-              <button class="btn btn-success" onclick="connectSocket()">Connect</button>
-              <button class="btn btn-danger" onclick="disconnectSocket()">Disconnect</button>
+              <button class="btn btn-primary" onclick="joinChannel()">
+                <i class="fas fa-sign-in-alt"></i> Join
+              </button>
+              <button class="btn btn-secondary" onclick="leaveChannel()">
+                <i class="fas fa-sign-out-alt"></i> Leave
+              </button>
+              <button class="btn btn-success" onclick="connectSocket()">
+                <i class="fas fa-plug"></i> Connect
+              </button>
+              <button class="btn btn-danger" onclick="disconnectSocket()">
+                <i class="fas fa-power-off"></i> Disconnect
+              </button>
 
 
               <h2>Messages:</h2>
@@ -51,9 +59,15 @@
                 class="form-control mb-2">
               <div class="d-flex align-items-center mb-2">
 
-                <button class="btn btn-success mr-2" onclick="sendMessage()">Send</button>
-                <button class="btn btn-danger mr-2" onclick="clearMessages()">Clear</button>
-                <button class="btn btn-warning mr-2" onclick="hangup()">Hangup</button>
+                <button class="btn btn-success mr-2" onclick="sendMessage()">
+                  <i class="fas fa-paper-plane"></i> Send
+                </button>
+                <button class="btn btn-danger mr-2" onclick="clearMessages()">
+                  <i class="fas fa-trash"></i> Clear
+                </button>
+                <button class="btn btn-warning mr-2" onclick="hangup()">
+                  <i class="fas fa-phone-slash"></i> Hangup
+                </button>
                 <div class="d-flex flex-column align-items-start mb-2">
                   <div class="custom-control custom-switch">
                     <input type="checkbox" class="custom-control-input" id="roleToggle">
@@ -100,9 +114,11 @@
       const connectionStatus = document.getElementById('connection-status');
       const connectButton = document.querySelector('button[onclick="connectSocket()"]');
       const disconnectButton = document.querySelector('button[onclick="disconnectSocket()"]');
+      
       if (connectionStatus) {
         connectionStatus.style.backgroundColor = connected ? 'green' : 'red';
       }
+      
       connectButton.style.display = connected ? 'none' : 'inline-block';
       disconnectButton.style.display = connected ? 'inline-block' : 'none';
     }

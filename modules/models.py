@@ -250,6 +250,13 @@ class AIUser(UserMixin, db.Model):
         lazy='dynamic',
         primaryjoin="AIUser.id == SharedAccess.shared_with_user_id"
     )
+    ai_translates = db.relationship(
+        'AITranslate',
+        back_populates='user',
+        cascade='all, delete-orphan',
+        lazy='dynamic',
+        primaryjoin="AIUser.id == AITranslate.user_id"
+    )
 
     def __repr__(self):
         return f'<AIUser {self.username}>'
@@ -365,4 +372,33 @@ class SharedAccess(db.Model):
 
     user = db.relationship('AIUser', back_populates='shared_access')
     agent = db.relationship('AIAgent', back_populates='shared_access')
+    
+
+class AITranslate(db.Model):
+    __tablename__ = 'ai_translate'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
+    created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    from_language = db.Column(db.String(50), nullable=False)
+    to_language = db.Column(db.String(50), nullable=False)
+    from_filter = db.Column(db.String(255), nullable=True)
+    to_filter = db.Column(db.String(255), nullable=True)
+    from_voice = db.Column(db.String(50), nullable=True)
+    to_voice = db.Column(db.String(50), nullable=True)
+    caller_id_number = db.Column(db.String(50), nullable=True)
+
+    user = db.relationship('AIUser', back_populates='ai_translates')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'from_language': self.from_language,
+            'to_language': self.to_language,
+            # other fields...
+        }
+
+    def __repr__(self):
+        return f'<AITranslate {self.from_language} to {self.to_language}>'
 

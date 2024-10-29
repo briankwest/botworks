@@ -257,13 +257,21 @@
           "render": function (data, type, row) {
             if (row.included) {
               return `
-                <button class="btn btn-primary btn-sm edit-function" data-id="${row.id}" disabled>Edit</button>
-                <button class="btn btn-danger btn-sm delete-function" data-id="${row.id}" disabled>Delete</button>
+                <button class="btn btn-primary btn-sm edit-function" data-id="${row.id}" disabled>
+                  <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="btn btn-danger btn-sm delete-function" data-id="${row.id}" disabled>
+                  <i class="fas fa-trash-alt"></i> Delete
+                </button>
               `;
             }
             return `
-              <button class="btn btn-primary btn-sm edit-function" data-id="${row.id}">Edit</button>
-              <button class="btn btn-danger btn-sm delete-function" data-id="${row.id}">Delete</button>
+              <button class="btn btn-primary btn-sm edit-function" data-id="${row.id}">
+                <i class="fas fa-edit"></i> Edit
+              </button>
+              <button class="btn btn-danger btn-sm delete-function" data-id="${row.id}">
+                <i class="fas fa-trash-alt"></i> Delete
+              </button>
             `;
           }
         }

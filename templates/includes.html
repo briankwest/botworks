@@ -432,8 +432,12 @@
               "render": function (data, type, row) {
                 return `
                     <div class="text-nowrap">
-                      <button class="btn btn-primary edit-btn" data-id="${row.id}">Edit</button>
-                      <button class="btn btn-danger delete-btn" data-id="${row.id}">Delete</button>
+                      <button class="btn btn-primary btn-sm edit-btn" data-id="${row.id}">
+                        <i class="fas fa-edit"></i> Edit
+                      </button>
+                      <button class="btn btn-danger btn-sm delete-btn" data-id="${row.id}">
+                        <i class="fas fa-trash-alt"></i> Delete
+                      </button>
                     </div>
                   `;
               }

@@ -117,8 +117,12 @@
           "data": null,
           "render": function (data, type, row) {
             return `
-                <button class="btn btn-primary btn-sm view-conversation" data-id="${row.id}">View</button>
-                <button class="btn btn-danger btn-sm delete-conversation" data-id="${row.id}">Delete</button>
+                <button class="btn btn-primary btn-sm view-conversation" data-id="${row.id}">
+                  <i class="fas fa-eye"></i> View
+                </button>
+                <button class="btn btn-danger btn-sm delete-conversation" data-id="${row.id}">
+                  <i class="fas fa-trash-alt"></i> Delete
+                </button>
               `;
           }
         }
