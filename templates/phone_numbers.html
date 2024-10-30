@@ -148,7 +148,9 @@
               <label for="city">City</label>
               <input type="text" class="form-control" id="city" placeholder="Enter city name">
             </div>
-            <button type="submit" class="btn btn-success">Search Numbers</button>
+            <button type="submit" class="btn btn-sm mr-2 btn-success">
+              <i class="fas fa-search"></i> Search Numbers
+            </button>
           </form>
         </div>
       </div>
@@ -219,13 +221,13 @@
             return data.map(function (capability) {
               switch (capability) {
                 case 'voice':
-                  return '<i class="fas fa-phone"></i>';
+                  return '<i class="mr-2 fas fa-phone"></i>';
                 case 'fax':
-                  return '<i class="fas fa-fax"></i>';
+                  return '<i class="mr-2 fas fa-fax"></i>';
                 case 'sms':
-                  return '<i class="fas fa-sms"></i>';
+                  return '<i class="mr-2 fas fa-sms"></i>';
                 case 'mms':
-                  return '<i class="fas fa-image"></i>';
+                  return '<i class="mr-2 fas fa-image"></i>';
                 default:
                   return capability;
               }
@@ -237,8 +239,12 @@
           "render": function (data, type, row) {
             return `
               <div class="btn-group" role="group">
-                <button class="btn btn-sm btn-primary edit-btn mr-2" data-id="${row.id}">Edit</button>
-                <button class="btn btn-sm btn-danger release-btn mr-2" data-id="${row.id}">Release</button>
+                <button class="btn btn-sm mr-2 btn-primary edit-btn" data-id="${row.id}">
+                  <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="btn btn-sm mr-2 btn-danger release-btn" data-id="${row.id}">
+                  <i class="fas fa-trash"></i> Release
+                </button>
               </div>
             `;
           }
@@ -311,13 +317,13 @@
             return data.map(function (capability) {
               switch (capability) {
                 case 'voice':
-                  return '<i class="fas fa-phone"></i>';
+                  return '<i class="mr-2 fas fa-phone"></i>';
                 case 'fax':
-                  return '<i class="fas fa-fax"></i>';
+                  return '<i class="mr-2 fas fa-fax"></i>';
                 case 'sms':
-                  return '<i class="fas fa-sms"></i>';
+                  return '<i class="mr-2 fas fa-sms"></i>';
                 case 'mms':
-                  return '<i class="fas fa-photo-video"></i>';
+                  return '<i class="mr-2 fas fa-photo-video"></i>';
                 default:
                   return capability;
               }
@@ -327,7 +333,9 @@
         {
           "data": null,
           "render": function (data, type, row) {
-            return `<button class="btn btn-primary btn-sm purchase-btn" data-number="${row.e164}">Purchase</button>`;
+            return `<button class="btn btn-sm mr-2 btn-primary purchase-btn" data-number="${row.e164}">
+              <i class="fas fa-plus"></i> Purchase
+            </button>`;
           }
         }
       ]
@@ -545,7 +553,9 @@
             </select>
           </div>
           <div class="d-flex justify-content-center mt-3">
-            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <button type="submit" class="btn btn-sm mr-2 btn-primary">
+              <i class="fas fa-save"></i> Save Changes
+            </button>
           </div>
         </form>
       </div>

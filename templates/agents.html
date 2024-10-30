@@ -60,7 +60,9 @@
                   <label for="agentPhoneNumber">Phone Number</label>
                   <input type="text" class="form-control" id="agentPhoneNumber" name="number" required>
                 </div>
-                <button type="submit" class="btn btn-success">Add AI Agent</button>
+                <button type="submit" class="btn btn-sm mr-2 btn-success">
+                  <i class="fas fa-plus"></i> Add AI Agent
+                </button>
               </form>
             </div>
           </div>
@@ -155,10 +157,18 @@
                         </div>    
                       </div>
                       <div class="button-group mt-4 text-center">
-                        <button id="startCall" type="button" class="btn btn-primary" onClick="makeCall()" disabled="true">Call</button>
-                        <button id="hangupCall" type="button" class="btn btn-danger d-none" onClick="hangup()" disabled="true">Hang up</button>
-                        <button id="btnDisconnect" type="button" class="btn btn-warning" onclick="disconnect()">Disconnect</button>
-                        <button id="btnConnect" type="button" class="btn btn-success" onclick="connect()">Connect</button>
+                        <button id="startCall" type="button" class="btn btn-sm mr-2 btn-primary" onClick="makeCall()" disabled="true">
+                          <i class="fas fa-phone"></i> Call
+                        </button>
+                        <button id="hangupCall" type="button" class="btn btn-sm mr-2 btn-danger d-none" onClick="hangup()" disabled="true">
+                          <i class="fas fa-phone-slash"></i> Hang up
+                        </button>
+                        <button id="btnDisconnect" type="button" class="btn btn-sm mr-2 btn-danger" onclick="disconnect()">
+                          <i class="fas fa-power-off"></i> Disconnect
+                        </button>
+                        <button id="btnConnect" type="button" class="btn btn-sm mr-2 btn-success" onclick="connect()">
+                          <i class="fas fa-plug"></i> Connect
+                        </button>
                       </div>
                       <div class="form-group text-center" id="dtmfKeys" hidden="false" style="padding: 20px 0;">
                         <div class="dtmf-grid" style="margin-bottom: 20px;">
@@ -181,7 +191,9 @@
                           </div>
                         </div>
                         <div class="modal-footer">
-                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                          <button type="button" class="btn btn-sm mr-2 btn-secondary" data-dismiss="modal">
+                            <i class="fas fa-times"></i> Close
+                          </button>
                         </div>
                       </div>
                     </div>

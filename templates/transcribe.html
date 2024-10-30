@@ -56,7 +56,9 @@
                   <label for="transcriptionText">Transcription Text</label>
                   <input type="text" class="form-control" id="transcriptionText" name="transcription" required>
                 </div>
-                <button type="submit" class="btn btn-success">Add Transcription</button>
+                <button type="submit" class="btn btn-sm mr-2 btn-success">
+                  <i class="fas fa-plus"></i> Add Transcription
+                </button>
               </form>
             </div>
           </div>
@@ -86,8 +88,12 @@
           </form>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary" id="saveEditButton">Save changes</button>
+          <button type="button" class="btn btn-sm mr-2 btn-secondary" data-dismiss="modal">
+            <i class="fas fa-times"></i> Close
+          </button>
+          <button type="button" class="btn btn-sm mr-2 btn-primary" id="saveEditButton">
+            <i class="fas fa-save"></i> Save changes
+          </button>
         </div>
       </div>
     </div>
@@ -117,8 +123,12 @@
           "data": null,
           "render": function (data, type, row) {
             return `
-                <button class="btn btn-primary btn-sm edit-transcription" data-id="${row.id}">Edit</button>
-                <button class="btn btn-danger btn-sm delete-transcription" data-id="${row.id}">Delete</button>
+                <button class="btn btn-sm mr-2 btn-primary edit-transcription" data-id="${row.id}">
+                  <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="btn btn-sm mr-2 btn-danger delete-transcription" data-id="${row.id}">
+                  <i class="fas fa-trash"></i> Delete
+                </button>
               `;
           }
         }
