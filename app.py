@@ -1000,6 +1000,8 @@ def postprompt(agent_id):
 def update_pronounce(selected_agent_id, id):
     pronounce_entry = AIPronounce.query.get_or_404(id)
     
+    data = request.get_json()
+    
     pronounce_entry.replace_this = data.get('replace_this', pronounce_entry.replace_this)
     pronounce_entry.replace_with = data.get('replace_with', pronounce_entry.replace_with)
     pronounce_entry.ignore_case = data.get('ignore_case', pronounce_entry.ignore_case)
