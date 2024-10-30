@@ -25,7 +25,7 @@
               <h3 class="card-title">Conversations</h3>
             </div>
             <div class="card-body">
-              <div class="table-responsive"> <!-- Added this wrapper -->
+              <div class="table-responsive">
                 <table id="conversationsTable" class="table table-striped w-100">
                   <thead>
                     <tr>
@@ -39,7 +39,7 @@
                   <tbody>
                   </tbody>
                 </table>
-              </div> <!-- Closing the wrapper -->
+              </div>
             </div>
           </div>
         </div>
@@ -418,7 +418,8 @@
             <td>${data.ai_end_date ? new Date(data.ai_end_date / 1000).toLocaleString() : ''}</td>
             <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.ai_end_date ? new Date(data.ai_end_date / 1000).toLocaleString() : ''}')"></i></td>
         </tr>`;
-    const additionalFields = [
+    
+        const additionalFields = [
       { key: 'Total Input Tokens', value: data.total_input_tokens },
       { key: 'Total Output Tokens', value: data.total_output_tokens },
       { key: 'Total ASR Cost Factor', value: data.total_asr_cost_factor },
@@ -443,7 +444,6 @@
         </tr>`;
       }
     });
-
 
     table += '</table></div>';
     return table;
