@@ -145,13 +145,13 @@
           "render": function (data, type, row) {
             return `
               <div class="btn-group" role="group">
-                <button class="btn btn-primary btn-sm edit-btn" data-id="${row.id}" style="margin-right: 5px;">
+                <button class="btn btn-primary btn-sm mr-2 edit-btn" data-id="${row.id}">
                   <i class="fas fa-edit"></i> Edit
                 </button>
-                <button class="btn btn-danger btn-sm delete-btn" data-id="${row.id}" style="margin-right: 5px;">
+                <button class="btn btn-danger btn-sm mr-2 delete-btn" data-id="${row.id}">
                   <i class="fas fa-trash-alt"></i> Delete
                 </button>
-                <button class="btn btn-success btn-sm query-btn" data-id="${row.id}" data-chunks="${row.number_of_chunks}">
+                <button class="btn btn-success btn-sm mr-2 query-btn" data-id="${row.id}" data-chunks="${row.number_of_chunks}">
                   <i class="fas fa-search"></i> Query
                 </button>
               </div>
