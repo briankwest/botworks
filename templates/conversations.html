@@ -301,8 +301,8 @@
 
     if (prevId) {
       const prevButton = document.createElement('button');
-      prevButton.className = 'btn btn-primary';
-      prevButton.innerText = 'Previous';
+      prevButton.className = 'btn btn-primary btn-sm mr-2';
+      prevButton.innerHTML = '<i class="fas fa-arrow-left"></i> Previous';
       prevButton.onclick = () => {
         fetchData(prevId);
       };
@@ -311,8 +311,8 @@
 
     if (nextId) {
       const nextButton = document.createElement('button');
-      nextButton.className = 'btn btn-primary ml-auto';
-      nextButton.innerText = 'Next';
+      nextButton.className = 'btn btn-primary btn-sm ml-auto';
+      nextButton.innerHTML = 'Next <i class="fas fa-arrow-right"></i>';
       nextButton.onclick = () => {
         fetchData(nextId);
       };
