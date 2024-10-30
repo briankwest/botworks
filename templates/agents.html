@@ -332,23 +332,19 @@
             let buttons = `
               <button class="btn btn-sm btn-primary edit-agent mr-2" data-id="${row.id}">
                 <i class="fas fa-edit"></i> Edit
-              </button>`;
-            if (row.name !== "BotWorks") {
-              buttons += `
-              <button class="btn btn-sm btn-danger delete-agent mr-2" data-id="${row.id}">
+              </button>
+              <button class="btn btn-sm btn-danger delete-agent mr-2" data-id="${row.id}" ${row.name === "BotWorks" ? 'disabled' : ''}>
                 <i class="fas fa-trash-alt"></i> Delete
               </button>`;
-            }
+
             buttons += `
               <button class="btn btn-success btn-sm clone-agent mr-2" data-id="${row.id}">
                 <i class="fas fa-clone"></i> Clone
-              </button>`;
-            if (row.number) {
-              buttons += `
-              <button class="btn btn-info btn-sm call-agent mr-2" data-number="${row.number}">
+              </button>
+              <button class="btn btn-info btn-sm call-agent mr-2" data-number="${row.number}" ${!row.number ? 'disabled' : ''}>
                 <i class="fas fa-phone"></i> Call
               </button>`;
-            }
+
             buttons += `
               <button class="btn btn-warning btn-sm share-agent mr-2" data-id="${row.id}">
                 <i class="fas fa-share-alt"></i> Share
