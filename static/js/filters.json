@@ -1,0 +1,7 @@
+[
+    { "code": "professional", "name": "Professional" },
+    { "code": "polite", "name": "Polite" },
+    { "code": "rude", "name": "Rude" },
+    { "code": "shakespeare", "name": "Shakespeare" },
+    { "code": "gen-z", "name": "Gen Z" }
+]
