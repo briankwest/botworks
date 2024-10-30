@@ -34,7 +34,7 @@
                         <th>Replace This</th>
                         <th>Replace With</th>
                         <th>Ignore Case</th>
-                        <th>Actions</th>
+                        <th class="text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -148,12 +148,13 @@
           },
           {
             "data": null,
+            "className": "text-right",
             "render": function(data, type, row) {
               return `
-                <button class="btn btn-primary btn-sm edit-pronounce" data-id="${row.id}">
+                <button class="btn btn-primary btn-sm edit-pronounce mr-2" data-id="${row.id}">
                   <i class="fas fa-edit"></i> Edit
                 </button>
-                <button class="btn btn-danger btn-sm delete-pronounce" data-id="${row.id}">
+                <button class="btn btn-danger btn-sm delete-pronounce mr-2" data-id="${row.id}">
                   <i class="fas fa-trash-alt"></i> Delete
                 </button>
               `;
@@ -161,7 +162,7 @@
           }
         ],
         "columnDefs": [
-          { "targets": -1, "className": "text-nowrap" }
+          { "targets": -1, "className": "text-nowrap text-right" }
         ]
       });
 

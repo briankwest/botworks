@@ -33,7 +33,7 @@
                       <th>ID</th>
                       <th>Parameter Name</th>
                       <th>Parameter Value</th>
-                      <th>Actions</th>
+                      <th class="text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -128,6 +128,7 @@
         { "data": "value" },
         {
           "data": null,
+          "className": "text-right",
           "render": function (data, type, row) {
             return `
                 <button class="btn btn-primary btn-sm edit-param" data-id="${row.id}">
@@ -141,7 +142,7 @@
         }
       ],
       "columnDefs": [
-        { "targets": -1, "className": "text-nowrap" }
+        { "targets": -1, "className": "text-nowrap text-right" }
       ]
     });
 

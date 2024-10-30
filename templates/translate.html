@@ -21,16 +21,16 @@
             </div>
             <div class="card-body">
               <div class="table-responsive">
-                <table class="table table-bordered table-striped" id="translatorsTable">
+                <table class="table table-striped w-100" id="translatorsTable">
                   <thead>
                     <tr>
                       <th>From Language</th>
-                      <th>To Languagdit</th>
+                      <th>To Language</th>
                       <th>From Filter</th>
                       <th>To Filter</th>
                       <th>From Voice</th>
                       <th>To Voice</th>
-                      <th>Actions</th>
+                      <th class="text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -85,7 +85,7 @@
                   <label for="callerIdNumber">Caller ID Number</label>
                   <input type="text" class="form-control" id="callerIdNumber" name="caller_id_number">
                 </div>
-                <div class="box-footer">
+                <div class="card-footer mt-3">
                   <button type="submit" class="btn btn-sm mr-2 btn-success">
                     <i class="fas fa-save"></i> Save Translator
                   </button>
@@ -163,179 +163,63 @@
 {% block scripts %}
 <script>
   $(document).ready(function () {
-    loadTranslators();
-    populateLanguageDropdowns();
-    loadVoices();
-    loadFilters();
-
-    function loadTranslators() {
-      $('#translatorsTable').DataTable({
-        "responsive": true,
-        "autoWidth": false,
-        "processing": true,
-        "serverSide": false,
-        "ajax": {
-          "url": "/translators",
-          "dataSrc": "",
-          "headers": {
-            "Accept": "application/json"
+    $('#translatorsTable').DataTable({
+      "responsive": true,
+      "autoWidth": true,
+      "processing": true,
+      "serverSide": false,
+      "ajax": {
+        "url": "/translators",
+        "dataSrc": "",
+        "headers": {
+          "Accept": "application/json"
+        }
+      },
+      "columns": [
+        { "data": "from_language" },
+        { "data": "to_language" },
+        { "data": "from_filter" },
+        { "data": "to_filter" },
+        { "data": "from_voice" },
+        { "data": "to_voice" },
+        {
+          "data": null,
+          "className": "text-right",
+          "render": function (data, type, row) {
+            return `
+              <div class="text-right">
+                <button class="btn btn-primary btn-sm edit-translator" data-id="${row.id}">
+                  <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="btn btn-danger btn-sm delete-translator" data-id="${row.id}">
+                  <i class="fas fa-trash-alt"></i> Delete
+                </button>
+              </div>
+            `;
           }
-        },
-        "columns": [
-          { "data": "from_language" },
-          { "data": "to_language" },
-          { "data": "from_filter" },
-          { "data": "to_filter" },
-          { "data": "from_voice" },
-          { "data": "to_voice" },
-          {
-            "data": null,
-            "render": function (data, type, row) {
-              return `
-                            <button class="btn btn-primary btn-sm edit-translator" data-id="${row.id}">
-                                <i class="fas fa-edit"></i> Edit
-                            </button>
-                            <button class="btn btn-danger btn-sm delete-translator" data-id="${row.id}">
-                                <i class="fas fa-trash-alt"></i> Delete
-                            </button>
-                        `;
-            }
-          }
-        ]
+        }
+      ],
+      "columnDefs": [
+        { "targets": -1, "className": "text-nowrap text-right" }
+      ]
+    });
+
+    function showToast(icon, title) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+          toast.addEventListener('mouseenter', Swal.stopTimer)
+          toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
       });
 
-      $('#translatorsTable').on('click', '.edit-translator', function (e) {
-        e.preventDefault();
-        const id = $(this).data('id');
-
-        $.ajax({
-          url: `/translators/${id}`,
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json'
-          },
-          success: function (data) {
-            console.log('Data from server:', data);
-            $('#editTranslatorId').val(data.id);
-            $('#editCallerIdNumber').val(data.caller_id_number);
-
-            $.getJSON('/static/js/language.json', function (languages) {
-              populateDropdowns(languages.languages, '#editFromLanguage', data.from_language);
-              populateDropdowns(languages.languages, '#editToLanguage', data.to_language);
-            });
-
-            $.getJSON('/static/js/filters.json', function (filters) {
-              populateDropdowns(filters, '#editFromFilter', data.from_filter);
-              populateDropdowns(filters, '#editToFilter', data.to_filter);
-            });
-
-            const providers = ['elevenlabs'];
-            const voiceDropdowns = ['#editFromVoice', '#editToVoice'];
-
-            voiceDropdowns.forEach(dropdownId => {
-              $(dropdownId).empty();
-            });
-
-            let voicesLoaded = 0;
-            const totalProviders = providers.length;
-
-            providers.forEach(provider => {
-              $.getJSON(`/static/js/${provider}.json`, function (voices) {
-                const optgroup = $('<optgroup>').attr('label', provider.charAt(0).toUpperCase() + provider.slice(1));
-                voices.forEach(voice => {
-                  const value = `${provider}.${voice.name}`;
-                  const option = $('<option>').val(value).text(voice.name);
-                  optgroup.append(option);
-                });
-
-                voiceDropdowns.forEach(dropdownId => {
-                  $(dropdownId).append(optgroup.clone());
-                });
-
-                voicesLoaded++;
-                if (voicesLoaded === totalProviders) {
-                  console.log('Setting from_voice:', data.from_voice);
-                  console.log('Setting to_voice:', data.to_voice);
-                  $('#editFromVoice').val(data.from_voice).change();
-                  $('#editToVoice').val(data.to_voice).change();
-                }
-              });
-            });
-
-            const modalElement = document.getElementById('editTranslatorModal');
-            if (modalElement) {
-              const editModal = new bootstrap.Modal(modalElement);
-              editModal.show();
-            } else {
-              console.error('Modal element not found');
-            }
-          },
-          error: function (xhr, status, error) {
-            console.error('Error fetching translator:', error);
-            Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: 'Failed to load translator data'
-            });
-          }
-        });
-      });
-    }
-
-    function populateLanguageDropdowns() {
-      $.getJSON('/static/js/language.json', function (data) {
-        const languages = data.languages;
-        const languageDropdowns = $('#fromLanguage, #toLanguage');
-
-        languageDropdowns.empty();
-
-        $.each(languages, function (index, language) {
-          const option = $('<option></option>').attr('value', language.code).text(language.name);
-          languageDropdowns.append(option);
-        });
-
-        languageDropdowns.val('en-US');
-      });
-    }
-
-    function loadVoices() {
-      const providers = ['elevenlabs'];
-      const voiceDropdowns = ['#fromVoice', '#toVoice'];
-
-      voiceDropdowns.forEach(dropdownId => {
-        $(dropdownId).empty();
-      });
-
-      providers.forEach(provider => {
-        $.getJSON(`/static/js/${provider}.json`, function (data) {
-          const optgroup = $('<optgroup>').attr('label', provider.charAt(0).toUpperCase() + provider.slice(1));
-          data.forEach(voice => {
-            const value = `${provider}.${voice.name}`;
-            optgroup.append($('<option>').val(value).text(voice.name));
-          });
-
-          voiceDropdowns.forEach(dropdownId => {
-            $(dropdownId).append(optgroup.clone());
-          });
-        });
-      });
-    }
-
-    function loadFilters() {
-      $.getJSON('/static/js/filters.json', function (data) {
-        const filterDropdowns = $('#fromFilter, #toFilter');
-
-        filterDropdowns.empty();
-
-        const placeholderOption = $('<option></option>').attr('value', '');
-        filterDropdowns.append(placeholderOption);
-
-        $.each(data, function (index, filter) {
-          const option = $('<option></option>').attr('value', filter.code).text(filter.name);
-          filterDropdowns.append(option);
-        });
-      }).fail(function () {
-        console.error("Failed to load filters.json");
+      Toast.fire({
+        icon: icon,
+        title: title
       });
     }
 
@@ -367,26 +251,10 @@
           $('#translatorsTable').DataTable().ajax.reload();
           $('#translatorForm')[0].reset();
           $('#translatorId').val('');
-          Swal.fire({
-            icon: 'success',
-            title: translatorId ? 'Translator updated successfully' : 'Translator added successfully',
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true
-          });
+          showToast('success', translatorId ? 'Translator updated successfully' : 'Translator added successfully');
         },
         error: function (error) {
-          Swal.fire({
-            icon: 'error',
-            title: translatorId ? 'Error updating translator' : 'Error adding translator',
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true
-          });
+          showToast('error', translatorId ? 'Error updating translator' : 'Error adding translator');
         }
       });
     });
@@ -411,92 +279,83 @@
             },
             success: function (response) {
               $('#translatorsTable').DataTable().ajax.reload();
-              Swal.fire({
-                icon: 'success',
-                title: 'Translator deleted successfully',
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 3000,
-                timerProgressBar: true
-              });
+              showToast('success', 'Translator deleted successfully');
             },
             error: function (error) {
-              Swal.fire({
-                icon: 'error',
-                title: 'Error deleting translator',
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 3000,
-                timerProgressBar: true
-              });
+              showToast('error', 'Error deleting translator');
             }
           });
         }
       });
     });
 
-    $('#editTranslatorForm').submit(function (e) {
+    $('#translatorsTable').on('click', '.edit-translator', function (e) {
       e.preventDefault();
-      const translatorId = $('#editTranslatorId').val();
-      const formData = $(this).serialize();
+      const id = $(this).data('id');
 
       $.ajax({
-        type: 'PUT',
-        url: `/translators/${translatorId}`,
-        data: formData,
+        url: `/translators/${id}`,
+        method: 'GET',
         headers: {
           'Accept': 'application/json'
         },
-        success: function (response) {
-          $('#editTranslatorModal').modal('hide');
-          $('#translatorsTable').DataTable().ajax.reload();
-          Swal.fire({
-            icon: 'success',
-            title: 'Translator updated successfully',
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true
+        success: function (data) {
+          $('#editTranslatorId').val(data.id);
+          $('#editCallerIdNumber').val(data.caller_id_number);
+
+          $.getJSON('/static/js/language.json', function (languages) {
+            populateDropdowns(languages.languages, '#editFromLanguage', data.from_language);
+            populateDropdowns(languages.languages, '#editToLanguage', data.to_language);
           });
+
+          $.getJSON('/static/js/filters.json', function (filters) {
+            populateDropdowns(filters, '#editFromFilter', data.from_filter);
+            populateDropdowns(filters, '#editToFilter', data.to_filter);
+          });
+
+          const providers = ['elevenlabs'];
+          const voiceDropdowns = ['#editFromVoice', '#editToVoice'];
+
+          voiceDropdowns.forEach(dropdownId => {
+            $(dropdownId).empty();
+          });
+
+          let voicesLoaded = 0;
+          const totalProviders = providers.length;
+
+          providers.forEach(provider => {
+            $.getJSON(`/static/js/${provider}.json`, function (voices) {
+              const optgroup = $('<optgroup>').attr('label', provider.charAt(0).toUpperCase() + provider.slice(1));
+              voices.forEach(voice => {
+                const value = `${provider}.${voice.name}`;
+                const option = $('<option>').val(value).text(voice.name);
+                optgroup.append(option);
+              });
+
+              voiceDropdowns.forEach(dropdownId => {
+                $(dropdownId).append(optgroup.clone());
+              });
+
+              voicesLoaded++;
+              if (voicesLoaded === totalProviders) {
+                $('#editFromVoice').val(data.from_voice).change();
+                $('#editToVoice').val(data.to_voice).change();
+              }
+            });
+          });
+
+          const modalElement = document.getElementById('editTranslatorModal');
+          if (modalElement) {
+            const editModal = new bootstrap.Modal(modalElement);
+            editModal.show();
+          } else {
+            console.error('Modal element not found');
+          }
         },
-        error: function (error) {
-          Swal.fire({
-            icon: 'error',
-            title: 'Error updating translator',
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true
-          });
+        error: function (xhr, status, error) {
+          showToast('error', 'Failed to load translator data');
         }
       });
-    });
-
-    $('body').append(`
-        <button id="testModalButton" class="btn btn-primary">
-            Test Modal
-        </button>
-    `);
-
-    $('#testModalButton').click(function () {
-      const editModal = new bootstrap.Modal(document.getElementById('editTranslatorModal'));
-      editModal.show();
-    });
-
-    $('#translatorsTable').on('click', '.edit-translator', function () {
-      console.log('Edit button clicked');
-    });
-
-    $('#editTranslatorModal').on('show.bs.modal', function () {
-      console.log('Modal is about to show');
-    });
-
-    $('#editTranslatorModal').on('shown.bs.modal', function () {
-      console.log('Modal has been shown');
     });
 
     function populateDropdowns(data, dropdownId, selectedValue) {

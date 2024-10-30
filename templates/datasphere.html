@@ -35,13 +35,13 @@
                   <th>Created At</th>
                   <th>Updated At</th>
                   <th>Number of Chunks</th>
-                  <th>Actions</th>
+                  <th class="text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
               </tbody>
             </table>
-          </div> <!-- Close the div -->
+          </div>
         </div>
       </div>
 
@@ -141,27 +141,28 @@
         { "data": "number_of_chunks" },
         {
           "data": null,
+          "className": "text-right",
           "render": function (data, type, row) {
             return `
-                            <div class="btn-group" role="group">
-                                <button class="btn btn-primary btn-sm edit-btn" data-id="${row.id}" style="margin-right: 5px;">
-                                    <i class="fas fa-edit"></i> Edit
-                                </button>
-                                <button class="btn btn-danger btn-sm delete-btn" data-id="${row.id}" style="margin-right: 5px;">
-                                    <i class="fas fa-trash-alt"></i> Delete
-                                </button>
-                                <button class="btn btn-success btn-sm query-btn" data-id="${row.id}" data-chunks="${row.number_of_chunks}">
-                                    <i class="fas fa-search"></i> Query
-                                </button>
-                            </div>
-                        `;
+              <div class="btn-group" role="group">
+                <button class="btn btn-primary btn-sm edit-btn" data-id="${row.id}" style="margin-right: 5px;">
+                  <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="btn btn-danger btn-sm delete-btn" data-id="${row.id}" style="margin-right: 5px;">
+                  <i class="fas fa-trash-alt"></i> Delete
+                </button>
+                <button class="btn btn-success btn-sm query-btn" data-id="${row.id}" data-chunks="${row.number_of_chunks}">
+                  <i class="fas fa-search"></i> Query
+                </button>
+              </div>
+            `;
           }
         }
       ],
       "responsive": true,
       "autoWidth": false,
       "columnDefs": [
-        { "targets": -1, "className": "text-nowrap" }
+        { "targets": -1, "className": "text-nowrap text-right" }
       ],
     });
 
@@ -397,7 +398,7 @@
       <div class="modal-header">
         <h5 class="modal-title" id="editDocumentModalLabel">Edit Document</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
+          <span aria-hidden="true"><i class="fas fa-times"></i></span>
         </button>
       </div>
       <div class="modal-body">
@@ -406,8 +407,15 @@
             <label for="editTags">Tags (comma separated)</label>
             <input type="text" class="form-control" id="editTags" placeholder="Enter tags">
           </div>
-          <button type="submit" class="btn btn-primary">Save changes</button>
         </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-sm mr-2 btn-secondary" data-dismiss="modal">
+          <i class="fas fa-times"></i> Close
+        </button>
+        <button type="submit" class="btn btn-sm mr-2 btn-primary" form="editDocumentForm">
+          <i class="fas fa-save"></i> Save changes
+        </button>
       </div>
     </div>
   </div>
@@ -421,7 +429,7 @@
       <div class="modal-header">
         <h5 class="modal-title" id="queryDocumentModalLabel">Query Document</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
+          <span aria-hidden="true"><i class="fas fa-times"></i></span>
         </button>
       </div>
       <div class="modal-body">
@@ -453,37 +461,22 @@
           <div class="form-group">
             <label for="queryPosToExpand">POS to Expand</label>
             <input type="text" class="form-control" id="queryPosToExpand"
-              placeholder="Synonym expansion will only happen for nouns and verbs.">
+              placeholder="Enter parts of speech to expand, e.g., 'noun, verb'.">
           </div>
           <div class="form-group">
             <label for="queryMaxSynonyms">Max Synonyms</label>
             <input type="number" class="form-control" id="queryMaxSynonyms"
-              placeholder="A maximum of 5 synonyms will be used for each word in the query.">
-          </div>
-          <div class="form-group">
-            <label>Number of Chunks</label>
-            <p id="queryNumberOfChunks"></p>
-          </div>
-          <div class="form-group">
-            <table id="queryResultsTable" class="table table-striped w-100">
-              <thead>
-                <tr>
-                  <th>Chunk Text</th>
-                </tr>
-              </thead>
-              <tbody>
-                <!-- Results will be populated here -->
-              </tbody>
-            </table>
-          </div>
-          <div class="text-center">
-            <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Close</button>
+              placeholder="Enter the maximum number of synonyms to consider.">
           </div>
         </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-sm mr-2 btn-secondary" data-dismiss="modal">
+          <i class="fas fa-times"></i> Close
+        </button>
       </div>
     </div>
   </div>
 </div>
-
 {% endblock %}
 

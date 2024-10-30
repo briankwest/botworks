@@ -37,7 +37,7 @@
                       <th>Confidence</th>
                       <th>Frequency Penalty</th>
                       <th>Presence Penalty</th>
-                      <th>Actions</th>
+                      <th class="text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -286,12 +286,13 @@
             { data: 'presence_penalty' },
             {
               data: null,
+              className: 'text-right',
               render: function (data, type, row) {
                 return `
-                  <button class="btn btn-sm btn-primary edit-btn" data-id="${row.id}">
+                  <button class="btn btn-sm btn-primary edit-btn mr-2" data-id="${row.id}">
                     <i class="fas fa-edit"></i> Edit
                   </button>
-                  <button class="btn btn-sm btn-danger delete-btn" data-id="${row.id}">
+                  <button class="btn btn-sm btn-danger delete-btn mr-2" data-id="${row.id}">
                     <i class="fas fa-trash-alt"></i> Delete
                   </button>
                 `;

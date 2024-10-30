@@ -32,7 +32,7 @@
                   <th>Number</th>
                   <th>Number Type</th>
                   <th>Capabilities</th>
-                  <th>Actions</th>
+                  <th class="text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -238,6 +238,7 @@
         },
         {
           "data": null,
+          "className": "text-right",
           "render": function (data, type, row) {
             return `
               <div class="btn-group" role="group">
@@ -253,8 +254,7 @@
         }
       ],
       "columnDefs": [
-        { "targets": -1, "className": "text-nowrap" }
-
+        { "targets": -1, "className": "text-nowrap text-right" }
       ],
       "responsive": true,
       "autoWidth": false
@@ -537,14 +537,13 @@
   </div>
 </div>
 
-<div class="modal fade" id="editPhoneNumberModal" tabindex="-1" role="dialog"
-  aria-labelledby="editPhoneNumberModalLabel" aria-hidden="true">
+<div class="modal fade" id="editPhoneNumberModal" tabindex="-1" role="dialog" aria-labelledby="editPhoneNumberModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="editPhoneNumberModalLabel">Edit Phone Number</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
+          <span aria-hidden="true"><i class="fas fa-times"></i></span>
         </button>
       </div>
       <div class="modal-body">
@@ -554,12 +553,15 @@
             <select class="form-control" id="agentSelect">
             </select>
           </div>
-          <div class="d-flex justify-content-center mt-3">
-            <button type="submit" class="btn btn-sm mr-2 btn-primary">
-              <i class="fas fa-save"></i> Save Changes
-            </button>
-          </div>
         </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-sm mr-2 btn-secondary" data-dismiss="modal">
+          <i class="fas fa-times"></i> Close
+        </button>
+        <button type="submit" class="btn btn-sm mr-2 btn-primary" form="editPhoneNumberForm">
+          <i class="fas fa-save"></i> Save changes
+        </button>
       </div>
     </div>
   </div>

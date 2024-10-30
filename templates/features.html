@@ -35,7 +35,7 @@
                       <th>Value</th>
                       <th>Enabled</th>
                       <th>Created At</th>
-                      <th>Actions</th>
+                      <th class="text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -313,20 +313,23 @@
           },
           {
             "data": null,
+            "className": "text-right",
             "render": function (data, type, row) {
               return `
-                <button class="btn btn-primary btn-sm edit-btn" data-id="${row.id}">
-                  <i class="fas fa-edit"></i> Edit
-                </button>
-                <button class="btn btn-danger btn-sm delete-btn" data-id="${row.id}">
-                  <i class="fas fa-trash-alt"></i> Delete
-                </button>
+                <div class="text-right">
+                  <button class="btn btn-primary btn-sm edit-btn" data-id="${row.id}">
+                    <i class="fas fa-edit"></i> Edit
+                  </button>
+                  <button class="btn btn-danger btn-sm delete-btn" data-id="${row.id}">
+                    <i class="fas fa-trash-alt"></i> Delete
+                  </button>
+                </div>
               `;
             }
           }
         ],
         "columnDefs": [
-          { "targets": -1, "className": "text-nowrap" }
+          { "targets": -1, "className": "text-nowrap text-right" }
         ],
         "pageLength": 10,
         "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],

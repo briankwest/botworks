@@ -34,7 +34,7 @@
                       <th>Name</th>
                       <th>Purpose</th>
                       <th>Active</th>
-                      <th>Actions</th>
+                      <th class="text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -266,6 +266,7 @@
         },
         {
           "data": null,
+          "className": "text-right",
           "render": function (data, type, row) {
             if (row.included) {
               return `
@@ -289,7 +290,7 @@
         }
       ],
       "columnDefs": [
-        { "targets": -1, "className": "text-nowrap" }
+        { "targets": -1, "className": "text-nowrap text-right" }
       ]
     });
 
