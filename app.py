@@ -2018,7 +2018,7 @@ def search_phone_numbers(selected_agent_id):
     if request.args.get('city'):
         params['city'] = request.args.get('city')
 
-    response = requests.get(url, headers=headers, params=params)
+    response = requests.get(url, headers=headers, params=params, timeout=30)
 
     if response.status_code == 200:
         return jsonify(response.json()), 200
