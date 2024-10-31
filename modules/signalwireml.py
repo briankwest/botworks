@@ -93,7 +93,8 @@ class SignalWireML:
         self._languages.append(language)
 
     def add_aiinclude(self, include):
-        self._SWAIG['includes'].append(include)
+        if 'url' in include and include['url']:
+            self._SWAIG['includes'].append(include)
 
     def add_ainativefunction(self, native):
         self._SWAIG['native_functions'].append(native)
@@ -127,9 +128,9 @@ class SignalWireML:
             del self._SWAIG['native_functions']
         if not self._SWAIG['includes']:
             del self._SWAIG['includes']
-        if not self._hints:
+        if len(self._hints) == 0:
             del self._hints
-        if not self._pronounce:
+        if len(self._pronounce) == 0:
             del self._pronounce
 
     def render(self):

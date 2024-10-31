@@ -1,8 +1,8 @@
 import json, base64
 from flask import request, jsonify
 from modules.models import (
-    AIPrompt, AIParams, AIUser, AIHints, AILanguage, AIPronounce, 
-    AIFunctions, AIFunctionArgs, AIIncludes, AISWMLRequest, AISteps, AIContext
+    AIPrompt, AIParams, AIHints, AILanguage, AIPronounce, 
+    AIFunctions, AIFunctionArgs, AIIncludes, AISteps, AIContext
 )
 from modules.utils import get_feature, get_signalwire_param
 from modules.signalwireml import SignalWireML
@@ -217,7 +217,7 @@ def generate_swml_response(agent_id, request_body):
             "url": ai_include.url,
             "functions": json.loads(ai_include.functions)
         }
-        if function_dict["functions"]:
+        if function_dict["functions"] and function_dict["url"]:
             swml.add_aiinclude(function_dict)
     
     
