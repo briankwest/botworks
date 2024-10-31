@@ -301,8 +301,8 @@
         data.forEach(item => {
           swaigTable.row.add({
             "function": item.function,
-            "parameters": JSON.stringify(item.parameters || ""),
-            "description": item.description || ""
+            "parameters": JSON.stringify(item.parameters || item.argument || ""),
+            "description": item.description || item.purpose || ""
           }).draw();
         });
       } else {
