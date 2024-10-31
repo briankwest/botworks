@@ -129,16 +129,6 @@ class SignalWireML:
         self._SWAIG['includes'] = [include for include in self._SWAIG['includes'] if include]
         self._SWAIG['native_functions'] = [native for native in self._SWAIG['native_functions'] if native]
 
-        def remove_empty(d):
-            if isinstance(d, dict):
-                return {k: remove_empty(v) for k, v in d.items() if v or isinstance(v, (int, float))}
-            elif isinstance(d, list):
-                return [remove_empty(v) for v in d if v]
-            else:
-                return d
-
-        self._content = remove_empty(self._content)
-
     def render(self):
         self.clean_empty_items()
         return self._content
