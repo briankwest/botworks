@@ -121,13 +121,16 @@ class SignalWireML:
         return json.dumps(response, indent=4, ensure_ascii=False)
 
     def clean_empty_items(self):
-        self._pronounce = [item for item in self._pronounce if item]
-        self._languages = [item for item in self._languages if item]
-
-        self._SWAIG['defaults'] = {k: v for k, v in self._SWAIG['defaults'].items() if v}
-        self._SWAIG['functions'] = [func for func in self._SWAIG['functions'] if func]
-        self._SWAIG['includes'] = [include for include in self._SWAIG['includes'] if include]
-        self._SWAIG['native_functions'] = [native for native in self._SWAIG['native_functions'] if native]
+        if not self._SWAIG['functions']:
+            del self._SWAIG['functions']
+        if not self._SWAIG['native_functions']:
+            del self._SWAIG['native_functions']
+        if not self._SWAIG['includes']:
+            del self._SWAIG['includes']
+        if not self._hints:
+            del self._hints
+        if not self._pronounce:
+            del self._pronounce
 
     def render(self):
         self.clean_empty_items()
