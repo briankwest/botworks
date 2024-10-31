@@ -128,11 +128,15 @@ class SignalWireML:
             del self._SWAIG['native_functions']
         if not self._SWAIG['includes']:
             del self._SWAIG['includes']
-        if len(self._hints) == 0:
+        if not self._hints:
             del self._hints
-        if len(self._pronounce) == 0:
+        if not self._pronounce:
             del self._pronounce
-
+        if not self._languages:
+            del self._languages 
+        if not self._params:
+            del self._params
+            
     def render(self):
         self.clean_empty_items()
         return self._content
