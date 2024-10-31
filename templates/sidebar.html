@@ -37,13 +37,13 @@
           </a>
           <ul class="nav nav-treeview ai-agents-indent">
             <li class="nav-item">
-              <a href="{{ url_for('agents') }}" class="nav-link {{ 'active' if request.endpoint == 'agents' else '' }}">
+              <a href="{{ url_for('agent_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if request.endpoint == 'agents' else '' }}">
                 <i class="nav-icon fas fa-robot"></i>
                 <p>Agents</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="{{ url_for('prompt') }}" class="nav-link {{ 'active' if request.endpoint == 'prompt' else '' }}">
+              <a href="{{ url_for('prompt_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if request.endpoint == 'prompt' else '' }}">
                 <i class="nav-icon fas fa-edit"></i>
                 <p>Prompt</p>
               </a>
@@ -62,7 +62,7 @@
               </a>
             </li>
             <li class="nav-item">
-              <a href="{{ url_for('pronounce') }}"
+              <a href="{{ url_for('pronounce_page', agent_id=agent_id) }}"
                 class="nav-link {{ 'active' if request.endpoint == 'pronounce' else '' }}">
                 <i class="nav-icon fas fa-bullhorn"></i>
                 <p>Pronounce</p>
@@ -76,14 +76,15 @@
               </a>
             </li>
             <li class="nav-item">
-              <a href="{{ url_for('context') }}"
-              class="nav-link {{ 'active' if request.endpoint == 'context' else '' }}">
+              <a href="{{ url_for('context_page', agent_id=agent_id) }}"
+                class="nav-link {{ 'active' if request.endpoint == 'context' else '' }}">
                 <i class="nav-icon fas fa-sitemap"></i>
                 <p>Contexts</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="{{ url_for('hints') }}" class="nav-link {{ 'active' if request.endpoint == 'hints' else '' }}">
+              <a href="{{ url_for('hints_page', agent_id=agent_id) }}"
+                class="nav-link {{ 'active' if request.endpoint == 'hints_page' else '' }}">
                 <i class="nav-icon fas fa-lightbulb"></i>
                 <p>Hints</p>
               </a>
@@ -165,8 +166,8 @@
           </ul>
         </li>
         <li class="nav-item">
-          <a href="{{ url_for('signalwire') }}"
-            class="nav-link {{ 'active' if request.endpoint == 'signalwire' else '' }}">
+          <a href="{{ url_for('signalwire_page', agent_id=agent_id) }}"
+            class="nav-link {{ 'active' if request.endpoint == 'signalwire_page' else '' }}">
             <i class="nav-icon fas fa-cogs"></i>
             <p>SignalWire</p>
           </a>

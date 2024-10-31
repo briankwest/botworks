@@ -997,8 +997,7 @@ def postprompt(agent_id):
 
 @app.route('/pronounce/<int:id>', methods=['PUT'])
 @login_required
-@check_agent_access
-def update_pronounce(selected_agent_id, id):
+def update2_pronounce(selected_agent_id, id):
     pronounce_entry = AIPronounce.query.get_or_404(id)
     
     data = request.get_json()
@@ -1041,7 +1040,7 @@ def pronounce(selected_agent_id):
 @app.route('/pronounce/<int:id>', methods=['DELETE'])
 @login_required
 @check_agent_access
-def delete_pronounce(selected_agent_id, id):
+def delete2_pronounce(selected_agent_id, id):
     pronounce_entry = AIPronounce.query.get_or_404(id)
     db.session.delete(pronounce_entry)
     db.session.commit()
@@ -1123,7 +1122,7 @@ def delete_prompt(selected_agent_id, id):
 @app.route('/prompt/<int:id>', methods=['PUT'])
 @login_required
 @check_agent_access
-def update_prompt(selected_agent_id, id):
+def update_prompt3(selected_agent_id, id):
     prompt_entry = AIPrompt.query.get_or_404(id)
     
     data = request.get_json()
@@ -1390,7 +1389,7 @@ def delete_datasphere(selected_agent_id, datasphere_id):
 @app.route('/agents/clone/<int:agent_id>', methods=['POST'])
 @login_required
 @check_agent_access
-def clone_agent(selected_agent_id, agent_id):
+def clone_agent2(selected_agent_id, agent_id):
     original_agent = AIAgent.query.get_or_404(agent_id)
 
     random_bits = generate_random_password(4)
@@ -1482,10 +1481,10 @@ def agents(selected_agent_id):
 
         return jsonify({'message': 'Agent created successfully'}), 201
     
-@app.route('/agents/<int:id>', methods=['GET'])
+@app.route('/agents3/<int:id>', methods=['GET'])
 @login_required
 @check_agent_access
-def get_agent(selected_agent_id, id):
+def get_agent2(selected_agent_id, id):
     agent = AIAgent.query.get_or_404(id)
 
     agent_data = {
@@ -1497,10 +1496,10 @@ def get_agent(selected_agent_id, id):
 
     return jsonify(agent_data), 200
 
-@app.route('/agents/<int:id>', methods=['DELETE'])
+@app.route('/agents3/<int:id>', methods=['DELETE'])
 @login_required
 @check_agent_access
-def delete_agent(selected_agent_id, id):
+def delete_agent2(selected_agent_id, id):
     agent = AIAgent.query.get_or_404(id)
 
     if agent.name == "BotWorks":
@@ -1511,10 +1510,10 @@ def delete_agent(selected_agent_id, id):
 
     return jsonify({'message': 'Agent deleted successfully'}), 200
 
-@app.route('/agents/<int:id>', methods=['PUT'])
+@app.route('/agents3/<int:id>', methods=['PUT'])
 @login_required
 @check_agent_access
-def update_agent(selected_agent_id, id):
+def update_agent2(selected_agent_id, id):
     agent = AIAgent.query.get_or_404(id)
 
     data = request.get_json()
@@ -2283,7 +2282,7 @@ def get_steps(selected_agent_id):
 @app.route('/context/<int:context_id>', methods=['GET'])
 @login_required
 @check_agent_access
-def get_context(selected_agent_id, context_id):
+def get_context3(selected_agent_id, context_id):
     context = AIContext.query.filter_by(id=context_id, agent_id=selected_agent_id).first_or_404()
 
     print(f"Context: {context.context_name} {context.id}, {context.agent_id}")
@@ -2662,6 +2661,670 @@ def reset_password(token):
         return redirect(url_for('login'))
         
     return render_template('reset_password.html')
+
+# Add API prefix constant
+API_PREFIX = '/api/v1'
+
+@app.route('/agents/<int:agent_id>', methods=['GET'])
+@login_required
+def agent_page(agent_id):
+    print(f"Agent ID: {agent_id}")
+    return render_template('agents.html', user=current_user, agent_id=agent_id)
+
+# API routes for agents
+@app.route(f'{API_PREFIX}/agents', methods=['GET'])
+@login_required
+def list_agents():
+    owned_agents = AIAgent.query.filter_by(user_id=current_user.id).all()
+    shared_agent_ids = db.session.query(SharedAccess.agent_id).filter_by(shared_with_user_id=current_user.id).all()
+    shared_agents = AIAgent.query.filter(AIAgent.id.in_([id for id, in shared_agent_ids])).all()
+    
+    all_agents = owned_agents + shared_agents
+    agents_data = [{
+        'id': agent.id,
+        'name': agent.name,
+        'number': agent.number,
+        'created': agent.created
+    } for agent in all_agents]
+    
+    return jsonify(agents_data), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>', methods=['GET'])
+@login_required
+def get_agent(agent_id):
+    agent = AIAgent.query.get_or_404(agent_id)
+    return jsonify({
+        'id': agent.id,
+        'name': agent.name,
+        'number': agent.number,
+        'created': agent.created
+    }), 200
+
+@app.route(f'{API_PREFIX}/agents', methods=['POST'])
+@login_required
+def create_agent():
+    data = request.get_json()
+    name = data.get('name')
+    number = data.get('number')
+
+    if not name:
+        return jsonify({'error': 'Name is required'}), 400
+
+    new_agent = AIAgent(
+        name=name, 
+        number=number, 
+        user_id=current_user.id
+    )
+    db.session.add(new_agent)
+    db.session.commit()
+
+    # Add default SignalWire parameters
+    default_params = [
+        {'name': 'HTTP_PASSWORD', 'value': os.environ.get('HTTP_PASSWORD', generate_random_password())},
+        {'name': 'HTTP_USERNAME', 'value': os.environ.get('HTTP_USERNAME', generate_random_password())},
+        {'name': 'SPACE_NAME', 'value': os.environ.get('SPACE_NAME', 'subdomain.signalwire.com')},
+        {'name': 'AUTH_TOKEN', 'value': os.environ.get('AUTH_TOKEN', 'PTb4d1.....')},
+        {'name': 'PROJECT_ID', 'value': os.environ.get('PROJECT_ID', '5f1c4418-.....')}
+    ]
+
+    for param in default_params:
+        new_param = AISignalWireParams(
+            agent_id=new_agent.id,
+            name=param['name'],
+            value=param['value']
+        )
+        db.session.add(new_param)
+
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Agent created successfully',
+        'id': new_agent.id
+    }), 201
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>', methods=['PUT'])
+@login_required
+def update_agent(agent_id):
+    agent = AIAgent.query.get_or_404(agent_id)
+    data = request.get_json()
+    
+    agent.name = data.get('name', agent.name)
+    agent.number = data.get('number', agent.number)
+    
+    db.session.commit()
+    return jsonify({'message': 'Agent updated successfully'}), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>', methods=['DELETE'])
+@login_required
+def delete_agent(agent_id):
+    agent = AIAgent.query.get_or_404(agent_id)
+
+    if agent.name == "BotWorks":
+        return jsonify({'message': 'Cannot delete the default agent "BotWorks".'}), 403
+
+    db.session.delete(agent)
+    db.session.commit()
+    return jsonify({'message': 'Agent deleted successfully'}), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/clone', methods=['POST'])
+@login_required
+def clone_agent(agent_id):
+    original_agent = AIAgent.query.get_or_404(agent_id)
+    random_bits = generate_random_password(4)
+
+    new_agent = AIAgent(
+        user_id=current_user.id,
+        name=f"{original_agent.name} Copy {random_bits}",
+        number=original_agent.number
+    )
+    db.session.add(new_agent)
+    db.session.commit()
+
+    def clone_relationships(original, new, relationship_name):
+        related_items = getattr(original, relationship_name)
+        for item in related_items:
+            new_item = item.__class__(**{col.name: getattr(item, col.name) 
+                                       for col in item.__table__.columns if col.name != 'id'})
+            new_item.agent_id = new.id
+            new_item.user_id = current_user.id
+            db.session.add(new_item)
+
+    relationships = [
+        'ai_signalwire_params', 'ai_functions', 'ai_function_argument', 
+        'ai_hints', 'ai_pronounce', 'ai_prompt', 'ai_language', 
+        'ai_params', 'ai_features', 'ai_includes', 'ai_contexts', 'ai_steps'
+    ]
+
+    for relationship in relationships:
+        clone_relationships(original_agent, new_agent, relationship)
+
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Agent cloned successfully',
+        'new_agent_id': new_agent.id
+    }), 201
+
+@app.route('/agents/<int:agent_id>/hints', methods=['GET'])
+@login_required
+def hints_page(agent_id):
+    if request.headers.get('Accept') == 'application/json':
+        hints = AIHints.query.filter_by(agent_id=agent_id).all()
+        return jsonify([{
+            'id': hint.id,
+            'hint': hint.hint,
+            'created': hint.created
+        } for hint in hints]), 200
+    return render_template('hints.html', user=current_user, agent_id=agent_id)
+
+# API routes for hints
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/hints', methods=['GET'])
+@login_required
+def list_hints(agent_id):
+    hints = AIHints.query.filter_by(agent_id=agent_id).all()
+    return jsonify([{
+        'id': hint.id,
+        'hint': hint.hint,
+        'created': hint.created
+    } for hint in hints]), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/hints/<int:hint_id>', methods=['GET'])
+@login_required
+def get_hint(agent_id, hint_id):
+    hint = AIHints.query.filter_by(id=hint_id, agent_id=agent_id).first_or_404()
+    return jsonify({
+        'id': hint.id,
+        'hint': hint.hint,
+        'created': hint.created
+    }), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/hints', methods=['POST'])
+@login_required
+def create_hint(agent_id):
+    data = request.get_json()
+    new_hint = AIHints(
+        hint=data['hint'],
+        agent_id=agent_id
+    )
+    db.session.add(new_hint)
+    db.session.commit()
+    return jsonify({'message': 'Hint created successfully', 'id': new_hint.id}), 201
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/hints/<int:hint_id>', methods=['PUT'])
+@login_required
+def update_hint(agent_id, hint_id):
+    hint = AIHints.query.filter_by(id=hint_id, agent_id=agent_id).first_or_404()
+    data = request.get_json()
+    hint.hint = data['hint']
+    db.session.commit()
+    return jsonify({'message': 'Hint updated successfully'}), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/hints/<int:hint_id>', methods=['DELETE'])
+@login_required
+def delete_hint(agent_id, hint_id):
+    hint = AIHints.query.filter_by(id=hint_id, agent_id=agent_id).first_or_404()
+    db.session.delete(hint)
+    db.session.commit()
+    return jsonify({'message': 'Hint deleted successfully'}), 200
+
+@app.route('/agents/<int:agent_id>/pronounce', methods=['GET'])
+@login_required
+def pronounce_page(agent_id):
+    return render_template('pronounce.html', user=current_user, agent_id=agent_id)
+
+# API routes for pronounce
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/pronounce', methods=['GET'])
+@login_required
+def list_pronounce(agent_id):
+    pronounces = AIPronounce.query.filter_by(agent_id=agent_id).all()
+    return jsonify([{
+        'id': p.id,
+        'replace_this': p.replace_this,
+        'replace_with': p.replace_with,
+        'ignore_case': p.ignore_case,
+        'created': p.created
+    } for p in pronounces]), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/pronounce/<int:pronounce_id>', methods=['GET'])
+@login_required
+def get_pronounce(agent_id, pronounce_id):
+    pronounce = AIPronounce.query.filter_by(id=pronounce_id, agent_id=agent_id).first_or_404()
+    return jsonify({
+        'id': pronounce.id,
+        'replace_this': pronounce.replace_this,
+        'replace_with': pronounce.replace_with,
+        'ignore_case': pronounce.ignore_case,
+        'created': pronounce.created
+    }), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/pronounce', methods=['POST'])
+@login_required
+def create_pronounce(agent_id):
+    data = request.get_json()
+    new_pronounce = AIPronounce(
+        replace_this=data['replace_this'],
+        replace_with=data['replace_with'],
+        ignore_case=data.get('ignore_case', False),
+        agent_id=agent_id
+    )
+    db.session.add(new_pronounce)
+    db.session.commit()
+    return jsonify({
+        'message': 'Pronounce entry created successfully',
+        'id': new_pronounce.id
+    }), 201
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/pronounce/<int:pronounce_id>', methods=['PUT'])
+@login_required
+def update_pronounce(agent_id, pronounce_id):
+    pronounce = AIPronounce.query.filter_by(id=pronounce_id, agent_id=agent_id).first_or_404()
+    data = request.get_json()
+    
+    pronounce.replace_this = data.get('replace_this', pronounce.replace_this)
+    pronounce.replace_with = data.get('replace_with', pronounce.replace_with)
+    pronounce.ignore_case = data.get('ignore_case', pronounce.ignore_case)
+    
+    db.session.commit()
+    return jsonify({'message': 'Pronounce entry updated successfully'}), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/pronounce/<int:pronounce_id>', methods=['DELETE'])
+@login_required
+def delete_pronounce(agent_id, pronounce_id):
+    pronounce = AIPronounce.query.filter_by(id=pronounce_id, agent_id=agent_id).first_or_404()
+    db.session.delete(pronounce)
+    db.session.commit()
+    return jsonify({'message': 'Pronounce entry deleted successfully'}), 200
+
+@app.route('/agents/<int:agent_id>/signalwire', methods=['GET'])
+@login_required
+def signalwire_page(agent_id):
+    if request.headers.get('Accept') == 'application/json':
+        params = AISignalWireParams.query.filter_by(agent_id=agent_id).all()
+        return jsonify([{
+            'id': param.id,
+            'name': param.name,
+            'value': param.value,
+            'created': param.created
+        } for param in params]), 200
+    return render_template('signalwire.html', user=current_user, agent_id=agent_id)
+
+# API routes for SignalWire parameters
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/signalwire', methods=['GET'])
+@login_required
+def list_signalwire_params(agent_id):
+    params = AISignalWireParams.query.filter_by(agent_id=agent_id).all()
+    return jsonify([{
+        'id': param.id,
+        'name': param.name,
+        'value': param.value,
+        'created': param.created
+    } for param in params]), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/signalwire/<int:param_id>', methods=['GET'])
+@login_required
+def get_signalwire_param_by_id(agent_id, param_id):
+    param = AISignalWireParams.query.filter_by(id=param_id, agent_id=agent_id).first_or_404()
+    return jsonify({
+        'id': param.id,
+        'name': param.name,
+        'value': param.value,
+        'created': param.created
+    }), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/signalwire', methods=['POST'])
+@login_required
+def create_signalwire_param(agent_id):
+    data = request.get_json()
+    new_param = AISignalWireParams(
+        name=data['name'],
+        value=data['value'],
+        agent_id=agent_id
+    )
+    db.session.add(new_param)
+    db.session.commit()
+    return jsonify({
+        'message': 'SignalWire parameter created successfully',
+        'id': new_param.id
+    }), 201
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/signalwire/<int:param_id>', methods=['PUT'])
+@login_required
+def update_signalwire_param(agent_id, param_id):
+    param = AISignalWireParams.query.filter_by(id=param_id, agent_id=agent_id).first_or_404()
+    data = request.get_json()
+    
+    param.name = data.get('name', param.name)
+    param.value = data.get('value', param.value)
+    
+    db.session.commit()
+    return jsonify({'message': 'SignalWire parameter updated successfully'}), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/signalwire/<int:param_id>', methods=['DELETE'])
+@login_required
+def delete_signalwire_param(agent_id, param_id):
+    param = AISignalWireParams.query.filter_by(id=param_id, agent_id=agent_id).first_or_404()
+    db.session.delete(param)
+    db.session.commit()
+    return jsonify({'message': 'SignalWire parameter deleted successfully'}), 200
+
+@app.route('/agents/<int:agent_id>/prompt', methods=['GET'])
+@login_required
+def prompt_page(agent_id):
+    if request.headers.get('Accept') == 'application/json':
+        prompts = AIPrompt.query.filter_by(agent_id=agent_id).all()
+        return jsonify([{
+            'id': prompt.id,
+            'agent_id': prompt.agent_id,
+            'prompt_type': prompt.prompt_type,
+            'prompt_text': prompt.prompt_text,
+            'top_p': prompt.top_p,
+            'temperature': prompt.temperature,
+            'max_tokens': prompt.max_tokens,
+            'confidence': prompt.confidence,
+            'frequency_penalty': prompt.frequency_penalty,
+            'presence_penalty': prompt.presence_penalty,
+            'created': prompt.created
+        } for prompt in prompts]), 200
+    return render_template('prompt.html', user=current_user, agent_id=agent_id)
+
+# API routes for prompts
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/prompt', methods=['GET'])
+@login_required
+def list_prompts(agent_id):
+    prompts = AIPrompt.query.filter_by(agent_id=agent_id).all()
+    return jsonify([{
+        'id': prompt.id,
+        'agent_id': prompt.agent_id,
+        'prompt_type': prompt.prompt_type,
+        'prompt_text': prompt.prompt_text,
+        'top_p': prompt.top_p,
+        'temperature': prompt.temperature,
+        'max_tokens': prompt.max_tokens,
+        'confidence': prompt.confidence,
+        'frequency_penalty': prompt.frequency_penalty,
+        'presence_penalty': prompt.presence_penalty,
+        'created': prompt.created
+    } for prompt in prompts]), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/prompt/<int:prompt_id>', methods=['GET'])
+@login_required
+def get_prompt(agent_id, prompt_id):
+    prompt = AIPrompt.query.filter_by(id=prompt_id, agent_id=agent_id).first_or_404()
+    return jsonify({
+        'id': prompt.id,
+        'prompt_type': prompt.prompt_type,
+        'prompt_text': prompt.prompt_text,
+        'top_p': prompt.top_p,
+        'temperature': prompt.temperature,
+        'max_tokens': prompt.max_tokens,
+        'confidence': prompt.confidence,
+        'frequency_penalty': prompt.frequency_penalty,
+        'presence_penalty': prompt.presence_penalty,
+        'created': prompt.created
+    }), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/prompt', methods=['POST'])
+@login_required
+def create_prompt(agent_id):
+    data = request.get_json()
+    
+    # Convert empty strings to None for float fields
+    float_fields = ['top_p', 'temperature', 'confidence', 'frequency_penalty', 'presence_penalty']
+    for field in float_fields:
+        if field in data and data[field] == '':
+            data[field] = None
+            
+    # Convert empty string to None for integer field
+    if 'max_tokens' in data and data['max_tokens'] == '':
+        data['max_tokens'] = None
+
+    new_prompt = AIPrompt(
+        agent_id=agent_id,
+        prompt_type=data['prompt_type'],
+        prompt_text=data['prompt_text'],
+        top_p=data['top_p'],
+        temperature=data['temperature'],
+        max_tokens=data['max_tokens'],
+        confidence=data['confidence'],
+        frequency_penalty=data['frequency_penalty'],
+        presence_penalty=data['presence_penalty']
+    )
+    
+    db.session.add(new_prompt)
+    db.session.commit()
+    
+    return jsonify({
+        'message': 'Prompt created successfully',
+        'id': new_prompt.id
+    }), 201
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/prompt/<int:prompt_id>', methods=['PUT'])
+@login_required
+def update_prompt(agent_id, prompt_id):
+    prompt = AIPrompt.query.filter_by(id=prompt_id, agent_id=agent_id).first_or_404()
+    data = request.get_json()
+    
+    # Convert empty strings to None for float fields
+    float_fields = ['top_p', 'temperature', 'confidence', 'frequency_penalty', 'presence_penalty']
+    for field in float_fields:
+        if field in data:
+            prompt.__setattr__(field, None if data[field] == '' else data[field])
+            
+    # Convert empty string to None for integer field
+    if 'max_tokens' in data:
+        prompt.max_tokens = None if data['max_tokens'] == '' else data['max_tokens']
+    
+    # Update other fields
+    if 'prompt_type' in data:
+        prompt.prompt_type = data['prompt_type']
+    if 'prompt_text' in data:
+        prompt.prompt_text = data['prompt_text']
+    
+    db.session.commit()
+    return jsonify({'message': 'Prompt updated successfully'}), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/prompt/<int:prompt_id>', methods=['PATCH'])
+@login_required
+def patch_prompt(agent_id, prompt_id):
+    prompt = AIPrompt.query.filter_by(id=prompt_id, agent_id=agent_id).first_or_404()
+    data = request.get_json()
+    
+    # Convert empty strings to None for float fields
+    float_fields = ['top_p', 'temperature', 'confidence', 'frequency_penalty', 'presence_penalty']
+    for field in float_fields:
+        if field in data:
+            value = None if data[field] == '' else data[field]
+            if value is not None:
+                setattr(prompt, field, value)
+    
+    # Convert empty string to None for integer field
+    if 'max_tokens' in data:
+        value = None if data['max_tokens'] == '' else data['max_tokens']
+        if value is not None:
+            prompt.max_tokens = value
+    
+    # Update other fields if present
+    if 'prompt_type' in data:
+        prompt.prompt_type = data['prompt_type']
+    if 'prompt_text' in data:
+        prompt.prompt_text = data['prompt_text']
+    
+    db.session.commit()
+    return jsonify({'message': 'Prompt updated successfully'}), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/prompt/<int:prompt_id>', methods=['DELETE'])
+@login_required
+def delete_prompt_api(agent_id, prompt_id):
+    prompt = AIPrompt.query.filter_by(id=prompt_id, agent_id=agent_id).first_or_404()
+    db.session.delete(prompt)
+    db.session.commit()
+    return jsonify({'message': 'Prompt deleted successfully'}), 200
+
+@app.route('/agents/<int:agent_id>/context', methods=['GET'])
+@login_required
+def context_page(agent_id):
+    return render_template('contexts.html', user=current_user, agent_id=agent_id)
+
+# API routes for contexts
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/context', methods=['GET'])
+@login_required
+def list_contexts(agent_id):
+    contexts = AIContext.query.filter_by(agent_id=agent_id).all()
+    return jsonify([context.to_dict() for context in contexts]), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/context/<int:context_id>', methods=['GET'])
+@login_required
+def get_context(agent_id, context_id):
+    context = AIContext.query.filter_by(id=context_id, agent_id=agent_id).first_or_404()
+    return jsonify(context.to_dict()), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/context', methods=['POST'])
+@login_required
+def create_context(agent_id):
+    data = request.get_json()
+    new_context = AIContext(
+        agent_id=agent_id,
+        context_name=data['context_name']
+    )
+    db.session.add(new_context)
+    db.session.commit()
+    return jsonify({
+        'message': 'Context created successfully',
+        'id': new_context.id,
+        'context': new_context.to_dict()
+    }), 201
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/context/<int:context_id>', methods=['PUT'])
+@login_required
+def update_context_full(agent_id, context_id):
+    context = AIContext.query.filter_by(id=context_id, agent_id=agent_id).first_or_404()
+    data = request.get_json()
+    
+    context.context_name = data['context_name']
+    
+    db.session.commit()
+    return jsonify({
+        'message': 'Context updated successfully',
+        'context': context.to_dict()
+    }), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/context/<int:context_id>', methods=['PATCH'])
+@login_required
+def patch_context_api(agent_id, context_id):
+    context = AIContext.query.filter_by(id=context_id, agent_id=agent_id).first_or_404()
+    data = request.get_json()
+    
+    if 'context_name' in data:
+        context.context_name = data['context_name']
+    
+    db.session.commit()
+    return jsonify({
+        'message': 'Context updated successfully',
+        'context': context.to_dict()
+    }), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/context/<int:context_id>', methods=['DELETE'])
+@login_required
+def delete_context_api(agent_id, context_id):
+    context = AIContext.query.filter_by(id=context_id, agent_id=agent_id).first_or_404()
+    db.session.delete(context)
+    db.session.commit()
+    return jsonify({'message': 'Context deleted successfully'}), 200
+
+# API routes for steps within contexts
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/context/<int:context_id>/steps', methods=['GET'])
+@login_required
+def list_context_steps(agent_id, context_id):
+    steps = AISteps.query.filter_by(context_id=context_id, agent_id=agent_id).all()
+    return jsonify([step.to_dict() for step in steps]), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/context/<int:context_id>/steps', methods=['POST'])
+@login_required
+def create_context_step(agent_id, context_id):
+    data = request.get_json()
+    new_step = AISteps(
+        agent_id=agent_id,
+        context_id=context_id,
+        name=data['name'],
+        text=data['text'],
+        step_criteria=data.get('step_criteria'),
+        valid_steps=data.get('valid_steps', []),
+        valid_contexts=data.get('valid_contexts', []),
+        end=data.get('end', False),
+        functions=data.get('functions', []),
+        skip_user_turn=data.get('skip_user_turn', False)
+    )
+    db.session.add(new_step)
+    db.session.commit()
+    return jsonify({
+        'message': 'Step created successfully',
+        'id': new_step.id,
+        'step': new_step.to_dict()
+    }), 201
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/context/<int:context_id>/steps/<int:step_id>', methods=['GET'])
+@login_required
+def get_context_step(agent_id, context_id, step_id):
+    step = AISteps.query.filter_by(id=step_id, context_id=context_id).first_or_404()
+    return jsonify(step.to_dict()), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/context/<int:context_id>/steps/<int:step_id>', methods=['PUT'])
+@login_required
+def update_context_step(agent_id, context_id, step_id):
+    step = AISteps.query.filter_by(id=step_id, context_id=context_id).first_or_404()
+    data = request.get_json()
+    
+    step.name = data['name']
+    step.text = data['text']
+    step.step_criteria = data.get('step_criteria')
+    step.valid_steps = data.get('valid_steps', [])
+    step.valid_contexts = data.get('valid_contexts', [])
+    step.end = data.get('end', False)
+    step.functions = data.get('functions', [])
+    step.skip_user_turn = data.get('skip_user_turn', False)
+    
+    db.session.commit()
+    return jsonify({
+        'message': 'Step updated successfully',
+        'step': step.to_dict()
+    }), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/context/<int:context_id>/steps/<int:step_id>', methods=['PATCH'])
+@login_required
+def patch_context_step(agent_id, context_id, step_id):
+    step = AISteps.query.filter_by(id=step_id, context_id=context_id).first_or_404()
+    data = request.get_json()
+    
+    if 'name' in data:
+        step.name = data['name']
+    if 'text' in data:
+        step.text = data['text']
+    if 'step_criteria' in data:
+        step.step_criteria = data['step_criteria']
+    if 'valid_steps' in data:
+        step.valid_steps = data['valid_steps']
+    if 'valid_contexts' in data:
+        step.valid_contexts = data['valid_contexts']
+    if 'end' in data:
+        step.end = data['end']
+    if 'functions' in data:
+        step.functions = data['functions']
+    if 'skip_user_turn' in data:
+        step.skip_user_turn = data['skip_user_turn']
+    
+    db.session.commit()
+    return jsonify({
+        'message': 'Step updated successfully',
+        'step': step.to_dict()
+    }), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/context/<int:context_id>/steps/<int:step_id>', methods=['DELETE'])
+@login_required
+def delete_context_step(agent_id, context_id, step_id):
+    step = AISteps.query.filter_by(id=step_id, context_id=context_id).first_or_404()
+    db.session.delete(step)
+    db.session.commit()
+    return jsonify({'message': 'Step deleted successfully'}), 200
 
 if __name__ == '__main__':
     with app.app_context():

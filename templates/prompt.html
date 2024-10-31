@@ -30,6 +30,7 @@
                   <thead>
                     <tr>
                       <th>ID</th>
+                      <th style="display: none;">Agent ID</th>
                       <th>Type</th>
                       <th>Top P</th>
                       <th>Temperature</th>
@@ -44,6 +45,7 @@
                     {% for prompt in prompts %}
                     <tr>
                       <td>{{ prompt.id }}</td>
+                      <td style="display: none;">{{ prompt.agent_id }}</td>
                       <td>{{ prompt.prompt_type }}</td>
                       <td>{{ prompt.top_p }}</td>
                       <td>{{ prompt.temperature }}</td>
@@ -187,6 +189,7 @@
                       <span id="editPresencePenaltyValue">0</span>
                     </div>
                     <input type="hidden" id="editPromptId" name="id">
+                    <input type="hidden" id="editPromptAgentId" name="agent_id">
                   </form>
                 </div>
                 <div class="modal-footer">
@@ -253,7 +256,7 @@
 
     $.ajax({
       type: 'GET',
-      url: "{{ url_for('prompt') }}",
+      url: "{{ url_for('list_prompts', agent_id=agent_id) }}",
       headers: {
         'Accept': 'application/json'
       },
@@ -266,6 +269,7 @@
           data: prompts,
           columns: [
             { data: 'id' },
+            { data: 'agent_id', visible: false },
             {
               data: 'prompt_type',
               render: function (data, type, row) {
@@ -332,6 +336,7 @@
         $('#promptTable tbody').on('click', '.edit-btn', function () {
           const data = $('#promptTable').DataTable().row($(this).parents('tr')).data();
           $('#editPromptId').val(data.id);
+          $('#editPromptAgentId').val(data.agent_id);
           $('#editPromptType').val(data.prompt_type);
 
           editPromptEditor.value(data.prompt_text);
@@ -366,7 +371,7 @@
             if (result.isConfirmed) {
               $.ajax({
                 type: 'DELETE',
-                url: "{{ url_for('prompt') }}/" + data.id,
+                url: `/api/v1/agents/${data.agent_id}/prompt/${data.id}`,
                 success: function (response) {
                   showToast('success', 'Prompt deleted successfully');
                   location.reload();
@@ -405,7 +410,7 @@
 
       $.ajax({
         type: 'POST',
-        url: "{{ url_for('prompt') }}",
+        url: `/api/v1/agents/${agent_id}/prompt`,
         contentType: 'application/json',
         dataType: 'json',
         data: JSON.stringify(formData),
@@ -413,7 +418,7 @@
           showToast('success', 'New prompt added successfully');
           $.ajax({
             type: 'GET',
-            url: "{{ url_for('prompt') }}",
+            url: `/api/v1/agents/${agent_id}/prompt`,
             headers: {
               'Accept': 'application/json'
             },
@@ -440,9 +445,10 @@
       event.preventDefault();
     });
 
-    $('#saveEditPrompt').click(function () {
+    $('#saveEditPrompt').click(function (event) {
       event.preventDefault();
       const formData = {
+        agent_id: $('#editPromptAgentId').val(),
         prompt_type: $('#editPromptType').val(),
         prompt_text: editPromptEditor.value(),
         top_p: parseFloat($('#editTopP').val()),
@@ -454,10 +460,11 @@
       };
 
       const promptId = $('#editPromptId').val();
+      const agentId = $('#editPromptAgentId').val();
 
       $.ajax({
         type: 'PUT',
-        url: "{{ url_for('prompt') }}/" + promptId,
+        url: `/api/v1/agents/${agentId}/prompt/${promptId}`,
         contentType: 'application/json',
         dataType: 'json',
         data: JSON.stringify(formData),

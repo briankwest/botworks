@@ -315,7 +315,7 @@
       "responsive": true,
       "autoWidth": false,
       "ajax": {
-        "url": "{{ url_for('agents') }}",
+        "url": "{{ url_for('list_agents') }}",
         "dataSrc": "",
         "headers": {
           "Content-Type": "application/json",
@@ -367,7 +367,7 @@
 
       $.ajax({
         type: 'POST',
-        url: "{{ url_for('agents') }}",
+        url: "{{ url_for('create_agent', agent_id=agent_id) }}",
         contentType: 'application/json',
         data: JSON.stringify(formData),
         success: function (response) {
@@ -396,7 +396,7 @@
         if (result.isConfirmed) {
           $.ajax({
             type: 'DELETE',
-            url: "/agents/" + id,
+            url: `/api/v1/agents/${id}`,
             success: function (response) {
               $('#agentTable').DataTable().ajax.reload();
               showToast('success', 'AI Agent entry deleted successfully');
@@ -413,10 +413,10 @@
     $('#agentTable').on('click', '.edit-agent', function () {
       const id = $(this).data('id');
       console.log('Edit button clicked for ID:', id);
-
+      
       $.ajax({
         type: 'GET',
-        url: "/agents/" + id,
+        url: `/api/v1/agents/${id}`,
         success: function (response) {
           console.log('AJAX success:', response);
           $('#editId').val(response.id);
@@ -447,7 +447,7 @@
 
       $.ajax({
         type: 'PUT',
-        url: "/agents/" + id,
+        url: `/api/v1/agents/${id}`,
         contentType: 'application/json',
         data: JSON.stringify(formData),
         success: function (response) {
@@ -464,9 +464,10 @@
 
     $('#agentTable').on('click', '.clone-agent', function () {
       const id = $(this).data('id');
+
       $.ajax({
         type: 'POST',
-        url: "/agents/clone/" + id,
+        url: `/api/v1/agents/${id}/clone`,
         success: function (response) {
           $('#agentTable').DataTable().ajax.reload();
           showToast('success', 'AI Agent entry cloned successfully');
@@ -487,7 +488,7 @@
     function refreshAgentsDropdown() {
       $.ajax({
         type: 'GET',
-        url: "/agents",
+        url: "{{ url_for('list_agents', agent_id=agent_id) }}",
         success: function (data) {
           const dropdown = $('#agentsDropdown');
           dropdown.empty();

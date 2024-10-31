@@ -47,7 +47,7 @@
   document.addEventListener('DOMContentLoaded', function () {
     const agentSelect = document.getElementById('agent-select');
 
-    fetch('{{ url_for("agents") }}', {
+    fetch('{{ url_for("list_agents", agent_id=agent_id) }}', {
       headers: {
         'Accept': 'application/json'
       }
@@ -100,7 +100,7 @@
     const agentSelect = document.getElementById('agent-select');
     agentSelect.innerHTML = '<option value="">-- Select an Agent --</option>';
 
-    fetch('{{ url_for("agents") }}', {
+    fetch('{{ url_for("list_agents", agent_id=agent_id) }}', {
       headers: {
         'Accept': 'application/json'
       }

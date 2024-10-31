@@ -127,7 +127,7 @@
         "responsive": true,
         "autoWidth": true,
         "ajax": {
-          "url": "{{ url_for('pronounce') }}",
+          "url": "{{ url_for('list_pronounce', agent_id=agent_id) }}",
           "dataSrc": ""
         },
         "order": [ 1, 'asc' ],
@@ -173,7 +173,7 @@
 
         $.ajax({
           type: 'PUT',
-          url: `/pronounce/${id}`,
+          url: "{{ url_for('update_pronounce', agent_id=agent_id, pronounce_id=0) }}".replace('0', id),
           contentType: 'application/json',
           data: JSON.stringify({ ignore_case: ignoreCase }),
           success: function(response) {
@@ -216,7 +216,7 @@
 
         $.ajax({
           type: 'POST',
-          url: "{{ url_for('pronounce') }}",
+          url: "{{ url_for('create_pronounce', agent_id=agent_id) }}",
           contentType: 'application/json',
           headers: {
             'Accept': 'application/json'
@@ -248,7 +248,7 @@
           if (result.isConfirmed) {
             $.ajax({
               type: 'DELETE',
-              url: `/pronounce/${id}`,
+              url: "{{ url_for('delete_pronounce', agent_id=agent_id, pronounce_id=0) }}".replace('0', id),
               headers: {
                 'Accept': 'application/json'
               },
@@ -286,7 +286,7 @@
 
         $.ajax({
           type: 'PUT',
-          url: `/pronounce/${formData.id}`,
+          url: "{{ url_for('update_pronounce', agent_id=agent_id, pronounce_id=0) }}".replace('0', formData.id),
           contentType: 'application/json',
           data: JSON.stringify(formData),
           success: function(response) {

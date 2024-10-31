@@ -270,7 +270,7 @@ class AIIncludes(db.Model):
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    agent = db.relationship('AIAgent', backref=db.backref('ai_includes', lazy=True))
+    agent = db.relationship('AIAgent', backref=db.backref('ai_includes', cascade='all, delete-orphan', lazy=True))
 
     def __repr__(self):
         return f'<AIIncludes {self.url}>'

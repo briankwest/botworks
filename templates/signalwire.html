@@ -115,7 +115,7 @@
       "responsive": true,
       "autoWidth": false,
       "ajax": {
-        "url": "{{ url_for('signalwire') }}",
+        "url": "{{ url_for('list_signalwire_params', agent_id=agent_id) }}",
         "dataSrc": "",
         "headers": {
           "Accept": "application/json",
@@ -173,8 +173,8 @@
       };
 
       $.ajax({
-        type: 'POST',
-        url: "{{ url_for('signalwire') }}",
+          type: 'POST',
+          url: "{{ url_for('create_signalwire_param', agent_id=agent_id) }}",
         contentType: 'application/json',
         data: JSON.stringify(formData),
         success: function (response) {
@@ -202,7 +202,7 @@
         if (result.isConfirmed) {
           $.ajax({
             type: 'DELETE',
-            url: "/signalwire/" + id,
+            url: "{{ url_for('delete_signalwire_param', agent_id=agent_id, param_id=0) }}".replace('0', id),
             success: function (response) {
               $('#paramsTable').DataTable().ajax.reload();
               showToast('success', 'Parameter entry deleted successfully');
@@ -219,7 +219,7 @@
       const id = $(this).data('id');
       $.ajax({
         type: 'GET',
-        url: "/signalwire/" + id,
+        url: "{{ url_for('get_signalwire_param_by_id', agent_id=agent_id, param_id=0) }}".replace('0', id),
         success: function (response) {
           $('#editId').val(response.id);
           $('#editParamName').val(response.name);
@@ -240,7 +240,7 @@
 
       $.ajax({
         type: 'PUT',
-        url: "/signalwire/" + formData.id,
+        url: "{{ url_for('update_signalwire_param', agent_id=agent_id, param_id=0) }}".replace('0', formData.id),
         contentType: 'application/json',
         data: JSON.stringify(formData),
         success: function (response) {
