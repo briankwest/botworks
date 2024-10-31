@@ -258,6 +258,9 @@
       "dom": 't'
     });
 
+    // Hide the SWAIG table card initially
+    $('#swaigTable').closest('.card').hide();
+
     $('#checkAllToggle').on('change', function () {
       const isChecked = $(this).is(':checked');
       $('.swaig-checkbox').prop('checked', isChecked);
@@ -285,6 +288,14 @@
 
     function populateSwaigTable(data) {
       console.log('Populating SWAIG table with data:', data);
+      if (data.length > 0) {
+        // Show the SWAIG table container if there is data
+        $('#swaigTable').closest('.card').show();
+      } else {
+        // Hide the SWAIG table container if there is no data
+        $('#swaigTable').closest('.card').hide();
+      }
+
       if ($.fn.DataTable.isDataTable('#swaigTable')) {
         swaigTable.clear().draw();
         data.forEach(item => {
@@ -306,6 +317,8 @@
       $('#reloadButton').hide();
       $('#cancelButton').hide();
       swaigTable.clear().draw();
+      // Hide the SWAIG table container when cleared
+      $('#swaigTable').closest('.card').hide();
     }
 
     $('#cancelButton').on('click', function (e) {
@@ -438,10 +451,10 @@
             },
             {
               "data": null,
-              "className": "text-right",
+              "className": "text-nowrap text-right",
               "render": function (data, type, row) {
                 return `
-                    <div class="text-nowrap">
+                    <div class="text-nowrap text-right">
                       <button class="btn btn-primary btn-sm edit-btn" data-id="${row.id}">
                         <i class="fas fa-edit"></i> Edit
                       </button>

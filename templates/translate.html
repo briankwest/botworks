@@ -184,14 +184,14 @@
         { "data": "to_voice" },
         {
           "data": null,
-          "className": "text-right",
+          "className": "text-nowrap text-right",
           "render": function (data, type, row) {
             return `
-              <div class="text-right">
-                <button class="btn btn-primary btn-sm edit-translator" data-id="${row.id}">
+              <div class="text-nowrap text-right">
+                <button class="btn btn-primary btn-sm mr-2 edit-translator" data-id="${row.id}">
                   <i class="fas fa-edit"></i> Edit
                 </button>
-                <button class="btn btn-danger btn-sm delete-translator" data-id="${row.id}">
+                <button class="btn btn-danger btn-sm mr-2 delete-translator" data-id="${row.id}">
                   <i class="fas fa-trash-alt"></i> Delete
                 </button>
               </div>

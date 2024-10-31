@@ -56,9 +56,11 @@
                   <label for="hintText">Hint Text</label>
                   <input type="text" class="form-control" id="hintText" name="hint" required>
                 </div>
-                <button type="submit" class="btn btn-sm mr-2 btn-success">
-                  <i class="fas fa-plus"></i> Add Hint
-                </button>
+                <div class="card-footer mt-3">
+                  <button type="submit" class="btn btn-sm mr-2 btn-success">
+                    <i class="fas fa-plus"></i> Add Hint
+                  </button>
+                </div>
               </form>
             </div>
           </div>
@@ -118,7 +120,7 @@
         { "data": "hint" },
         {
           "data": null,
-          "className": "text-right",
+          "className": "text-nowrap text-right",
           "render": function (data, type, row) {
             return `
                 <button class="btn btn-primary btn-sm edit-hint mr-2" data-id="${row.id}">
