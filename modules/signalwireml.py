@@ -121,21 +121,18 @@ class SignalWireML:
     def swaig_response_json(self, response):
         return json.dumps(response, indent=4, ensure_ascii=False)
 
+
     def clean_empty_items(self):
-        if not self._SWAIG['functions']:
-            del self._SWAIG['functions']
-        if not self._SWAIG['native_functions']:
-            del self._SWAIG['native_functions']
-        if not self._SWAIG['includes']:
-            del self._SWAIG['includes']
-        if not self._hints:
-            del self._hints
-        if not self._pronounce:
-            del self._pronounce
-        if not self._languages:
-            del self._languages 
-        if not self._params:
-            del self._params
+        keys_to_check = ['functions', 'native_functions', 'includes']
+        for key in keys_to_check:
+            if not self._SWAIG[key]:
+                del self._SWAIG[key]
+                
+        self._hints = [hint for hint in self._hints if hint]
+        self._pronounce = [pronounce for pronounce in self._pronounce if pronounce]
+        self._languages = [language for language in self._languages if language]
+        self._params = {k: v for k, v in self._params.items() if v}
+        self._post_prompt = {k: v for k, v in self._post_prompt.items() if v}
             
     def render(self):
         self.clean_empty_items()
