@@ -1,6 +1,6 @@
 from modules.db import db
 from flask_login import UserMixin
-from datetime import datetime
+from datetime import datetime, timedelta
 import enum
 
 class AIAgent(db.Model):
@@ -401,4 +401,25 @@ class AITranslate(db.Model):
 
     def __repr__(self):
         return f'<AITranslate {self.from_language} to {self.to_language}>'
+
+class PasswordResetToken(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id'), nullable=False)
+    token = db.Column(db.String(100), unique=True, nullable=False)
+    created = db.Column(db.DateTime, default=datetime.utcnow)
+    expires = db.Column(db.DateTime, nullable=False)
+    used = db.Column(db.Boolean, default=False)
+
+    def __init__(self, user_id, token):
+        self.user_id = user_id
+        self.token = token
+        self.created = datetime.utcnow()
+        self.expires = self.created + timedelta(minutes=15)
+        self.used = False
+
+    def is_expired(self):
+        return datetime.utcnow() > self.expires
+
+    def is_valid(self):
+        return not self.used and not self.is_expired()
 

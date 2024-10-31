@@ -14,13 +14,14 @@ from flask_migrate import Migrate
 from dotenv import load_dotenv
 from urllib.parse import urlparse
 from modules.signalwireml import SignalWireML
-from modules.models import db, AIAgent, AIUser, AISignalWireParams, AIFeatures, AIFunctions, AIIncludes, AIConversation, AISWMLRequest, AIParams, AIFunctionArgs, AIPrompt, AIPronounce, AILanguage, AIHints, AIIncludes, AISWMLRequest, AIDebugLogs, AIContext, AISteps, AIHooks, SharedAccess, AITranslate
+from modules.models import db, AIAgent, AIUser, AISignalWireParams, AIFeatures, AIFunctions, AIIncludes, AIConversation, AISWMLRequest, AIParams, AIFunctionArgs, AIPrompt, AIPronounce, AILanguage, AIHints, AIIncludes, AISWMLRequest, AIDebugLogs, AIContext, AISteps, AIHooks, SharedAccess, AITranslate, PasswordResetToken
 from modules.swml_generator import generate_swml_response
 from modules.utils import (
     generate_random_password, get_signalwire_param, 
     setup_default_agent_and_params, create_admin_user,
     get_swaig_includes, check_agent_access
 )
+import secrets
 
 logging.basicConfig(level=logging.DEBUG)
 logging.getLogger('werkzeug').setLevel(logging.WARNING)
@@ -2576,6 +2577,91 @@ def not_found_error(error):
 def internal_error(error):
     db.session.rollback()
     return render_template('500.html'), 500
+
+def send_password_reset_email(email, reset_url):
+    MAILGUN_API_KEY = os.environ.get('MAILGUN_API_KEY')
+    MAILGUN_DOMAIN = os.environ.get('MAILGUN_DOMAIN')
+    FROM_EMAIL = os.environ.get('MAILGUN_FROM_EMAIL')
+    FROM_NAME = os.environ.get('MAILGUN_FROM_NAME')
+    
+    return requests.post(
+        f"https://api.mailgun.net/v3/{MAILGUN_DOMAIN}/messages",
+        auth=("api", MAILGUN_API_KEY),
+        data={
+            "from": f"{FROM_NAME} <{FROM_EMAIL}>",
+            "to": email,
+            "subject": "Password Reset Request",
+            "text": f"To reset your password, please click the following link: {reset_url}\n\n"
+                   f"This link will expire in 15 minutes.\n\n"
+                   f"If you did not request this password reset, please ignore this email."
+        }
+    )
+
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        user = AIUser.query.filter_by(email=email).first()
+        
+        if user:
+            # Generate token and save to database
+            token = secrets.token_urlsafe(32)
+            reset_token = PasswordResetToken(user_id=user.id, token=token)
+            db.session.add(reset_token)
+            db.session.commit()
+            
+            # Generate reset URL
+            reset_url = url_for('reset_password', token=token, _external=True)
+            
+            # Send email
+            try:
+                response = send_password_reset_email(email, reset_url)
+                if response.status_code == 200:
+                    flash('Password reset instructions have been sent to your email.', 'success')
+                else:
+                    flash('Failed to send reset email. Please try again later.', 'error')
+            except Exception as e:
+                app.logger.error(f"Failed to send reset email: {str(e)}")
+                flash('Failed to send reset email. Please try again later.', 'error')
+                
+        else:
+            # To prevent email enumeration, show the same message even if email doesn't exist
+            flash('Password reset instructions have been sent to your email if it exists in our system.', 'success')
+            
+        return redirect(url_for('login'))
+        
+    return render_template('forgot_password.html')
+
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    # Find the token in database
+    reset_token = PasswordResetToken.query.filter_by(token=token).first()
+    
+    if not reset_token or not reset_token.is_valid():
+        flash('Invalid or expired password reset link.', 'error')
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        
+        if password != confirm_password:
+            flash('Passwords do not match.', 'error')
+            return render_template('reset_password.html')
+        
+        # Update user's password
+        user = AIUser.query.get(reset_token.user_id)
+        user.password = generate_password_hash(password, method='pbkdf2:sha256')
+        
+        # Mark token as used
+        reset_token.used = True
+        
+        db.session.commit()
+        
+        flash('Your password has been reset successfully.', 'success')
+        return redirect(url_for('login'))
+        
+    return render_template('reset_password.html')
 
 if __name__ == '__main__':
     with app.app_context():
