@@ -63,6 +63,14 @@ migrate = Migrate(app, db)
 
 auth = HTTPBasicAuth()
 
+@app.context_processor
+def inject_agent_id():
+    if current_user.is_authenticated:
+        first_agent = AIAgent.query.filter_by(user_id=current_user.id).first()
+        if first_agent:
+            return {'agent_id': first_agent.id}
+    return {'agent_id': None}
+
 @auth.verify_password
 def verify_password(username, password):
     full_url = request.url
@@ -2665,10 +2673,10 @@ def reset_password(token):
 # Add API prefix constant
 API_PREFIX = '/api/v1'
 
+
 @app.route('/agents/<int:agent_id>', methods=['GET'])
 @login_required
 def agent_page(agent_id):
-    print(f"Agent ID: {agent_id}")
     return render_template('agents.html', user=current_user, agent_id=agent_id)
 
 # API routes for agents
@@ -3010,21 +3018,6 @@ def delete_signalwire_param(agent_id, param_id):
 @app.route('/agents/<int:agent_id>/prompt', methods=['GET'])
 @login_required
 def prompt_page(agent_id):
-    if request.headers.get('Accept') == 'application/json':
-        prompts = AIPrompt.query.filter_by(agent_id=agent_id).all()
-        return jsonify([{
-            'id': prompt.id,
-            'agent_id': prompt.agent_id,
-            'prompt_type': prompt.prompt_type,
-            'prompt_text': prompt.prompt_text,
-            'top_p': prompt.top_p,
-            'temperature': prompt.temperature,
-            'max_tokens': prompt.max_tokens,
-            'confidence': prompt.confidence,
-            'frequency_penalty': prompt.frequency_penalty,
-            'presence_penalty': prompt.presence_penalty,
-            'created': prompt.created
-        } for prompt in prompts]), 200
     return render_template('prompt.html', user=current_user, agent_id=agent_id)
 
 # API routes for prompts
@@ -3235,8 +3228,9 @@ def delete_context_api(agent_id, context_id):
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/context/<int:context_id>/steps', methods=['GET'])
 @login_required
 def list_context_steps(agent_id, context_id):
-    steps = AISteps.query.filter_by(context_id=context_id, agent_id=agent_id).all()
-    return jsonify([step.to_dict() for step in steps]), 200
+    steps = db.session.query(AISteps, AIContext).join(AIContext, AISteps.context_id == AIContext.id).filter(
+        AISteps.context_id == context_id, AISteps.agent_id == agent_id).all()
+    return jsonify([{'step': step.to_dict(), 'user_id': context.agent_id} for step, context in steps]), 200
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/context/<int:context_id>/steps', methods=['POST'])
 @login_required
@@ -3265,7 +3259,7 @@ def create_context_step(agent_id, context_id):
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/context/<int:context_id>/steps/<int:step_id>', methods=['GET'])
 @login_required
 def get_context_step(agent_id, context_id, step_id):
-    step = AISteps.query.filter_by(id=step_id, context_id=context_id).first_or_404()
+    step = AISteps.query.filter_by(id=step_id, context_id=context_id, agent_id=agent_id).first_or_404()
     return jsonify(step.to_dict()), 200
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/context/<int:context_id>/steps/<int:step_id>', methods=['PUT'])

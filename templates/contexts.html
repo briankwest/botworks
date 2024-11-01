@@ -58,8 +58,8 @@
                 </div>
                 <div class="card-footer mt-3">
                   <button type="submit" class="btn btn-sm mr-2 btn-success">
-                  <i class="fas fa-plus"></i> Add AI Context
-                </button>
+                    <i class="fas fa-plus"></i> Add AI Context
+                  </button>
                 </div>
               </form>
             </div>
@@ -277,256 +277,173 @@
 
 <script>
   $(document).ready(function () {
-    $('.steps-section, .add-step-section').hide();
-
+    const contextDropdowns = $('#stepContextId, #editStepContextId, #validContexts, #editValidContexts');
+    const stepsDropdowns = $('#validSteps, #editValidSteps');
+    const functionsDropdowns = $('#functions, #editFunctions');
     let currentContextId = null;
-
-    function fetchSteps(contextId) {
-        if ($('#stepsTable').DataTable()) {
-            $('#stepsTable').DataTable().destroy();
-        }
-        
-        $('#stepsTable').DataTable({
-            "responsive": true,
-            "autoWidth": false,
-            "ajax": {
-                "url": `/agent/${agent_id}/contexts/${contextId}/steps`,
-                "type": "GET",
-                "dataSrc": "",
-                "headers": {
-                    "Content-Type": "application/json",
-                    "Accept": "application/json"
-                }
-            },
-            "columns": [
-                { "data": "id" },
-                {
-                    "data": "context_id",
-                    "render": function (data, type, row) {
-                        return contextMap[data] || 'Unknown Context';
-                    }
-                },
-                { "data": "name" },
-                { "data": "agent_id", "visible": false },
-                {
-                    "data": "end",
-                    "render": function (data, type, row) {
-                        return `<div class="d-flex justify-content-center">
-                                    <div class="custom-control custom-switch">
-                                        <input type="checkbox" class="custom-control-input toggle-end" id="toggleEnd${row.id}" data-id="${row.id}" ${data ? 'checked' : ''}>
-                                        <label class="custom-control-label" for="toggleEnd${row.id}"></label>
-                                    </div>
-                                </div>`;
-                    }
-                },
-                {
-                    "data": "skip_user_turn",
-                    "render": function (data, type, row) {
-                        return `<div class="d-flex justify-content-center">
-                                    <div class="custom-control custom-switch">
-                                        <input type="checkbox" class="custom-control-input toggle-skip-user-turn" id="toggleSkipUserTurn${row.id}" data-id="${row.id}" ${data ? 'checked' : ''}>
-                                        <label class="custom-control-label" for="toggleSkipUserTurn${row.id}"></label>
-                                    </div>
-                                </div>`;
-                    }
-                },
-                {
-                    "data": "functions",
-                    "render": function (data, type, row) {
-                        if (Array.isArray(data)) {
-                            return data.map(function (funcId) {
-                                return functionMap[funcId] || 'Unknown Function';
-                            }).join(', ');
-                        }
-                        return 'No Functions';
-                    }
-                },
-                {
-                    "data": null,
-                    "className": "text-right",
-                    "render": function (data, type, row) {
-                        return `
-                            <button class="btn btn-sm btn-primary edit-step mr-2" data-id="${row.id}">
-                                <i class="fas fa-edit"></i> Edit
-                            </button>
-                            <button class="btn btn-sm btn-danger delete-step" data-id="${row.id}">
-                                <i class="fas fa-trash-alt"></i> Delete
-                            </button>
-                        `;
-                    }
-                },
-                { "data": "context_id", "visible": false }
-            ]
-        });
-    }
-
-    $('#stepContextId').on('change', function() {
-        currentContextId = $(this).val();
-        if (currentContextId) {
-            fetchSteps(currentContextId);
-        }
-    });
-
-    function checkContextsAndToggleSteps() {
-      $.ajax({
-        type: 'GET',
-        url: "{{ url_for('list_contexts', agent_id=agent_id) }}",
-        contentType: 'application/json',
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json"
-        },
-        success: function (data) {
-          if (Array.isArray(data) && data.length > 0) {
-            $('.steps-section, .add-step-section').show();
-          } else {
-            $('.steps-section, .add-step-section').hide();
-          }
-        },
-        error: function (error) {
-          console.error('Error fetching contexts:', error);
-          showToast('error', 'Error fetching contexts');
-        }
-      });
-    }
-
-    // Initialize in sequence
-    checkContextsAndToggleSteps()
-        .then(() => populateContextDropdown())
-        .then(() => {
-            if (currentContextId) {
-                fetchSteps(currentContextId);
-            }
-        })
-        .catch(error => {
-            console.error('Initialization error:', error);
-            showToast('error', 'Error initializing page');
-        });
-
-    $('#contextTable').DataTable({
-      "responsive": true,
-      "autoWidth": false,
-      "ajax": {
-        "url": "{{ url_for('list_contexts', agent_id=agent_id) }}",
-        "type": "GET",
-        "dataSrc": "",
-        "headers": {
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        }
-      },
-      "columns": [
-        { "data": "id" },
-        { "data": "context_name" },
-        { "data": "agent_id", "visible": false },
-        {
-          "data": null,
-          "className": "text-nowrap text-right",
-          "render": function (data, type, row) {
-            return `
-              <button class="btn btn-sm btn-primary edit-context mr-2" data-id="${row.id}">
-                <i class="fas fa-edit"></i> Edit
-              </button>
-              <button class="btn btn-sm btn-danger delete-context" data-id="${row.id}">
-                <i class="fas fa-trash-alt"></i> Delete
-              </button>
-            `;
-          }
-        }
-      ]
-    });
-
     let contextMap = {};
-
-    function fetchContexts(context_id) {
-      return $.ajax({
-        type: 'GET',
-        url: "{{ url_for('list_contexts', agent_id=agent_id, context_id=context_id) }}",
-        contentType: 'application/json',
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json"
-        },
-        success: function (data) {
-          if (Array.isArray(data)) {
-            contextMap = {};
-            data.forEach(function (context) {
-              contextMap[context.id] = context.context_name;
-            });
-          }
-        },
-        error: function (error) {
-          console.error('Error fetching contexts:', error);
-          showToast('error', 'Error fetching contexts');
-        }
-      });
-    }
-
     let functionMap = {};
 
-    function fetchFunctions() {
+    function initializePage() {
+      $('.steps-section, .add-step-section').hide();
+      checkContextsAndToggleSteps()
+        .then(populateContextDropdown)
+        .then(() => {
+          if (currentContextId) {
+            fetchSteps(currentContextId);
+          }
+        })
+        .catch(handleError('Error initializing page'));
+      fetchContexts();
+    }
+
+    function fetchData(url, successCallback) {
       return $.ajax({
         type: 'GET',
-        url: "{{ url_for('functions') }}",
+        url: url,
         contentType: 'application/json',
         headers: {
           "Accept": "application/json",
           "Content-Type": "application/json"
         },
-        success: function (data) {
-          if (Array.isArray(data)) {
-            functionMap = {};
-            data.forEach(function (func) {
-              functionMap[func.id] = func.name;
-            });
-          }
-        },
-        error: function (error) {
-          console.error('Error fetching functions:', error);
-          showToast('error', 'Error fetching functions');
+        success: successCallback,
+        error: handleError('Error fetching data')
+      });
+    }
+
+    function populateDropdown(dropdown, data, key, value) {
+      dropdown.empty();
+      data.forEach(item => dropdown.append(new Option(item[value], item[key])));
+      dropdown.trigger('change');
+    }
+
+    function checkContextsAndToggleSteps() {
+      return fetchData("{{ url_for('list_contexts', agent_id=agent_id) }}", function (data) {
+        if (Array.isArray(data) && data.length > 0) {
+          $('.steps-section, .add-step-section').show();
+        } else {
+          $('.steps-section, .add-step-section').hide();
         }
       });
     }
 
     function populateContextDropdown() {
-      return new Promise((resolve, reject) => {
-        $.ajax({
-          type: 'GET',
-          url: `/agent/${agent_id}/contexts`,
-          contentType: 'application/json',
-          headers: {
-            "Accept": "application/json",
-            "Content-Type": "application/json"
-          },
-          success: function (data) {
-            const contextDropdowns = $('#stepContextId, #editStepContextId, #validContexts, #editValidContexts');
-            contextDropdowns.empty();
-            
-            if (Array.isArray(data) && data.length > 0) {
-              data.forEach(function (context) {
-                contextDropdowns.append(new Option(context.context_name, context.id));
-              });
-              
-              // Set the first context as selected if none is currently selected
-              if (!currentContextId) {
-                currentContextId = data[0].id;
-                $('#stepContextId').val(currentContextId).trigger('change');
-              }
-            }
-            resolve(data);
-          },
-          error: function (error) {
-            console.error('Error fetching contexts:', error);
-            showToast('error', 'Error fetching contexts');
-            reject(error);
-          }
-        });
+      return fetchData(`/api/v1/agents/${agent_id}/context`, function (data) {
+        populateDropdown(contextDropdowns, data, 'id', 'context_name');
+        if (!currentContextId && data.length > 0) {
+          currentContextId = data[0].id;
+          $('#stepContextId').val(currentContextId).trigger('change');
+        }
       });
     }
 
-    function sanitizeInput(input) {
-      return input.replace(/[^a-zA-Z0-9]/g, '_');
+    function fetchSteps(contextId) {
+      if ($.fn.DataTable.isDataTable('#stepsTable')) {
+        $('#stepsTable').DataTable().destroy();
+      }
+      $('#stepsTable').DataTable({
+        "responsive": true,
+        "autoWidth": false,
+        "ajax": {
+          "url": `/api/v1/agents/${agent_id}/context/${contextId}/steps`,
+          "type": "GET",
+          "dataSrc": "",
+          "headers": {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          }
+        },
+        "columns": [
+          { "data": "step.id" },
+          { "data": "step.context_id" },
+          { "data": "step.name" },
+          { "data": "user_id" },
+          {
+            "data": "step.end",
+            "render": function (data, type, row) {
+              return createSwitch('toggle-end', row.step.id, data);
+            }
+          },
+          {
+            "data": "step.skip_user_turn",
+            "render": function (data, type, row) {
+              return createSwitch('toggle-skip-user-turn', row.step.id, data);
+            }
+          },
+          {
+            "data": "step.functions",
+            "render": function (data) {
+              return renderFunctions(data);
+            }
+          },
+          {
+            "data": null,
+            "className": "text-right",
+            "render": function (data, type, row) {
+              return createActionButtons(row.step.id);
+            }
+          }
+        ]
+      });
     }
+
+    function createSwitch(className, id, checked) {
+      return `<div class="d-flex justify-content-center">
+                <div class="custom-control custom-switch">
+                  <input type="checkbox" class="custom-control-input ${className}" id="${className}${id}" data-id="${id}" ${checked ? 'checked' : ''}>
+                  <label class="custom-control-label" for="${className}${id}"></label>
+                </div>
+              </div>`;
+    }
+
+    function renderFunctions(data) {
+      if (Array.isArray(data)) {
+        return data.map(funcId => functionMap[funcId] || 'Unknown Function').join(', ');
+      }
+      return 'No Functions';
+    }
+
+    function createActionButtons(id) {
+      return `<button class="btn btn-sm btn-primary edit-step mr-2" data-id="${id}">
+                <i class="fas fa-edit"></i> Edit
+              </button>
+              <button class="btn btn-sm btn-danger delete-step" data-id="${id}">
+                <i class="fas fa-trash-alt"></i> Delete
+              </button>`;
+    }
+
+    function handleError(message) {
+      return function (error) {
+        console.error(message, error);
+        showToast('error', message);
+      };
+    }
+
+    function showToast(icon, title) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+          toast.addEventListener('mouseenter', Swal.stopTimer);
+          toast.addEventListener('mouseleave', Swal.resumeTimer);
+        }
+      });
+
+      Toast.fire({
+        icon: icon,
+        title: title
+      });
+    }
+
+    $('#stepContextId').on('change', function () {
+      currentContextId = $(this).val();
+      if (currentContextId) {
+        fetchSteps(currentContextId);
+      }
+    });
 
     $('#addContextForm, #editContextForm').on('input', '#contextName, #editContextName', function () {
       this.value = sanitizeInput(this.value);
@@ -536,6 +453,10 @@
       this.value = sanitizeInput(this.value);
     });
 
+    function sanitizeInput(input) {
+      return input.replace(/[^a-zA-Z0-9]/g, '_');
+    }
+
     $('#addContextForm').submit(function (e) {
       e.preventDefault();
       const formData = {
@@ -544,7 +465,7 @@
 
       $.ajax({
         type: 'POST',
-        url: `/agent/${agent_id}/contexts`,
+        url: `/api/v1/agents/${agent_id}/context`,
         contentType: 'application/json',
         data: JSON.stringify(formData),
         success: function (response) {
@@ -552,21 +473,15 @@
           $('#addContextForm')[0].reset();
           showToast('success', 'AI Context created successfully');
           checkContextsAndToggleSteps();
-          
-          // Update context dropdowns and select the new context
           populateContextDropdown().then(() => {
             if (response.id) {
               $('#stepContextId').val(response.id).trigger('change');
             }
           });
         },
-        error: function (error) {
-          showToast('error', 'Error creating AI Context');
-        }
+        error: handleError('Error creating AI Context')
       });
     });
-
-    $('#validSteps, #validContexts, #functions').select2();
 
     $('#addStepForm').submit(function (e) {
       e.preventDefault();
@@ -583,11 +498,9 @@
         skip_user_turn: $('#skipUserTurn').is(':checked')
       };
 
-      console.log('Form Data:', formData);
-
       $.ajax({
         type: 'POST',
-        url: `/api/v1/agent/${agent_id}/context/${currentContextId}/steps`,
+        url: `/api/v1/agents/${agent_id}/context/${currentContextId}/steps`,
         contentType: 'application/json',
         data: JSON.stringify(formData),
         success: function (response) {
@@ -597,9 +510,7 @@
           showToast('success', 'AI Step created successfully');
           populateContextDropdown();
         },
-        error: function (error) {
-          showToast('error', 'Error creating AI Step');
-        }
+        error: handleError('Error creating AI Step')
       });
     });
 
@@ -609,15 +520,13 @@
 
       $.ajax({
         type: 'GET',
-        url: `/api/v1/agent/${agent_id}/context/${contextId}`,
+        url: `/api/v1/agents/${agent_id}/context/${contextId}`,
         success: function (data) {
           $('#editContextId').val(data.id);
           $('#editContextName').val(data.context_name);
           $('#editContextModal').modal('show');
         },
-        error: function (error) {
-          showToast('error', 'Error fetching context details');
-        }
+        error: handleError('Error fetching context details')
       });
     });
 
@@ -631,7 +540,7 @@
 
       $.ajax({
         type: 'PUT',
-        url: `/api/v1/agent/${agent_id}/context/${contextId}`,
+        url: `/api/v1/agents/${agent_id}/context/${contextId}`,
         contentType: 'application/json',
         data: JSON.stringify(formData),
         success: function (response) {
@@ -639,9 +548,7 @@
           $('#editContextModal').modal('hide');
           showToast('success', 'AI Context updated successfully');
         },
-        error: function (error) {
-          showToast('error', 'Error updating AI Context');
-        }
+        error: handleError('Error updating AI Context')
       });
     });
 
@@ -660,7 +567,7 @@
         if (result.isConfirmed) {
           $.ajax({
             type: 'DELETE',
-            url: `/api/v1/agent/${agent_id}/context/${contextId}`,
+            url: `/api/v1/agents/${agent_id}/context/${contextId}`,
             success: function (response) {
               $('#contextTable').DataTable().ajax.reload();
               $('#stepsTable').DataTable().ajax.reload();
@@ -669,43 +576,11 @@
               populateContextDropdown();
               fetchContexts(contextId);
             },
-            error: function (error) {
-              showToast('error', 'Error deleting AI Context');
-            }
+            error: handleError('Error deleting AI Context')
           });
         }
       });
     });
-
-    function populateEditContextDropdown(selectedContextId) {
-      $.ajax({
-        type: 'GET',
-        url: `/api/v1/agent/${agent_id}/contexts`,
-        contentType: 'application/json',
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json"
-        },
-        success: function (data) {
-          if (Array.isArray(data)) {
-            const contextDropdown = $('#editStepContextId');
-            
-            contextDropdown.empty();
-            data.forEach(function (context) {
-              contextDropdown.append(new Option(context.context_name, context.id));
-            });
-            contextDropdown.val(selectedContextId).trigger('change');
-          } else {
-            console.error('Expected an array but got:', data);
-            showToast('error', 'Unexpected response format');
-          }
-        },
-        error: function (error) {
-          console.error('Error fetching contexts:', error);
-          showToast('error', 'Error fetching contexts');
-        }
-      });
-    }
 
     $('#stepsTable').on('click', '.edit-step', function () {
       const stepId = $(this).data('id');
@@ -713,7 +588,7 @@
       const currentContextId = $('#stepContextId').val();
       $.ajax({
         type: 'GET',
-        url: `/api/v1/agent/${agent_id}/context/${currentContextId}/steps/${stepId}`,
+        url: `/api/v1/agents/${agent_id}/context/${currentContextId}/steps/${stepId}`,
         success: function (data) {
           $('#editStepId').val(data.id);
           $('#editStepName').val(data.name);
@@ -727,9 +602,7 @@
           populateEditContextDropdown(data.context_id);
           $('#editStepModal').modal('show');
         },
-        error: function (error) {
-          showToast('error', 'Error fetching step details');
-        }
+        error: handleError('Error fetching step details')
       });
     });
 
@@ -737,7 +610,6 @@
       e.preventDefault();
       const stepId = $('#editStepId').val();
       const selectedContextId = $('#editStepContextId').val();
-      console.log('Selected Context ID:', selectedContextId);
 
       const formData = {
         context_id: selectedContextId,
@@ -753,7 +625,7 @@
 
       $.ajax({
         type: 'PUT',
-        url: `/api/v1/agent/${agent_id}/context/${currentContextId}/steps/${stepId}`,
+        url: `/api/v1/agents/${agent_id}/context/${currentContextId}/steps/${stepId}`,
         contentType: 'application/json',
         data: JSON.stringify(formData),
         success: function (response) {
@@ -761,9 +633,7 @@
           $('#editStepModal').modal('hide');
           showToast('success', 'AI Step updated successfully');
         },
-        error: function (error) {
-          showToast('error', 'Error updating AI Step');
-        }
+        error: handleError('Error updating AI Step')
       });
     });
 
@@ -781,169 +651,15 @@
         if (result.isConfirmed) {
           $.ajax({
             type: 'DELETE',
-            url: `/api/v1/agent/${agent_id}/context/${currentContextId}/steps/${stepId}`,
+            url: `/api/v1/agents/${agent_id}/context/${currentContextId}/steps/${stepId}`,
             success: function (response) {
               handlePutOrDeleteSuccess();
             },
-            error: function (error) {
-              showToast('error', 'Error deleting AI Step');
-            }
+            error: handleError('Error deleting AI Step')
           });
         }
       });
     });
-
-    function showToast(icon, title) {
-      const Toast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-        didOpen: (toast) => {
-          toast.addEventListener('mouseenter', Swal.stopTimer)
-          toast.addEventListener('mouseleave', Swal.resumeTimer)
-        }
-      });
-
-      Toast.fire({
-        icon: icon,
-        title: title
-      });
-    }
-
-    $('#validSteps, #validContexts, #functions, #editValidSteps, #editValidContexts, #editFunctions').select2({
-      templateResult: function (data) {
-        if (!data.id) {
-          return data.text;
-        }
-        var $result = $('<span style="color: black;">' + data.text + '</span>');
-        return $result;
-      },
-      templateSelection: function (data) {
-        return $('<span style="color: black;">' + data.text + '</span>');
-      }
-    });
-
-    function populateStepsDropdown() {
-      $.ajax({
-        type: 'GET',
-        url: `/api/v1/agent/${agent_id}/context/${currentContextId}/steps`,
-        contentType: 'application/json',
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json"
-        },
-        success: function (data) {
-          const stepsDropdown = $('#validSteps, #editValidSteps');
-          stepsDropdown.empty();
-          data.forEach(function (step) {
-            stepsDropdown.append(new Option(step.name, step.id));
-          });
-          stepsDropdown.trigger('change');
-        },
-        error: function (error) {
-          console.error('Error fetching steps:', error);
-          showToast('error', 'Error fetching steps');
-        }
-      });
-    }
-
-    function populateFunctionsDropdown() {
-      $.ajax({
-        type: 'GET',
-        url: `/api/v1/agent/${agent_id}/functions`,
-        contentType: 'application/json',
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json"
-        },
-        success: function (data) {
-          const functionsDropdown = $('#functions, #editFunctions');
-          functionsDropdown.empty();
-          data.forEach(function (func) {
-            functionsDropdown.append(new Option(func.name, func.id));
-          });
-        },
-        error: function (error) {
-          console.error('Error fetching functions:', error);
-          showToast('error', 'Error fetching functions');
-        }
-      });
-    }
-
-    populateFunctionsDropdown();
-
-    populateContextDropdown();
-    populateStepsDropdown();
-
-    function refreshMultiSelects() {
-      $.ajax({
-        type: 'GET',
-        url: "{{ url_for('list_contexts', agent_id=agent_id) }}",
-        contentType: 'application/json',
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json"
-        },
-        success: function (data) {
-          const contextDropdowns = $('#validContexts, #editValidContexts');
-          contextDropdowns.empty();
-          data.forEach(function (context) {
-            contextDropdowns.append(new Option(context.context_name, context.id));
-          });
-          contextDropdowns.trigger('change');
-        },
-        error: function (error) {
-          console.error('Error fetching contexts:', error);
-          showToast('error', 'Error fetching contexts');
-        }
-      });
-
-      $.ajax({
-        type: 'GET',
-        url: "{{ url_for('list_steps', agent_id=agent_id) }}",
-        contentType: 'application/json',
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json"
-        },
-        success: function (data) {
-          const stepsDropdowns = $('#validSteps, #editValidSteps');
-          stepsDropdowns.empty();
-          data.forEach(function (step) {
-            stepsDropdowns.append(new Option(step.name, step.id));
-          });
-          stepsDropdowns.trigger('change');
-        },
-        error: function (error) {
-          console.error('Error fetching steps:', error);
-          showToast('error', 'Error fetching steps');
-        }
-      });
-
-      $.ajax({
-        type: 'GET',
-        url: "{{ url_for('list_functions', agent_id=agent_id) }}",
-        contentType: 'application/json',
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json"
-        },
-        success: function (data) {
-          const functionsDropdowns = $('#functions, #editFunctions');
-          functionsDropdowns.empty();
-          data.forEach(function (func) {
-            functionsDropdowns.append(new Option(func.name, func.id));
-          });
-          functionsDropdowns.trigger('change');
-        },
-        error: function (error) {
-          console.error('Error fetching functions:', error);
-          showToast('error', 'Error fetching functions');
-        }
-      });
-    }
 
     function handlePutOrDeleteSuccess() {
       $('#stepsTable').DataTable().ajax.reload();
@@ -969,17 +685,62 @@
 
       $.ajax({
         type: 'PUT',
-        url: `{{ url_for('get_step', agent_id=agent_id, step_id=stepId) }}`,
+        url: `/api/v1/agents/${agent_id}/context/${currentContextId}/steps/${stepId}`,
         contentType: 'application/json',
         data: JSON.stringify(formData),
         success: function (response) {
           showToast('success', `AI Step ${field} updated successfully`);
         },
-        error: function (error) {
-          showToast('error', `Error updating AI Step ${field}`);
-        }
+        error: handleError(`Error updating AI Step ${field}`)
       });
     }
+
+    function refreshMultiSelects() {
+      fetchData(`/api/v1/agents/${agent_id}/context`, function (data) {
+        populateDropdown(contextDropdowns, data, 'id', 'context_name');
+      });
+
+      fetchData(`/api/v1/agents/${agent_id}/context/${currentContextId}/steps`, function (data) {
+        populateDropdown(stepsDropdowns, data, 'id', 'name');
+      });
+
+      fetchData(`/api/v1/agents/${agent_id}/functions`, function (data) {
+        populateDropdown(functionsDropdowns, data, 'id', 'name');
+      });
+    }
+
+    function fetchContexts() {
+      if ($.fn.DataTable.isDataTable('#contextTable')) {
+        $('#contextTable').DataTable().destroy();
+      }
+      $('#contextTable').DataTable({
+        "responsive": true,
+        "autoWidth": false,
+        "ajax": {
+          "url": `/api/v1/agents/${agent_id}/context`,
+          "type": "GET",
+          "dataSrc": "",
+          "headers": {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          }
+        },
+        "columns": [
+          { "data": "id" },
+          { "data": "context_name" },
+          { "data": "agent_id" },
+          {
+            "data": null,
+            "className": "text-right",
+            "render": function (data, type, row) {
+              return createActionButtons(row.id);
+            }
+          }
+        ]
+      });
+    }
+
+    initializePage();
   });
 </script>
 {% endblock %}
