@@ -57,14 +57,14 @@
             </li>
             <li class="nav-item">
               <a href="{{ url_for('conversation_page', agent_id=agent_id) }}"
-                class="nav-link {{ 'active' if request.endpoint == 'conversations' else '' }}">
+                class="nav-link {{ 'active' if 'agents' in request.path and 'conversation_page' in request.endpoint else '' }}">
                 <i class="nav-icon fas fa-comments"></i>
                 <p>Conversations</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('pronounce_page', agent_id=agent_id) }}"
-                class="nav-link {{ 'active' if request.endpoint == 'pronounce' else '' }}">
+                class="nav-link {{ 'active' if 'agents' in request.path and 'pronounce_page' in request.endpoint else '' }}">
                 <i class="nav-icon fas fa-bullhorn"></i>
                 <p>Pronounce</p>
               </a>
@@ -78,27 +78,27 @@
             </li>
             <li class="nav-item">
               <a href="{{ url_for('context_page', agent_id=agent_id) }}"
-                class="nav-link {{ 'active' if request.endpoint == 'context' else '' }}">
+                class="nav-link {{ 'active' if 'agents' in request.path and 'context_page' in request.endpoint else '' }}">
                 <i class="nav-icon fas fa-sitemap"></i>
                 <p>Contexts</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('hints_page', agent_id=agent_id) }}"
-                class="nav-link {{ 'active' if request.endpoint == 'hints_page' else '' }}">
+                class="nav-link {{ 'active' if 'agents' in request.path and 'hints_page' in request.endpoint else '' }}">
                 <i class="nav-icon fas fa-lightbulb"></i>
                 <p>Hints</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="{{ url_for('parameters_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if request.endpoint == 'params' else '' }}">
+              <a href="{{ url_for('parameters_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if 'agents' in request.path and 'parameters_page' in request.endpoint else '' }}">
                 <i class="nav-icon fas fa-sliders-h"></i>
                 <p>Parameters</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('aifeatures_page', agent_id=agent_id) }}"
-                class="nav-link {{ 'active' if request.endpoint == 'aifeatures' else '' }}">
+                class="nav-link {{ 'active' if 'agents' in request.path and 'aifeatures_page' in request.endpoint else '' }}">
                 <i class="nav-icon fas fa-brain"></i>
                 <p>Features</p>
               </a>
@@ -131,7 +131,7 @@
             </li>
             <li class="nav-item">
               <a href="{{ url_for('swmlrequests_page', agent_id=agent_id) }}"
-                class="nav-link {{ 'active' if request.endpoint == 'swmlrequests' else '' }}">
+                class="nav-link {{ 'active' if 'agents' in request.path and 'swmlrequests_page' in request.endpoint else '' }}">
                 <i class="nav-icon fas fa-file-alt"></i>
                 <p>Requests</p>
               </a>

@@ -258,33 +258,6 @@ def process_ai_data(agent_id, ai_data):
 
     db.session.commit()
 
-@app.route('/swmlrequests/<int:agent_id>', methods=['DELETE'])
-@login_required
-@check_agent_access
-def delete_swmlrequests(selected_agent_id, agent_id):
-    AISWMLRequest.query.filter_by(agent_id=agent_id).delete()
-    db.session.commit()
-    return jsonify({'message': 'All SWML requests for the agent deleted successfully'}), 200
-
-@app.route('/swmlrequests', methods=['GET'])
-@login_required
-@check_agent_access
-def swmlrequests(selected_agent_id):
-    if request.headers.get('Accept') == 'application/json':
-        swml_requests = AISWMLRequest.query.filter_by(agent_id=selected_agent_id).all()
-
-        swml_requests_data = [{
-            'id': req.id,
-            'created': req.created,
-            'request': req.request,
-            'response': req.response,
-            'ip_address': req.ip_address
-        } for req in swml_requests]
-        return jsonify(swml_requests_data), 200
-
-    else:
-        return render_template('swmlrequests.html', user=current_user)
-
 @app.route('/dashboard/completed', methods=['GET'])
 @login_required
 @check_agent_access
@@ -574,196 +547,6 @@ def view_conversation(selected_agent_id, id):
     
     return render_template('conversation.html', id=id, user=current_user)
 
-@app.route('/conversations')
-@login_required
-@check_agent_access
-def conversations(selected_agent_id):
-    if request.method == 'GET':
-        if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
-            conversations = AIConversation.query.filter_by(agent_id=selected_agent_id).all()
-            conversation_list = [{
-                'id': conv.id,
-                'created': conv.created.isoformat(),
-                'data': conv.data
-            } for conv in conversations]
-            return jsonify(conversation_list), 200
-        else:
-            return render_template('conversations.html', user=current_user)
-
-@app.route('/conversations/<int:id>', methods=['GET', 'DELETE'])
-@login_required
-@check_agent_access
-def get_or_delete_conversation(selected_agent_id, id):
-    conversation = AIConversation.query.filter_by(id=id, agent_id=selected_agent_id).first_or_404()
-
-    if request.method == 'GET':
-        next_conversation = AIConversation.query.filter(
-            AIConversation.id > id,
-            AIConversation.agent_id == selected_agent_id
-        ).order_by(AIConversation.id.asc()).first()
-        
-        prev_conversation = AIConversation.query.filter(
-            AIConversation.id < id,
-            AIConversation.agent_id == selected_agent_id
-        ).order_by(AIConversation.id.desc()).first()
-
-        return jsonify({
-            'id': conversation.id,
-            'created': conversation.created,
-            'data': conversation.data,
-            'next': next_conversation.id if next_conversation else None,
-            'prev': prev_conversation.id if prev_conversation else None
-        }), 200
-
-    elif request.method == 'DELETE':
-        db.session.delete(conversation)
-        db.session.commit()
-        return jsonify({'message': 'Conversation deleted successfully'}), 200
-
-@app.route('/hints', methods=['GET', 'POST'])
-@login_required
-@check_agent_access
-def hints(selected_agent_id):
-    if request.method == 'GET':
-        if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
-            hints = AIHints.query.filter_by(agent_id=selected_agent_id).all()
-            return jsonify([{
-                'id': hint.id,
-                'hint': hint.hint,
-                'created': hint.created
-            } for hint in hints]), 200
-        else:
-            return render_template('hints.html', user=current_user)
-    elif request.method == 'POST':
-        data = request.get_json()
-        new_hint = AIHints(
-            hint=data['hint'],
-            agent_id=selected_agent_id
-        )
-        db.session.add(new_hint)
-        db.session.commit()
-        return jsonify({'message': 'Hint entry created successfully'}), 201
-
-@app.route('/hints/<int:id>', methods=['GET', 'PUT', 'DELETE'])
-@login_required
-@check_agent_access
-def hint(selected_agent_id, id):
-    hint_entry = AIHints.query.filter_by(id=id, agent_id=selected_agent_id).first_or_404()
-    
-    if request.method == 'GET':
-        return jsonify({
-            'id': hint_entry.id,
-            'hint': hint_entry.hint
-        }), 200
-    elif request.method == 'PUT':
-        data = request.get_json()
-        hint_entry.hint = data.get('hint', hint_entry.hint)
-        db.session.commit()
-        return jsonify({'message': 'Hint entry updated successfully'}), 200
-    elif request.method == 'DELETE':
-        db.session.delete(hint_entry)
-        db.session.commit()
-        return jsonify({'message': 'Hint entry deleted successfully'}), 200
-
-@app.route('/signalwire/<int:id>', methods=['GET', 'PUT', 'DELETE'])
-@login_required
-@check_agent_access
-def manage_signalwire(selected_agent_id, id):
-    signalwire_entry = AISignalWireParams.query.filter_by(id=id, agent_id=selected_agent_id).first_or_404()
-    
-    if request.method == 'GET':
-        return jsonify({
-            'id': signalwire_entry.id,
-            'name': signalwire_entry.name,
-            'value': signalwire_entry.value
-        }), 200
-
-    elif request.method == 'PUT':
-        data = request.get_json()
-        signalwire_entry.value = data.get('value', signalwire_entry.value)
-        db.session.commit()
-        return jsonify({'message': 'SignalWire entry updated successfully'}), 200
-
-    elif request.method == 'DELETE':
-        db.session.delete(signalwire_entry)
-        db.session.commit()
-        return jsonify({'message': 'SignalWire entry deleted successfully'}), 200
-
-@app.route('/signalwire', methods=['GET', 'POST'])
-@login_required
-@check_agent_access
-def signalwire(selected_agent_id):
-    if request.method == 'GET':
-        if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
-            params = AISignalWireParams.query.filter_by(agent_id=selected_agent_id).all()
-            return jsonify([{
-                'id': param.id,
-                'name': param.name,
-                'value': param.value,
-                'created': param.created
-            } for param in params]), 200
-        else:
-            return render_template('signalwire.html', user=current_user)
-    elif request.method == 'POST':
-        data = request.get_json()
-        new_params = AISignalWireParams(
-            name=data['name'],
-            value=data['value'],
-            agent_id=selected_agent_id
-        )
-        db.session.add(new_params)
-        db.session.commit()
-        return jsonify({'message': 'SignalWire entry created successfully'}), 201
-
-@app.route('/params/<int:id>', methods=['GET', 'PUT', 'DELETE'])
-@login_required
-@check_agent_access
-def manage_params(selected_agent_id, id):
-    params_entry = AIParams.query.filter_by(id=id, agent_id=selected_agent_id).first_or_404()
-    
-    if request.method == 'GET':
-        return jsonify({
-            'id': params_entry.id,
-            'name': params_entry.name,
-            'value': params_entry.value
-        }), 200
-
-    elif request.method == 'PUT':
-        data = request.get_json()
-        params_entry.value = data.get('value', params_entry.value)
-        db.session.commit()
-        return jsonify({'message': 'Params entry updated successfully'}), 200
-
-    elif request.method == 'DELETE':
-        db.session.delete(params_entry)
-        db.session.commit()
-        return jsonify({'message': 'Params entry deleted successfully'}), 200
-
-@app.route('/params', methods=['GET', 'POST'])
-@login_required
-@check_agent_access
-def params(selected_agent_id):
-    if request.method == 'GET':
-        if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
-            params = AIParams.query.filter_by(agent_id=selected_agent_id).all()
-            return jsonify([{
-                'id': param.id,
-                'name': param.name,
-                'value': param.value,
-                'created': param.created
-            } for param in params]), 200
-        else:
-            return render_template('parameters.html', user=current_user)
-    elif request.method == 'POST':
-        data = request.get_json()
-        new_params = AIParams(
-            name=data['name'],
-            value=data['value'],
-            agent_id=selected_agent_id
-        )
-        db.session.add(new_params)
-        db.session.commit()
-        return jsonify({'message': 'Params entry created successfully'}), 201
 
 @app.route('/refresh', methods=['POST'])
 @login_required
@@ -1002,266 +785,6 @@ def postprompt(agent_id):
     
     redis_client.publish(f"debug_channel_{agent_id}", json.dumps(message))
     return jsonify({'message': 'Conversation entry created successfully'}), 201
-
-@app.route('/pronounce/<int:id>', methods=['PUT'])
-@login_required
-def update2_pronounce(selected_agent_id, id):
-    pronounce_entry = AIPronounce.query.get_or_404(id)
-    
-    data = request.get_json()
-    
-    pronounce_entry.replace_this = data.get('replace_this', pronounce_entry.replace_this)
-    pronounce_entry.replace_with = data.get('replace_with', pronounce_entry.replace_with)
-    pronounce_entry.ignore_case = data.get('ignore_case', pronounce_entry.ignore_case)
-    
-    db.session.commit()
-    return jsonify({'message': 'Pronounce entry updated successfully'}), 200
-
-@app.route('/pronounce', methods=['GET', 'POST'])
-@login_required
-@check_agent_access
-def pronounce(selected_agent_id):
-    if request.method == 'GET':
-        if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
-            pronounces = AIPronounce.query.filter_by(agent_id=selected_agent_id).all()
-            pronounce_list = [{
-                'id': p.id,
-                'replace_this': p.replace_this,
-                'replace_with': p.replace_with,
-                'ignore_case': p.ignore_case
-            } for p in pronounces]
-            return jsonify(pronounce_list), 200
-        else:
-            return render_template('pronounce.html', user=current_user)
-    elif request.method == 'POST':
-        data = request.get_json()
-        new_pronounce = AIPronounce(
-            replace_this=data['replace_this'],
-            replace_with=data['replace_with'],
-            ignore_case=data.get('ignore_case', False),
-            agent_id=selected_agent_id
-        )
-        db.session.add(new_pronounce)
-        db.session.commit()
-        return jsonify({'message': 'Pronounce entry created successfully'}), 201
-
-@app.route('/pronounce/<int:id>', methods=['DELETE'])
-@login_required
-@check_agent_access
-def delete2_pronounce(selected_agent_id, id):
-    pronounce_entry = AIPronounce.query.get_or_404(id)
-    db.session.delete(pronounce_entry)
-    db.session.commit()
-    return jsonify({'message': 'Pronounce entry deleted successfully'}), 200
-
-@app.route('/prompt', methods=['GET', 'POST'])
-@login_required
-@check_agent_access
-def prompt(selected_agent_id):
-    if request.method == 'GET':
-        if request.headers.get('Accept') == 'application/json':
-            prompt_entries = AIPrompt.query.filter_by(agent_id=selected_agent_id).all()
-            response_data = [
-                {
-                    'id': prompt_entry.id,
-                    'prompt_type': prompt_entry.prompt_type,
-                    'prompt_text': prompt_entry.prompt_text,
-                    'top_p': prompt_entry.top_p,
-                    'temperature': prompt_entry.temperature,
-                    'max_tokens': prompt_entry.max_tokens,
-                    'confidence': prompt_entry.confidence,
-                    'frequency_penalty': prompt_entry.frequency_penalty,
-                    'presence_penalty': prompt_entry.presence_penalty
-                } for prompt_entry in prompt_entries
-            ]
-            return jsonify(response_data), 200
-        else:
-            return render_template('prompt.html', user=current_user)
-    
-    elif request.method == 'POST':
-        data = request.json
-        user_id = current_user.id
-        
-        float_keys = ['top_p', 'temperature', 'confidence', 'frequency_penalty', 'presence_penalty']
-        integer_keys = ['max_tokens']
-        
-        for key in float_keys + integer_keys:
-            if key in data and data[key] == '':
-                data[key] = None
-        
-        existing_prompt = AIPrompt.query.filter_by(agent_id=selected_agent_id, prompt_type=data['prompt_type']).first()
-        
-        if existing_prompt:
-            existing_prompt.prompt_text = data['prompt_text']
-            existing_prompt.top_p = data['top_p']
-            existing_prompt.temperature = data['temperature']
-            existing_prompt.max_tokens = data['max_tokens']
-            existing_prompt.confidence = data['confidence']
-            existing_prompt.frequency_penalty = data['frequency_penalty']
-            existing_prompt.presence_penalty = data['presence_penalty']
-            db.session.commit()
-            return jsonify({'message': 'Prompt updated successfully'}), 200
-        else:
-            new_prompt = AIPrompt(
-                agent_id=selected_agent_id,
-                prompt_type=data['prompt_type'],
-                prompt_text=data['prompt_text'],
-                top_p=data['top_p'],
-                temperature=data['temperature'],
-                max_tokens=data['max_tokens'],
-                confidence=data['confidence'],
-                frequency_penalty=data['frequency_penalty'],
-                presence_penalty=data['presence_penalty']
-            )
-            db.session.add(new_prompt)
-            db.session.commit()
-            return jsonify({'message': 'Prompt created successfully'}), 201
-
-@app.route('/prompt/<int:id>', methods=['DELETE'])
-@login_required
-@check_agent_access
-def delete_prompt(selected_agent_id, id):
-    prompt_entry = AIPrompt.query.get_or_404(id)
-        
-    db.session.delete(prompt_entry)
-    db.session.commit()
-    return jsonify({'message': 'Prompt deleted successfully'}), 200
-
-@app.route('/prompt/<int:id>', methods=['PUT'])
-@login_required
-@check_agent_access
-def update_prompt3(selected_agent_id, id):
-    prompt_entry = AIPrompt.query.get_or_404(id)
-    
-    data = request.get_json()
-    prompt_entry.prompt_type = data.get('prompt_type', prompt_entry.prompt_type)
-    prompt_entry.prompt_text = data.get('prompt_text', prompt_entry.prompt_text)
-    prompt_entry.top_p = data.get('top_p', prompt_entry.top_p)
-    prompt_entry.temperature = data.get('temperature', prompt_entry.temperature)
-    prompt_entry.max_tokens = data.get('max_tokens', prompt_entry.max_tokens)
-    prompt_entry.confidence = data.get('confidence', prompt_entry.confidence)
-    prompt_entry.frequency_penalty = data.get('frequency_penalty', prompt_entry.frequency_penalty)
-    prompt_entry.presence_penalty = data.get('presence_penalty', prompt_entry.presence_penalty)
-    
-    db.session.commit()
-    return jsonify({'message': 'Prompt updated successfully'}), 200
-
-@app.route('/language/<int:id>', methods=['PATCH'])
-@login_required
-@check_agent_access
-def patch_language3 (selected_agent_id, id):
-    language_entry = AILanguage.query.filter_by(id=id).first_or_404()
-    
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({'message': 'No data provided'}), 400
-
-        language_entry.name = data.get('name', language_entry.name)
-        language_entry.code = data.get('code', language_entry.code)
-        language_entry.voice = data.get('voice', language_entry.voice)
-        language_entry.speech_fillers = data.get('speech_fillers', language_entry.speech_fillers)
-        language_entry.function_fillers = data.get('function_fillers', language_entry.function_fillers)
-        language_entry.language_order = data.get('language_order', language_entry.language_order)
-
-        db.session.commit()
-        return jsonify({'message': 'Language entry updated successfully'}), 200
-
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'message': 'Error updating language entry', 'error': str(e)}), 500
-
-
-
-@app.route('/language/<int:id>', methods=['PUT'])
-@login_required
-@check_agent_access
-def update_language3(selected_agent_id, id):
-    data = request.get_json()
-    language_entry = AILanguage.query.filter_by(id=id).first_or_404()
-    
-    language_entry.name = data.get('name', language_entry.name)
-    language_entry.code = data.get('code', language_entry.code)
-    language_entry.voice = data.get('voice', language_entry.voice)
-    language_entry.speech_fillers = data.get('speech_fillers', language_entry.speech_fillers)
-    language_entry.function_fillers = data.get('function_fillers', language_entry.function_fillers)
-    language_entry.language_order = data.get('language_order', language_entry.language_order)
-    
-    db.session.commit()
-    return jsonify({'message': 'Language entry updated successfully'}), 200
-
-@app.route('/language/<int:id>', methods=['GET'])
-@login_required
-@check_agent_access
-def get_language_by_id3(selected_agent_id, id):
-    language_entry = AILanguage.query.filter_by(id=id).first_or_404()
-    return jsonify({
-        'id': language_entry.id,
-        'name': language_entry.name,
-        'code': language_entry.code,
-        'voice': language_entry.voice,
-        'speech_fillers': language_entry.speech_fillers,
-        'function_fillers': language_entry.function_fillers,
-        'language_order': language_entry.language_order
-    }), 200
-
-@app.route('/language/<int:id>', methods=['DELETE'])
-@login_required
-@check_agent_access
-def delete_language3(selected_agent_id, id):
-    language_entry = AILanguage.query.get_or_404(id)
-    db.session.delete(language_entry)
-    db.session.commit()
-    return jsonify({'message': 'Language entry deleted successfully'}), 200
-
-@app.route('/language', methods=['GET', 'POST', 'PUT'])
-@login_required
-@check_agent_access
-def language3(selected_agent_id):
-    if request.method == 'GET':
-        if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
-            languages = AILanguage.query.filter_by(agent_id=selected_agent_id).order_by(AILanguage.language_order.asc()).all()
-            language_list = [{
-                'id': l.id,
-                'name': l.name,
-                'code': l.code,
-                'voice': l.voice,
-                'speech_fillers': l.speech_fillers,
-                'function_fillers': l.function_fillers,
-                'language_order': l.language_order
-            } for l in languages]
-            return jsonify(language_list), 200
-        else:
-            return render_template('language.html', user=current_user)
-    elif request.method == 'POST':
-        data = request.get_json()
-        new_language = AILanguage(
-            name=data['name'],
-            code=data['code'],
-            voice=data['voice'],
-            speech_fillers=data['speech_fillers'],
-            function_fillers=data['function_fillers'],
-            language_order=data.get('language_order', 0),
-            agent_id=selected_agent_id
-        )
-        db.session.add(new_language)
-        db.session.commit()
-        return jsonify({'message': 'Language entry created successfully'}), 201
-    elif request.method == 'PUT':
-        data = request.get_json()
-        language_entry = AILanguage.query.filter_by(id=data['id'], agent_id=selected_agent_id).first_or_404()
-        
-        language_entry.name = data.get('name', language_entry.name)
-        language_entry.code = data.get('code', language_entry.code)
-        language_entry.voice = data.get('voice', language_entry.voice)
-        language_entry.speech_fillers = data.get('speech_fillers', language_entry.speech_fillers)
-        language_entry.function_fillers = data.get('function_fillers', language_entry.function_fillers)
-        language_entry.language_order = data.get('language_order', language_entry.language_order)
-        
-        db.session.commit()
-        return jsonify({'message': 'Language entry updated successfully'}), 200
-    else:
-        return render_template('language.html', user=current_user)
 
 @app.route('/datasphere/search/<uuid:document_id>', methods=['POST'])
 @login_required
@@ -3442,7 +2965,7 @@ def conversation_page(agent_id):
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/conversation/<int:id>', methods=['PATCH'])
 @login_required
 def patch_conversation(agent_id, id):
-    conversation = Conversation.query.filter_by(id=id, agent_id=agent_id).first_or_404()
+    conversation = AIConversation.query.filter_by(id=id, agent_id=agent_id).first_or_404()
     
     try:
         data = request.get_json()
@@ -3463,7 +2986,7 @@ def patch_conversation(agent_id, id):
 @login_required
 def update_conversation(agent_id, id):
     data = request.get_json()
-    conversation = Conversation.query.filter_by(id=id, agent_id=agent_id).first_or_404()
+    conversation = AIConversation.query.filter_by(id=id, agent_id=agent_id).first_or_404()
     
     conversation.title = data.get('title', conversation.title)
     conversation.content = data.get('content', conversation.content)
@@ -3474,7 +2997,7 @@ def update_conversation(agent_id, id):
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/conversation/<int:id>', methods=['GET'])
 @login_required
 def get_conversation_by_id(agent_id, id):
-    conversation = Conversation.query.filter_by(id=id, agent_id=agent_id).first_or_404()
+    conversation = AIConversation.query.filter_by(id=id, agent_id=agent_id).first_or_404()
     return jsonify({
         'id': conversation.id,
         'title': conversation.title,
@@ -3484,7 +3007,7 @@ def get_conversation_by_id(agent_id, id):
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/conversation/<int:id>', methods=['DELETE'])
 @login_required
 def delete_conversation(agent_id, id):
-    conversation = Conversation.query.filter_by(id=id, agent_id=agent_id).first_or_404()
+    conversation = AIConversation.query.filter_by(id=id, agent_id=agent_id).first_or_404()
     db.session.delete(conversation)
     db.session.commit()
     return jsonify({'message': 'Conversation deleted successfully'}), 200
@@ -3493,7 +3016,7 @@ def delete_conversation(agent_id, id):
 @login_required
 def conversation(agent_id):
     if request.method == 'GET':
-        conversations = Conversation.query.filter_by(agent_id=agent_id).all()
+        conversations = AIConversation.query.filter_by(agent_id=agent_id).all()
         conversation_list = [{
             'id': c.id,
             'title': c.title,

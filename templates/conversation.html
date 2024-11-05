@@ -92,7 +92,7 @@
 
     $('#conversationsTable').DataTable({
       "ajax": {
-        "url": "{{ url_for('conversations') }}",
+        "url": "{{ url_for('conversation', agent_id=agent_id) }}",
         "dataSrc": "",
         "headers": {
           "Accept": "application/json"
