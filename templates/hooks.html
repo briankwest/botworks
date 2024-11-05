@@ -50,37 +50,6 @@
       </div>
     </div>
   </section>
-
-  <div class="modal fade" id="editTranscriptionModal" tabindex="-1" role="dialog"
-    aria-labelledby="editTranscriptionModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="editTranscriptionModalLabel">Edit Transcription Entry</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          <form id="editTranscriptionForm">
-            <input type="hidden" id="editId" name="id">
-            <div class="form-group">
-              <label for="editTranscriptionText">Transcription Text</label>
-              <input type="text" class="form-control" id="editTranscriptionText" name="transcription" required>
-            </div>
-          </form>
-        </div>
-        <div class="card-footer">
-          <button type="button" class="btn btn-sm mr-2 btn-secondary" data-dismiss="modal">
-            <i class="fas fa-times"></i> Close
-          </button>
-          <button type="button" class="btn btn-sm mr-2 btn-primary" id="saveEditButton">
-            <i class="fas fa-save"></i> Save changes
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
 </div>
 
 {% include 'footer.html' %}
@@ -93,20 +62,15 @@
       "responsive": true,
       "autoWidth": false,
       "ajax": {
-        "url": "{{ url_for('hooks') }}",
+        "url": "{{ url_for('list_hooks', agent_id=agent_id) }}",
         "headers": {
           "Accept": "application/json"
         },
         "dataSrc": function (json) {
           return json.map(function (item) {
-            console.log('Item:', item); // Log the entire item for debugging
-
             const data = item.data || {};
             const argumentDesc = data.argument_desc || {};
             const parsedArguments = data.argument.parsed || [];
-            console.log('Argument Description:', argumentDesc); // Log argument description
-            console.log('Parsed Arguments:', parsedArguments); // Log parsed arguments
-
             const properties = argumentDesc.properties || {};
             let formattedArgs = '<ul>';
 
@@ -120,12 +84,10 @@
             }
             formattedArgs += '</ul>';
 
-            console.log('Formatted Arguments:', formattedArgs); // Debugging line
-
             return {
               id: item.id,
               hook_type: item.hook_type,
-              arguments: formattedArgs  // Use formatted arguments
+              arguments: formattedArgs
             };
           });
         }
@@ -159,67 +121,6 @@
       });
     }
 
-    $('#addTranscriptionForm').submit(function (e) {
-      e.preventDefault();
-      const formData = {
-        transcription: $('#transcriptionText').val()
-      };
-
-      $.ajax({
-        type: 'POST',
-        url: "{{ url_for('transcribe') }}",
-        contentType: 'application/json',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        data: JSON.stringify(formData),
-        success: function (response) {
-          $('#hooksTable').DataTable().ajax.reload();
-          $('#addTranscriptionForm')[0].reset();
-          showToast('success', 'Transcription entry created successfully');
-        },
-        error: function (error) {
-          showToast('error', 'Error creating transcription entry');
-        }
-      });
-    });
-
-    $('#hooksTable').on('click', '.edit-hook', function () {
-      const id = $(this).data('id');
-      // Implement edit functionality here
-    });
-
-    $('#editTranscriptionForm').on('submit', function (e) {
-      e.preventDefault();
-    });
-
-    $('#saveEditButton').click(function () {
-      const id = $('#editId').val();
-      const formData = {
-        transcription: $('#editTranscriptionText').val()
-      };
-
-      $.ajax({
-        type: 'PUT',
-        url: "/transcribe/" + id,
-        contentType: 'application/json',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        data: JSON.stringify(formData),
-        success: function (response) {
-          $('#hooksTable').DataTable().ajax.reload();
-          $('#editTranscriptionModal').modal('hide');
-          showToast('success', 'Transcription entry updated successfully');
-        },
-        error: function (error) {
-          showToast('error', 'Error updating transcription entry');
-        }
-      });
-    });
-
     $('#deleteAllHooks').click(function () {
       Swal.fire({
         title: 'Are you sure?',
@@ -236,7 +137,7 @@
           if (selected_agent_id) {
             $.ajax({
               type: 'DELETE',
-              url: "/hooks/" + selected_agent_id,
+              url: "{{ url_for('delete_all_hooks', agent_id=agent_id) }}",
               headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'

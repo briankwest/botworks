@@ -201,7 +201,7 @@
       "responsive": true,
       "autoWidth": false,
       "ajax": {
-        "url": "{{ url_for('language') }}",
+        "url": "{{ url_for('get_languages', agent_id=agent_id) }}",
         "dataSrc": ""
       },
       "columns": [
@@ -266,7 +266,7 @@
 
       $.ajax({
         type: 'POST',
-        url: "{{ url_for('language') }}",
+        url: "{{ url_for('create_language', agent_id=agent_id) }}",
         contentType: 'application/json',
         data: JSON.stringify(formData),
         success: function (response) {

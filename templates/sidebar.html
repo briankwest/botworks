@@ -49,13 +49,13 @@
               </a>
             </li>
             <li class="nav-item">
-              <a href="{{ url_for('hooks') }}" class="nav-link {{ 'active' if request.endpoint == 'hooks' else '' }}">
+              <a href="{{ url_for('hooks_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if request.endpoint == 'hooks' else '' }}">
                 <i class="nav-icon fas fa-link"></i>
                 <p>Hooks</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="{{ url_for('conversations') }}"
+              <a href="{{ url_for('conversation_page', agent_id=agent_id) }}"
                 class="nav-link {{ 'active' if request.endpoint == 'conversations' else '' }}">
                 <i class="nav-icon fas fa-comments"></i>
                 <p>Conversations</p>
@@ -69,7 +69,7 @@
               </a>
             </li>
             <li class="nav-item">
-              <a href="{{ url_for('language') }}"
+              <a href="{{ url_for('language_page', agent_id=agent_id) }}"
                 class="nav-link {{ 'active' if request.endpoint == 'language' else '' }}">
                 <i class="nav-icon fas fa-language"></i>
                 <p>Language</p>
@@ -90,13 +90,13 @@
               </a>
             </li>
             <li class="nav-item">
-              <a href="{{ url_for('params') }}" class="nav-link {{ 'active' if request.endpoint == 'params' else '' }}">
+              <a href="{{ url_for('parameters_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if request.endpoint == 'params' else '' }}">
                 <i class="nav-icon fas fa-sliders-h"></i>
                 <p>Parameters</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="{{ url_for('aifeatures') }}"
+              <a href="{{ url_for('aifeatures_page', agent_id=agent_id) }}"
                 class="nav-link {{ 'active' if request.endpoint == 'aifeatures' else '' }}">
                 <i class="nav-icon fas fa-brain"></i>
                 <p>Features</p>
@@ -129,7 +129,7 @@
               </ul>
             </li>
             <li class="nav-item">
-              <a href="{{ url_for('swmlrequests') }}"
+              <a href="{{ url_for('swmlrequests_page', agent_id=agent_id) }}"
                 class="nav-link {{ 'active' if request.endpoint == 'swmlrequests' else '' }}">
                 <i class="nav-icon fas fa-file-alt"></i>
                 <p>Requests</p>
