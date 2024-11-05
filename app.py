@@ -1207,13 +1207,12 @@ def transcribe(selected_agent_id):
 
 @app.route('/phone_numbers', methods=['GET'])
 @login_required
-@check_agent_access
-def list_phone_numbers(selected_agent_id):
+def list_phone_numbers():
     if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
         space_name = get_signalwire_param('SPACE_NAME')
         project_id = get_signalwire_param('PROJECT_ID')
         auth_token = get_signalwire_param('AUTH_TOKEN')
-
+        print(f"space_name: {space_name}, project_id: {project_id}, auth_token: {auth_token}")
         encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
         url = f'https://{space_name}/api/relay/rest/phone_numbers'
         authorization = f'Basic {encoded_credentials}'
@@ -1255,7 +1254,7 @@ def list_phone_numbers(selected_agent_id):
             params['filter_number'] = filter_number
 
         response = requests.get(url, headers=headers, params=params)
-
+        print(f"Response: {response}")
         if response.status_code == 200:
             return jsonify(response.json()), 200
         elif response.status_code == 401:
@@ -1268,8 +1267,7 @@ def list_phone_numbers(selected_agent_id):
     
 @app.route('/phone_numbers/search', methods=['GET'])
 @login_required
-@check_agent_access
-def search_phone_numbers(selected_agent_id):
+def search_phone_numbers():
     space_name = get_signalwire_param('SPACE_NAME')
     project_id = get_signalwire_param('PROJECT_ID')
     auth_token = get_signalwire_param('AUTH_TOKEN')
@@ -1310,8 +1308,7 @@ def search_phone_numbers(selected_agent_id):
     
 @app.route('/phone_numbers', methods=['POST'])
 @login_required
-@check_agent_access
-def purchase_phone_number(selected_agent_id):
+def purchase_phone_number():
     space_name = get_signalwire_param('SPACE_NAME')
     project_id = get_signalwire_param('PROJECT_ID')
     auth_token = get_signalwire_param('AUTH_TOKEN')
@@ -1344,8 +1341,7 @@ def purchase_phone_number(selected_agent_id):
 
 @app.route('/phone_numbers/<uuid:phone_number_id>', methods=['PUT'])
 @login_required
-@check_agent_access
-def update_phone_number(selected_agent_id, phone_number_id):
+def update_phone_number(phone_number_id):
     data = request.get_json()
     phone_number = data.get('phone_number')
     agent_id = data.get('agent_id')
@@ -1388,8 +1384,7 @@ def update_phone_number(selected_agent_id, phone_number_id):
     
 @app.route('/phone_numbers/<uuid:phone_number_id>', methods=['DELETE'])
 @login_required
-@check_agent_access
-def release_phone_number(selected_agent_id, phone_number_id):
+def release_phone_number(phone_number_id):
     space_name = get_signalwire_param('SPACE_NAME')
     project_id = get_signalwire_param('PROJECT_ID')
     auth_token = get_signalwire_param('AUTH_TOKEN')
@@ -1491,19 +1486,17 @@ def includes(selected_agent_id):
 
 @app.route('/phone/authenticate', methods=['GET'])
 @login_required
-@check_agent_access
-def phone_authenticate(selected_agent_id):
+def phone_authenticate():
     import requests
     import random
     import string
-    if not selected_agent_id:
-        return jsonify({'message': 'Agent ID not found in cookies'}), 400
 
     identifier = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
 
     space_name = get_signalwire_param('SPACE_NAME')
     project_id = get_signalwire_param('PROJECT_ID')
     auth_token = get_signalwire_param('AUTH_TOKEN')
+
     url = f"https://{space_name}/api/relay/rest/jwt"
     auth = (project_id, auth_token)
     headers = {"Content-Type": "application/json"}
@@ -1541,8 +1534,7 @@ def phone_authenticate(selected_agent_id):
 
 @app.route('/phone', methods=['GET'])
 @login_required
-@check_agent_access
-def phone(selected_agent_id):
+def phone():
     return render_template('phone.html', user=current_user)
 
 @app.route('/context', methods=['GET'])

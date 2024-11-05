@@ -137,7 +137,7 @@
       const data = JSON.parse(addFeatureDataEditor.getValue());
 
       $.ajax({
-        url: "{{ url_for('add_aifeature', agent_id=agent_id) }}",
+        url: "{{ url_for('create_aifeature', agent_id=agent_id) }}",
         type: 'POST',
         contentType: 'application/json',
         data: JSON.stringify({ name, value, enabled, data }),
@@ -215,7 +215,7 @@
 
       $.ajax({
         url: "{{ url_for('update_aifeature', agent_id=agent_id, feature_id=0) }}".replace('0', featureId),
-        type: 'PATCH',
+        type: 'PUT',
         contentType: 'application/json',
         data: JSON.stringify({ enabled }),
         success: function () {
