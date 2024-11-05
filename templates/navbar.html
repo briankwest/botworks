@@ -54,13 +54,13 @@
     })
       .then(response => response.json())
       .then(data => {
-        const selectedAgentId = getCookie('selectedAgentId');
+        const selectedAgentId = {{ agent_id }};
 
         data.forEach(agent => {
           const option = document.createElement('option');
           option.value = agent.id;
           option.textContent = agent.name;
-          if (agent.id == selectedAgentId) {
+          if (agent.id == {{ agent_id }}) {
             option.selected = true;
           }
           agentSelect.appendChild(option);
@@ -74,8 +74,9 @@
         agentSelect.addEventListener('change', function () {
           const agentId = this.value;
           if (agentId) {
-            document.cookie = `selectedAgentId=${agentId}; path=/; samesite=Strict`;
-            location.reload();
+            const currentPath = window.location.pathname;
+            const newPath = currentPath.replace(/\/agents\/\d+/, `/agents/${agentId}`);
+            location.href = newPath;
           }
         });
       })

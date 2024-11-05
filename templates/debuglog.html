@@ -63,7 +63,7 @@
 
     $('#agentSelector').change(function () {
       selectedAgentId = $(this).val();
-      $('#debugLogsTable').DataTable().ajax.url("{{ url_for('debuglogs') }}/" + selectedAgentId).load();
+      $('#debugLogsTable').DataTable().ajax.url("{{ url_for('get_debuglogs', agent_id=agent_id) }}").load();
     });
 
     initializeDataTable(selectedAgentId);
@@ -73,7 +73,7 @@
     if ($.fn.DataTable) {
       $('#debugLogsTable').DataTable({
         "ajax": {
-          "url": "{{ url_for('debuglogs') }}/" + agentId,
+          "url": "{{ url_for('get_debuglogs', agent_id=agent_id) }}",
           "dataSrc": "",
           "headers": {
             "Accept": "application/json"
