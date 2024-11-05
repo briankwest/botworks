@@ -25,10 +25,11 @@
             <p>Numbers</p>
           </a>
         </li>
+        
         <li
-          class="nav-item has-treeview {{ 'menu-open' if request.endpoint in ['agents', 'prompt', 'hooks', 'conversations', 'pronounce', 'language', 'hints', 'params', 'includes', 'aifeatures', 'functions', 'swmlrequests', 'livedebug', 'debuglogs', 'translate', 'transcribe', 'context'] else '' }}">
+          class="nav-item has-treeview {{ 'menu-open' if 'agents' in request.path or request.endpoint in ['prompt', 'hooks', 'conversations', 'pronounce', 'language', 'hints', 'params', 'includes', 'aifeatures', 'functions', 'swmlrequests', 'livedebug', 'debuglogs', 'translate', 'transcribe', 'context'] else '' }}">
           <a href="#"
-            class="nav-link {{ 'active' if request.endpoint in ['agents', 'prompt', 'hooks', 'conversations', 'pronounce', 'language', 'hints', 'params', 'includes', 'aifeatures', 'functions', 'swmlrequests', 'livedebug', 'debuglogs', 'translate', 'transcribe', 'context'] else '' }}">
+            class="nav-link {{ 'active' if 'agents' in request.path or request.endpoint in ['prompt', 'hooks', 'conversations', 'pronounce', 'language', 'hints', 'params', 'includes', 'aifeatures', 'functions', 'swmlrequests', 'livedebug', 'debuglogs', 'translate', 'transcribe', 'context'] else '' }}">
             <i class="nav-icon fas fa-robot"></i>
             <p>
               AI Agents
@@ -37,19 +38,19 @@
           </a>
           <ul class="nav nav-treeview ai-agents-indent">
             <li class="nav-item">
-              <a href="{{ url_for('agent_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if request.endpoint == 'agents' else '' }}">
+              <a href="{{ url_for('agent_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if 'agents' in request.path and 'agent_page' in request.endpoint else '' }}">
                 <i class="nav-icon fas fa-robot"></i>
                 <p>Agents</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="{{ url_for('prompt_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if request.endpoint == 'prompt' else '' }}">
+              <a href="{{ url_for('prompt_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if 'agents' in request.path and 'prompt_page' in request.endpoint else '' }}">
                 <i class="nav-icon fas fa-edit"></i>
                 <p>Prompt</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="{{ url_for('hooks_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if request.endpoint == 'hooks' else '' }}">
+              <a href="{{ url_for('hooks_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if 'agents' in request.path and 'hooks_page' in request.endpoint else '' }}">
                 <i class="nav-icon fas fa-link"></i>
                 <p>Hooks</p>
               </a>
@@ -70,7 +71,7 @@
             </li>
             <li class="nav-item">
               <a href="{{ url_for('language_page', agent_id=agent_id) }}"
-                class="nav-link {{ 'active' if request.endpoint == 'language' else '' }}">
+                class="nav-link {{ 'active' if 'agents' in request.path and 'language_page' in request.endpoint else '' }}">
                 <i class="nav-icon fas fa-language"></i>
                 <p>Language</p>
               </a>
