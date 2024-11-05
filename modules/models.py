@@ -14,7 +14,7 @@ class AIAgent(db.Model):
     user = db.relationship('AIUser', backref=db.backref('ai_agents', lazy=True))
     
     ai_debug_logs = db.relationship('AIDebugLogs', back_populates='agent', cascade='all, delete-orphan', lazy=True)
-    ai_signalwire_params = db.relationship('AISignalWireParams', back_populates='agent', cascade='all, delete-orphan', lazy=True)
+
     ai_swml_requests = db.relationship('AISWMLRequest', back_populates='agent', cascade='all, delete-orphan', lazy=True)
     ai_functions = db.relationship('AIFunctions', back_populates='agent', cascade='all, delete-orphan', lazy=True)
     ai_function_argument = db.relationship('AIFunctionArgs', back_populates='agent', cascade='all, delete-orphan', lazy=True)
@@ -49,14 +49,12 @@ class AIDebugLogs(db.Model):
 class AISignalWireParams(db.Model):
     __tablename__ = 'ai_signalwire_params'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
-    name = db.Column(db.String(100), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
+    name = db.Column(db.String(100), nullable=False, unique=True)
     value = db.Column(db.String(255), nullable=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow) 
+    updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    agent = db.relationship('AIAgent', back_populates='ai_signalwire_params')
-
     def __repr__(self):
         return f'<AISignalWireParams {self.name}: {self.value}>'
 

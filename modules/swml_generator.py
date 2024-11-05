@@ -77,8 +77,8 @@ def generate_swml_response(agent_id, request_body):
     params_dict = {param.name: param.value for param in ai_params}
     swml.set_aiparams(params_dict)
 
-    auth_user = get_signalwire_param(agent_id, 'HTTP_USERNAME')
-    auth_pass = get_signalwire_param(agent_id, 'HTTP_PASSWORD')
+    auth_user = get_signalwire_param('HTTP_USERNAME')
+    auth_pass = get_signalwire_param('HTTP_PASSWORD')
     
     post_prompt_url = f"https://{request.host}/postprompt/{agent_id}"
     if auth_user and auth_pass:
@@ -529,9 +529,9 @@ def generate_swml_response(agent_id, request_body):
     if enable_datasphere_feature and enable_datasphere_feature.enabled:
         document_id = enable_datasphere_feature.value
 
-        space_name = get_signalwire_param(agent_id, 'SPACE_NAME')
-        project_id = get_signalwire_param(agent_id, 'PROJECT_ID')
-        auth_token = get_signalwire_param(agent_id, 'AUTH_TOKEN')
+        space_name = get_signalwire_param('SPACE_NAME')
+        project_id = get_signalwire_param('PROJECT_ID')
+        auth_token = get_signalwire_param('AUTH_TOKEN')
 
         encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
         url = f"https://{space_name}/api/datasphere/documents/search"

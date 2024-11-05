@@ -24,8 +24,8 @@ def get_feature(agent_id, feature_name):
     feature = AIFeatures.query.filter_by(agent_id=agent_id, name=feature_name).first()
     return feature
 
-def get_signalwire_param(agent_id, param_name):
-    param = AISignalWireParams.query.filter_by(agent_id=agent_id, name=param_name).first()
+def get_signalwire_param(   param_name):
+    param = AISignalWireParams.query.filter_by(user_id=current_user.id, name=param_name).first()
     return param.value if param else None
 
 def extract_agent_id(f):
@@ -59,9 +59,9 @@ def setup_default_agent_and_params(user_id):
     }
 
     for param_name, default_value in params_to_check.items():
-        if not get_signalwire_param(agent_id, param_name):
+        if not get_signalwire_param(param_name):
             new_param = AISignalWireParams(
-                agent_id=agent_id,
+                user_id=user_id,
                 name=param_name,
                 value=default_value
             )

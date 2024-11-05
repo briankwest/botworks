@@ -460,7 +460,7 @@
 
     function fetchAgents() {
       $.ajax({
-        url: "{{ url_for('agents') }}",
+        url: "{{ url_for('get_all_agents') }}",
         type: 'GET',
         headers: {
           "Accept": "application/json",

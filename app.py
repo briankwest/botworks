@@ -115,19 +115,17 @@ def load_user(user_id):
 
 @app.route('/')
 @login_required
-@check_agent_access
-def dashboard(selected_agent_id):
-    number_of_requests = AISWMLRequest.query.filter_by(agent_id=selected_agent_id).count()
-    number_of_conversations = AIConversation.query.filter_by(agent_id=selected_agent_id).count()
-    number_of_functions = AIFunctions.query.filter_by(agent_id=selected_agent_id).count()
-    number_of_agents = AIAgent.query.filter_by(user_id=current_user.id).count()
+def dashboard():
+    number_of_requests = AISWMLRequest.query.filter_by().count()
+    number_of_conversations = AIConversation.query.filter_by().count()
+    number_of_functions = AIFunctions.query.filter_by().count()
+    number_of_agents = AIAgent.query.filter_by().count()
 
     return render_template('dashboard.html', user=current_user, number_of_requests=number_of_requests, number_of_conversations=number_of_conversations, number_of_functions=number_of_functions, number_of_agents=number_of_agents)
 
 @app.route('/import_swml', methods=['POST'])
 @login_required
-@check_agent_access
-def import_swml(selected_agent_id):
+def import_swml():
     data = request.get_json()
 
     version = data.get('version')
@@ -837,11 +835,11 @@ def search_datasphere(selected_agent_id, document_id):
 
 @app.route('/datasphere', methods=['POST'])
 @login_required
-def create_datasphere(selected_agent_id):
+def create_datasphere():
     data = request.get_json()
-    space_name = get_signalwire_param(selected_agent_id, 'SPACE_NAME')
-    project_id = get_signalwire_param(selected_agent_id, 'PROJECT_ID')
-    auth_token = get_signalwire_param(selected_agent_id, 'AUTH_TOKEN')
+    space_name = get_signalwire_param('SPACE_NAME')
+    project_id = get_signalwire_param('PROJECT_ID')
+    auth_token = get_signalwire_param('AUTH_TOKEN')
     
     url = f'https://{space_name}/api/datasphere/documents'
     headers = {
@@ -859,12 +857,11 @@ def create_datasphere(selected_agent_id):
 
 @app.route('/datasphere/documents/<uuid:datasphere_id>', methods=['PATCH'])
 @login_required
-@check_agent_access
-def update_datasphere(selected_agent_id, datasphere_id):
+def update_datasphere(datasphere_id):
     data = request.get_json()
-    space_name = get_signalwire_param(selected_agent_id, 'SPACE_NAME')
-    project_id = get_signalwire_param(selected_agent_id, 'PROJECT_ID')
-    auth_token = get_signalwire_param(selected_agent_id, 'AUTH_TOKEN')
+    space_name = get_signalwire_param('SPACE_NAME')
+    project_id = get_signalwire_param('PROJECT_ID')
+    auth_token = get_signalwire_param('AUTH_TOKEN')
     
     url = f'https://{space_name}/api/datasphere/documents/{datasphere_id}'
     headers = {
@@ -880,13 +877,12 @@ def update_datasphere(selected_agent_id, datasphere_id):
 
 @app.route('/datasphere', methods=['GET'])
 @login_required
-@check_agent_access
-def datasphere(selected_agent_id):
+def datasphere():
     if request.method == 'GET':
         if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
-            space_name = get_signalwire_param(selected_agent_id, 'SPACE_NAME')
-            project_id = get_signalwire_param(selected_agent_id, 'PROJECT_ID')
-            auth_token = get_signalwire_param(selected_agent_id, 'AUTH_TOKEN')
+            space_name = get_signalwire_param('SPACE_NAME')
+            project_id = get_signalwire_param('PROJECT_ID')
+            auth_token = get_signalwire_param('AUTH_TOKEN')
             
             url = f'https://{space_name}/api/datasphere/documents'
             headers = {'Accept': 'application/json'}
@@ -901,11 +897,10 @@ def datasphere(selected_agent_id):
 
 @app.route('/datasphere/documents/<uuid:datasphere_id>', methods=['DELETE'])
 @login_required
-@check_agent_access
-def delete_datasphere(selected_agent_id, datasphere_id):
-    space_name = get_signalwire_param(selected_agent_id, 'SPACE_NAME')
-    project_id = get_signalwire_param(selected_agent_id, 'PROJECT_ID')
-    auth_token = get_signalwire_param(selected_agent_id, 'AUTH_TOKEN')
+def delete_datasphere(datasphere_id):
+    space_name = get_signalwire_param('SPACE_NAME')
+    project_id = get_signalwire_param('PROJECT_ID')
+    auth_token = get_signalwire_param('AUTH_TOKEN')
     
     url = f'https://{space_name}/api/datasphere/documents/{datasphere_id}'
     headers = {
@@ -1103,9 +1098,9 @@ def handle_message(data):
 
         agent_id = int(channel.rsplit('_', 1)[-1])     
 
-        space_name = get_signalwire_param(agent_id, 'SPACE_NAME')
-        auth_token = get_signalwire_param(agent_id, 'AUTH_TOKEN')
-        project_id = get_signalwire_param(agent_id, 'PROJECT_ID')
+        space_name = get_signalwire_param('SPACE_NAME')
+        auth_token = get_signalwire_param('AUTH_TOKEN')
+        project_id = get_signalwire_param('PROJECT_ID')
 
         encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
         url = f"https://{space_name}/api/calling/calls"
@@ -1192,112 +1187,6 @@ def get_debuglogs(agent_id):
 def debuglogs_page(agent_id):
     return render_template('debuglog.html', user=current_user, agent_id=agent_id)
 
-
-
-@app.route('/aifeatures/<int:agent_id>/<int:feature_id>', methods=['PATCH'])
-@login_required
-@check_agent_access
-def patch_aifeature(selected_agent_id, agent_id, feature_id):
-    feature = AIFeatures.query.filter_by(id=feature_id, agent_id=selected_agent_id).first_or_404()
-    data = request.get_json()
-
-    if 'name' in data:
-        feature.name = data['name']
-    if 'value' in data:
-        feature.value = data['value']
-    if 'enabled' in data:
-        feature.enabled = data['enabled']
-    if 'data' in data:
-        feature.data = data['data']
-
-    db.session.commit()
-    return jsonify({'message': 'Feature patched successfully'}), 200
-
-@app.route('/aifeatures/<int:agent_id>/<int:feature_id>', methods=['GET', 'PUT', 'DELETE'])
-@login_required
-@check_agent_access
-def manage_aifeature(selected_agent_id, agent_id, feature_id):
-    feature = AIFeatures.query.filter_by(id=feature_id, agent_id=selected_agent_id).first_or_404()
-
-    if request.method == 'GET':
-        return jsonify({
-            'id': feature.id,
-            'name': feature.name,
-            'value': feature.value,
-            'enabled': feature.enabled,
-            'data': feature.data,
-            'created': feature.created
-        }), 200
-
-    elif request.method == 'PUT':
-        data = request.get_json()
-        feature.name = data.get('name', feature.name)
-        feature.value = data.get('value', feature.value)
-        feature.enabled = data.get('enabled', feature.enabled)
-        feature.data = data.get('data', feature.data)
-        db.session.commit()
-        return jsonify({'message': 'Feature updated successfully'}), 200
-
-    elif request.method == 'DELETE':
-        db.session.delete(feature)
-        db.session.commit()
-        return jsonify({'message': 'Feature deleted successfully'}), 200
-
-@app.route('/aifeatures/<int:agent_id>', methods=['POST'])
-@login_required
-@check_agent_access
-def add_aifeature(selected_agent_id, agent_id):
-    data = request.get_json()
-    new_feature = AIFeatures(
-        name=data['name'],
-        value=data['value'],
-        enabled=data['enabled'],
-        data=data.get('data'),
-        agent_id=selected_agent_id
-    )
-    db.session.add(new_feature)
-    db.session.commit()
-
-    return jsonify({'message': 'Feature added successfully'}), 201
-
-@app.route('/aifeatures', methods=['GET'])
-@login_required
-@check_agent_access
-def aifeatures(selected_agent_id):
-    if request.headers.get('Accept') == 'application/json':
-        features = AIFeatures.query.filter_by(agent_id=selected_agent_id).all()
-        features_data = [{
-            'id': feature.id,
-            'name': feature.name,
-            'agent_id': feature.agent_id,
-            'value': feature.value,
-            'enabled': feature.enabled,
-            'data': feature.data,
-            'created': feature.created
-        } for feature in features]
-        return jsonify(features_data), 200
-    else:
-        return render_template('features.html', user=current_user)
-
-@app.route('/aifeatures/<int:agent_id>', methods=['GET'])
-@login_required
-@check_agent_access
-def aifeatures_agent(selected_agent_id, agent_id):
-    if request.headers.get('Accept') == 'application/json':
-        features = AIFeatures.query.filter_by(agent_id=selected_agent_id).all()
-        features_data = [{
-            'id': feature.id,
-            'name': feature.name,
-            'agent_id': feature.agent_id,
-            'value': feature.value,
-            'enabled': feature.enabled,
-            'data': feature.data,
-            'created': feature.created
-        } for feature in features]
-        return jsonify(features_data), 200
-    else:
-        return render_template('features.html', user=current_user)
-
 @app.route('/translate', methods=['GET'])
 @login_required
 @check_agent_access
@@ -1321,9 +1210,9 @@ def transcribe(selected_agent_id):
 @check_agent_access
 def list_phone_numbers(selected_agent_id):
     if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
-        space_name = get_signalwire_param(selected_agent_id, 'SPACE_NAME')
-        project_id = get_signalwire_param(selected_agent_id, 'PROJECT_ID')
-        auth_token = get_signalwire_param(selected_agent_id, 'AUTH_TOKEN')
+        space_name = get_signalwire_param('SPACE_NAME')
+        project_id = get_signalwire_param('PROJECT_ID')
+        auth_token = get_signalwire_param('AUTH_TOKEN')
 
         encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
         url = f'https://{space_name}/api/relay/rest/phone_numbers'
@@ -1381,9 +1270,9 @@ def list_phone_numbers(selected_agent_id):
 @login_required
 @check_agent_access
 def search_phone_numbers(selected_agent_id):
-    space_name = get_signalwire_param(selected_agent_id, 'SPACE_NAME')
-    project_id = get_signalwire_param(selected_agent_id, 'PROJECT_ID')
-    auth_token = get_signalwire_param(selected_agent_id, 'AUTH_TOKEN')
+    space_name = get_signalwire_param('SPACE_NAME')
+    project_id = get_signalwire_param('PROJECT_ID')
+    auth_token = get_signalwire_param('AUTH_TOKEN')
 
     encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
     url = f'https://{space_name}/api/relay/rest/phone_numbers/search'
@@ -1423,9 +1312,9 @@ def search_phone_numbers(selected_agent_id):
 @login_required
 @check_agent_access
 def purchase_phone_number(selected_agent_id):
-    space_name = get_signalwire_param(selected_agent_id, 'SPACE_NAME')
-    project_id = get_signalwire_param(selected_agent_id, 'PROJECT_ID')
-    auth_token = get_signalwire_param(selected_agent_id, 'AUTH_TOKEN')
+    space_name = get_signalwire_param('SPACE_NAME')
+    project_id = get_signalwire_param('PROJECT_ID')
+    auth_token = get_signalwire_param('AUTH_TOKEN')
 
     encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
     url = f'https://{space_name}/api/relay/rest/phone_numbers'
@@ -1461,11 +1350,11 @@ def update_phone_number(selected_agent_id, phone_number_id):
     phone_number = data.get('phone_number')
     agent_id = data.get('agent_id')
 
-    auth_pass = get_signalwire_param(agent_id, 'HTTP_PASSWORD')
-    space_name = get_signalwire_param(agent_id, 'SPACE_NAME')
-    project_id = get_signalwire_param(agent_id, 'PROJECT_ID')
-    auth_token = get_signalwire_param(agent_id, 'AUTH_TOKEN')
-    auth_user = get_signalwire_param(agent_id, 'HTTP_USERNAME')
+    auth_pass = get_signalwire_param('HTTP_PASSWORD')
+    space_name = get_signalwire_param('SPACE_NAME')
+    project_id = get_signalwire_param('PROJECT_ID')
+    auth_token = get_signalwire_param('AUTH_TOKEN')
+    auth_user = get_signalwire_param('HTTP_USERNAME')
     swml_url = f"https://{auth_user}:{auth_pass}@{request.host}/swml/{agent_id}"  
     
     encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
@@ -1501,9 +1390,9 @@ def update_phone_number(selected_agent_id, phone_number_id):
 @login_required
 @check_agent_access
 def release_phone_number(selected_agent_id, phone_number_id):
-    space_name = get_signalwire_param(selected_agent_id, 'SPACE_NAME')
-    project_id = get_signalwire_param(selected_agent_id, 'PROJECT_ID')
-    auth_token = get_signalwire_param(selected_agent_id, 'AUTH_TOKEN')
+    space_name = get_signalwire_param('SPACE_NAME')
+    project_id = get_signalwire_param('PROJECT_ID')
+    auth_token = get_signalwire_param('AUTH_TOKEN')
 
     encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
     url = f'https://{space_name}/api/relay/rest/phone_numbers/{phone_number_id}'
@@ -1612,9 +1501,9 @@ def phone_authenticate(selected_agent_id):
 
     identifier = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
 
-    space_name = get_signalwire_param(selected_agent_id, 'SPACE_NAME')
-    project_id = get_signalwire_param(selected_agent_id, 'PROJECT_ID')
-    auth_token = get_signalwire_param(selected_agent_id, 'AUTH_TOKEN')
+    space_name = get_signalwire_param('SPACE_NAME')
+    project_id = get_signalwire_param('PROJECT_ID')
+    auth_token = get_signalwire_param('AUTH_TOKEN')
     url = f"https://{space_name}/api/relay/rest/jwt"
     auth = (project_id, auth_token)
     headers = {"Content-Type": "application/json"}
@@ -2064,6 +1953,19 @@ def get_agent(agent_id):
         'number': agent.number,
         'created': agent.created
     }), 200
+    
+@app.route(f'{API_PREFIX}/agents', methods=['GET'])
+@login_required
+def get_all_agents():
+    agents = AIAgent.query.all()
+    agents_data = [{
+        'id': agent.id,
+        'name': agent.name,
+        'number': agent.number,
+        'created': agent.created
+    } for agent in agents]
+    
+    return jsonify(agents_data), 200
 
 @app.route(f'{API_PREFIX}/agents', methods=['POST'])
 @login_required
@@ -2077,25 +1979,6 @@ def create_agent():
 
     new_agent = AIAgent(name=name, number=number, user_id=current_user.id)
     db.session.add(new_agent)
-    db.session.commit()
-
-    # Add default SignalWire parameters
-    default_params = [
-        {'name': 'HTTP_PASSWORD', 'value': os.environ.get('HTTP_PASSWORD', generate_random_password())},
-        {'name': 'HTTP_USERNAME', 'value': os.environ.get('HTTP_USERNAME', generate_random_password())},
-        {'name': 'SPACE_NAME', 'value': os.environ.get('SPACE_NAME', 'subdomain.signalwire.com')},
-        {'name': 'AUTH_TOKEN', 'value': os.environ.get('AUTH_TOKEN', 'PTb4d1.....')},
-        {'name': 'PROJECT_ID', 'value': os.environ.get('PROJECT_ID', '5f1c4418-.....')}
-    ]
-
-    for param in default_params:
-        new_param = AISignalWireParams(
-            agent_id=new_agent.id,
-            name=param['name'],
-            value=param['value']
-        )
-        db.session.add(new_param)
-
     db.session.commit()
 
     return jsonify({
@@ -2151,7 +2034,7 @@ def clone_agent(agent_id):
             db.session.add(new_item)
 
     relationships = [
-        'ai_signalwire_params', 'ai_functions', 'ai_function_argument', 
+        'ai_functions', 'ai_function_argument', 
         'ai_hints', 'ai_pronounce', 'ai_prompt', 'ai_language', 
         'ai_params', 'ai_features', 'ai_includes', 'ai_contexts', 'ai_steps'
     ]
@@ -2296,6 +2179,65 @@ def delete_pronounce(agent_id, pronounce_id):
     db.session.commit()
     return jsonify({'message': 'Pronounce entry deleted successfully'}), 200
 
+# API routes for SignalWire parameters
+@app.route(f'{API_PREFIX}/agents/signalwire', methods=['GET'])
+@login_required
+def list_signalwire_params():
+    params = AISignalWireParams.query.filter_by(user_id=current_user.id).all()
+    return jsonify([{
+        'id': param.id,
+        'name': param.name,
+        'value': param.value,
+        'created': param.created
+    } for param in params]), 200
+
+@app.route(f'{API_PREFIX}/agents/signalwire/<int:param_id>', methods=['GET'])
+@login_required
+def get_signalwire_param_by_id(param_id):
+    param = AISignalWireParams.query.filter_by(id=param_id, user_id=current_user.id).first_or_404()
+    return jsonify({
+        'id': param.id,
+        'name': param.name,
+        'value': param.value,
+        'created': param.created
+    }), 200
+
+@app.route(f'{API_PREFIX}/agents/signalwire', methods=['POST'])
+@login_required
+def create_signalwire_param():
+    data = request.get_json()
+    new_param = AISignalWireParams(
+        name=data['name'],
+        value=data['value'],
+        user_id=current_user.id
+    )
+    db.session.add(new_param)
+    db.session.commit()
+    return jsonify({
+        'message': 'SignalWire parameter created successfully',
+        'id': new_param.id
+    }), 201
+
+@app.route(f'{API_PREFIX}/agents/signalwire/<int:param_id>', methods=['PUT'])
+@login_required
+def update_signalwire_param(param_id):
+    param = AISignalWireParams.query.filter_by(id=param_id, user_id=current_user.id).first_or_404()
+    data = request.get_json()
+    
+    param.name = data.get('name', param.name)
+    param.value = data.get('value', param.value)
+    
+    db.session.commit()
+    return jsonify({'message': 'SignalWire parameter updated successfully'}), 200
+
+@app.route(f'{API_PREFIX}/agents/signalwire/<int:param_id>', methods=['DELETE'])
+@login_required
+def delete_signalwire_param(param_id):
+    param = AISignalWireParams.query.filter_by(id=param_id, user_id=current_user.id).first_or_404()
+    db.session.delete(param)
+    db.session.commit()
+    return jsonify({'message': 'SignalWire parameter deleted successfully'}), 200
+
 @app.route('/agents/<int:agent_id>/signalwire', methods=['GET'])
 @login_required
 def signalwire_page(agent_id):
@@ -2308,65 +2250,6 @@ def signalwire_page(agent_id):
             'created': param.created
         } for param in params]), 200
     return render_template('signalwire.html', user=current_user, agent_id=agent_id)
-
-# API routes for SignalWire parameters
-@app.route(f'{API_PREFIX}/agents/<int:agent_id>/signalwire', methods=['GET'])
-@login_required
-def list_signalwire_params(agent_id):
-    params = AISignalWireParams.query.filter_by(agent_id=agent_id).all()
-    return jsonify([{
-        'id': param.id,
-        'name': param.name,
-        'value': param.value,
-        'created': param.created
-    } for param in params]), 200
-
-@app.route(f'{API_PREFIX}/agents/<int:agent_id>/signalwire/<int:param_id>', methods=['GET'])
-@login_required
-def get_signalwire_param_by_id(agent_id, param_id):
-    param = AISignalWireParams.query.filter_by(id=param_id, agent_id=agent_id).first_or_404()
-    return jsonify({
-        'id': param.id,
-        'name': param.name,
-        'value': param.value,
-        'created': param.created
-    }), 200
-
-@app.route(f'{API_PREFIX}/agents/<int:agent_id>/signalwire', methods=['POST'])
-@login_required
-def create_signalwire_param(agent_id):
-    data = request.get_json()
-    new_param = AISignalWireParams(
-        name=data['name'],
-        value=data['value'],
-        agent_id=agent_id
-    )
-    db.session.add(new_param)
-    db.session.commit()
-    return jsonify({
-        'message': 'SignalWire parameter created successfully',
-        'id': new_param.id
-    }), 201
-
-@app.route(f'{API_PREFIX}/agents/<int:agent_id>/signalwire/<int:param_id>', methods=['PUT'])
-@login_required
-def update_signalwire_param(agent_id, param_id):
-    param = AISignalWireParams.query.filter_by(id=param_id, agent_id=agent_id).first_or_404()
-    data = request.get_json()
-    
-    param.name = data.get('name', param.name)
-    param.value = data.get('value', param.value)
-    
-    db.session.commit()
-    return jsonify({'message': 'SignalWire parameter updated successfully'}), 200
-
-@app.route(f'{API_PREFIX}/agents/<int:agent_id>/signalwire/<int:param_id>', methods=['DELETE'])
-@login_required
-def delete_signalwire_param(agent_id, param_id):
-    param = AISignalWireParams.query.filter_by(id=param_id, agent_id=agent_id).first_or_404()
-    db.session.delete(param)
-    db.session.commit()
-    return jsonify({'message': 'SignalWire parameter deleted successfully'}), 200
 
 @app.route('/agents/<int:agent_id>/prompt', methods=['GET'])
 @login_required
