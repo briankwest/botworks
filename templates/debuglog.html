@@ -166,8 +166,8 @@
         confirmButtonText: 'Yes, delete it!'
       }).then((result) => {
         if (result.isConfirmed) {
-          const agentId = getCookie('selectedAgentId');
-          fetch(`/debuglogs/${agentId}`, {
+          const agentId = {{agent_id}};
+          fetch("{{ url_for('get_debuglogs', agent_id=0) }}".replace('0', agentId), {
             method: 'DELETE',
             headers: {
               'Content-Type': 'application/json'
