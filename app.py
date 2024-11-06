@@ -1,6 +1,8 @@
 import eventlet
 eventlet.monkey_patch()
 import os, jwt, base64, json, redis, yaml, requests, logging
+import random
+import string
 from datetime import datetime, timedelta, timezone
 from flask import Flask, flash, make_response, jsonify, redirect, render_template, request, url_for, g
 from flask_socketio import SocketIO, join_room, leave_room, emit, disconnect
@@ -22,6 +24,10 @@ from modules.utils import (
     get_swaig_includes, check_agent_access
 )
 import secrets
+if os.environ.get('DEBUG', False):
+    debug_pin = f"{random.randint(100, 999)}-{random.randint(100, 999)}-{random.randint(100, 999)}"
+    os.environ['WERKZEUG_DEBUG_PIN'] = debug_pin
+    print(f"Debugger PIN: {debug_pin}")
 
 logging.basicConfig(level=logging.DEBUG)
 logging.getLogger('werkzeug').setLevel(logging.WARNING)
@@ -287,272 +293,9 @@ def dashboard_completed(selected_agent_id):
 
     return jsonify({'labels': labels, 'counts': counts}), 200
 
-@app.route('/functions', methods=['GET', 'POST'])
-@login_required
-@check_agent_access
-def functions(selected_agent_id):
-    if request.method == 'GET':
-        if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
-            functions = AIFunctions.query.filter_by(agent_id=selected_agent_id).all()
-            function_list = [{
-                'id': f.id,
-                'name': f.name,
-                'purpose': f.purpose,
-                'active': f.active,
-                'web_hook_url': f.web_hook_url,
-                'wait_file': f.wait_file,
-                'wait_file_loops': f.wait_file_loops,
-                'fillers': f.fillers,
-                'meta_data': f.meta_data,
-                'meta_data_token': f.meta_data_token,
-                'created': f.created.isoformat()
-            } for f in functions]
-            return jsonify(function_list), 200
-        else:
-            return render_template('functions.html', user=current_user)
-    elif request.method == 'POST':
-        try:
-            data = request.get_json()
-            new_function = AIFunctions(
-                name=data['name'],
-                purpose=data['purpose'],
-                agent_id=selected_agent_id,
-                web_hook_url=data.get('web_hook_url'),
-                wait_file=data.get('wait_file'),
-                wait_file_loops=data.get('wait_file_loops', 0) or 0,
-                fillers=data.get('fillers'),
-                meta_data=data.get('meta_data'),
-                meta_data_token=data.get('meta_data_token'),
-                active=data.get('active', True)
-            )
-            db.session.add(new_function)
-            db.session.commit()
-        except IntegrityError as e:
-            db.session.rollback()
-            if 'Key (user_id, agent_id, name)' in str(e.orig):
-                return jsonify({'message': 'Function name must be unique for the user and agent'}), 200
-            else:
-                return jsonify({'message': 'An error occurred while creating the function'}), 500
-        
-        try:
-            arguments = data.get('arguments', [])
-            for arg in arguments:
-                if 'name' not in arg:
-                    return jsonify({'message': 'Argument name is required'}), 400
-
-                new_argument = AIFunctionArgs(
-                    function_id=new_function.id,
-                    agent_id=selected_agent_id,
-                    name=arg['name'],
-                    type=arg['type'],
-                    description=arg['description'],
-                    required=arg['required'],
-                    enum=arg.get('enum'),
-                    default=arg.get('default')
-                )
-                db.session.add(new_argument)
-            
-            db.session.commit()
-            return jsonify({'message': 'Function entry created successfully'}), 200
-        except IntegrityError as e:
-            db.session.rollback()
-            if 'Key (function_id, name)' in str(e.orig):
-                db.session.delete(new_function)
-                db.session.commit()
-                return jsonify({'message': 'Arguments must be unique'}), 200
-            else:
-                return jsonify({'message': 'An error occurred while adding arguments'}), 500
-
-@app.route('/functions/<int:id>', methods=['PATCH'])
-@login_required
-@check_agent_access
-def patch_function(selected_agent_id, id):
-    function_entry = AIFunctions.query.filter_by(id=id, agent_id=selected_agent_id).first_or_404()
-
-    data = request.get_json()
-    try:
-        if 'name' in data:
-            function_entry.name = data['name']
-        if 'purpose' in data:
-            function_entry.purpose = data['purpose']
-        if 'active' in data:
-            function_entry.active = data['active']
-        if 'web_hook_url' in data:
-            function_entry.web_hook_url = data['web_hook_url']
-        if 'wait_file' in data:
-            function_entry.wait_file = data['wait_file']
-        if 'wait_file_loops' in data:
-            function_entry.wait_file_loops = data['wait_file_loops'] or 0
-        if 'fillers' in data:
-            function_entry.fillers = data['fillers']
-        if 'meta_data' in data:
-            function_entry.meta_data = data['meta_data']
-        if 'meta_data_token' in data:
-            function_entry.meta_data_token = data['meta_data_token']
-
-        db.session.commit()
-        return jsonify({'message': 'Function updated successfully'}), 200
-
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        return jsonify({'message': 'An error occurred while updating the function', 'error': str(e)}), 500
-
-@app.route('/functions/<int:id>', methods=['GET', 'PUT', 'DELETE'])
-@login_required
-@check_agent_access
-def manage_function(selected_agent_id, id):
-    function_entry = AIFunctions.query.filter_by(id=id, agent_id=selected_agent_id).first_or_404()
-
-    if request.method == 'GET':
-        return jsonify({
-            'id': function_entry.id,
-            'name': function_entry.name,
-            'purpose': function_entry.purpose,
-            'active': function_entry.active,
-            'web_hook_url': function_entry.web_hook_url,
-            'wait_file': function_entry.wait_file,
-            'wait_file_loops': function_entry.wait_file_loops,
-            'fillers': function_entry.fillers,
-            'meta_data': function_entry.meta_data,
-            'meta_data_token': function_entry.meta_data_token
-        }), 200
-
-    elif request.method == 'PUT':
-        data = request.get_json()
-        function_entry.name = data.get('name', function_entry.name)
-        function_entry.purpose = data.get('purpose', function_entry.purpose)
-        function_entry.active = data.get('active', function_entry.active)
-        function_entry.web_hook_url = data.get('web_hook_url', function_entry.web_hook_url)
-        function_entry.wait_file = data.get('wait_file', function_entry.wait_file)
-        function_entry.wait_file_loops = data.get('wait_file_loops', function_entry.wait_file_loops) or 0
-        function_entry.fillers = data.get('fillers', function_entry.fillers)
-        function_entry.meta_data = data.get('meta_data', function_entry.meta_data)
-        function_entry.meta_data_token = data.get('meta_data_token', function_entry.meta_data_token)
-        db.session.commit()
-        return jsonify({'message': 'Function entry updated successfully'}), 200
-
-    elif request.method == 'DELETE':
-        db.session.delete(function_entry)
-        db.session.commit()
-        return jsonify({'message': 'Function entry deleted successfully'}), 200
-
-@app.route('/functions/<int:function_id>/args', methods=['POST'])
-@login_required
-@check_agent_access
-def add_function_arg(selected_agent_id, function_id):
-    function_entry = AIFunctions.query.filter_by(id=function_id, agent_id=selected_agent_id).first_or_404()
-    
-    try:
-        data = request.get_json()
-        new_arg = AIFunctionArgs(
-            function_id=function_id,
-            agent_id=selected_agent_id,
-            name=data['name'],
-            type=data['type'],
-            required=data.get('required', False),
-            enum=data.get('enum'),
-            default=data.get('default')
-        )
-        db.session.add(new_arg)
-        db.session.commit()
-        return jsonify({'message': 'Function argument added successfully'}), 201
-    except IntegrityError as e:
-        db.session.rollback()
-        if 'Key (function_id, name)' in str(e.orig):
-            return jsonify({'message': 'Arguments must be unique'}), 200
-        else:
-            return jsonify({'message': 'An error occurred while adding arguments'}), 500
-
-@app.route('/functions/names', methods=['GET'])
-@login_required
-@check_agent_access
-def get_function_names(selected_agent_id):
-    functions = AIFunctions.query.filter_by(agent_id=selected_agent_id).all()
-    function_names = [function.name for function in functions]
-
-    return jsonify(function_names), 200
-
-@app.route('/functions/<int:function_id>/args', methods=['GET'])
-@login_required
-@check_agent_access
-def get_function_args(selected_agent_id, function_id):
-    function_entry = AIFunctions.query.filter_by(id=function_id, agent_id=selected_agent_id).first_or_404()
-      
-    args = AIFunctionArgs.query.filter_by(function_id=function_id, agent_id=selected_agent_id).order_by(AIFunctionArgs.name.asc()).all()
-
-    return jsonify([{
-        'id': arg.id,
-        'name': arg.name,
-        'type': arg.type,
-        'description': arg.description,
-        'required': arg.required,
-        'enum': arg.enum,
-        'default': arg.default
-    } for arg in args]), 200
-
-@app.route('/functions/<int:function_id>/args/<int:arg_id>', methods=['PATCH'])
-@login_required
-@check_agent_access
-def patch_function_arg(selected_agent_id, function_id, arg_id):
-    function_entry = AIFunctions.query.filter_by(id=function_id, agent_id=selected_agent_id).first_or_404()
-    arg_entry = AIFunctionArgs.query.filter_by(id=arg_id, function_id=function_id, agent_id=selected_agent_id).first_or_404()
-
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({'message': 'No data provided'}), 400
-
-        arg_entry.name = data.get('name', arg_entry.name)
-        arg_entry.type = data.get('type', arg_entry.type)
-        arg_entry.description = data.get('description', arg_entry.description)
-        arg_entry.required = data.get('required', arg_entry.required)
-        arg_entry.enum = data.get('enum', arg_entry.enum)
-        arg_entry.default = data.get('default', arg_entry.default)
-
-        db.session.commit()
-        return jsonify({'message': 'Argument updated successfully'}), 200
-
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'message': 'Error updating argument', 'error': str(e)}), 500
-
-
-@app.route('/functions/<int:function_id>/args/<int:arg_id>', methods=['PUT', 'DELETE'])
-@login_required
-@check_agent_access
-def manage_function_arg(selected_agent_id, function_id, arg_id):
-    function_entry = AIFunctions.query.filter_by(id=function_id, agent_id=selected_agent_id).first_or_404()
-    arg_entry = AIFunctionArgs.query.filter_by(id=arg_id, function_id=function_id, agent_id=selected_agent_id).first_or_404()
-    
-    if request.method == 'PUT':
-        data = request.get_json()
-        arg_entry.name = data.get('name', arg_entry.name)
-        arg_entry.type = data.get('type', arg_entry.type)
-        arg_entry.description = data.get('description', arg_entry.description)
-        arg_entry.required = data.get('required', arg_entry.required)
-        arg_entry.enum = data.get('enum', arg_entry.enum)
-        arg_entry.default = data.get('default', arg_entry.default)
-        db.session.commit()
-        return jsonify({'message': 'Function argument updated successfully'}), 200
-
-    elif request.method == 'DELETE':
-        db.session.delete(arg_entry)
-        db.session.commit()
-        return jsonify({'message': 'Function argument deleted successfully'}), 200
-
-@app.route('/conversation/view/<int:id>', methods=['GET'])
-@login_required
-@check_agent_access
-def view_conversation(selected_agent_id, id):
-    conversation = AIConversation.query.filter_by(id=id, agent_id=selected_agent_id).first_or_404()
-    
-    return render_template('conversation.html', id=id, user=current_user)
-
-
 @app.route('/refresh', methods=['POST'])
 @login_required
-@check_agent_access
-def refresh(selected_agent_id):
+def refresh():
     refresh_token = request.json.get('refresh_token')
     if not refresh_token:
         new_access_token = jwt.encode({
@@ -1405,91 +1148,10 @@ def release_phone_number(phone_number_id):
     else:
         return jsonify({'error': 'Failed to release phone number'}), response.status_code
 
-@app.route('/includes/<int:agent_id>', methods=['POST'])
-@login_required
-@check_agent_access
-def create_or_update_include(selected_agent_id, agent_id):
-    data = request.get_json()
-    url = data.get('url').strip()
-    functions = data.get('functions', [])
-
-    include_entry = AIIncludes.query.filter_by(url=url, agent_id=selected_agent_id).first()
-
-    if include_entry:
-        include_entry.functions = functions
-    else:
-        include_entry = AIIncludes(url=url, functions=functions, agent_id=selected_agent_id)
-        db.session.add(include_entry)
-
-    db.session.commit()
-    return jsonify({'message': 'Include entry saved successfully'}), 200
-@app.route('/includes/<int:agent_id>', methods=['GET'])
-@login_required
-@check_agent_access
-def get_includes_agent(selected_agent_id, agent_id):
-    includes_entries = AIIncludes.query.filter_by(agent_id=selected_agent_id).all()
-    return jsonify([{
-        'id': entry.id,
-        'url': entry.url,
-        'functions': entry.functions
-    } for entry in includes_entries]), 200
-
-@app.route('/includes/<int:agent_id>/<int:include_id>', methods=['GET'])
-@login_required
-@check_agent_access
-def get_include_agent(selected_agent_id, agent_id, include_id):
-    include_entry = AIIncludes.query.filter_by(id=include_id, agent_id=selected_agent_id).first_or_404()
-    return jsonify({
-        'id': include_entry.id,
-        'url': include_entry.url,
-        'functions': include_entry.functions
-    }), 200
-
-@app.route('/includes/<int:agent_id>/<int:include_id>', methods=['PUT'])
-@login_required
-@check_agent_access
-def update_include(selected_agent_id, agent_id, include_id):
-    include_entry = AIIncludes.query.filter_by(id=include_id, agent_id=selected_agent_id).first_or_404()
-    data = request.get_json()
-    include_entry.url = data.get('url', include_entry.url)
-    include_entry.functions = data.get('functions', include_entry.functions)
-    db.session.commit()
-    return jsonify({'message': 'Include updated successfully'}), 200
-
-@app.route('/includes/<int:agent_id>/<int:include_id>', methods=['DELETE'])
-@login_required
-@check_agent_access
-def delete_include(selected_agent_id, agent_id, include_id):
-    include_entry = AIIncludes.query.filter_by(id=include_id, agent_id=selected_agent_id).first_or_404()
-    db.session.delete(include_entry)
-    db.session.commit()
-    return jsonify({'message': 'Include deleted successfully'}), 200
-
-@app.route('/includes', methods=['POST'])
-@login_required
-@check_agent_access
-def get_includes_post(selected_agent_id):
-    if request.headers.get('Accept') == 'application/json':
-        url = request.get_json().get('url')
-        if not url:
-            return jsonify({'error': 'URL parameter is required'}), 400
-        swaig_response = get_swaig_includes(url)
-        return jsonify(swaig_response), 200
-    else:
-        return jsonify({'error': 'Accept header must be application/json'}), 400
-
-@app.route('/includes', methods=['GET'])
-@login_required
-@check_agent_access
-def includes(selected_agent_id):
-    return render_template('includes.html', user=current_user)
-
 @app.route('/phone/authenticate', methods=['GET'])
 @login_required
 def phone_authenticate():
-    import requests
-    import random
-    import string
+
 
     identifier = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
 
@@ -2961,6 +2623,225 @@ def delete_aifeature(agent_id, feature_id):
 @login_required
 def aifeatures_page(agent_id):
     return render_template('features.html', user=current_user, agent_id=agent_id)
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/functions', methods=['GET'])
+@login_required
+def list_functions(agent_id):
+    functions = AIFunctions.query.filter_by(agent_id=agent_id).all()
+    functions_data = [{
+        'id': function.id,
+        'name': function.name,
+        'purpose': function.purpose,
+        'active': function.active
+    } for function in functions]
+    return jsonify(functions_data), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/functions/<int:function_id>', methods=['GET'])
+@login_required
+def get_function(agent_id, function_id):
+    function = AIFunctions.query.filter_by(id=function_id, agent_id=agent_id).first_or_404()
+    return jsonify({
+        'id': function.id,
+        'name': function.name,
+        'purpose': function.purpose,
+        'web_hook_url': function.web_hook_url,
+        'wait_file': function.wait_file,
+        'wait_file_loops': function.wait_file_loops,
+        'fillers': function.fillers,
+        'meta_data': function.meta_data,
+        'meta_data_token': function.meta_data_token,
+        'active': function.active
+    }), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/functions', methods=['POST'])
+@login_required
+def create_function(agent_id):
+    data = request.get_json()
+    new_function = AIFunctions(
+        agent_id=agent_id,
+        name=data['name'],
+        purpose=data['purpose'],
+        web_hook_url=data.get('web_hook_url'),
+        wait_file=data.get('wait_file'),
+        wait_file_loops=data.get('wait_file_loops', 1),
+        fillers=data.get('fillers'),
+        meta_data=data.get('meta_data', {}),
+        meta_data_token=data.get('meta_data_token'),
+        active=data.get('active', True)
+    )
+    db.session.add(new_function)
+    db.session.commit()
+    return jsonify({'message': 'Function entry created successfully'}), 201
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/functions/<int:function_id>', methods=['PATCH'])
+@login_required
+def update_function(agent_id, function_id):
+    function = AIFunctions.query.filter_by(id=function_id, agent_id=agent_id).first_or_404()
+    data = request.get_json()
+    function.purpose = data.get('purpose', function.purpose)
+    function.web_hook_url = data.get('web_hook_url', function.web_hook_url)
+    function.wait_file = data.get('wait_file', function.wait_file)
+    function.wait_file_loops = data.get('wait_file_loops', function.wait_file_loops)
+    function.fillers = data.get('fillers', function.fillers)
+    function.meta_data = data.get('meta_data', function.meta_data)
+    function.meta_data_token = data.get('meta_data_token', function.meta_data_token)
+    function.active = data.get('active', function.active)
+    db.session.commit()
+    return jsonify({'message': 'Function updated successfully'}), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/functions/<int:function_id>', methods=['DELETE'])
+@login_required
+def delete_function(agent_id, function_id):
+    function = AIFunctions.query.filter_by(id=function_id, agent_id=agent_id).first_or_404()
+    db.session.delete(function)
+    db.session.commit()
+    return jsonify({'message': 'Function entry deleted successfully'}), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/functions/<int:function_id>/args', methods=['GET'])
+@login_required
+def list_function_args(agent_id, function_id):
+    args = AIFunctionArgs.query.filter_by(function_id=function_id).all()
+    args_data = [{
+        'id': arg.id,
+        'name': arg.name,
+        'type': arg.type,
+        'description': arg.description,
+        'required': arg.required,
+        'enum': arg.enum,
+        'default': arg.default
+    } for arg in args]
+    return jsonify(args_data), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/functions/<int:function_id>/args', methods=['POST'])
+@login_required
+def create_function_arg(agent_id, function_id):
+    print(f"Creating argument for function {function_id}, agent_id: {agent_id}")
+    data = request.get_json()
+    new_arg = AIFunctionArgs(
+        function_id=function_id,
+        agent_id=agent_id,
+        name=data['name'],
+        type=data['type'],
+        description=data.get('description'),
+        required=data.get('required', False),
+        enum=data.get('enum'),
+        default=data.get('default')
+    )
+    db.session.add(new_arg)
+    db.session.commit()
+    return jsonify({'message': 'Argument created successfully'}), 201
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/functions/<int:function_id>/args/<int:arg_id>', methods=['PATCH'])
+@login_required
+def update_function_arg(agent_id, function_id, arg_id):
+    arg = AIFunctionArgs.query.filter_by(id=arg_id, function_id=function_id).first_or_404()
+    data = request.get_json()
+    arg.name = data.get('name', arg.name)
+    arg.type = data.get('type', arg.type)
+    arg.description = data.get('description', arg.description)
+    arg.required = data.get('required', arg.required)
+    arg.enum = data.get('enum', arg.enum)
+    arg.default = data.get('default', arg.default)
+    db.session.commit()
+    return jsonify({'message': 'Argument updated successfully'}), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/functions/<int:function_id>/args/<int:arg_id>', methods=['DELETE'])
+@login_required
+def delete_function_arg(agent_id, function_id, arg_id):
+    arg = AIFunctionArgs.query.filter_by(agent_id=agent_id, id=arg_id, function_id=function_id).first_or_404()
+    db.session.delete(arg)
+    db.session.commit()
+    return jsonify({'message': 'Argument deleted successfully'}), 200
+
+@app.route('/agents/<int:agent_id>/functions', methods=['GET'])
+@login_required
+def functions_page(agent_id):
+    return render_template('functions.html', user=current_user, agent_id=agent_id)
+
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/includes', methods=['POST'])
+@login_required
+def create_or_update_include(agent_id):
+    data = request.get_json()
+    url = data.get('url').strip()
+    functions = data.get('functions', [])
+    get_swaig = data.get('get_remote_swaig', False)
+    print(f"Creating or updating include for URL: {url}, functions: {functions}, get_swaig: {get_swaig}")
+
+    if get_swaig:
+        if not url:
+            return jsonify({'error': 'URL parameter is required'}), 400
+        print(f"Getting includes for URL: {url}")
+        swaig_response = get_swaig_includes(url)
+        print(f"SWAIG response: {swaig_response}")
+        return jsonify(swaig_response), 200
+    else:
+        include_entry = AIIncludes.query.filter_by(url=url, agent_id=agent_id).first()
+
+        if include_entry:
+            include_entry.functions = functions
+        else:
+            include_entry = AIIncludes(url=url, functions=functions, agent_id=agent_id)
+        db.session.add(include_entry)
+
+    db.session.commit()
+    return jsonify({'message': 'Include entry saved successfully'}), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/includes', methods=['GET'])
+@login_required
+def get_includes_agent(agent_id):
+    includes_entries = AIIncludes.query.filter_by(agent_id=agent_id).all()
+    return jsonify([{
+        'id': entry.id,
+        'url': entry.url,
+        'functions': entry.functions
+    } for entry in includes_entries]), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/includes/<int:include_id>', methods=['GET'])
+@login_required
+def get_include_agent(agent_id, include_id):
+    include_entry = AIIncludes.query.filter_by(id=include_id, agent_id=agent_id).first_or_404()
+    return jsonify({
+        'id': include_entry.id,
+        'url': include_entry.url,
+        'functions': include_entry.functions
+    }), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/includes/<int:include_id>', methods=['PUT'])
+@login_required
+def update_include(agent_id, include_id):
+    include_entry = AIIncludes.query.filter_by(id=include_id, agent_id=agent_id).first_or_404()
+    data = request.get_json()
+    include_entry.url = data.get('url', include_entry.url)
+    include_entry.functions = data.get('functions', include_entry.functions)
+    db.session.commit()
+    return jsonify({'message': 'Include updated successfully'}), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/includes/<int:include_id>', methods=['DELETE'])
+@login_required
+def delete_include(agent_id, include_id):
+    include_entry = AIIncludes.query.filter_by(id=include_id, agent_id=agent_id).first_or_404()
+    db.session.delete(include_entry)
+    db.session.commit()
+    return jsonify({'message': 'Include deleted successfully'}), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/includes', methods=['POST'])
+@login_required
+def get_includes_post(agent_id):
+    if request.headers.get('Accept') == 'application/json':
+        url = request.get_json().get('url')
+        if not url:
+            return jsonify({'error': 'URL parameter is required'}), 400
+        print(f"Getting includes for URL: {url}")
+        swaig_response = get_swaig_includes(url)
+        return jsonify(swaig_response), 200
+    else:
+        return jsonify({'error': 'Accept header must be application/json'}), 400
+
+@app.route('/agents/<int:agent_id>/includes', methods=['GET'])
+@login_required
+def includes_page(agent_id):
+    return render_template('includes.html', user=current_user)
 
 if __name__ == '__main__':
     with app.app_context():
