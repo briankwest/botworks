@@ -20,7 +20,7 @@ from modules.swml_generator import generate_swml_response
 from modules.utils import (
     generate_random_password, get_signalwire_param, 
     setup_default_agent_and_params, create_admin_user,
-    get_swaig_includes, check_agent_access
+    get_swaig_includes, check_agent_access, get_signalwire_param_by_agent_id
 )
 import secrets
 if os.environ.get('DEBUG', False):
@@ -86,8 +86,8 @@ def verify_password(username, password):
     path_segments = parsed_url.path.split('/')
     agent_id = path_segments[-1]
     g.agent_id = agent_id
-    http_username = get_signalwire_param(agent_id, 'HTTP_USERNAME')
-    http_password = get_signalwire_param(agent_id, 'HTTP_PASSWORD')
+    http_username = get_signalwire_param_by_agent_id(agent_id, 'HTTP_USERNAME')
+    http_password = get_signalwire_param_by_agent_id(agent_id, 'HTTP_PASSWORD')
 
     if username == http_username and password == http_password:
         return True
@@ -420,7 +420,7 @@ def signup():
 
     return render_template('signup.html')
 
-@app.route('/yaml/<int:id>/<int:agent_id>', methods=['POST', 'GET'])
+@app.route('/yaml/<int:agent_id>', methods=['POST', 'GET'])
 @auth.login_required
 def get_yaml(id, agent_id):
     if request.method == 'POST':
@@ -428,7 +428,7 @@ def get_yaml(id, agent_id):
     else:
         data = request.args.to_dict()
 
-    response_data = generate_swml_response(id, agent_id, request_body=data)
+    response_data = generate_swml_response(agent_id, request_body=data)
 
     response = make_response(yaml.dump(response_data))
     response.headers['Content-Type'] = 'text/x-yaml'

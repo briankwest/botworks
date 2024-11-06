@@ -24,7 +24,17 @@ def get_feature(agent_id, feature_name):
     feature = AIFeatures.query.filter_by(agent_id=agent_id, name=feature_name).first()
     return feature
 
-def get_signalwire_param(   param_name):
+
+def get_signalwire_param_by_agent_id(agent_id, param_name):
+    user_id = db.session.query(AIAgent.user_id).filter(AIAgent.id == agent_id).scalar()
+
+    if not user_id:
+        return None 
+
+    param = AISignalWireParams.query.filter_by(user_id=user_id, name=param_name).first()
+    return param.value if param else None
+
+def get_signalwire_param(param_name):
     param = AISignalWireParams.query.filter_by(user_id=current_user.id, name=param_name).first()
     return param.value if param else None
 
