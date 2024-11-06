@@ -115,7 +115,7 @@
       "responsive": true,
       "autoWidth": false,
       "ajax": {
-        "url": `/api/v1/agents/${agent_id}/signalwire`,
+        "url": `/api/v1/signalwire`,
         "dataSrc": "",
         "headers": {
           "Accept": "application/json",
@@ -174,7 +174,7 @@
 
       $.ajax({
           type: 'POST',
-          url: `/api/v1/agents/${agent_id}/signalwire`,
+          url: `/api/v1/signalwire`,
           contentType: 'application/json',
           data: JSON.stringify(formData),
           success: function (response) {
@@ -202,7 +202,7 @@
         if (result.isConfirmed) {
           $.ajax({
             type: 'DELETE',
-            url: `/api/v1/agents/${agent_id}/signalwire/${id}`,
+            url: `/api/v1/signalwire/${id}`,
             success: function (response) {
               $('#paramsTable').DataTable().ajax.reload();
               showToast('success', 'Parameter entry deleted successfully');
@@ -219,7 +219,7 @@
       const id = $(this).data('id');
       $.ajax({
         type: 'GET',
-        url: `/api/v1/agents/${agent_id}/signalwire/${id}`,
+        url: `/api/v1/signalwire/${id}`,
         success: function (response) {
           $('#editId').val(response.id);
           $('#editParamName').val(response.name);
@@ -240,7 +240,7 @@
 
       $.ajax({
         type: 'PUT',
-        url: `/api/v1/agents/${agent_id}/signalwire/${formData.id}`,
+        url: `/api/v1/signalwire/${formData.id}`,
         contentType: 'application/json',
         data: JSON.stringify(formData),
         success: function (response) {
