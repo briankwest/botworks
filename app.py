@@ -21,7 +21,7 @@ from modules.swml_generator import generate_swml_response
 from modules.utils import (
     generate_random_password, get_signalwire_param, 
     setup_default_agent_and_params, create_admin_user,
-    get_swaig_includes, check_agent_access, get_signalwire_param_by_agent_id
+    get_swaig_includes, get_signalwire_param_by_agent_id, agent_access_required
 )
 import secrets
 if os.environ.get('DEBUG', False):
@@ -909,10 +909,11 @@ def create_debuglog(agent_id):
 
     return jsonify({'message': 'Debug log created successfully'}), 201
 
-@app.route(f'{API_PREFIX}/conversations/<int:conversation_id>/share', methods=['POST'])
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/conversations/<int:conversation_id>/share', methods=['POST'])
 @login_required
-def create_conversation_share(conversation_id):
-    conversation = AIConversation.query.get_or_404(conversation_id)
+@agent_access_required
+def create_conversation_share(agent_id, conversation_id):
+    conversation = AIConversation.query.get_or_404(agent_id, conversation_id)
     
     share_uuid = str(uuid4())
 
@@ -938,6 +939,7 @@ def view_shared_conversation(uuid):
 
 @app.route(f'{API_PREFIX}/conversations/shared/<string:uuid>', methods=['DELETE'])
 @login_required
+@agent_access_required
 def remove_conversation_share(uuid):
     shared_conversation = SharedConversations.query.filter_by(uuid=uuid).first_or_404()
     db.session.delete(shared_conversation)
@@ -954,6 +956,7 @@ def display_shared_conversation(uuid):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/debuglogs', methods=['GET', 'DELETE'])
 @login_required
+@agent_access_required
 def get_debuglogs(agent_id):
     if request.method == 'GET':
         logs = AIDebugLogs.query.filter_by(agent_id=agent_id).all()
@@ -1264,7 +1267,6 @@ def get_translators():
 
 @app.route('/translators', methods=['POST'])
 @login_required
-@check_agent_access
 def add_translator():
     try:
         data = request.get_json()
@@ -1654,12 +1656,14 @@ def delete_hint(agent_id, hint_id):
 
 @app.route('/agents/<int:agent_id>/pronounce', methods=['GET'])
 @login_required
+@agent_access_required
 def pronounce_page(agent_id):
     return render_template('pronounce.html', user=current_user, agent_id=agent_id)
 
 # API routes for pronounce
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/pronounce', methods=['GET'])
 @login_required
+@agent_access_required
 def list_pronounce(agent_id):
     pronounces = AIPronounce.query.filter_by(agent_id=agent_id).all()
     return jsonify([{
@@ -1672,6 +1676,7 @@ def list_pronounce(agent_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/pronounce/<int:pronounce_id>', methods=['GET'])
 @login_required
+@agent_access_required
 def get_pronounce(agent_id, pronounce_id):
     pronounce = AIPronounce.query.filter_by(id=pronounce_id, agent_id=agent_id).first_or_404()
     return jsonify({
@@ -1684,6 +1689,7 @@ def get_pronounce(agent_id, pronounce_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/pronounce', methods=['POST'])
 @login_required
+@agent_access_required
 def create_pronounce(agent_id):
     data = request.get_json()
     new_pronounce = AIPronounce(
@@ -1701,6 +1707,7 @@ def create_pronounce(agent_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/pronounce/<int:pronounce_id>', methods=['PUT'])
 @login_required
+@agent_access_required
 def update_pronounce(agent_id, pronounce_id):
     pronounce = AIPronounce.query.filter_by(id=pronounce_id, agent_id=agent_id).first_or_404()
     data = request.get_json()
@@ -1714,6 +1721,7 @@ def update_pronounce(agent_id, pronounce_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/pronounce/<int:pronounce_id>', methods=['DELETE'])
 @login_required
+@agent_access_required
 def delete_pronounce(agent_id, pronounce_id):
     pronounce = AIPronounce.query.filter_by(id=pronounce_id, agent_id=agent_id).first_or_404()
     db.session.delete(pronounce)
@@ -1800,6 +1808,7 @@ def prompt_page(agent_id):
 # API routes for prompts
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/prompt', methods=['GET'])
 @login_required
+@agent_access_required
 def list_prompts(agent_id):
     prompts = AIPrompt.query.filter_by(agent_id=agent_id).all()
     return jsonify([{
@@ -1818,6 +1827,7 @@ def list_prompts(agent_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/prompt/<int:prompt_id>', methods=['GET'])
 @login_required
+@agent_access_required
 def get_prompt(agent_id, prompt_id):
     prompt = AIPrompt.query.filter_by(id=prompt_id, agent_id=agent_id).first_or_404()
     return jsonify({
@@ -1835,6 +1845,7 @@ def get_prompt(agent_id, prompt_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/prompt', methods=['POST'])
 @login_required
+@agent_access_required
 def create_prompt(agent_id):
     data = request.get_json()
     
@@ -1871,6 +1882,7 @@ def create_prompt(agent_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/prompt/<int:prompt_id>', methods=['PUT'])
 @login_required
+@agent_access_required
 def update_prompt(agent_id, prompt_id):
     prompt = AIPrompt.query.filter_by(id=prompt_id, agent_id=agent_id).first_or_404()
     data = request.get_json()
@@ -1896,6 +1908,7 @@ def update_prompt(agent_id, prompt_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/prompt/<int:prompt_id>', methods=['PATCH'])
 @login_required
+@agent_access_required
 def patch_prompt(agent_id, prompt_id):
     prompt = AIPrompt.query.filter_by(id=prompt_id, agent_id=agent_id).first_or_404()
     data = request.get_json()
@@ -1925,6 +1938,7 @@ def patch_prompt(agent_id, prompt_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/prompt/<int:prompt_id>', methods=['DELETE'])
 @login_required
+@agent_access_required
 def delete_prompt_api(agent_id, prompt_id):
     prompt = AIPrompt.query.filter_by(id=prompt_id, agent_id=agent_id).first_or_404()
     db.session.delete(prompt)
@@ -1939,18 +1953,21 @@ def context_page(agent_id):
 # API routes for contexts
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/context', methods=['GET'])
 @login_required
+@agent_access_required
 def list_contexts(agent_id):
     contexts = AIContext.query.filter_by(agent_id=agent_id).all()
     return jsonify([context.to_dict() for context in contexts]), 200
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/context/<int:context_id>', methods=['GET'])
 @login_required
+@agent_access_required
 def get_context(agent_id, context_id):
     context = AIContext.query.filter_by(id=context_id, agent_id=agent_id).first_or_404()
     return jsonify(context.to_dict()), 200
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/context', methods=['POST'])
 @login_required
+@agent_access_required
 def create_context(agent_id):
     data = request.get_json()
     new_context = AIContext(
@@ -1967,6 +1984,7 @@ def create_context(agent_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/context/<int:context_id>', methods=['PUT'])
 @login_required
+@agent_access_required
 def update_context(agent_id, context_id):
     context = AIContext.query.filter_by(id=context_id, agent_id=agent_id).first_or_404()
     data = request.get_json()
@@ -1981,6 +1999,7 @@ def update_context(agent_id, context_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/context/<int:context_id>', methods=['PATCH'])
 @login_required
+@agent_access_required
 def patch_context_api(agent_id, context_id):
     context = AIContext.query.filter_by(id=context_id, agent_id=agent_id).first_or_404()
     data = request.get_json()
@@ -1996,6 +2015,7 @@ def patch_context_api(agent_id, context_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/context/<int:context_id>', methods=['DELETE'])
 @login_required
+@agent_access_required
 def delete_context(agent_id, context_id):
     context = AIContext.query.filter_by(id=context_id, agent_id=agent_id).first_or_404()
     db.session.delete(context)
@@ -2005,6 +2025,7 @@ def delete_context(agent_id, context_id):
 # API routes for steps within contexts
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/context/<int:context_id>/steps', methods=['GET'])
 @login_required
+@agent_access_required
 def list_context_steps(agent_id, context_id):
     steps = db.session.query(AISteps, AIContext).join(AIContext, AISteps.context_id == AIContext.id).filter(
         AISteps.context_id == context_id, AISteps.agent_id == agent_id).all()
@@ -2012,6 +2033,7 @@ def list_context_steps(agent_id, context_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/context/<int:context_id>/steps', methods=['POST'])
 @login_required
+@agent_access_required        
 def create_context_step(agent_id, context_id):
     data = request.get_json()
     new_step = AISteps(
@@ -2036,12 +2058,14 @@ def create_context_step(agent_id, context_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/context/<int:context_id>/steps/<int:step_id>', methods=['GET'])
 @login_required
+@agent_access_required
 def get_context_step(agent_id, context_id, step_id):
     step = AISteps.query.filter_by(id=step_id, context_id=context_id, agent_id=agent_id).first_or_404()
     return jsonify(step.to_dict()), 200
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/context/<int:context_id>/steps/<int:step_id>', methods=['PUT'])
 @login_required
+@agent_access_required
 def update_context_step(agent_id, context_id, step_id):
     step = AISteps.query.join(AIContext).join(AIAgent).filter(
         AISteps.id == step_id,
@@ -2075,6 +2099,7 @@ def update_context_step(agent_id, context_id, step_id):
     }), 200
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/context/<int:context_id>/steps/<int:step_id>', methods=['PATCH'])
 @login_required
+@agent_access_required
 def patch_context_step(agent_id, context_id, step_id):
     step = AISteps.query.filter_by(id=step_id, context_id=context_id).first_or_404()
     data = request.get_json()
@@ -2104,6 +2129,7 @@ def patch_context_step(agent_id, context_id, step_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/context/<int:context_id>/steps/<int:step_id>', methods=['DELETE'])
 @login_required
+@agent_access_required
 def delete_context_step(agent_id, context_id, step_id):
     step = AISteps.query.filter_by(id=step_id, context_id=context_id).first_or_404()
     db.session.delete(step)
@@ -2117,6 +2143,7 @@ def language_page(agent_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/language/<int:id>', methods=['PATCH'])
 @login_required
+@agent_access_required
 def patch_language(agent_id, id):
     language_entry = AILanguage.query.filter_by(id=id, agent_id=agent_id).first_or_404()
     
@@ -2141,6 +2168,7 @@ def patch_language(agent_id, id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/language/<int:id>', methods=['PUT'])
 @login_required
+@agent_access_required
 def update_language(agent_id, id):
     data = request.get_json()
     language_entry = AILanguage.query.filter_by(id=id, agent_id=agent_id).first_or_404()
@@ -2157,6 +2185,7 @@ def update_language(agent_id, id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/language/<int:id>', methods=['GET'])
 @login_required
+@agent_access_required
 def get_language_by_id(agent_id, id):
     language_entry = AILanguage.query.filter_by(id=id, agent_id=agent_id).first_or_404()
     return jsonify({
@@ -2171,6 +2200,7 @@ def get_language_by_id(agent_id, id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/language/<int:id>', methods=['DELETE'])
 @login_required
+@agent_access_required
 def delete_language(agent_id, id):
     language_entry = AILanguage.query.filter_by(id=id, agent_id=agent_id).first_or_404()
     db.session.delete(language_entry)
@@ -2179,6 +2209,7 @@ def delete_language(agent_id, id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/language', methods=['GET'])
 @login_required
+@agent_access_required
 def get_languages(agent_id):
     if request.accept_mimetypes['application/json'] and request.accept_mimetypes.best == 'application/json':
         languages = AILanguage.query.filter_by(agent_id=agent_id).order_by(AILanguage.language_order.asc()).all()
@@ -2197,6 +2228,7 @@ def get_languages(agent_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/language', methods=['POST'])
 @login_required
+@agent_access_required
 def create_language(agent_id):
     data = request.get_json()
     new_language = AILanguage(
@@ -2214,6 +2246,7 @@ def create_language(agent_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/language', methods=['PUT'])
 @login_required
+@agent_access_required
 def update_language_entry(agent_id):
     data = request.get_json()
     language_entry = AILanguage.query.filter_by(id=data['id'], agent_id=agent_id).first_or_404()
@@ -2235,6 +2268,7 @@ def conversation_page(agent_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/conversation/<int:id>', methods=['GET'])
 @login_required
+@agent_access_required
 def get_or_delete_conversation(agent_id, id):
     conversation = AIConversation.query.filter_by(id=id, agent_id=agent_id).first_or_404()
 
@@ -2259,33 +2293,24 @@ def get_or_delete_conversation(agent_id, id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/conversation/<int:id>', methods=['DELETE'])
 @login_required
+@agent_access_required
 def delete_conversation(agent_id, id):
     conversation = AIConversation.query.filter_by(id=id, agent_id=agent_id).first_or_404()
     db.session.delete(conversation)
     db.session.commit()
     return jsonify({'message': 'Conversation deleted successfully'}), 200
 
-@app.route(f'{API_PREFIX}/agents/<int:agent_id>/conversation', methods=['GET', 'POST'])
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/conversation', methods=['GET'])
 @login_required
+@agent_access_required
 def conversation(agent_id):
-    if request.method == 'GET':
-        conversations = AIConversation.query.filter_by(agent_id=agent_id).all()
-        conversation_list = [{
-            'id': conv.id,
-            'created': conv.created.isoformat(),
-            'data': conv.data
-        } for conv in conversations]
-        return jsonify(conversation_list), 200
-    elif request.method == 'POST':
-        data = request.get_json()
-        new_conversation = Conversation(
-            title=data['title'],
-            content=data['content'],
-            agent_id=agent_id
-        )
-        db.session.add(new_conversation)
-        db.session.commit()
-        return jsonify({'message': 'Conversation created successfully'}), 201
+    conversations = AIConversation.query.filter_by(agent_id=agent_id).all()
+    conversation_list = [{
+        'id': conv.id,
+        'created': conv.created.isoformat(),
+        'data': conv.data
+    } for conv in conversations]
+    return jsonify(conversation_list), 200
 
 @app.route('/agents/<int:agent_id>/parameters', methods=['GET'])
 @login_required
@@ -2294,6 +2319,7 @@ def parameters_page(agent_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/parameters/<int:id>', methods=['PATCH'])
 @login_required
+@agent_access_required
 def patch_parameter(agent_id, id):
     parameter = AIParams.query.filter_by(id=id, agent_id=agent_id).first_or_404()
     
@@ -2314,6 +2340,7 @@ def patch_parameter(agent_id, id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/parameters/<int:id>', methods=['PUT'])
 @login_required
+@agent_access_required
 def update_parameter(agent_id, id):
     data = request.get_json()
     parameter = AIParams.query.filter_by(id=id, agent_id=agent_id).first_or_404()
@@ -2326,6 +2353,7 @@ def update_parameter(agent_id, id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/parameters/<int:id>', methods=['GET'])
 @login_required
+@agent_access_required
 def get_parameter_by_id(agent_id, id):
     parameter = AIParams.query.filter_by(id=id, agent_id=agent_id).first_or_404()
     return jsonify({
@@ -2336,6 +2364,7 @@ def get_parameter_by_id(agent_id, id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/parameters/<int:id>', methods=['DELETE'])
 @login_required
+@agent_access_required
 def delete_parameter(agent_id, id):
     parameter = AIParams.query.filter_by(id=id, agent_id=agent_id).first_or_404()
     db.session.delete(parameter)
@@ -2344,6 +2373,7 @@ def delete_parameter(agent_id, id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/parameters', methods=['GET'])
 @login_required
+@agent_access_required
 def get_parameters(agent_id):
     parameters = AIParams.query.filter_by(agent_id=agent_id).all()
     parameter_list = [{
@@ -2355,6 +2385,7 @@ def get_parameters(agent_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/parameters', methods=['POST'])
 @login_required
+@agent_access_required
 def create_parameter(agent_id):
     data = request.get_json()
     new_parameter = AIParams(
@@ -2369,6 +2400,7 @@ def create_parameter(agent_id):
 # API route for listing hooks
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/hooks', methods=['GET'])
 @login_required
+@agent_access_required
 def list_hooks(agent_id):
     hooks = AIHooks.query.filter_by(agent_id=agent_id).all()
     hooks_list = [{
@@ -2384,6 +2416,7 @@ def list_hooks(agent_id):
 # API route for deleting all hooks
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/hooks', methods=['DELETE'])
 @login_required
+@agent_access_required
 def delete_all_hooks(agent_id):
     hooks = AIHooks.query.filter_by(agent_id=agent_id).all()
     for hook in hooks:
@@ -2400,6 +2433,7 @@ def hooks_page(agent_id):
 # API routes for SWML Requests
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/swmlrequests', methods=['GET'])
 @login_required
+@agent_access_required
 def list_swmlrequests(agent_id):
     swml_requests = AISWMLRequest.query.filter_by(agent_id=agent_id).all()
     swml_requests_data = [{
@@ -2413,6 +2447,7 @@ def list_swmlrequests(agent_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/swmlrequests', methods=['DELETE'])
 @login_required
+@agent_access_required
 def delete_swmlrequest(agent_id):
     swml_requests = AISWMLRequest.query.filter_by(agent_id=agent_id).all()
     for request in swml_requests:
@@ -2429,6 +2464,7 @@ def swmlrequests_page(agent_id):
 # API routes for AI Features
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/features', methods=['GET'])
 @login_required
+@agent_access_required
 def list_aifeatures(agent_id):
     features = AIFeatures.query.filter_by(agent_id=agent_id).all()
     return jsonify([{
@@ -2442,6 +2478,7 @@ def list_aifeatures(agent_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/features/<int:feature_id>', methods=['GET'])
 @login_required
+@agent_access_required
 def get_aifeature(agent_id, feature_id):
     feature = AIFeatures.query.filter_by(id=feature_id, agent_id=agent_id).first_or_404()
     return jsonify({
@@ -2455,6 +2492,7 @@ def get_aifeature(agent_id, feature_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/features', methods=['POST'])
 @login_required
+@agent_access_required
 def create_aifeature(agent_id):
     data = request.get_json()
     new_feature = AIFeatures(
@@ -2470,6 +2508,7 @@ def create_aifeature(agent_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/features/<int:feature_id>', methods=['PUT'])
 @login_required
+@agent_access_required
 def update_aifeature(agent_id, feature_id):
     feature = AIFeatures.query.filter_by(id=feature_id, agent_id=agent_id).first_or_404()
     data = request.get_json()
@@ -2484,6 +2523,7 @@ def update_aifeature(agent_id, feature_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/features/<int:feature_id>', methods=['DELETE'])
 @login_required
+@agent_access_required
 def delete_aifeature(agent_id, feature_id):
     feature = AIFeatures.query.filter_by(id=feature_id, agent_id=agent_id).first_or_404()
     db.session.delete(feature)
@@ -2498,6 +2538,7 @@ def aifeatures_page(agent_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/functions', methods=['GET'])
 @login_required
+@agent_access_required
 def list_functions(agent_id):
     functions = AIFunctions.query.filter_by(agent_id=agent_id).all()
     functions_data = [{
@@ -2510,6 +2551,7 @@ def list_functions(agent_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/functions/<int:function_id>', methods=['GET'])
 @login_required
+@agent_access_required
 def get_function(agent_id, function_id):
     function = AIFunctions.query.filter_by(id=function_id, agent_id=agent_id).first_or_404()
     return jsonify({
@@ -2527,6 +2569,7 @@ def get_function(agent_id, function_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/functions/names', methods=['GET'])
 @login_required
+@agent_access_required
 def get_function_names(agent_id):
     functions = AIFunctions.query.filter_by(agent_id=agent_id).all()
     function_names = [function.name for function in functions]
@@ -2535,6 +2578,7 @@ def get_function_names(agent_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/functions', methods=['POST'])
 @login_required
+@agent_access_required
 def create_function(agent_id):
     data = request.get_json()
     new_function = AIFunctions(
@@ -2555,6 +2599,7 @@ def create_function(agent_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/functions/<int:function_id>', methods=['PATCH'])
 @login_required
+@agent_access_required
 def update_function(agent_id, function_id):
     function = AIFunctions.query.filter_by(id=function_id, agent_id=agent_id).first_or_404()
     data = request.get_json()
@@ -2571,6 +2616,7 @@ def update_function(agent_id, function_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/functions/<int:function_id>', methods=['DELETE'])
 @login_required
+@agent_access_required
 def delete_function(agent_id, function_id):
     function = AIFunctions.query.filter_by(id=function_id, agent_id=agent_id).first_or_404()
     db.session.delete(function)
@@ -2579,6 +2625,7 @@ def delete_function(agent_id, function_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/functions/<int:function_id>/args', methods=['GET'])
 @login_required
+@agent_access_required
 def list_function_args(agent_id, function_id):
     args = AIFunctionArgs.query.filter_by(function_id=function_id).all()
     args_data = [{
@@ -2594,6 +2641,7 @@ def list_function_args(agent_id, function_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/functions/<int:function_id>/args', methods=['POST'])
 @login_required
+@agent_access_required
 def create_function_arg(agent_id, function_id):
     print(f"Creating argument for function {function_id}, agent_id: {agent_id}")
     data = request.get_json()
@@ -2613,6 +2661,7 @@ def create_function_arg(agent_id, function_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/functions/<int:function_id>/args/<int:arg_id>', methods=['PATCH'])
 @login_required
+@agent_access_required
 def update_function_arg(agent_id, function_id, arg_id):
     arg = AIFunctionArgs.query.filter_by(id=arg_id, function_id=function_id).first_or_404()
     data = request.get_json()
@@ -2627,6 +2676,7 @@ def update_function_arg(agent_id, function_id, arg_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/functions/<int:function_id>/args/<int:arg_id>', methods=['DELETE'])
 @login_required
+@agent_access_required
 def delete_function_arg(agent_id, function_id, arg_id):
     arg = AIFunctionArgs.query.filter_by(agent_id=agent_id, id=arg_id, function_id=function_id).first_or_404()
     db.session.delete(arg)
@@ -2641,6 +2691,7 @@ def functions_page(agent_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/includes', methods=['POST'])
 @login_required
+@agent_access_required
 def create_or_update_include(agent_id):
     data = request.get_json()
     url = data.get('url').strip()
@@ -2669,6 +2720,7 @@ def create_or_update_include(agent_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/includes', methods=['GET'])
 @login_required
+@agent_access_required
 def get_includes_agent(agent_id):
     includes_entries = AIIncludes.query.filter_by(agent_id=agent_id).all()
     return jsonify([{
@@ -2679,6 +2731,7 @@ def get_includes_agent(agent_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/includes/<int:include_id>', methods=['GET'])
 @login_required
+@agent_access_required
 def get_include_agent(agent_id, include_id):
     include_entry = AIIncludes.query.filter_by(id=include_id, agent_id=agent_id).first_or_404()
     return jsonify({
@@ -2689,6 +2742,7 @@ def get_include_agent(agent_id, include_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/includes/<int:include_id>', methods=['PUT'])
 @login_required
+@agent_access_required
 def update_include(agent_id, include_id):
     include_entry = AIIncludes.query.filter_by(id=include_id, agent_id=agent_id).first_or_404()
     data = request.get_json()
@@ -2699,6 +2753,7 @@ def update_include(agent_id, include_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/includes/<int:include_id>', methods=['DELETE'])
 @login_required
+@agent_access_required
 def delete_include(agent_id, include_id):
     include_entry = AIIncludes.query.filter_by(id=include_id, agent_id=agent_id).first_or_404()
     db.session.delete(include_entry)
@@ -2707,6 +2762,7 @@ def delete_include(agent_id, include_id):
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/includes', methods=['POST'])
 @login_required
+@agent_access_required
 def get_includes_post(agent_id):
     if request.headers.get('Accept') == 'application/json':
         url = request.get_json().get('url')
@@ -2720,6 +2776,7 @@ def get_includes_post(agent_id):
 
 @app.route('/agents/<int:agent_id>/includes', methods=['GET'])
 @login_required
+@agent_access_required
 def includes_page(agent_id):
     return render_template('includes.html', user=current_user)
 

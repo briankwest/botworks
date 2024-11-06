@@ -4,7 +4,7 @@ import random
 import requests
 import os
 from urllib.parse import urlparse
-from flask import g, request, make_response, jsonify
+from flask import g, request, abort
 from flask_login import current_user
 from werkzeug.security import generate_password_hash
 from modules.db import db
@@ -139,34 +139,37 @@ def get_swaig_includes(url):
 
 def user_has_access_to_agent(agent_id):
     owns_agent = AIAgent.query.filter_by(id=agent_id, user_id=current_user.id).first()
-    has_shared_access = SharedAccess.query.filter_by(agent_id=agent_id, shared_with_user_id=current_user.id).first()
+    has_shared_access = SharedAgent.query.filter_by(agent_id=agent_id, shared_with_user_id=current_user.id).first()
     return owns_agent or has_shared_access
 
-def get_or_set_selected_agent_id():
-    if not current_user or not hasattr(current_user, 'id'):
-        raise ValueError("User is not authenticated or current_user is not set.")
 
-    selected_agent_id = request.cookies.get('selectedAgentId')
-    if not selected_agent_id:
-        first_agent = AIAgent.query.filter_by(user_id=current_user.id).first()
-        if first_agent:
-            selected_agent_id = first_agent.id
-            response = make_response()
-            response.set_cookie('selectedAgentId', str(selected_agent_id), samesite='Strict')
-            return selected_agent_id, response
-        else:
-            return None, jsonify({'message': 'No agents found for the user'}), 400
-    return selected_agent_id, None
-
-def check_agent_access(f):
+def agent_access_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        selected_agent_id, response = get_or_set_selected_agent_id()
-        if not selected_agent_id:
-            return response
+        agent_id = kwargs.get('agent_id')
+        if not agent_id:
+            abort(400, description="Agent ID is required")
 
-        if not user_has_access_to_agent(selected_agent_id):
-            return jsonify({'message': 'Permission denied'}), 403
+        # Check if user owns the agent
+        agent = AIAgent.query.filter_by(id=agent_id, user_id=current_user.id).first()
+        if agent:
+            return f(*args, **kwargs)
 
-        return f(selected_agent_id, *args, **kwargs)
+        # Check if agent is shared with the user
+        shared_access = SharedAgent.query.filter_by(
+            agent_id=agent_id,
+            shared_with_user_id=current_user.id
+        ).first()
+
+        if not shared_access:
+            abort(403, description="Access denied to this agent")
+
+        # If view-only access, deny write operations
+        if shared_access.permissions == 'view' and request.method in ['PUT', 'DELETE', 'PATCH', 'POST']:
+            abort(403, description="View-only access - write operations not permitted")
+
+        return f(*args, **kwargs)
     return decorated_function
+
+
+
