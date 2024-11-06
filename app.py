@@ -2802,8 +2802,12 @@ def get_includes_post(agent_id):
 def includes_page(agent_id):
     return render_template('includes.html', user=current_user)
 
-if __name__ == '__main__':
+def init_db():
     with app.app_context():
         db.create_all()
         create_admin_user()
+
+init_db()
+
+if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', port=5000, debug=app.config['DEBUG'])
