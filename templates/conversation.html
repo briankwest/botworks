@@ -204,7 +204,7 @@
         $('#fullScreenModal').focus();
       }, 200);
 
-      fetchData(id);
+      fetchData(agentId, id);
 
       $(document).on('focusin', function (e) {
         if ($('#fullScreenModal').is(':visible') && !$('#fullScreenModal').has(e.target).length) {
@@ -261,7 +261,9 @@
     });
   });
 
-  function fetchData(id) {
+  function fetchData(agentId, id) {
+
+    console.log('Fetching data for ID:', id);
     fetch(`/api/v1/agents/${agentId}/conversation/${id}`)
       .then(response => {
         if (!response.ok) {
@@ -273,7 +275,7 @@
         console.log('Received data:', responseData); // Log the received data
         clearContent();
         displayData(responseData.data);
-        setupNavigationButtons(responseData.next, responseData.prev);
+        setupNavigationButtons(agentId, responseData.next, responseData.prev);
       })
       .catch(error => {
         console.error('Error fetching JSON:', error);
@@ -288,7 +290,7 @@
     content.innerHTML = '';
   }
 
-  function setupNavigationButtons(nextId, prevId) {
+  function setupNavigationButtons(agentId, nextId, prevId) {
     const content = document.getElementById('PostPromptDataContent');
 
     let navContainer = document.getElementById('navContainer');
@@ -302,10 +304,11 @@
 
     if (prevId) {
       const prevButton = document.createElement('button');
+
       prevButton.className = 'btn btn-primary btn-sm mr-2';
       prevButton.innerHTML = '<i class="fas fa-arrow-left"></i> Previous';
       prevButton.onclick = () => {
-        fetchData(prevId);
+        fetchData(agentId, prevId);
       };
       navContainer.appendChild(prevButton);
     }
@@ -315,7 +318,7 @@
       nextButton.className = 'btn btn-primary btn-sm ml-auto';
       nextButton.innerHTML = 'Next <i class="fas fa-arrow-right"></i>';
       nextButton.onclick = () => {
-        fetchData(nextId);
+        fetchData(agentId, nextId);
       };
       navContainer.appendChild(nextButton);
     }

@@ -1794,17 +1794,16 @@ def get_prompt(agent_id, prompt_id):
 def create_prompt(agent_id):
     data = request.get_json()
     
-    # Convert empty strings to None for float fields
     float_fields = ['top_p', 'temperature', 'confidence', 'frequency_penalty', 'presence_penalty']
     for field in float_fields:
         if field in data and data[field] == '':
             data[field] = None
-            
-    # Convert empty string to None for integer field
+
+    if 'prompt_text' in data:
+        data['prompt_text'] = data['prompt_text'].encode('ascii', 'ignore').decode('ascii')
+
     if 'max_tokens' in data and data['max_tokens'] == '':
         data['max_tokens'] = None
-    if 'prompt_text' in data:
-        data['prompt_text'] = data['prompt_text'].encode('utf-8').decode('utf-8')
 
     new_prompt = AIPrompt(
         agent_id=agent_id,
@@ -2228,10 +2227,10 @@ def conversation(agent_id):
     if request.method == 'GET':
         conversations = AIConversation.query.filter_by(agent_id=agent_id).all()
         conversation_list = [{
-            'id': c.id,
-            'title': c.title,
-            'content': c.content
-        } for c in conversations]
+            'id': conv.id,
+            'created': conv.created.isoformat(),
+            'data': conv.data
+        } for conv in conversations]
         return jsonify(conversation_list), 200
     elif request.method == 'POST':
         data = request.get_json()

@@ -372,6 +372,19 @@ class SharedAgent(db.Model):
     user = db.relationship('AIUser', back_populates='shared_agent', foreign_keys=[user_id])
     agent = db.relationship('AIAgent', back_populates='shared_agent')
     
+class SharedConversations(db.Model):
+    __tablename__ = 'shared_conversations'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    uuid = db.Column(db.String(36), nullable=False)
+    conversation_id = db.Column(db.Integer, db.ForeignKey('ai_conversation.id', ondelete='CASCADE'), nullable=False)
+    created = db.Column(db.DateTime, default=datetime.utcnow)
+    updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    conversation = db.relationship('AIConversation', backref=db.backref('shared_conversations', lazy=True))
+
+    def __repr__(self):
+        return f'<SharedConversations {self.id}>'
+    
 
 class AITranslate(db.Model):
     __tablename__ = 'ai_translate'
