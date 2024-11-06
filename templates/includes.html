@@ -117,16 +117,16 @@
 
 <script>
   $(document).ready(function () {
-    var selectedAgentId = getCookie('selectedAgentId');
+    const agentId = {{ agent_id }};
 
-    initializeIncludesTable(selectedAgentId);
+    initializeIncludesTable(agentId);
 
     // Debounce the fetchIncludes function
     const debouncedFetchIncludes = debounce(fetchIncludes, 1000);
 
     function fetchIncludes(url) {
       $.ajax({
-        url: `/includes/${selectedAgentId}`,
+        url: `/api/v1/agents/${agentId}/includes`,
         type: 'GET',
         data: { url: url },
         success: function (data) {
@@ -158,12 +158,12 @@
     function fetchSwaigData(url) {
       console.log('Attempting to fetch SWAIG data for URL:', url);
       $.ajax({
-        url: '/includes',
+        url: `/api/v1/agents/${agentId}/includes`,
         type: 'POST',
         headers: {
           'Accept': 'application/json'
         },
-        data: JSON.stringify({ url: url }),
+        data: JSON.stringify({ url: url, get_remote_swaig: true }),
         contentType: 'application/json',
         success: function (data) {
           console.log('SWAIG data fetched successfully:', data);
@@ -329,7 +329,7 @@
 
     $(document).on('click', '.edit-btn', function () {
       const includeId = $(this).data('id');
-      $.get(`/includes/${selectedAgentId}/${includeId}`, function (data) {
+      $.get(`/api/v1/agents/${agentId}/includes/${includeId}`, function (data) {
         $('#includeUrl').val(data.url);
         $('#includeFunctions').val(data.functions);
 
@@ -363,7 +363,7 @@
       const functions = $('#includeFunctions').val();
 
       $.ajax({
-        url: `/includes/${selectedAgentId}`,
+        url: `/api/v1/agents/${agentId}/includes`,
         type: 'POST',
         contentType: 'application/json',
         headers: {
@@ -398,7 +398,7 @@
       const functions = $('#editIncludeFunctions').val();
 
       $.ajax({
-        url: `/includes/${selectedAgentId}/${id}`,
+        url: `/api/v1/agents/${agentId}/includes/${id}`,
         type: 'PUT',
         contentType: 'application/json',
         data: JSON.stringify({ url, functions }),
@@ -422,7 +422,7 @@
       if ($.fn.DataTable) {
         const includesTable = $('#includesTable').DataTable({
           "ajax": {
-            "url": `/includes/${agentId}`,
+            "url": `/api/v1/agents/${agentId}/includes`,
             "dataSrc": "",
             "headers": {
               "Accept": "application/json"
@@ -491,7 +491,7 @@
         }).then((result) => {
           if (result.isConfirmed) {
             $.ajax({
-              url: `/includes/${agentId}/${includeId}`,
+              url: `/api/v1/agents/${agentId}/includes/${includeId}`,
               type: 'DELETE',
               success: function () {
                 $('#includesTable').DataTable().ajax.reload();
@@ -550,7 +550,7 @@
 
       $(document).on('click', '.edit-btn', function () {
         const includeId = $(this).data('id');
-        $.get(`/includes/${selectedAgentId}/${includeId}`, function (data) {
+        $.get(`/api/v1/agents/${agentId}/includes/${includeId}`, function (data) {
           $('#includeUrl').val(data.url);
           $('#includeFunctions').val(data.functions);
 
@@ -583,12 +583,12 @@
     function fetchSwaigData(url) {
       return new Promise((resolve, reject) => {
         $.ajax({
-          url: '/includes',
+          url: `/api/v1/agents/${agentId}/includes`,
           type: 'POST',
           headers: {
             'Accept': 'application/json'
           },
-          data: JSON.stringify({ url: url }),
+          data: JSON.stringify({ url: url, get_remote_swaig: true }),
           contentType: 'application/json',
           success: function (data) {
             console.log('SWAIG data fetched successfully:', data);

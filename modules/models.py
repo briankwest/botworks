@@ -14,7 +14,7 @@ class AIAgent(db.Model):
     user = db.relationship('AIUser', backref=db.backref('ai_agents', lazy=True))
     
     ai_debug_logs = db.relationship('AIDebugLogs', back_populates='agent', cascade='all, delete-orphan', lazy=True)
-    ai_signalwire_params = db.relationship('AISignalWireParams', back_populates='agent', cascade='all, delete-orphan', lazy=True)
+
     ai_swml_requests = db.relationship('AISWMLRequest', back_populates='agent', cascade='all, delete-orphan', lazy=True)
     ai_functions = db.relationship('AIFunctions', back_populates='agent', cascade='all, delete-orphan', lazy=True)
     ai_function_argument = db.relationship('AIFunctionArgs', back_populates='agent', cascade='all, delete-orphan', lazy=True)
@@ -27,7 +27,7 @@ class AIAgent(db.Model):
     ai_features = db.relationship('AIFeatures', back_populates='agent', cascade='all, delete-orphan', lazy=True)
     ai_contexts = db.relationship('AIContext', back_populates='agent', cascade='all, delete-orphan', lazy=True)
     ai_steps = db.relationship('AISteps', back_populates='agent', cascade='all, delete-orphan', lazy=True)
-    shared_access = db.relationship('SharedAccess', back_populates='agent', cascade='all, delete-orphan', lazy='dynamic')
+    shared_agent = db.relationship('SharedAgent', back_populates='agent', cascade='all, delete-orphan', lazy='dynamic')
 
     def __repr__(self):
         return f'<AIAgent {self.name}>'
@@ -49,14 +49,12 @@ class AIDebugLogs(db.Model):
 class AISignalWireParams(db.Model):
     __tablename__ = 'ai_signalwire_params'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
-    name = db.Column(db.String(100), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
+    name = db.Column(db.String(100), nullable=False, unique=False)
     value = db.Column(db.String(255), nullable=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow) 
+    updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    agent = db.relationship('AIAgent', back_populates='ai_signalwire_params')
-
     def __repr__(self):
         return f'<AISignalWireParams {self.name}: {self.value}>'
 
@@ -243,12 +241,12 @@ class AIUser(UserMixin, db.Model):
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    shared_access = db.relationship(
-        'SharedAccess',
+    shared_agent = db.relationship(
+        'SharedAgent',
         back_populates='user',
         cascade='all, delete-orphan',
         lazy='dynamic',
-        primaryjoin="AIUser.id == SharedAccess.shared_with_user_id"
+        primaryjoin="AIUser.id == SharedAgent.shared_with_user_id"
     )
     ai_translates = db.relationship(
         'AITranslate',
@@ -270,7 +268,7 @@ class AIIncludes(db.Model):
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    agent = db.relationship('AIAgent', backref=db.backref('ai_includes', lazy=True))
+    agent = db.relationship('AIAgent', backref=db.backref('ai_includes', cascade='all, delete-orphan', lazy=True))
 
     def __repr__(self):
         return f'<AIIncludes {self.url}>'
@@ -361,17 +359,31 @@ class AIHooks(db.Model):
             'hook_type': self.hook_type.value
         }
 
-class SharedAccess(db.Model):
-    __tablename__ = 'shared_access'
+class SharedAgent(db.Model):
+    __tablename__ = 'shared_agent'
     id = db.Column(db.Integer, primary_key=True)
     agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
     shared_with_user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
     permissions = db.Column(db.String(50), nullable=False)
     created = db.Column(db.DateTime, default=datetime.utcnow)
     updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    user = db.relationship('AIUser', back_populates='shared_access')
-    agent = db.relationship('AIAgent', back_populates='shared_access')
+    user = db.relationship('AIUser', back_populates='shared_agent', foreign_keys=[user_id])
+    agent = db.relationship('AIAgent', back_populates='shared_agent')
+    
+class SharedConversations(db.Model):
+    __tablename__ = 'shared_conversations'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    uuid = db.Column(db.String(36), nullable=False)
+    conversation_id = db.Column(db.Integer, db.ForeignKey('ai_conversation.id', ondelete='CASCADE'), nullable=False)
+    created = db.Column(db.DateTime, default=datetime.utcnow)
+    updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    conversation = db.relationship('AIConversation', backref=db.backref('shared_conversations', lazy=True))
+
+    def __repr__(self):
+        return f'<SharedConversations {self.id}>'
     
 
 class AITranslate(db.Model):

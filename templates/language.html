@@ -201,7 +201,7 @@
       "responsive": true,
       "autoWidth": false,
       "ajax": {
-        "url": "{{ url_for('language') }}",
+        "url": "{{ url_for('get_languages', agent_id=agent_id) }}",
         "dataSrc": ""
       },
       "columns": [
@@ -266,7 +266,7 @@
 
       $.ajax({
         type: 'POST',
-        url: "{{ url_for('language') }}",
+        url: `/api/v1/agents/${agent_id}/language`,
         contentType: 'application/json',
         data: JSON.stringify(formData),
         success: function (response) {
@@ -295,7 +295,7 @@
         if (result.isConfirmed) {
           $.ajax({
             type: 'DELETE',
-            url: `/language/${id}`,
+            url: `/api/v1/agents/${agent_id}/language/${id}`,
             success: function (response) {
               $('#languageTable').DataTable().ajax.reload();
               showToast('success', 'Language entry deleted successfully');
@@ -312,7 +312,7 @@
       const id = $(this).data('id');
       $.ajax({
         type: 'GET',
-        url: `/language/${id}`,
+        url: `/api/v1/agents/${agent_id}/language/${id}`,
         success: function (response) {
           $('#editId').val(response.id);
           $('#editName').val(response.name);
@@ -342,7 +342,7 @@
 
       $.ajax({
         type: 'PUT',
-        url: `/language/${id}`,
+        url: `/api/v1/agents/${agent_id}/language/${id}`,
         contentType: 'application/json',
         data: JSON.stringify(formData),
         success: function (response) {
@@ -369,7 +369,7 @@
         order.forEach(function (item) {
           $.ajax({
             type: 'PATCH',
-            url: `/language/${item.id}`,
+            url: `/api/v1/agents/${agent_id}/language/${item.id}`,
             contentType: 'application/json',
             headers: {
               'Accept': 'application/json'

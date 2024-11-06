@@ -31,6 +31,7 @@
                     <tr>
                       <th>ID</th>
                       <th>Context Name</th>
+                      <th>Agent ID</th>
                       <th class="text-right">Actions</th>
                     </tr>
                   </thead>
@@ -57,8 +58,8 @@
                 </div>
                 <div class="card-footer mt-3">
                   <button type="submit" class="btn btn-sm mr-2 btn-success">
-                  <i class="fas fa-plus"></i> Add AI Context
-                </button>
+                    <i class="fas fa-plus"></i> Add AI Context
+                  </button>
                 </div>
               </form>
             </div>
@@ -80,10 +81,12 @@
                       <th>ID</th>
                       <th>Context</th>
                       <th>Step Name</th>
+                      <th>Agent ID</th>
                       <th>End</th>
                       <th>Skip User Turn</th>
                       <th>Functions</th>
                       <th class="text-right">Actions</th>
+                      <th style="display:none;">Context ID</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -201,6 +204,7 @@
             <label for="editStepContextId">Context</label>
             <select class="form-control" id="editStepContextId" name="context_id" required>
             </select>
+            <input type="hidden" id="editAgentId" name="agent_id">
           </div>
           <div class="form-group">
             <label for="editStepName">Step Name</label>
@@ -273,250 +277,223 @@
 
 <script>
   $(document).ready(function () {
-    $('.steps-section, .add-step-section').hide();
+    const contextDropdowns = $('#stepContextId, #editStepContextId, #validContexts, #editValidContexts');
+    const stepsDropdowns = $('#validSteps, #editValidSteps');
+    const functionsDropdowns = $('#functions, #editFunctions');
+    let currentContextId = null;
 
-    function checkContextsAndToggleSteps() {
-      $.ajax({
-        type: 'GET',
-        url: "{{ url_for('context') }}",
-        contentType: 'application/json',
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json"
-        },
-        success: function (data) {
-          if (Array.isArray(data) && data.length > 0) {
-            $('.steps-section, .add-step-section').show();
-          } else {
-            $('.steps-section, .add-step-section').hide();
+    function initializePage() {
+      $('.steps-section, .add-step-section').hide();
+      loadContexts()
+        .then(() => {
+          if (currentContextId) {
+            fetchSteps(currentContextId);
           }
-        },
-        error: function (error) {
-          console.error('Error fetching contexts:', error);
-          showToast('error', 'Error fetching contexts');
-        }
-      });
+        })
+        .catch(handleError('Error initializing page'));
     }
 
-    checkContextsAndToggleSteps();
-
-    $('#contextTable').DataTable({
-      "responsive": true,
-      "autoWidth": false,
-      "ajax": {
-        "url": "{{ url_for('context') }}",
-        "type": "GET",
-        "dataSrc": "",
-        "headers": {
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        }
-      },
-      "columns": [
-        { "data": "id" },
-        { "data": "context_name" },
-        {
-          "data": null,
-          "className": "text-nowrap text-right",
-          "render": function (data, type, row) {
-            return `
-              <button class="btn btn-sm btn-primary edit-context mr-2" data-id="${row.id}">
-                <i class="fas fa-edit"></i> Edit
-              </button>
-              <button class="btn btn-sm btn-danger delete-context" data-id="${row.id}">
-                <i class="fas fa-trash-alt"></i> Delete
-              </button>
-            `;
-          }
-        }
-      ]
-    });
-
-    let contextMap = {};
-
-    function fetchContexts() {
+    function fetchData(url) {
+      console.log('Fetching data from:', url);
       return $.ajax({
         type: 'GET',
-        url: "{{ url_for('context') }}",
+        url: url,
         contentType: 'application/json',
         headers: {
           "Accept": "application/json",
           "Content-Type": "application/json"
-        },
-        success: function (data) {
-          if (Array.isArray(data)) {
-            contextMap = {};
-            data.forEach(function (context) {
-              contextMap[context.id] = context.context_name;
-            });
-          }
-        },
-        error: function (error) {
-          console.error('Error fetching contexts:', error);
-          showToast('error', 'Error fetching contexts');
         }
+      }).promise().then(response => {
+        console.log('Response:', response);
+        return response;
       });
     }
 
-    let functionMap = {};
+    function populateDropdown(dropdown, data, key, value) {
+      dropdown.empty();
+      if (Array.isArray(data)) {
+        data.forEach(item => dropdown.append(new Option(item[value], item[key])));
+      } else if (data && typeof data === 'object') {
+        dropdown.append(new Option(data[value], data[key]));
+      } else {
+        console.error('Expected an array or object but got:', data);
+      }
+      dropdown.trigger('change');
+    }
 
-    function fetchFunctions() {
-      return $.ajax({
-        type: 'GET',
-        url: "{{ url_for('functions') }}",
-        contentType: 'application/json',
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json"
-        },
-        success: function (data) {
-          if (Array.isArray(data)) {
-            functionMap = {};
-            data.forEach(function (func) {
-              functionMap[func.id] = func.name;
-            });
+    function loadContexts() {
+      if ($.fn.DataTable.isDataTable('#contextTable')) {
+        $('#contextTable').DataTable().destroy();
+      }
+      
+      return new Promise((resolve, reject) => {
+        $('#contextTable').DataTable({
+          "responsive": true,
+          "autoWidth": false,
+          "ajax": {
+            "url": `/api/v1/agents/${agent_id}/context`,
+            "type": "GET",
+            "dataSrc": "",
+            "headers": {
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            }
+          },
+          "columns": [
+            { "data": "id" },
+            { "data": "context_name" },
+            { "data": "agent_id" },
+            {
+              "data": null,
+              "className": "text-right",
+              "render": function (data, type, row) {
+                return `
+                  <button class="btn btn-sm btn-primary edit-context mr-2" data-id="${row.id}" data-agent-id="${row.agent_id}">
+                    <i class="fas fa-edit"></i> Edit
+                  </button>
+                  <button class="btn btn-sm btn-danger delete-context" data-id="${row.id}" data-agent-id="${row.agent_id}">
+                    <i class="fas fa-trash-alt"></i> Delete
+                  </button>
+                `;
+              }
+            }
+          ],
+          "initComplete": function(settings, json) {
+            if (Array.isArray(json) && json.length > 0) {
+              $('.steps-section, .add-step-section').show();
+              populateDropdown(contextDropdowns, json, 'id', 'context_name');
+              currentContextId = json[0].id;
+              $('#stepContextId').val(currentContextId).trigger('change');
+            }
+            resolve();
+          },
+          "error": function(xhr, error, thrown) {
+            reject(error);
           }
-        },
-        error: function (error) {
-          console.error('Error fetching functions:', error);
-          showToast('error', 'Error fetching functions');
-        }
+        });
       });
     }
 
-    fetchContexts().then(fetchFunctions).then(function () {
+    function fetchSteps(contextId) {
+      if (!contextId) {
+        console.warn('No context ID provided for fetching steps.');
+        return;
+      }
+
+      if ($.fn.DataTable.isDataTable('#stepsTable')) {
+        $('#stepsTable').DataTable().destroy();
+      }
+
       $('#stepsTable').DataTable({
         "responsive": true,
         "autoWidth": false,
         "ajax": {
-          "url": "{{ url_for('step') }}",
+          "url": `/api/v1/agents/${agent_id}/context/${contextId}/steps`,
           "type": "GET",
-          "dataSrc": "",
+          "dataSrc": function (json) {
+            if (!json || json.length === 0) {
+              console.warn('No steps found for the context.');
+              // Optionally update the UI to indicate no steps are available
+              return [];
+            }
+            return json;
+          },
           "headers": {
             "Content-Type": "application/json",
             "Accept": "application/json"
           }
         },
         "columns": [
-          { "data": "id" },
+          { "data": "step.id" },
+          { "data": "step.context_id" },
+          { "data": "step.name" },
+          { "data": "user_id" },
           {
-            "data": "context_id",
+            "data": "step.end",
             "render": function (data, type, row) {
-              return contextMap[data] || 'Unknown Context';
-            }
-          },
-          { "data": "name" },
-          {
-            "data": "end",
-            "render": function (data, type, row) {
-              return `<div class="d-flex justify-content-center">
-                                <div class="custom-control custom-switch">
-                                    <input type="checkbox" class="custom-control-input toggle-end" id="toggleEnd${row.id}" data-id="${row.id}" ${data ? 'checked' : ''}>
-                                    <label class="custom-control-label" for="toggleEnd${row.id}"></label>
-                                </div>
-                            </div>`;
+              return createSwitch('toggle-end', row.step.id, data);
             }
           },
           {
-            "data": "skip_user_turn",
+            "data": "step.skip_user_turn",
             "render": function (data, type, row) {
-              return `<div class="d-flex justify-content-center">
-                                <div class="custom-control custom-switch">
-                                    <input type="checkbox" class="custom-control-input toggle-skip-user-turn" id="toggleSkipUserTurn${row.id}" data-id="${row.id}" ${data ? 'checked' : ''}>
-                                    <label class="custom-control-label" for="toggleSkipUserTurn${row.id}"></label>
-                                </div>
-                            </div>`;
+              return createSwitch('toggle-skip-user-turn', row.step.id, data);
             }
           },
           {
-            "data": "functions",
-            "render": function (data, type, row) {
-              if (Array.isArray(data)) {
-                return data.map(function (funcId) {
-                  return functionMap[funcId] || 'Unknown Function';
-                }).join(', ');
-              }
-              return 'No Functions';
+            "data": "step.functions",
+            "render": function (data) {
+              return renderFunctions(data);
             }
           },
           {
             "data": null,
             "className": "text-right",
             "render": function (data, type, row) {
-              return `
-                <button class="btn btn-sm btn-primary edit-step mr-2" data-id="${row.id}">
-                  <i class="fas fa-edit"></i> Edit
-                </button>
-                <button class="btn btn-sm btn-danger delete-step" data-id="${row.id}">
-                  <i class="fas fa-trash-alt"></i> Delete
-                </button>
-              `;
+              return createActionButtons(row.step.id);
             }
           }
         ]
       });
+    }
+
+    function createSwitch(className, id, checked) {
+      return `<div class="d-flex justify-content-center">
+                <div class="custom-control custom-switch">
+                  <input type="checkbox" class="custom-control-input ${className}" id="${className}${id}" data-id="${id}" ${checked ? 'checked' : ''}>
+                  <label class="custom-control-label" for="${className}${id}"></label>
+                </div>
+              </div>`;
+    }
+
+    function renderFunctions(data) {
+      if (Array.isArray(data)) {
+        return data.map(funcId => functionMap[funcId] || 'Unknown Function').join(', ');
+      }
+      return 'No Functions';
+    }
+
+    function createActionButtons(id) {
+      return `<button class="btn btn-sm btn-primary edit-step mr-2" data-id="${id}">
+                <i class="fas fa-edit"></i> Edit
+              </button>
+              <button class="btn btn-sm btn-danger delete-step" data-id="${id}">
+                <i class="fas fa-trash-alt"></i> Delete
+              </button>`;
+    }
+
+    function handleError(message) {
+      return function (error) {
+        console.error(message, error);
+        showToast('error', message);
+      };
+    }
+
+    function showToast(icon, title) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+          toast.addEventListener('mouseenter', Swal.stopTimer);
+          toast.addEventListener('mouseleave', Swal.resumeTimer);
+        }
+      });
+
+      Toast.fire({
+        icon: icon,
+        title: title
+      });
+    }
+
+    $('#stepContextId').on('change', function () {
+      currentContextId = $(this).val();
+      if (currentContextId) {
+        fetchSteps(currentContextId);
+      }
     });
-
-    function populateContextDropdown() {
-      $.ajax({
-        type: 'GET',
-        url: "{{ url_for('context') }}",
-        contentType: 'application/json',
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json"
-        },
-        success: function (data) {
-          console.log('Response data:', data);
-          if (Array.isArray(data)) {
-            const contextDropdown = $('#stepContextId');
-            contextDropdown.empty();
-            data.forEach(function (context) {
-              contextDropdown.append(new Option(context.context_name, context.id));
-            });
-          } else {
-            console.error('Expected an array but got:', data);
-            showToast('error', 'Unexpected response format');
-          }
-        },
-        error: function (error) {
-          console.error('Error fetching contexts:', error);
-          showToast('error', 'Error fetching contexts');
-        }
-      });
-    }
-
-    populateContextDropdown();
-
-    function populateContextDropdown() {
-      $.ajax({
-        type: 'GET',
-        url: "{{ url_for('context') }}",
-        contentType: 'application/json',
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json"
-        },
-        success: function (data) {
-          const contextDropdowns = $('#stepContextId, #editStepContextId, #validContexts, #editValidContexts');
-          contextDropdowns.empty();
-          data.forEach(function (context) {
-            contextDropdowns.append(new Option(context.context_name, context.id));
-          });
-          contextDropdowns.trigger('change');
-        },
-        error: function (error) {
-          console.error('Error fetching contexts:', error);
-          showToast('error', 'Error fetching contexts');
-        }
-      });
-    }
-
-    populateContextDropdown();
-
-    function sanitizeInput(input) {
-      return input.replace(/[^a-zA-Z0-9]/g, '_');
-    }
 
     $('#addContextForm, #editContextForm').on('input', '#contextName, #editContextName', function () {
       this.value = sanitizeInput(this.value);
@@ -526,6 +503,10 @@
       this.value = sanitizeInput(this.value);
     });
 
+    function sanitizeInput(input) {
+      return input.replace(/[^a-zA-Z0-9]/g, '_');
+    }
+
     $('#addContextForm').submit(function (e) {
       e.preventDefault();
       const formData = {
@@ -534,28 +515,37 @@
 
       $.ajax({
         type: 'POST',
-        url: "{{ url_for('context') }}",
+        url: `/api/v1/agents/${agent_id}/context`,
         contentType: 'application/json',
         data: JSON.stringify(formData),
         success: function (response) {
           $('#contextTable').DataTable().ajax.reload();
           $('#addContextForm')[0].reset();
           showToast('success', 'AI Context created successfully');
-          checkContextsAndToggleSteps();
-          populateContextDropdown();
-          fetchContexts();
+          populateContextDropdown().then(() => {
+            if (response.id) {
+              $('#stepContextId').val(response.id).trigger('change');
+            }
+            checkContextsAndToggleSteps();
+          });
         },
-        error: function (error) {
-          showToast('error', 'Error creating AI Context');
-        }
+        error: handleError('Error creating AI Context')
       });
     });
 
-    $('#validSteps, #validContexts, #functions').select2();
+    function checkContextsAndToggleSteps() {
+      const contextCount = $('#contextTable').DataTable().data().count();
+      if (contextCount > 0) {
+        $('.steps-section, .add-step-section').show();
+      } else {
+        $('.steps-section, .add-step-section').hide();
+      }
+    }
 
     $('#addStepForm').submit(function (e) {
       e.preventDefault();
       const formData = {
+        agent_id: $('#agentId').val(),
         context_id: $('#stepContextId').val(),
         name: sanitizeInput($('#stepName').val()),
         text: $('#stepText').val(),
@@ -567,11 +557,9 @@
         skip_user_turn: $('#skipUserTurn').is(':checked')
       };
 
-      console.log('Form Data:', formData);
-
       $.ajax({
         type: 'POST',
-        url: "{{ url_for('step') }}",
+        url: `/api/v1/agents/${agent_id}/context/${currentContextId}/steps`,
         contentType: 'application/json',
         data: JSON.stringify(formData),
         success: function (response) {
@@ -581,38 +569,37 @@
           showToast('success', 'AI Step created successfully');
           populateContextDropdown();
         },
-        error: function (error) {
-          showToast('error', 'Error creating AI Step');
-        }
+        error: handleError('Error creating AI Step')
       });
     });
 
     $('#contextTable').on('click', '.edit-context', function () {
       const contextId = $(this).data('id');
+      const agent_id = $(this).data('agent-id');
+
       $.ajax({
         type: 'GET',
-        url: `{{ url_for('context') }}/${contextId}`,
+        url: `/api/v1/agents/${agent_id}/context/${contextId}`,
         success: function (data) {
           $('#editContextId').val(data.id);
           $('#editContextName').val(data.context_name);
           $('#editContextModal').modal('show');
         },
-        error: function (error) {
-          showToast('error', 'Error fetching context details');
-        }
+        error: handleError('Error fetching context details')
       });
     });
 
     $('#editContextForm').submit(function (e) {
       e.preventDefault();
       const contextId = $('#editContextId').val();
+      const agent_id = $('#editAgentId').val();
       const formData = {
         context_name: sanitizeInput($('#editContextName').val())
       };
 
       $.ajax({
         type: 'PUT',
-        url: `{{ url_for('context') }}/${contextId}`,
+        url: `/api/v1/agents/${agent_id}/context/${contextId}`,
         contentType: 'application/json',
         data: JSON.stringify(formData),
         success: function (response) {
@@ -620,14 +607,13 @@
           $('#editContextModal').modal('hide');
           showToast('success', 'AI Context updated successfully');
         },
-        error: function (error) {
-          showToast('error', 'Error updating AI Context');
-        }
+        error: handleError('Error updating AI Context')
       });
     });
 
     $('#contextTable').on('click', '.delete-context', function () {
       const contextId = $(this).data('id');
+      const agent_id = $(this).data('agent-id');
       Swal.fire({
         title: 'Are you sure?',
         text: "You won't be able to revert this!",
@@ -640,81 +626,51 @@
         if (result.isConfirmed) {
           $.ajax({
             type: 'DELETE',
-            url: `{{ url_for('context') }}/${contextId}`,
+            url: `/api/v1/agents/${agent_id}/context/${contextId}`,
             success: function (response) {
               $('#contextTable').DataTable().ajax.reload();
               $('#stepsTable').DataTable().ajax.reload();
               showToast('success', 'AI Context deleted successfully');
-              checkContextsAndToggleSteps();
+              setTimeout(checkContextsAndToggleSteps, 500);
               populateContextDropdown();
-              fetchContexts();
             },
-            error: function (error) {
-              showToast('error', 'Error deleting AI Context');
-            }
+            error: handleError('Error deleting AI Context')
           });
         }
       });
     });
 
-    function populateEditContextDropdown(selectedContextId) {
-      $.ajax({
-        type: 'GET',
-        url: "{{ url_for('context') }}",
-        contentType: 'application/json',
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json"
-        },
-        success: function (data) {
-          if (Array.isArray(data)) {
-            const contextDropdown = $('#editStepContextId');
-            contextDropdown.empty();
-            data.forEach(function (context) {
-              contextDropdown.append(new Option(context.context_name, context.id));
-            });
-            contextDropdown.val(selectedContextId).trigger('change');
-          } else {
-            console.error('Expected an array but got:', data);
-            showToast('error', 'Unexpected response format');
-          }
-        },
-        error: function (error) {
-          console.error('Error fetching contexts:', error);
-          showToast('error', 'Error fetching contexts');
-        }
-      });
-    }
-
     $('#stepsTable').on('click', '.edit-step', function () {
       const stepId = $(this).data('id');
-      $.ajax({
-        type: 'GET',
-        url: `{{ url_for('step') }}/${stepId}`,
-        success: function (data) {
-          $('#editStepId').val(data.id);
-          $('#editStepName').val(data.name);
-          $('#editStepText').val(data.text);
-          $('#editStepCriteria').val(data.step_criteria || '');
-          $('#editValidSteps').val(data.valid_steps).trigger('change');
-          $('#editValidContexts').val(data.valid_contexts).trigger('change');
-          $('#editFunctions').val(data.functions).trigger('change');
-          $('#editEnd').prop('checked', data.end || false);
-          $('#editSkipUserTurn').prop('checked', data.skip_user_turn || false);
-          populateEditContextDropdown(data.context_id);
-          $('#editStepModal').modal('show');
-        },
-        error: function (error) {
-          showToast('error', 'Error fetching step details');
-        }
-      });
+      if (stepId) {
+        console.log('Editing step with ID:', stepId);
+        const agent_id = $(this).data('agent-id');
+        const currentContextId = $('#stepContextId').val();
+        $.ajax({
+          type: 'GET',
+          url: `/api/v1/agents/${agent_id}/context/${currentContextId}/steps/${stepId}`,
+          success: function (data) {
+            $('#editStepId').val(data.id);
+            $('#editStepName').val(data.name);
+            $('#editStepText').val(data.text);
+            $('#editStepCriteria').val(data.step_criteria || '');
+            $('#editValidSteps').val(data.valid_steps).trigger('change');
+            $('#editValidContexts').val(data.valid_contexts).trigger('change');
+            $('#editFunctions').val(data.functions).trigger('change');
+            $('#editEnd').prop('checked', data.end || false);
+            $('#editSkipUserTurn').prop('checked', data.skip_user_turn || false);
+            populateEditContextDropdown(data.context_id);
+            $('#editStepModal').modal('show');
+          },
+          error: handleError('Error fetching step details')
+        });
+      }
     });
 
     $('#editStepForm').submit(function (e) {
       e.preventDefault();
       const stepId = $('#editStepId').val();
       const selectedContextId = $('#editStepContextId').val();
-      console.log('Selected Context ID:', selectedContextId);
 
       const formData = {
         context_id: selectedContextId,
@@ -730,7 +686,7 @@
 
       $.ajax({
         type: 'PUT',
-        url: `{{ url_for('step') }}/${stepId}`,
+        url: `/api/v1/agents/${agent_id}/context/${currentContextId}/steps/${stepId}`,
         contentType: 'application/json',
         data: JSON.stringify(formData),
         success: function (response) {
@@ -738,14 +694,13 @@
           $('#editStepModal').modal('hide');
           showToast('success', 'AI Step updated successfully');
         },
-        error: function (error) {
-          showToast('error', 'Error updating AI Step');
-        }
+        error: handleError('Error updating AI Step')
       });
     });
 
     $('#stepsTable').on('click', '.delete-step', function () {
       const stepId = $(this).data('id');
+      const currentContextId = $('#stepContextId').val();
       Swal.fire({
         title: 'Are you sure?',
         text: "You won't be able to revert this!",
@@ -755,177 +710,25 @@
         cancelButtonColor: '#d33',
         confirmButtonText: 'Yes, delete it!'
       }).then((result) => {
-        if (result.isConfirmed) {
+        if (result.isConfirmed && stepId) {
           $.ajax({
             type: 'DELETE',
-            url: `{{ url_for('step') }}/${stepId}`,
+            url: `/api/v1/agents/${agent_id}/context/${currentContextId}/steps/${stepId}`,
             success: function (response) {
-              handlePutOrDeleteSuccess();
+              $('#stepsTable').DataTable().ajax.reload();
+              showToast('success', 'AI Step deleted successfully');
+              refreshMultiSelects(currentContextId, stepId);
             },
-            error: function (error) {
-              showToast('error', 'Error deleting AI Step');
-            }
+            error: handleError('Error deleting AI Step')
           });
         }
       });
     });
 
-    function showToast(icon, title) {
-      const Toast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-        didOpen: (toast) => {
-          toast.addEventListener('mouseenter', Swal.stopTimer)
-          toast.addEventListener('mouseleave', Swal.resumeTimer)
-        }
-      });
-
-      Toast.fire({
-        icon: icon,
-        title: title
-      });
-    }
-
-    $('#validSteps, #validContexts, #functions, #editValidSteps, #editValidContexts, #editFunctions').select2({
-      templateResult: function (data) {
-        if (!data.id) {
-          return data.text;
-        }
-        var $result = $('<span style="color: black;">' + data.text + '</span>');
-        return $result;
-      },
-      templateSelection: function (data) {
-        return $('<span style="color: black;">' + data.text + '</span>');
-      }
-    });
-
-    function populateStepsDropdown() {
-      $.ajax({
-        type: 'GET',
-        url: "{{ url_for('step') }}",
-        contentType: 'application/json',
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json"
-        },
-        success: function (data) {
-          const stepsDropdown = $('#validSteps, #editValidSteps');
-          stepsDropdown.empty();
-          data.forEach(function (step) {
-            stepsDropdown.append(new Option(step.name, step.id));
-          });
-          stepsDropdown.trigger('change');
-        },
-        error: function (error) {
-          console.error('Error fetching steps:', error);
-          showToast('error', 'Error fetching steps');
-        }
-      });
-    }
-
-    function populateFunctionsDropdown() {
-      $.ajax({
-        type: 'GET',
-        url: "{{ url_for('functions') }}",
-        contentType: 'application/json',
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json"
-        },
-        success: function (data) {
-          const functionsDropdown = $('#functions, #editFunctions');
-          functionsDropdown.empty();
-          data.forEach(function (func) {
-            functionsDropdown.append(new Option(func.name, func.id));
-          });
-        },
-        error: function (error) {
-          console.error('Error fetching functions:', error);
-          showToast('error', 'Error fetching functions');
-        }
-      });
-    }
-
-    populateFunctionsDropdown();
-
-    populateContextDropdown();
-    populateStepsDropdown();
-
-    function refreshMultiSelects() {
-      $.ajax({
-        type: 'GET',
-        url: "{{ url_for('context') }}",
-        contentType: 'application/json',
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json"
-        },
-        success: function (data) {
-          const contextDropdowns = $('#validContexts, #editValidContexts');
-          contextDropdowns.empty();
-          data.forEach(function (context) {
-            contextDropdowns.append(new Option(context.context_name, context.id));
-          });
-          contextDropdowns.trigger('change');
-        },
-        error: function (error) {
-          console.error('Error fetching contexts:', error);
-          showToast('error', 'Error fetching contexts');
-        }
-      });
-
-      $.ajax({
-        type: 'GET',
-        url: "{{ url_for('step') }}",
-        contentType: 'application/json',
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json"
-        },
-        success: function (data) {
-          const stepsDropdowns = $('#validSteps, #editValidSteps');
-          stepsDropdowns.empty();
-          data.forEach(function (step) {
-            stepsDropdowns.append(new Option(step.name, step.id));
-          });
-          stepsDropdowns.trigger('change');
-        },
-        error: function (error) {
-          console.error('Error fetching steps:', error);
-          showToast('error', 'Error fetching steps');
-        }
-      });
-
-      $.ajax({
-        type: 'GET',
-        url: "{{ url_for('functions') }}",
-        contentType: 'application/json',
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json"
-        },
-        success: function (data) {
-          const functionsDropdowns = $('#functions, #editFunctions');
-          functionsDropdowns.empty();
-          data.forEach(function (func) {
-            functionsDropdowns.append(new Option(func.name, func.id));
-          });
-          functionsDropdowns.trigger('change');
-        },
-        error: function (error) {
-          console.error('Error fetching functions:', error);
-          showToast('error', 'Error fetching functions');
-        }
-      });
-    }
-
-    function handlePutOrDeleteSuccess() {
+    function handlePutOrDeleteSuccess(contextId, stepId) {
       $('#stepsTable').DataTable().ajax.reload();
       showToast('success', 'Operation successful');
-      refreshMultiSelects();
+      refreshMultiSelects(contextId, stepId);
     }
 
     $('#stepsTable').on('change', '.toggle-end', function () {
@@ -941,22 +744,65 @@
     });
 
     function updateStepField(stepId, field, value) {
+      const currentContextId = $('#stepContextId').val();
       const formData = {};
       formData[field] = value;
 
       $.ajax({
         type: 'PUT',
-        url: `{{ url_for('step') }}/${stepId}`,
+        url: `/api/v1/agents/${agent_id}/context/${currentContextId}/steps/${stepId}`,
         contentType: 'application/json',
         data: JSON.stringify(formData),
         success: function (response) {
           showToast('success', `AI Step ${field} updated successfully`);
         },
-        error: function (error) {
-          showToast('error', `Error updating AI Step ${field}`);
-        }
+        error: handleError(`Error updating AI Step ${field}`)
       });
     }
+
+    function refreshMultiSelects(currentContextId, stepId) {
+      if (currentContextId) {
+        fetchData(`/api/v1/agents/${agent_id}/context/${currentContextId}`)
+          .then(data => {
+            populateDropdown(contextDropdowns, data, 'id', 'context_name');
+          });
+      }
+
+      if (stepId) {
+        fetchData(`/api/v1/agents/${agent_id}/context/${currentContextId}/steps/${stepId}`)
+          .then(data => {
+            populateDropdown(stepsDropdowns, data, 'id', 'name');
+          });
+      }
+
+      fetchData(`/api/v1/agents/${agent_id}/functions`)
+          .then(data => {
+            populateDropdown(functionsDropdowns, data, 'id', 'name');
+          });
+    }
+
+    function populateContextDropdown() {
+      return fetchData(`/api/v1/agents/${agent_id}/context`)
+        .then(data => {
+          if (Array.isArray(data)) {
+            populateDropdown(contextDropdowns, data, 'id', 'context_name');
+          }
+        })
+        .catch(handleError('Error populating context dropdown'));
+    }
+
+    function populateEditContextDropdown(selectedContextId) {
+      fetchData(`/api/v1/agents/${agent_id}/context`)
+        .then(data => {
+          if (Array.isArray(data)) {
+            populateDropdown($('#editStepContextId'), data, 'id', 'context_name');
+            $('#editStepContextId').val(selectedContextId).trigger('change');
+          }
+        })
+        .catch(handleError('Error populating edit context dropdown'));
+    }
+
+    initializePage();
   });
 </script>
 {% endblock %}

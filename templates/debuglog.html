@@ -63,7 +63,7 @@
 
     $('#agentSelector').change(function () {
       selectedAgentId = $(this).val();
-      $('#debugLogsTable').DataTable().ajax.url("{{ url_for('debuglogs') }}/" + selectedAgentId).load();
+      $('#debugLogsTable').DataTable().ajax.url(`/api/v1/agents/${selectedAgentId}/debuglogs`).load();
     });
 
     initializeDataTable(selectedAgentId);
@@ -73,7 +73,7 @@
     if ($.fn.DataTable) {
       $('#debugLogsTable').DataTable({
         "ajax": {
-          "url": "{{ url_for('debuglogs') }}/" + agentId,
+          "url": `/api/v1/agents/${agentId}/debuglogs`,
           "dataSrc": "",
           "headers": {
             "Accept": "application/json"
@@ -166,8 +166,8 @@
         confirmButtonText: 'Yes, delete it!'
       }).then((result) => {
         if (result.isConfirmed) {
-          const agentId = getCookie('selectedAgentId');
-          fetch(`/debuglogs/${agentId}`, {
+          const agentId = {{agent_id}};
+          fetch(`/api/v1/agents/${agentId}/debuglogs`, {
             method: 'DELETE',
             headers: {
               'Content-Type': 'application/json'

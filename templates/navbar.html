@@ -6,10 +6,12 @@
   </ul>
 
   <ul class="navbar-nav ml-auto">
+    <!--
     <li class="nav-item">
       <a class="nav-link" data-widget="navbar-search" href="#" role="button">
         <i class="fas fa-search"></i>
       </a>
+
       <div class="navbar-search-block">
         <form class="form-inline">
           <div class="input-group input-group-sm">
@@ -26,20 +28,17 @@
         </form>
       </div>
     </li>
-
+  -->
     <li class="nav-item dropdown">
     </li>
     <li class="nav-item dropdown">
     </li>
-    <li class="nav-item">
-      <a class="nav-link" data-widget="fullscreen" href="#" role="button">
-        <i class="fas fa-expand-arrows-alt"></i>
-      </a>
+    <li class="nav-item dropdown">
+      <select id="agent-select" class="form-control" style="display: inline-block; width: auto; margin-left: 10px;"
+        onchange="handleAgentChange(event)">
+        <option value="">-- Select an Agent --</option>
+      </select>
     </li>
-    <select id="agent-select" class="form-control" style="display: inline-block; width: auto; margin-left: 10px;"
-      onchange="handleAgentChange(event)">
-      <option value="">-- Select an Agent --</option>
-    </select>
   </ul>
 </nav>
 
@@ -47,20 +46,20 @@
   document.addEventListener('DOMContentLoaded', function () {
     const agentSelect = document.getElementById('agent-select');
 
-    fetch('{{ url_for("agents") }}', {
+    fetch('{{ url_for("list_agents", agent_id=agent_id) }}', {
       headers: {
         'Accept': 'application/json'
       }
     })
       .then(response => response.json())
       .then(data => {
-        const selectedAgentId = getCookie('selectedAgentId');
+        const selectedAgentId = {{ agent_id }};
 
         data.forEach(agent => {
           const option = document.createElement('option');
           option.value = agent.id;
           option.textContent = agent.name;
-          if (agent.id == selectedAgentId) {
+          if (agent.id == {{ agent_id }}) {
             option.selected = true;
           }
           agentSelect.appendChild(option);
@@ -74,8 +73,9 @@
         agentSelect.addEventListener('change', function () {
           const agentId = this.value;
           if (agentId) {
-            document.cookie = `selectedAgentId=${agentId}; path=/; samesite=Strict`;
-            location.reload();
+            const currentPath = window.location.pathname;
+            const newPath = currentPath.replace(/\/agents\/\d+/, `/agents/${agentId}`);
+            location.href = newPath;
           }
         });
       })
@@ -100,7 +100,7 @@
     const agentSelect = document.getElementById('agent-select');
     agentSelect.innerHTML = '<option value="">-- Select an Agent --</option>';
 
-    fetch('{{ url_for("agents") }}', {
+    fetch('{{ url_for("list_agents", agent_id=agent_id) }}', {
       headers: {
         'Accept': 'application/json'
       }

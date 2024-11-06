@@ -115,7 +115,7 @@
         "responsive": true,
         "autoWidth": true,
         "ajax": {
-          "url": "{{ url_for('params') }}",
+          "url": `/api/v1/agents/${agent_id}/parameters`,
           "dataSrc": "",
           "headers": {
             "Accept": "application/json",
@@ -174,7 +174,7 @@
 
         $.ajax({
           type: 'POST',
-          url: "{{ url_for('params') }}",
+          url: `/api/v1/agents/${agent_id}/parameters`,
           contentType: 'application/json',
           data: JSON.stringify(formData),
           success: function(response) {
@@ -190,6 +190,7 @@
 
       $('#paramsTable').on('click', '.delete-param', function() {
         const id = $(this).data('id');
+        const agentId = "{{ agent_id }}";
         Swal.fire({
           title: 'Are you sure?',
           text: "You won't be able to revert this!",
@@ -202,7 +203,7 @@
           if (result.isConfirmed) {
             $.ajax({
               type: 'DELETE',
-              url: "/params/" + id,
+              url: `/api/v1/agents/${agent_id}/parameters/${id}`,
               success: function(response) {
                 $('#paramsTable').DataTable().ajax.reload();
                 showToast('success', 'Parameter entry deleted successfully');
@@ -219,7 +220,7 @@
         const id = $(this).data('id');
         $.ajax({
           type: 'GET',
-          url: "/params/" + id,
+          url: `/api/v1/agents/${agent_id}/parameters/${id}`,
           success: function(response) {
             $('#editId').val(response.id);
             $('#editParamName').val(response.name);
@@ -240,7 +241,7 @@
 
         $.ajax({
           type: 'PUT',
-          url: "/params/" + formData.id,
+          url: `/api/v1/agents/${agent_id}/parameters/${formData.id}`,
           contentType: 'application/json',
           data: JSON.stringify(formData),
           success: function(response) {

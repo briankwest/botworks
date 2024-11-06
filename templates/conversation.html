@@ -89,10 +89,11 @@
 <script>
   $(document).ready(function () {
     console.log('Document is ready');
+    const agentId = {{ agent_id }};
 
     $('#conversationsTable').DataTable({
       "ajax": {
-        "url": "{{ url_for('conversations') }}",
+        "url": `/api/v1/agents/${agentId}/conversation`,
         "dataSrc": "",
         "headers": {
           "Accept": "application/json"
@@ -178,7 +179,7 @@
         if (result.isConfirmed) {
           $.ajax({
             type: 'DELETE',
-            url: "/conversations/" + id,
+            url: `/api/v1/agents/${agentId}/conversation/${id}`,
             success: function (response) {
               $('#conversationsTable').DataTable().ajax.reload();
               showToast('success', 'Conversation entry deleted successfully');
@@ -197,13 +198,14 @@
 
       $('#fullScreenModal').show();
       $('#fullScreenModal').attr('aria-hidden', 'false');
+      $('#fullScreenModal').data('conversation-id', id);
       $('#fullScreenModal .modal-content').scrollTop(0);
 
       setTimeout(() => {
         $('#fullScreenModal').focus();
       }, 200);
 
-      fetchData(id);
+      fetchData(agentId, id);
 
       $(document).on('focusin', function (e) {
         if ($('#fullScreenModal').is(':visible') && !$('#fullScreenModal').has(e.target).length) {
@@ -260,8 +262,10 @@
     });
   });
 
-  function fetchData(id) {
-    fetch(`/conversations/${id}`)
+  function fetchData(agentId, id) {
+
+    console.log('Fetching data for ID:', id);
+    fetch(`/api/v1/agents/${agentId}/conversation/${id}`)
       .then(response => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -272,11 +276,11 @@
         console.log('Received data:', responseData); // Log the received data
         clearContent();
         displayData(responseData.data);
-        setupNavigationButtons(responseData.next, responseData.prev);
+        setupNavigationButtons(agentId, responseData.next, responseData.prev);
       })
       .catch(error => {
         console.error('Error fetching JSON:', error);
-        fetch(`/conversations/${id}`)
+        fetch(`/api/v1/agents/${agentId}/conversation/${id}`)
           .then(response => response.text())
           .then(text => console.error('Response text:', text));
       });
@@ -287,37 +291,111 @@
     content.innerHTML = '';
   }
 
-  function setupNavigationButtons(nextId, prevId) {
+  function setupNavigationButtons(agentId, nextId, prevId) {
     const content = document.getElementById('PostPromptDataContent');
 
     let navContainer = document.getElementById('navContainer');
     if (!navContainer) {
-      navContainer = document.createElement('div');
-      navContainer.id = 'navContainer';
-      navContainer.className = 'd-flex justify-content-between mb-3';
-      content.insertAdjacentElement('beforebegin', navContainer);
+        navContainer = document.createElement('div');
+        navContainer.id = 'navContainer';
+        navContainer.className = 'd-flex justify-content-between align-items-center mb-3';
+        content.insertAdjacentElement('beforebegin', navContainer);
     }
     navContainer.innerHTML = '';
 
+    const navigationGroup = document.createElement('div');
+    const actionsGroup = document.createElement('div');
+    
     if (prevId) {
-      const prevButton = document.createElement('button');
-      prevButton.className = 'btn btn-primary btn-sm mr-2';
-      prevButton.innerHTML = '<i class="fas fa-arrow-left"></i> Previous';
-      prevButton.onclick = () => {
-        fetchData(prevId);
-      };
-      navContainer.appendChild(prevButton);
+        const prevButton = document.createElement('button');
+        prevButton.className = 'btn btn-primary btn-sm mr-2';
+        prevButton.innerHTML = '<i class="fas fa-arrow-left"></i> Previous';
+        prevButton.onclick = () => {
+            fetchData(agentId, prevId);
+        };
+        navigationGroup.appendChild(prevButton);
     }
 
     if (nextId) {
-      const nextButton = document.createElement('button');
-      nextButton.className = 'btn btn-primary btn-sm ml-auto';
-      nextButton.innerHTML = 'Next <i class="fas fa-arrow-right"></i>';
-      nextButton.onclick = () => {
-        fetchData(nextId);
-      };
-      navContainer.appendChild(nextButton);
+        const nextButton = document.createElement('button');
+        nextButton.className = 'btn btn-primary btn-sm';
+        nextButton.innerHTML = 'Next <i class="fas fa-arrow-right"></i>';
+        nextButton.onclick = () => {
+            fetchData(agentId, nextId);
+        };
+        navigationGroup.appendChild(nextButton);
     }
+
+    const shareButton = document.createElement('button');
+    shareButton.className = 'btn btn-success btn-sm';
+    shareButton.innerHTML = '<i class="fas fa-share"></i> Share';
+    shareButton.onclick = () => shareConversation();
+    actionsGroup.appendChild(shareButton);
+
+    navContainer.appendChild(navigationGroup);
+    navContainer.appendChild(actionsGroup);
+  }
+
+  function shareConversation() {
+    const currentUrl = window.location.href;
+    const conversationId = $('#fullScreenModal').data('conversation-id');
+    const agentId = currentUrl.split('/').slice(-2, -1)[0];
+
+    fetch(`/api/v1/agents/${agentId}/conversations/${conversationId}/share`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => {
+                throw new Error(err.error || 'Failed to create share link');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        const shareUrl = `${window.location.origin}/conversations/shared/${data.uuid}`;
+        
+        Swal.fire({
+            title: 'Share Link Created',
+            html: `
+                <div class="input-group">
+                    <input type="text" id="shareUrlInput" class="form-control" value="${shareUrl}" readonly>
+                    <button class="btn btn-outline-secondary" onclick="copyShareUrl('${shareUrl}')">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            `,
+            showConfirmButton: false,
+            showCloseButton: true,
+            position: 'top-end',
+            toast: true,
+            timer: false
+        });
+    })
+    .catch(error => {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.message,
+            toast: true,
+            position: 'top-end',
+            timer: 3000,
+            showConfirmButton: false
+        });
+    });
+  }
+
+  function copyShareUrl(url) {
+    navigator.clipboard.writeText(url).then(() => {
+        const copyButton = document.querySelector('.swal2-html-container .btn');
+        copyButton.innerHTML = '<i class="fas fa-check"></i>';
+        setTimeout(() => {
+            copyButton.innerHTML = '<i class="fas fa-copy"></i>';
+        }, 1000);
+    });
   }
 
   function displayData(data) {

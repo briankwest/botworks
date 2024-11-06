@@ -78,7 +78,7 @@
       }).then((result) => {
         if (result.isConfirmed) {
           const agentId = getCookie('selectedAgentId');
-          fetch(`/swmlrequests/${agentId}`, {
+          fetch(`/api/v1/agents/${agentId}/swmlrequests`, {
             method: 'DELETE',
             headers: {
               'Content-Type': 'application/json'
@@ -114,7 +114,7 @@
     if ($.fn.DataTable) {
       $('#swmlRequestsTable').DataTable({
         "ajax": {
-          "url": "{{ url_for('swmlrequests') }}",
+          "url": "{{ url_for('list_swmlrequests', agent_id=agent_id) }}",
           "dataSrc": "",
           "headers": {
             "Accept": "application/json"
@@ -211,7 +211,7 @@
 
   function deleteRequest(id) {
     $.ajax({
-      url: `/swmlrequests/${id}`,
+      url: "{{ url_for('delete_swmlrequest', agent_id=agent_id) }}",
       type: 'DELETE',
       success: function (result) {
         $('#swmlRequestsTable').DataTable().ajax.reload();

@@ -222,6 +222,8 @@
 
 <script>
   $(document).ready(function () {
+    const agentId = {{ agent_id }};
+
     const Toast = Swal.mixin({
       toast: true,
       position: 'top-end',
@@ -238,7 +240,7 @@
       "responsive": true,
       "autoWidth": false,
       "ajax": {
-        "url": "{{ url_for('functions') }}",
+        "url": `/api/v1/agents/${agentId}/functions`,
         "dataSrc": ""
       },
       "columns": [
@@ -306,7 +308,7 @@
         confirmButtonText: 'Yes, delete it!'
       }).then((result) => {
         if (result.isConfirmed) {
-          fetch(`/functions/${functionId}`, {
+          fetch(`/api/v1/agents/${agentId}/functions/${functionId}`, {
             method: 'DELETE'
           })
             .then(response => {
@@ -335,7 +337,7 @@
 
     $('#functionTable').on('click', '.edit-function', function () {
       const functionId = $(this).data('id');
-      fetch(`/functions/${functionId}`)
+      fetch(`/api/v1/agents/${agentId}/functions/${functionId}`)
         .then(response => response.json())
         .then(data => {
           $('#editFunctionId').val(data.id);
@@ -359,7 +361,7 @@
     });
 
     function loadFunctionArgs(functionId) {
-      fetch(`/functions/${functionId}/args`)
+      fetch(`/api/v1/agents/${agentId}/functions/${functionId}/args`)
         .then(response => response.json())
         .then(args => {
           const argsBody = $('#functionArgsBody');
@@ -442,12 +444,12 @@
           confirmButtonText: 'Yes, delete it!'
         }).then((result) => {
           if (result.isConfirmed) {
-            fetch(`/functions/${$('#editFunctionId').val()}/args/${argId}`, {
+            fetch(`/api/v1/agents/${agentId}/functions/${$('#editFunctionId').val()}/args/${argId}`, {
               method: 'DELETE'
             })
               .then(response => response.json())
               .then(data => {
-                if (data.message === 'Function argument deleted successfully') {
+                if (data.message === 'Argument deleted successfully') {
                   $row.remove();
                 } else {
                   Swal.fire('Error', 'Error deleting argument', 'error');
@@ -481,7 +483,7 @@
 
       const functionName = $('#functionName').val();
 
-      fetch('/functions/names')
+      fetch(`/api/v1/agents/${agentId}/functions/names`)
         .then(response => response.json())
         .then(existingNames => {
           if (existingNames.includes(functionName)) {
@@ -514,7 +516,7 @@
             });
           });
 
-          fetch('/functions', {
+          fetch(`/api/v1/agents/${agentId}/functions`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -548,7 +550,7 @@
       const functionId = $(this).data('id');
       const isActive = $(this).is(':checked');
 
-      fetch(`/functions/${functionId}`, {
+      fetch(`/api/v1/agents/${agentId}/functions/${functionId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -583,7 +585,7 @@
       const isActive = $(this).is(':checked');
       const functionId = $('#editFunctionId').val();
 
-      fetch(`/functions/${functionId}/args/${argId}`, {
+      fetch(`/api/v1/agents/${agentId}/functions/${functionId}/args/${argId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -662,7 +664,7 @@
         active: $('#editFunctionActiveToggle').is(':checked')
       };
 
-      fetch(`/functions/${functionId}`, {
+      fetch(`/api/v1/agents/${agentId}/functions/${functionId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -719,7 +721,7 @@
       });
 
       const updateExistingArgs = existingArguments.map(arg => {
-        return fetch(`/functions/${functionId}/args/${arg.id}`, {
+        return fetch(`/api/v1/agents/${agentId}/functions/${functionId}/args/${arg.id}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -730,7 +732,7 @@
       });
 
       const createNewArgs = newArguments.map(arg => {
-        return fetch(`/functions/${functionId}/args`, {
+        return fetch(`/api/v1/agents/${agentId}/functions/${functionId}/args`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -741,7 +743,7 @@
       });
 
       const deleteArgs = deletedArgumentIds.map(argId => {
-        return fetch(`/functions/${functionId}/args/${argId}`, {
+        return fetch(`/api/v1/agents/${agentId}/functions/${functionId}/args/${argId}`, {
           method: 'DELETE'
         });
       });

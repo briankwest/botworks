@@ -112,7 +112,10 @@
       "responsive": true,
       "autoWidth": false,
       "ajax": {
-        "url": "{{ url_for('hints') }}",
+        "url": `/api/v1/agents/${agent_id}/hints`,
+        "headers": {
+          "Accept": "application/json"
+        },
         "dataSrc": ""
       },
       "columns": [
@@ -165,7 +168,7 @@
 
       $.ajax({
         type: 'POST',
-        url: "{{ url_for('hints') }}",
+        url: `/api/v1/agents/${agent_id}/hints`,
         contentType: 'application/json',
         data: JSON.stringify(formData),
         success: function (response) {
@@ -180,7 +183,8 @@
     });
 
     $('#hintTable').on('click', '.delete-hint', function () {
-      const id = $(this).data('id');
+      const id = $(this).data('id')
+
       Swal.fire({
         title: 'Are you sure?',
         text: "You won't be able to revert this!",
@@ -193,7 +197,7 @@
         if (result.isConfirmed) {
           $.ajax({
             type: 'DELETE',
-            url: "/hints/" + id,
+            url: `/api/v1/agents/${agent_id}/hints/${id}`,
             success: function (response) {
               $('#hintTable').DataTable().ajax.reload();
               showToast('success', 'Hint entry deleted successfully');
@@ -208,9 +212,10 @@
 
     $('#hintTable').on('click', '.edit-hint', function () {
       const id = $(this).data('id');
+
       $.ajax({
         type: 'GET',
-        url: "/hints/" + id,
+        url: `/api/v1/agents/${agent_id}/hints/${id}`,
         success: function (response) {
           $('#editId').val(response.id);
           $('#editHintText').val(response.hint);
@@ -234,7 +239,7 @@
 
       $.ajax({
         type: 'PUT',
-        url: "/hints/" + id,
+        url: `/api/v1/agents/${agent_id}/hints/${id}`,
         contentType: 'application/json',
         data: JSON.stringify(formData),
         success: function (response) {

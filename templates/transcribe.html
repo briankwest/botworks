@@ -111,7 +111,7 @@
       "responsive": true,
       "autoWidth": true,
       "ajax": {
-        "url": "{{ url_for('transcribe') }}",
+        "url": `/transcribe`,
         "headers": {
           "Accept": "application/json"
         },
@@ -167,7 +167,7 @@
 
       $.ajax({
         type: 'POST',
-        url: "{{ url_for('transcribe') }}",
+        url: `/transcribe`,
         contentType: 'application/json',
         headers: {
           'Accept': 'application/json',
@@ -220,7 +220,7 @@
       const id = $(this).data('id');
       $.ajax({
         type: 'GET',
-        url: "/transcribe/" + id,
+        url: `/transcribe/${id}`,
         headers: {
           'Accept': 'application/json'
         },
