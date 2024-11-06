@@ -1834,7 +1834,7 @@ def delete_pronounce(agent_id, pronounce_id):
     return jsonify({'message': 'Pronounce entry deleted successfully'}), 200
 
 # API routes for SignalWire parameters
-@app.route(f'{API_PREFIX}/agents/signalwire', methods=['GET'])
+@app.route(f'{API_PREFIX}/signalwire', methods=['GET'])
 @login_required
 def list_signalwire_params():
     params = AISignalWireParams.query.filter_by(user_id=current_user.id).all()
@@ -1845,7 +1845,7 @@ def list_signalwire_params():
         'created': param.created
     } for param in params]), 200
 
-@app.route(f'{API_PREFIX}/agents/signalwire/<int:param_id>', methods=['GET'])
+@app.route(f'{API_PREFIX}/signalwire/<int:param_id>', methods=['GET'])
 @login_required
 def get_signalwire_param_by_id(param_id):
     param = AISignalWireParams.query.filter_by(id=param_id, user_id=current_user.id).first_or_404()
@@ -1856,7 +1856,7 @@ def get_signalwire_param_by_id(param_id):
         'created': param.created
     }), 200
 
-@app.route(f'{API_PREFIX}/agents/signalwire', methods=['POST'])
+@app.route(f'{API_PREFIX}/signalwire', methods=['POST'])
 @login_required
 def create_signalwire_param():
     data = request.get_json()
@@ -1872,7 +1872,7 @@ def create_signalwire_param():
         'id': new_param.id
     }), 201
 
-@app.route(f'{API_PREFIX}/agents/signalwire/<int:param_id>', methods=['PUT'])
+@app.route(f'{API_PREFIX}/signalwire/<int:param_id>', methods=['PUT'])
 @login_required
 def update_signalwire_param(param_id):
     param = AISignalWireParams.query.filter_by(id=param_id, user_id=current_user.id).first_or_404()
@@ -1884,7 +1884,7 @@ def update_signalwire_param(param_id):
     db.session.commit()
     return jsonify({'message': 'SignalWire parameter updated successfully'}), 200
 
-@app.route(f'{API_PREFIX}/agents/signalwire/<int:param_id>', methods=['DELETE'])
+@app.route(f'{API_PREFIX}/signalwire/<int:param_id>', methods=['DELETE'])
 @login_required
 def delete_signalwire_param(param_id):
     param = AISignalWireParams.query.filter_by(id=param_id, user_id=current_user.id).first_or_404()
@@ -1892,18 +1892,18 @@ def delete_signalwire_param(param_id):
     db.session.commit()
     return jsonify({'message': 'SignalWire parameter deleted successfully'}), 200
 
-@app.route('/agents/<int:agent_id>/signalwire', methods=['GET'])
+@app.route('/signalwire', methods=['GET'])
 @login_required
-def signalwire_page(agent_id):
+def signalwire_page():
     if request.headers.get('Accept') == 'application/json':
-        params = AISignalWireParams.query.filter_by(agent_id=agent_id).all()
+        params = AISignalWireParams.query.filter_by(user_id=current_user.id).all()
         return jsonify([{
             'id': param.id,
             'name': param.name,
             'value': param.value,
             'created': param.created
         } for param in params]), 200
-    return render_template('signalwire.html', user=current_user, agent_id=agent_id)
+    return render_template('signalwire.html', user=current_user)
 
 @app.route('/agents/<int:agent_id>/prompt', methods=['GET'])
 @login_required

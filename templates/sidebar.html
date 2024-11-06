@@ -18,18 +18,12 @@
             <p>Dashboard</p>
           </a>
         </li>
-        <li class="nav-item">
-          <a href="{{ url_for('list_phone_numbers') }}"
-            class="nav-link {{ 'active' if request.endpoint == 'list_phone_numbers' else '' }}">
-            <i class="nav-icon fas fa-phone"></i>
-            <p>Numbers</p>
-          </a>
-        </li>
+
         
         <li
-          class="nav-item has-treeview {{ 'menu-open' if 'agents' in request.path or request.endpoint in ['prompt', 'hooks', 'conversations', 'pronounce', 'language', 'hints', 'params', 'includes', 'aifeatures', 'functions', 'swmlrequests', 'livedebug', 'debuglogs', 'translate', 'transcribe', 'context'] else '' }}">
+          class="nav-item has-treeview {{ 'menu-open' if 'agents' in request.path or request.endpoint in ['prompt', 'hooks', 'conversations', 'pronounce', 'language', 'hints', 'params', 'includes', 'aifeatures', 'functions', 'swmlrequests', 'livedebug', 'debuglogs', 'context'] else '' }}">
           <a href="#"
-            class="nav-link {{ 'active' if 'agents' in request.path or request.endpoint in ['prompt', 'hooks', 'conversations', 'pronounce', 'language', 'hints', 'params', 'includes', 'aifeatures', 'functions', 'swmlrequests', 'livedebug', 'debuglogs', 'translate', 'transcribe', 'context'] else '' }}">
+            class="nav-link {{ 'active' if 'agents' in request.path or request.endpoint in ['prompt', 'hooks', 'conversations', 'pronounce', 'language', 'hints', 'params', 'includes', 'aifeatures', 'functions', 'swmlrequests', 'livedebug', 'debuglogs', 'context'] else '' }}">
             <i class="nav-icon fas fa-robot"></i>
             <p>
               AI Agents
@@ -38,74 +32,67 @@
           </a>
           <ul class="nav nav-treeview ai-agents-indent">
             <li class="nav-item">
-              <a href="{{ url_for('agent_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if 'agents' in request.path and 'agent_page' in request.endpoint else '' }}">
+              <a href="{{ url_for('agent_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if request.endpoint == 'agent_page' else '' }}">
                 <i class="nav-icon fas fa-robot"></i>
                 <p>Agents</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="{{ url_for('prompt_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if 'agents' in request.path and 'prompt_page' in request.endpoint else '' }}">
+              <a href="{{ url_for('prompt_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if request.endpoint == 'prompt_page' else '' }}">
                 <i class="nav-icon fas fa-edit"></i>
                 <p>Prompt</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="{{ url_for('hooks_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if 'agents' in request.path and 'hooks_page' in request.endpoint else '' }}">
+              <a href="{{ url_for('hooks_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if request.endpoint == 'hooks_page' else '' }}">
                 <i class="nav-icon fas fa-link"></i>
                 <p>Hooks</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="{{ url_for('conversation_page', agent_id=agent_id) }}"
-                class="nav-link {{ 'active' if 'agents' in request.path and 'conversation_page' in request.endpoint else '' }}">
+              <a href="{{ url_for('conversation_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if request.endpoint == 'conversation_page' else '' }}">
                 <i class="nav-icon fas fa-comments"></i>
                 <p>Conversations</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="{{ url_for('pronounce_page', agent_id=agent_id) }}"
-                class="nav-link {{ 'active' if 'agents' in request.path and 'pronounce_page' in request.endpoint else '' }}">
+              <a href="{{ url_for('pronounce_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if request.endpoint == 'pronounce_page' else '' }}">
                 <i class="nav-icon fas fa-bullhorn"></i>
                 <p>Pronounce</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="{{ url_for('language_page', agent_id=agent_id) }}"
-                class="nav-link {{ 'active' if 'agents' in request.path and 'language_page' in request.endpoint else '' }}">
+              <a href="{{ url_for('language_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if request.endpoint == 'language_page' else '' }}">
                 <i class="nav-icon fas fa-language"></i>
                 <p>Language</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="{{ url_for('context_page', agent_id=agent_id) }}"
-                class="nav-link {{ 'active' if 'agents' in request.path and 'context_page' in request.endpoint else '' }}">
+              <a href="{{ url_for('context_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if request.endpoint == 'context_page' else '' }}">
                 <i class="nav-icon fas fa-sitemap"></i>
                 <p>Contexts</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="{{ url_for('hints_page', agent_id=agent_id) }}"
-                class="nav-link {{ 'active' if 'agents' in request.path and 'hints_page' in request.endpoint else '' }}">
+              <a href="{{ url_for('hints_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if request.endpoint == 'hints_page' else '' }}">
                 <i class="nav-icon fas fa-lightbulb"></i>
                 <p>Hints</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="{{ url_for('parameters_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if 'agents' in request.path and 'parameters_page' in request.endpoint else '' }}">
+              <a href="{{ url_for('parameters_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if request.endpoint == 'parameters_page' else '' }}">
                 <i class="nav-icon fas fa-sliders-h"></i>
                 <p>Parameters</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="{{ url_for('aifeatures_page', agent_id=agent_id) }}"
-                class="nav-link {{ 'active' if 'agents' in request.path and 'aifeatures_page' in request.endpoint else '' }}">
+              <a href="{{ url_for('aifeatures_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if request.endpoint == 'aifeatures_page' else '' }}">
                 <i class="nav-icon fas fa-brain"></i>
                 <p>Features</p>
               </a>
             </li>
-            <li class="nav-item has-treeview {{ 'menu-open' if request.endpoint in ['functions', 'includes'] else '' }}">
-              <a href="#"
-                class="nav-link {{ 'active' if request.endpoint in ['functions', 'includes'] else '' }}">
+            <li class="nav-item has-treeview {{ 'menu-open' if request.endpoint in ['functions_page', 'includes_page'] else '' }}">
+              <a href="#" class="nav-link {{ 'active' if request.endpoint in ['functions_page', 'includes_page'] else '' }}">
                 <i class="nav-icon fas fa-code"></i>
                 <p>
                   Functions
@@ -114,15 +101,13 @@
               </a>
               <ul class="nav nav-treeview">
                 <li class="nav-item">
-                  <a href="{{ url_for('functions_page', agent_id=agent_id) }}"
-                    class="nav-link {{ 'active' if request.endpoint == 'functions_page' else '' }}">
+                  <a href="{{ url_for('functions_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if request.endpoint == 'functions_page' else '' }}">
                     <i class="nav-icon fas fa-circle"></i>
                     <p>Functions</p>
                   </a>
                 </li>
                 <li class="nav-item">
-                  <a href="{{ url_for('includes_page', agent_id=agent_id) }}"
-                    class="nav-link {{ 'active' if request.endpoint == 'includes_page' else '' }}">
+                  <a href="{{ url_for('includes_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if request.endpoint == 'includes_page' else '' }}">
                     <i class="nav-icon fas fa-circle"></i>
                     <p>Includes</p>
                   </a>
@@ -130,47 +115,48 @@
               </ul>
             </li>
             <li class="nav-item">
-              <a href="{{ url_for('swmlrequests_page', agent_id=agent_id) }}"
-                class="nav-link {{ 'active' if 'agents' in request.path and 'swmlrequests_page' in request.endpoint else '' }}">
+              <a href="{{ url_for('swmlrequests_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if request.endpoint == 'swmlrequests_page' else '' }}">
                 <i class="nav-icon fas fa-file-alt"></i>
                 <p>Requests</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="{{ url_for('debuglogs_page', agent_id=agent_id) }}"
-                class="nav-link {{ 'active' if 'agents' in request.path and 'debuglogs_page' in request.endpoint else '' }}">
+              <a href="{{ url_for('debuglogs_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if request.endpoint == 'debuglogs_page' else '' }}">
                 <i class="nav-icon fas fa-bug"></i>
                 <p>Debug Logs</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="{{ url_for('livedebug_page', agent_id=agent_id) }}"
-                class="nav-link {{ 'active' if 'agents' in request.path and 'livedebug_page' in request.endpoint else '' }}">
+              <a href="{{ url_for('livedebug_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if request.endpoint == 'livedebug_page' else '' }}">
                 <i class="nav-icon fas fa-bug"></i>
                 <p>Live Debug</p>
               </a>
             </li>
-            <li class="nav-item">
-              <a href="{{ url_for('translate') }}"
-                class="nav-link {{ 'active' if request.endpoint == 'translate' else '' }}">
-                <i class="nav-icon fas fa-language"></i>
-                <p>Translate</p>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a href="{{ url_for('transcribe') }}"
-                class="nav-link {{ 'active' if request.endpoint == 'transcribe' else '' }}">
-                <i class="nav-icon fas fa-microphone"></i>
-                <p>Transcribe</p>
-              </a>
-            </li>
+
           </ul>
         </li>
         <li class="nav-item">
-          <a href="{{ url_for('signalwire_page', agent_id=agent_id) }}"
-            class="nav-link {{ 'active' if request.endpoint == 'signalwire_page' else '' }}">
+          <a href="{{ url_for('translate') }}" class="nav-link {{ 'active' if request.endpoint == 'translate' else '' }}">
+            <i class="nav-icon fas fa-language"></i>
+            <p>Translate</p>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="{{ url_for('transcribe') }}" class="nav-link {{ 'active' if request.endpoint == 'transcribe' else '' }}">
+            <i class="nav-icon fas fa-microphone"></i>
+                        <p>Transcribe</p>
+                      </a>
+                    </li>
+        <li class="nav-item">
+          <a href="{{ url_for('signalwire_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if request.endpoint == 'signalwire_page' else '' }}">
             <i class="nav-icon fas fa-cogs"></i>
             <p>SignalWire</p>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="{{ url_for('list_phone_numbers') }}" class="nav-link {{ 'active' if request.endpoint == 'list_phone_numbers' else '' }}">
+            <i class="nav-icon fas fa-phone"></i>
+            <p>Numbers</p>
           </a>
         </li>
         <li class="nav-item">

@@ -775,7 +775,7 @@
           });
       }
 
-      fetchData("{{ url_for('functions', agent_id=agent_id) }}")
+      fetchData("{{ url_for('list_functions', agent_id=agent_id) }}")
           .then(data => {
             populateDropdown(functionsDropdowns, data, 'id', 'name');
           });
