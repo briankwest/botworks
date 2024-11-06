@@ -331,7 +331,7 @@
           "responsive": true,
           "autoWidth": false,
           "ajax": {
-            "url": "{{ url_for('list_contexts', agent_id=agent_id) }}",
+            "url": `/api/v1/agents/${agent_id}/context`,
             "type": "GET",
             "dataSrc": "",
             "headers": {
@@ -599,7 +599,7 @@
 
       $.ajax({
         type: 'PUT',
-        url: "{{ url_for('update_context', agent_id=agent_id, context_id=0) }}".replace('0', contextId),
+        url: `/api/v1/agents/${agent_id}/context/${contextId}`,
         contentType: 'application/json',
         data: JSON.stringify(formData),
         success: function (response) {
@@ -626,7 +626,7 @@
         if (result.isConfirmed) {
           $.ajax({
             type: 'DELETE',
-            url: "{{ url_for('delete_context', agent_id=agent_id, context_id=0) }}".replace('0', contextId),
+            url: `/api/v1/agents/${agent_id}/context/${contextId}`,
             success: function (response) {
               $('#contextTable').DataTable().ajax.reload();
               $('#stepsTable').DataTable().ajax.reload();
@@ -686,7 +686,7 @@
 
       $.ajax({
         type: 'PUT',
-        url: "{{ url_for('update_context_step', agent_id=agent_id, context_id=0, step_id=0) }}".replace('0', currentContextId).replace('0', stepId),
+        url: `/api/v1/agents/${agent_id}/context/${currentContextId}/steps/${stepId}`,
         contentType: 'application/json',
         data: JSON.stringify(formData),
         success: function (response) {
@@ -750,7 +750,7 @@
 
       $.ajax({
         type: 'PUT',
-        url: "{{ url_for('update_context_step', agent_id=agent_id, context_id=0, step_id=0) }}".replace('0', currentContextId).replace('0', stepId),
+        url: `/api/v1/agents/${agent_id}/context/${currentContextId}/steps/${stepId}`,
         contentType: 'application/json',
         data: JSON.stringify(formData),
         success: function (response) {
@@ -762,27 +762,27 @@
 
     function refreshMultiSelects(currentContextId, stepId) {
       if (currentContextId) {
-        fetchData("{{ url_for('get_context', agent_id=agent_id, context_id=0) }}".replace('0', currentContextId))
+        fetchData(`/api/v1/agents/${agent_id}/context/${currentContextId}`)
           .then(data => {
             populateDropdown(contextDropdowns, data, 'id', 'context_name');
           });
       }
 
       if (stepId) {
-        fetchData("{{ url_for('get_context_step', agent_id=agent_id, context_id=0, step_id=0) }}".replace('0', currentContextId).replace('0', stepId))
+        fetchData(`/api/v1/agents/${agent_id}/context/${currentContextId}/steps/${stepId}`)
           .then(data => {
             populateDropdown(stepsDropdowns, data, 'id', 'name');
           });
       }
 
-      fetchData("{{ url_for('list_functions', agent_id=agent_id) }}")
+      fetchData(`/api/v1/agents/${agent_id}/functions`)
           .then(data => {
             populateDropdown(functionsDropdowns, data, 'id', 'name');
           });
     }
 
     function populateContextDropdown() {
-      return fetchData("{{ url_for('list_contexts', agent_id=agent_id) }}")
+      return fetchData(`/api/v1/agents/${agent_id}/context`)
         .then(data => {
           if (Array.isArray(data)) {
             populateDropdown(contextDropdowns, data, 'id', 'context_name');
@@ -792,7 +792,7 @@
     }
 
     function populateEditContextDropdown(selectedContextId) {
-      fetchData("{{ url_for('list_contexts', agent_id=agent_id) }}")
+      fetchData(`/api/v1/agents/${agent_id}/context`)
         .then(data => {
           if (Array.isArray(data)) {
             populateDropdown($('#editStepContextId'), data, 'id', 'context_name');

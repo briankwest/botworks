@@ -315,7 +315,7 @@
       "responsive": true,
       "autoWidth": false,
       "ajax": {
-        "url": "{{ url_for('list_agents') }}",
+        "url": `/api/v1/agents`,
         "dataSrc": "",
         "headers": {
           "Content-Type": "application/json",
@@ -367,7 +367,7 @@
 
       $.ajax({
         type: 'POST',
-        url: "{{ url_for('create_agent', agent_id=agent_id) }}",
+        url: `/api/v1/agents`,
         contentType: 'application/json',
         data: JSON.stringify(formData),
         success: function (response) {
@@ -488,7 +488,7 @@
     function refreshAgentsDropdown() {
       $.ajax({
         type: 'GET',
-        url: "{{ url_for('list_agents', agent_id=agent_id) }}",
+        url: `/api/v1/agents`,
         success: function (data) {
           const dropdown = $('#agentsDropdown');
           dropdown.empty();

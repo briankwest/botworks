@@ -136,6 +136,13 @@
           </ul>
         </li>
         <li class="nav-item">
+          <a href="{{ url_for('list_phone_numbers') }}"
+            class="nav-link {{ 'active' if request.endpoint == 'list_phone_numbers' else '' }}">
+            <i class="nav-icon fas fa-phone"></i>
+            <p>Numbers</p>
+          </a>
+        </li>
+        <li class="nav-item">
           <a href="{{ url_for('translate') }}" class="nav-link {{ 'active' if request.endpoint == 'translate' else '' }}">
             <i class="nav-icon fas fa-language"></i>
             <p>Translate</p>
@@ -144,26 +151,19 @@
         <li class="nav-item">
           <a href="{{ url_for('transcribe') }}" class="nav-link {{ 'active' if request.endpoint == 'transcribe' else '' }}">
             <i class="nav-icon fas fa-microphone"></i>
-                        <p>Transcribe</p>
-                      </a>
-                    </li>
+            <p>Transcribe</p>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="{{ url_for('datasphere') }}" class="nav-link {{ 'active' if request.endpoint == 'datasphere' else '' }}">
+            <i class="nav-icon fas fa-database"></i>
+            <p>DataSphere</p>
+          </a>
+        </li>
         <li class="nav-item">
           <a href="{{ url_for('signalwire_page', agent_id=agent_id) }}" class="nav-link {{ 'active' if request.endpoint == 'signalwire_page' else '' }}">
             <i class="nav-icon fas fa-cogs"></i>
             <p>SignalWire</p>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a href="{{ url_for('list_phone_numbers') }}" class="nav-link {{ 'active' if request.endpoint == 'list_phone_numbers' else '' }}">
-            <i class="nav-icon fas fa-phone"></i>
-            <p>Numbers</p>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a href="{{ url_for('datasphere') }}"
-            class="nav-link {{ 'active' if request.endpoint == 'datasphere' else '' }}">
-            <i class="nav-icon fas fa-database"></i>
-            <p>DataSphere</p>
           </a>
         </li>
         <li class="nav-item mt-auto">

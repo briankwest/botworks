@@ -112,7 +112,7 @@
       "responsive": true,
       "autoWidth": false,
       "ajax": {
-        "url": "{{ url_for('list_hints', agent_id=agent_id) }}",
+        "url": `/api/v1/agents/${agent_id}/hints`,
         "headers": {
           "Accept": "application/json"
         },
@@ -168,7 +168,7 @@
 
       $.ajax({
         type: 'POST',
-        url: "{{ url_for('create_hint', agent_id=agent_id) }}",
+        url: `/api/v1/agents/${agent_id}/hints`,
         contentType: 'application/json',
         data: JSON.stringify(formData),
         success: function (response) {
@@ -197,7 +197,7 @@
         if (result.isConfirmed) {
           $.ajax({
             type: 'DELETE',
-            url: "{{ url_for('delete_hint', agent_id=agent_id, hint_id=0) }}".replace('0', id),
+            url: `/api/v1/agents/${agent_id}/hints/${id}`,
             success: function (response) {
               $('#hintTable').DataTable().ajax.reload();
               showToast('success', 'Hint entry deleted successfully');
@@ -212,11 +212,10 @@
 
     $('#hintTable').on('click', '.edit-hint', function () {
       const id = $(this).data('id');
-      const getHintUrl = "{{ url_for('get_hint', agent_id=agent_id, hint_id=0) }}".replace('0', id);
 
       $.ajax({
         type: 'GET',
-        url: getHintUrl,
+        url: `/api/v1/agents/${agent_id}/hints/${id}`,
         success: function (response) {
           $('#editId').val(response.id);
           $('#editHintText').val(response.hint);
@@ -240,7 +239,7 @@
 
       $.ajax({
         type: 'PUT',
-        url: "{{ url_for('update_hint', agent_id=agent_id, hint_id=0) }}".replace('0', id),
+        url: `/api/v1/agents/${agent_id}/hints/${id}`,
         contentType: 'application/json',
         data: JSON.stringify(formData),
         success: function (response) {

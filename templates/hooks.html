@@ -137,7 +137,7 @@
           if (selected_agent_id) {
             $.ajax({
               type: 'DELETE',
-              url: "{{ url_for('delete_all_hooks', agent_id=agent_id) }}",
+              url: `/api/v1/agents/${agent_id}/hooks`,
               headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'

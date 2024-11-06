@@ -78,7 +78,7 @@
       }).then((result) => {
         if (result.isConfirmed) {
           const agentId = getCookie('selectedAgentId');
-          fetch("{{ url_for('delete_swmlrequest', agent_id=agent_id) }}", {
+          fetch(`/api/v1/agents/${agentId}/swmlrequests`, {
             method: 'DELETE',
             headers: {
               'Content-Type': 'application/json'

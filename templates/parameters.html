@@ -115,7 +115,7 @@
         "responsive": true,
         "autoWidth": true,
         "ajax": {
-          "url": "{{ url_for('get_parameters', agent_id=agent_id) }}",
+          "url": `/api/v1/agents/${agent_id}/parameters`,
           "dataSrc": "",
           "headers": {
             "Accept": "application/json",
@@ -174,7 +174,7 @@
 
         $.ajax({
           type: 'POST',
-          url: "{{ url_for('create_parameter', agent_id=agent_id) }}",
+          url: `/api/v1/agents/${agent_id}/parameters`,
           contentType: 'application/json',
           data: JSON.stringify(formData),
           success: function(response) {
@@ -203,7 +203,7 @@
           if (result.isConfirmed) {
             $.ajax({
               type: 'DELETE',
-              url: "{{ url_for('delete_parameter', agent_id=agent_id, id=0) }}".replace('0', id),
+              url: `/api/v1/agents/${agent_id}/parameters/${id}`,
               success: function(response) {
                 $('#paramsTable').DataTable().ajax.reload();
                 showToast('success', 'Parameter entry deleted successfully');
@@ -220,7 +220,7 @@
         const id = $(this).data('id');
         $.ajax({
           type: 'GET',
-          url: "{{ url_for('get_parameter_by_id', agent_id=agent_id, id=0) }}".replace('0', id),
+          url: `/api/v1/agents/${agent_id}/parameters/${id}`,
           success: function(response) {
             $('#editId').val(response.id);
             $('#editParamName').val(response.name);
@@ -241,7 +241,7 @@
 
         $.ajax({
           type: 'PUT',
-          url: "{{ url_for('update_parameter', agent_id=agent_id, id=0) }}".replace('0', formData.id),
+          url: `/api/v1/agents/${agent_id}/parameters/${formData.id}`,
           contentType: 'application/json',
           data: JSON.stringify(formData),
           success: function(response) {

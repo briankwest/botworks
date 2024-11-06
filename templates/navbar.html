@@ -6,10 +6,12 @@
   </ul>
 
   <ul class="navbar-nav ml-auto">
+    <!--
     <li class="nav-item">
       <a class="nav-link" data-widget="navbar-search" href="#" role="button">
         <i class="fas fa-search"></i>
       </a>
+
       <div class="navbar-search-block">
         <form class="form-inline">
           <div class="input-group input-group-sm">
@@ -26,20 +28,17 @@
         </form>
       </div>
     </li>
-
+  -->
     <li class="nav-item dropdown">
     </li>
     <li class="nav-item dropdown">
     </li>
-    <li class="nav-item">
-      <a class="nav-link" data-widget="fullscreen" href="#" role="button">
-        <i class="fas fa-expand-arrows-alt"></i>
-      </a>
+    <li class="nav-item dropdown">
+      <select id="agent-select" class="form-control" style="display: inline-block; width: auto; margin-left: 10px;"
+        onchange="handleAgentChange(event)">
+        <option value="">-- Select an Agent --</option>
+      </select>
     </li>
-    <select id="agent-select" class="form-control" style="display: inline-block; width: auto; margin-left: 10px;"
-      onchange="handleAgentChange(event)">
-      <option value="">-- Select an Agent --</option>
-    </select>
   </ul>
 </nav>
 

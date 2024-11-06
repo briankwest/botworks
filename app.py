@@ -425,8 +425,7 @@ def signup():
 
 @app.route('/yaml/<int:id>/<int:agent_id>', methods=['POST', 'GET'])
 @auth.login_required
-@check_agent_access
-def get_yaml(selected_agent_id, id, agent_id):
+def get_yaml(id, agent_id):
     if request.method == 'POST':
         data = request.get_json()
     else:
@@ -932,8 +931,7 @@ def debuglogs_page(agent_id):
 
 @app.route('/translate', methods=['GET'])
 @login_required
-@check_agent_access
-def translate(selected_agent_id):
+def translate():
     if request.headers.get('Accept') == 'application/json':
         return jsonify([]), 200
     else:
@@ -941,8 +939,7 @@ def translate(selected_agent_id):
 
 @app.route('/transcribe', methods=['GET'])
 @login_required
-@check_agent_access
-def transcribe(selected_agent_id):
+def transcribe():
     if request.headers.get('Accept') == 'application/json':
         return jsonify([]), 200
     else:
@@ -2345,47 +2342,29 @@ def update_language_entry(agent_id):
 def conversation_page(agent_id):
     return render_template('conversation.html', user=current_user, agent_id=agent_id)
 
-@app.route(f'{API_PREFIX}/agents/<int:agent_id>/conversation/<int:id>', methods=['PATCH'])
-@login_required
-def patch_conversation(agent_id, id):
-    conversation = AIConversation.query.filter_by(id=id, agent_id=agent_id).first_or_404()
-    
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({'message': 'No data provided'}), 400
-
-        conversation.title = data.get('title', conversation.title)
-        conversation.content = data.get('content', conversation.content)
-
-        db.session.commit()
-        return jsonify({'message': 'Conversation updated successfully'}), 200
-
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'message': 'Error updating conversation', 'error': str(e)}), 500
-
-@app.route(f'{API_PREFIX}/agents/<int:agent_id>/conversation/<int:id>', methods=['PUT'])
-@login_required
-def update_conversation(agent_id, id):
-    data = request.get_json()
-    conversation = AIConversation.query.filter_by(id=id, agent_id=agent_id).first_or_404()
-    
-    conversation.title = data.get('title', conversation.title)
-    conversation.content = data.get('content', conversation.content)
-    
-    db.session.commit()
-    return jsonify({'message': 'Conversation updated successfully'}), 200
-
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/conversation/<int:id>', methods=['GET'])
 @login_required
-def get_conversation_by_id(agent_id, id):
-    conversation = AIConversation.query.filter_by(id=id, agent_id=agent_id).first_or_404()
+def get_or_delete_conversation(selected_agent_id, id):
+    conversation = AIConversation.query.filter_by(id=id, agent_id=selected_agent_id).first_or_404()
+
+    next_conversation = AIConversation.query.filter(
+        AIConversation.id > id,
+        AIConversation.agent_id == selected_agent_id
+        ).order_by(AIConversation.id.asc()).first()
+        
+    prev_conversation = AIConversation.query.filter(
+            AIConversation.id < id,
+            AIConversation.agent_id == selected_agent_id
+        ).order_by(AIConversation.id.desc()).first()
+
     return jsonify({
         'id': conversation.id,
-        'title': conversation.title,
-        'content': conversation.content
+        'created': conversation.created,
+        'data': conversation.data,
+        'next': next_conversation.id if next_conversation else None,
+        'prev': prev_conversation.id if prev_conversation else None
     }), 200
+
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/conversation/<int:id>', methods=['DELETE'])
 @login_required

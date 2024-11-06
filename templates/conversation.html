@@ -89,10 +89,11 @@
 <script>
   $(document).ready(function () {
     console.log('Document is ready');
+    const agentId = {{ agent_id }};
 
     $('#conversationsTable').DataTable({
       "ajax": {
-        "url": "{{ url_for('conversation', agent_id=agent_id) }}",
+        "url": `/api/v1/agents/${agentId}/conversation`,
         "dataSrc": "",
         "headers": {
           "Accept": "application/json"
@@ -178,7 +179,7 @@
         if (result.isConfirmed) {
           $.ajax({
             type: 'DELETE',
-            url: "/conversations/" + id,
+            url: `/api/v1/agents/${agentId}/conversation/${id}`,
             success: function (response) {
               $('#conversationsTable').DataTable().ajax.reload();
               showToast('success', 'Conversation entry deleted successfully');
@@ -261,7 +262,7 @@
   });
 
   function fetchData(id) {
-    fetch(`/conversations/${id}`)
+    fetch(`/api/v1/agents/${agentId}/conversation/${id}`)
       .then(response => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -276,7 +277,7 @@
       })
       .catch(error => {
         console.error('Error fetching JSON:', error);
-        fetch(`/conversations/${id}`)
+        fetch(`/api/v1/agents/${agentId}/conversation/${id}`)
           .then(response => response.text())
           .then(text => console.error('Response text:', text));
       });

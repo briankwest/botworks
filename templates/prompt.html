@@ -256,7 +256,7 @@
 
     $.ajax({
       type: 'GET',
-      url: "{{ url_for('list_prompts', agent_id=agent_id) }}",
+      url: `/api/v1/agents/${agent_id}/prompt`,
       headers: {
         'Accept': 'application/json'
       },
