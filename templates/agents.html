@@ -733,7 +733,7 @@
     function fetchSharedUsers(agentId) {
       $.ajax({
         type: 'GET',
-        url: `/agents/${agentId}/share`,
+        url: `/api/v1/agents/${agentId}/share`,
         headers: {
           'Content-Type': 'application/json'
         },
@@ -766,7 +766,7 @@
 
       $.ajax({
         type: 'POST',
-        url: `/agents/${agentId}/share`,
+        url: `/api/v1/agents/${agentId}/share`,
         contentType: 'application/json',
         data: JSON.stringify({ user_id: userId, permissions: permissions }),
         success: function (response) {
@@ -790,7 +790,7 @@
 
       $.ajax({
         type: 'DELETE',
-        url: `/agents/${agentId}/share/${sharedUserId}`,
+        url: `/api/v1/agents/${agentId}/share/${sharedUserId}`,
         headers: {
           'Content-Type': 'application/json'
         },

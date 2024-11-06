@@ -8,7 +8,7 @@ from flask import g, request, make_response, jsonify
 from flask_login import current_user
 from werkzeug.security import generate_password_hash
 from modules.db import db
-from modules.models import AIFeatures, AIUser, AISignalWireParams, AIAgent, SharedAccess
+from modules.models import AIFeatures, AIUser, AISignalWireParams, AIAgent, SharedAgent
 from functools import wraps
 
 def generate_random_password(length=16):

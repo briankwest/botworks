@@ -15,7 +15,7 @@ from flask_migrate import Migrate
 from dotenv import load_dotenv
 from urllib.parse import urlparse
 from modules.signalwireml import SignalWireML
-from modules.models import db, AIAgent, AIUser, AISignalWireParams, AIFeatures, AIFunctions, AIIncludes, AIConversation, AISWMLRequest, AIParams, AIFunctionArgs, AIPrompt, AIPronounce, AILanguage, AIHints, AIIncludes, AISWMLRequest, AIDebugLogs, AIContext, AISteps, AIHooks, SharedAccess, AITranslate, PasswordResetToken
+from modules.models import db, AIAgent, AIUser, AISignalWireParams, AIFeatures, AIFunctions, AIIncludes, AIConversation, AISWMLRequest, AIParams, AIFunctionArgs, AIPrompt, AIPronounce, AILanguage, AIHints, AIIncludes, AISWMLRequest, AIDebugLogs, AIContext, AISteps, AIHooks, SharedAgent, AITranslate, PasswordResetToken
 from modules.swml_generator import generate_swml_response
 from modules.utils import (
     generate_random_password, get_signalwire_param, 
@@ -1374,7 +1374,47 @@ def reset_password(token):
         
     return render_template('reset_password.html')
 
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/share/<int:user_id>', methods=['DELETE'])
+@login_required
+def revoke_share(agent_id, user_id):
+    shared_access = SharedAgent.query.filter_by(user_id=current_user.id, agent_id=agent_id, shared_with_user_id=user_id).all()
+    for sa in shared_access:
+        db.session.delete(sa)
+    db.session.commit()
+    return jsonify({'message': 'Share revoked successfully'}), 200
 
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/share', methods=['GET'])
+@login_required
+def get_shared_users(agent_id):
+    shared_access_list = SharedAgent.query.filter_by(user_id=current_user.id, agent_id=agent_id).all()
+    shared_users_data = []
+
+    for sa in shared_access_list:
+        user = AIUser.query.get(sa.shared_with_user_id)
+        if user:
+            shared_users_data.append({
+                'id': sa.shared_with_user_id,
+                'permissions': sa.permissions,
+                'username': user.username,
+                'full_name': user.full_name
+            })
+
+    return jsonify(shared_users_data), 200
+
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/share', methods=['POST'])
+@login_required
+def share_agent(agent_id):
+    data = request.get_json()
+    shared_with_user_id = data.get('user_id')
+    permissions = data.get('permissions', 'view')
+
+    agent = AIAgent.query.filter_by(id=agent_id, user_id=current_user.id).first_or_404()
+
+    shared_access = SharedAgent(user_id=current_user.id, agent_id=agent_id, shared_with_user_id=shared_with_user_id, permissions=permissions)
+    db.session.add(shared_access)
+    db.session.commit()
+
+    return jsonify({'message': 'Agent shared successfully'}), 201
 
 
 @app.route('/agents/<int:agent_id>', methods=['GET'])
@@ -1387,7 +1427,7 @@ def agent_page(agent_id):
 @login_required
 def list_agents():
     owned_agents = AIAgent.query.filter_by(user_id=current_user.id).all()
-    shared_agent_ids = db.session.query(SharedAccess.agent_id).filter_by(shared_with_user_id=current_user.id).all()
+    shared_agent_ids = db.session.query(SharedAgent.agent_id).filter_by(shared_with_user_id=current_user.id).all()
     shared_agents = AIAgent.query.filter(AIAgent.id.in_([id for id, in shared_agent_ids])).all()
     
     all_agents = owned_agents + shared_agents

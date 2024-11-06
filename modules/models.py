@@ -27,7 +27,7 @@ class AIAgent(db.Model):
     ai_features = db.relationship('AIFeatures', back_populates='agent', cascade='all, delete-orphan', lazy=True)
     ai_contexts = db.relationship('AIContext', back_populates='agent', cascade='all, delete-orphan', lazy=True)
     ai_steps = db.relationship('AISteps', back_populates='agent', cascade='all, delete-orphan', lazy=True)
-    shared_access = db.relationship('SharedAccess', back_populates='agent', cascade='all, delete-orphan', lazy='dynamic')
+    shared_agent = db.relationship('SharedAgent', back_populates='agent', cascade='all, delete-orphan', lazy='dynamic')
 
     def __repr__(self):
         return f'<AIAgent {self.name}>'
@@ -241,12 +241,12 @@ class AIUser(UserMixin, db.Model):
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    shared_access = db.relationship(
-        'SharedAccess',
+    shared_agent = db.relationship(
+        'SharedAgent',
         back_populates='user',
         cascade='all, delete-orphan',
         lazy='dynamic',
-        primaryjoin="AIUser.id == SharedAccess.shared_with_user_id"
+        primaryjoin="AIUser.id == SharedAgent.shared_with_user_id"
     )
     ai_translates = db.relationship(
         'AITranslate',
@@ -359,17 +359,18 @@ class AIHooks(db.Model):
             'hook_type': self.hook_type.value
         }
 
-class SharedAccess(db.Model):
-    __tablename__ = 'shared_access'
+class SharedAgent(db.Model):
+    __tablename__ = 'shared_agent'
     id = db.Column(db.Integer, primary_key=True)
     agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
     shared_with_user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
     permissions = db.Column(db.String(50), nullable=False)
     created = db.Column(db.DateTime, default=datetime.utcnow)
     updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    user = db.relationship('AIUser', back_populates='shared_access')
-    agent = db.relationship('AIAgent', back_populates='shared_access')
+    user = db.relationship('AIUser', back_populates='shared_agent', foreign_keys=[user_id])
+    agent = db.relationship('AIAgent', back_populates='shared_agent')
     
 
 class AITranslate(db.Model):
