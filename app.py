@@ -122,10 +122,29 @@ def load_user(user_id):
 @app.route('/')
 @login_required
 def dashboard():
-    number_of_requests = AISWMLRequest.query.filter_by().count()
-    number_of_conversations = AIConversation.query.filter_by().count()
-    number_of_functions = AIFunctions.query.filter_by().count()
-    number_of_agents = AIAgent.query.filter_by().count()
+    # Count requests for agents owned by current user
+    number_of_requests = db.session.query(AISWMLRequest).join(
+        AIAgent, AISWMLRequest.agent_id == AIAgent.id
+    ).filter(
+        AIAgent.user_id == current_user.id
+    ).count()
+
+    # Count conversations for agents owned by current user 
+    number_of_conversations = db.session.query(AIConversation).join(
+        AIAgent, AIConversation.agent_id == AIAgent.id
+    ).filter(
+        AIAgent.user_id == current_user.id
+    ).count()
+
+    # Count functions for agents owned by current user
+    number_of_functions = db.session.query(AIFunctions).join(
+        AIAgent, AIFunctions.agent_id == AIAgent.id
+    ).filter(
+        AIAgent.user_id == current_user.id
+    ).count()
+
+    # Count agents owned by current user
+    number_of_agents = AIAgent.query.filter_by(user_id=current_user.id).count()
 
     return render_template('dashboard.html', user=current_user, number_of_requests=number_of_requests, number_of_conversations=number_of_conversations, number_of_functions=number_of_functions, number_of_agents=number_of_agents)
 
@@ -273,13 +292,16 @@ def dashboard_completed():
     start_time = end_time - timedelta(hours=23)
 
     hourly_counts = {start_time + timedelta(hours=i): 0 for i in range(24)}
-
+    
     completed_conversations = db.session.query(
         db.func.date_trunc('hour', AIConversation.created).label('hour'),
         db.func.count(AIConversation.id).label('count')
+    ).join(
+        AIAgent, AIConversation.agent_id == AIAgent.id
     ).filter(
+        AIAgent.user_id == current_user.id,
         AIConversation.created >= start_time,
-        AIConversation.created < end_time,
+        AIConversation.created < end_time
     ).group_by('hour').order_by('hour').all()
 
     for hour, count in completed_conversations:

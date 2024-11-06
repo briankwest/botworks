@@ -348,7 +348,11 @@
         }
     })
     .then(response => {
-        if (!response.ok) throw new Error('Network response was not ok');
+        if (!response.ok) {
+            return response.json().then(err => {
+                throw new Error(err.error || 'Failed to create share link');
+            });
+        }
         return response.json();
     })
     .then(data => {
@@ -375,7 +379,7 @@
         Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: 'Failed to create share link',
+            text: error.message,
             toast: true,
             position: 'top-end',
             timer: 3000,

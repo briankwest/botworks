@@ -162,11 +162,11 @@ def agent_access_required(f):
         ).first()
 
         if not shared_access:
-            abort(403, description="Access denied to this agent")
+            return {"error": "Access denied to this agent"}, 403
 
         # If view-only access, deny write operations
         if shared_access.permissions == 'view' and request.method in ['PUT', 'DELETE', 'PATCH', 'POST']:
-            abort(403, description="View-only access - write operations not permitted")
+            return {"error": "View-only access - write operations not permitted"}, 403
 
         return f(*args, **kwargs)
     return decorated_function
