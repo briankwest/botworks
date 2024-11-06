@@ -2,6 +2,7 @@ import eventlet
 eventlet.monkey_patch()
 import os, jwt, base64, json, redis, yaml, requests, logging
 import random
+from uuid import uuid4
 import string
 from datetime import datetime, timedelta, timezone
 from flask import Flask, flash, make_response, jsonify, redirect, render_template, request, url_for, g
@@ -15,7 +16,7 @@ from flask_migrate import Migrate
 from dotenv import load_dotenv
 from urllib.parse import urlparse
 from modules.signalwireml import SignalWireML
-from modules.models import db, AIAgent, AIUser, AISignalWireParams, AIFeatures, AIFunctions, AIIncludes, AIConversation, AISWMLRequest, AIParams, AIFunctionArgs, AIPrompt, AIPronounce, AILanguage, AIHints, AIIncludes, AISWMLRequest, AIDebugLogs, AIContext, AISteps, AIHooks, SharedAgent, AITranslate, PasswordResetToken
+from modules.models import db, AIAgent, AIUser, AISignalWireParams, AIFeatures, AIFunctions, AIIncludes, AIConversation, AISWMLRequest, AIParams, AIFunctionArgs, AIPrompt, AIPronounce, AILanguage, AIHints, AIIncludes, AISWMLRequest, AIDebugLogs, AIContext, AISteps, AIHooks, SharedAgent, SharedConversations, AITranslate, PasswordResetToken
 from modules.swml_generator import generate_swml_response
 from modules.utils import (
     generate_random_password, get_signalwire_param, 
@@ -907,6 +908,49 @@ def create_debuglog(agent_id):
     db.session.commit()
 
     return jsonify({'message': 'Debug log created successfully'}), 201
+
+@app.route(f'{API_PREFIX}/conversations/<int:conversation_id>/share', methods=['POST'])
+@login_required
+def create_conversation_share(conversation_id):
+    conversation = AIConversation.query.get_or_404(conversation_id)
+    
+    share_uuid = str(uuid4())
+
+    shared_conversation = SharedConversations(
+        uuid=share_uuid,
+        conversation_id=conversation.id
+    )
+    db.session.add(shared_conversation)
+    db.session.commit()
+    
+    return jsonify({'message': 'Conversation shared successfully', 'uuid': share_uuid}), 201
+
+@app.route(f'{API_PREFIX}/conversations/shared/<string:uuid>', methods=['GET'])
+def view_shared_conversation(uuid):
+    shared_conversation = SharedConversations.query.filter_by(uuid=uuid).first_or_404()
+    conversation = shared_conversation.conversation
+    print(f"Conversation: {conversation}")
+    return jsonify({
+        'id': conversation.id,
+        'created': conversation.created,
+        'data': conversation.data
+    }), 200
+
+@app.route(f'{API_PREFIX}/conversations/shared/<string:uuid>', methods=['DELETE'])
+@login_required
+def remove_conversation_share(uuid):
+    shared_conversation = SharedConversations.query.filter_by(uuid=uuid).first_or_404()
+    db.session.delete(shared_conversation)
+    db.session.commit()
+    
+    return jsonify({'message': 'Conversation share removed successfully'}), 200
+
+@app.route('/conversations/shared/<string:uuid>', methods=['GET'])
+def display_shared_conversation(uuid):
+    shared_conversation = SharedConversations.query.filter_by(uuid=uuid).first()
+    if not shared_conversation:
+        return jsonify({'error': 'Shared conversation not found'}), 404
+    return render_template('sharedconversation.html', uuid=uuid)
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/debuglogs', methods=['GET', 'DELETE'])
 @login_required
@@ -2358,12 +2402,14 @@ def hooks_page(agent_id):
 @login_required
 def list_swmlrequests(agent_id):
     swml_requests = AISWMLRequest.query.filter_by(agent_id=agent_id).all()
-    return jsonify([{
-        'id': request.id,
-        'name': request.name,
-        'description': request.description,
-        'created': request.created
-    } for request in swml_requests]), 200
+    swml_requests_data = [{
+        'id': req.id,
+        'created': req.created,
+        'request': req.request,
+        'response': req.response,
+        'ip_address': req.ip_address
+    } for req in swml_requests]
+    return jsonify(swml_requests_data), 200
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/swmlrequests', methods=['DELETE'])
 @login_required

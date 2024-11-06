@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conversation Details</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.0.2/sweetalert2.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.1.0/css/adminlte.min.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.2/dist/sweetalert2.all.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
+</head>
+
+<body>
+  <div id="fullScreenModal" class="modal" role="dialog" aria-labelledby="modalTitle" aria-hidden="true" tabindex="-1"
+    style="display:block; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.8); z-index:1050;">
+    <div class="modal-content" tabindex="0" style="position:relative; width:100%; height:100%; overflow:auto;">
+      <div class="p-3">
+        <section class="content">
+          <div class="row">
+            <div class="col-md-12">
+              <div class="card card-primary">
+                <div class="card-header bg-primary">
+                  <h3 class="card-title">Interaction Details</h3>
+                </div>
+                <div class="card-body">
+                  <div id="PostPromptDataContent"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const url = window.location.href;
+      const uuid = url.split('/').pop();
+      fetchData(uuid);
+
+      document.querySelectorAll('.copy-btn').forEach(button => {
+        button.addEventListener('click', function () {
+          const value = this.getAttribute('data-copy');
+          copyToClipboard(value);
+        });
+      });
+    });
+
+    function showToast(icon, title) {
+      const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+          toast.addEventListener('mouseenter', Swal.stopTimer)
+          toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+      });
+
+      Toast.fire({
+        icon: icon,
+        title: title
+      });
+    }
+    window.copyToClipboard = function (value) {
+      const tempInput = document.createElement('textarea');
+      tempInput.style.position = 'absolute';
+      tempInput.style.left = '-9999px';
+      tempInput.value = value;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempInput);
+      const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 1500,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+          toast.addEventListener('mouseenter', Swal.stopTimer)
+          toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+      });
+
+      Toast.fire({
+        icon: 'success',
+        title: 'Copied to clipboard'
+      });
+    }
+    function fetchData(id) {
+      console.log('Fetching data for ID:', id);
+      fetch(`/api/v1/conversations/shared/${id}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(responseData => {
+          console.log('Received data:', responseData);
+          displayData(responseData.data);
+        })
+        .catch(error => {
+          console.error('Error fetching JSON:', error);
+          fetch(`/api/v1/conversations/shared/${id}`)
+            .then(response => response.text())
+            .then(text => console.error('Response text:', text));
+        });
+    }
+
+    function displayData(data) {
+      const content = document.getElementById('PostPromptDataContent');
+      content.innerHTML = ''; // Clear previous content
+
+      console.log('Displaying data:', data); // Debugging log
+
+      if (!data) {
+        console.error('Data is undefined or null');
+        return;
+      }
+
+      if (data.raw_call_log) {
+        const callLogCard = createCard('Call Log', createCallLogTable(data.raw_call_log), 'bg-success');
+        content.appendChild(callLogCard);
+      }
+
+      if (data.times) {
+        const timesCard = createCard('Times', createTimesTable(data.times), 'bg-warning');
+        content.appendChild(timesCard);
+      }
+
+      if (data.SWMLVars) {
+        const swmlVarsCard = createCard('SWML Vars', createSWMLVarsTable(data.SWMLVars), 'bg-danger');
+        content.appendChild(swmlVarsCard);
+      }
+
+      if (data.swaig_log) {
+        const swaigLogCard = createCard('SWAIG Log', createSwaigLogTable(data.swaig_log), 'bg-secondary');
+        content.appendChild(swaigLogCard);
+      }
+
+      if (data.post_prompt_data) {
+        const postPromptDataCard = createCard('Post Prompt Data', createPostPromptDataTable(data.post_prompt_data), 'bg-primary');
+        content.appendChild(postPromptDataCard);
+      }
+    }
+
+    function createCard(title, contentHtml, headerClass) {
+      const card = document.createElement('div');
+      card.className = 'card mb-3';
+
+      const cardHeader = document.createElement('div');
+      cardHeader.className = 'card-header ' + (headerClass || 'bg-info');
+
+      const cardTitle = document.createElement('h5');
+      cardTitle.className = 'card-title';
+      cardTitle.innerText = title;
+
+      cardHeader.appendChild(cardTitle);
+
+      const cardBody = document.createElement('div');
+      cardBody.className = 'card-body';
+      cardBody.innerHTML = contentHtml;
+
+      card.appendChild(cardHeader);
+      card.appendChild(cardBody);
+
+      return card;
+    }
+
+    function createInteractionDetailsTable(data) {
+      let table = '<div class="table-responsive"><table class="table table-striped table-sm">';
+      table += `
+                <tr>
+                    <th style="width: 45%;">Key</th>
+                    <th style="width: 45%;">Value</th>
+                    <th style="width: 5%;">Copy</th>
+                </tr>
+                <tr>
+                    <td>Call ID</td>
+                    <td>${data.call_id || ''}</td>
+                    <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.call_id || ''}')"></i></td>
+                </tr>
+                <tr>
+                    <td>Caller ID Name</td>
+                    <td>${data.caller_id_name || ''}</td>
+                    <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.caller_id_name || ''}')"></i></td>
+                </tr>
+                <tr>
+                    <td>Caller ID Number</td>
+                    <td>${data.caller_id_number || ''}</td>
+                    <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.caller_id_number || ''}')"></i></td>
+                </tr>
+                <tr>
+                    <td>Call Start Date</td>
+                    <td>${data.call_start_date ? new Date(data.call_start_date / 1000).toLocaleString() : ''}</td>
+                    <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.call_start_date ? new Date(data.call_start_date / 1000).toLocaleString() : ''}')"></i></td>
+                </tr>
+                <tr>
+                    <td>Call End Date</td>
+                    <td>${data.call_end_date ? new Date(data.call_end_date / 1000).toLocaleString() : ''}</td>
+                    <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.call_end_date ? new Date(data.call_end_date / 1000).toLocaleString() : ''}')"></i></td>
+                </tr>
+                <tr>
+                    <td>AI Start Date</td>
+                    <td>${data.ai_start_date ? new Date(data.ai_start_date / 1000).toLocaleString() : ''}</td>
+                    <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.ai_start_date ? new Date(data.ai_start_date / 1000).toLocaleString() : ''}')"></i></td>
+                </tr>
+                <tr>
+                    <td>AI End Date</td>
+                    <td>${data.ai_end_date ? new Date(data.ai_end_date / 1000).toLocaleString() : ''}</td>
+                    <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.ai_end_date ? new Date(data.ai_end_date / 1000).toLocaleString() : ''}')"></i></td>
+                </tr>`;
+
+      const additionalFields = [
+        { key: 'Total Input Tokens', value: data.total_input_tokens },
+        { key: 'Total Output Tokens', value: data.total_output_tokens },
+        { key: 'Total ASR Cost Factor', value: data.total_asr_cost_factor },
+        { key: 'Total ASR Minutes', value: data.total_asr_minutes },
+        { key: 'Total Minutes', value: data.total_minutes },
+        { key: 'Total TTS Chars', value: data.total_tts_chars },
+        { key: 'Total TTS Chars Per Minute', value: data.total_tts_chars_per_min },
+        { key: 'Total Wire Input Tokens', value: data.total_wire_input_tokens },
+        { key: 'Total Wire Input Tokens Per Minute', value: data.total_wire_input_tokens_per_minute },
+        { key: 'Total Wire Output Tokens', value: data.total_wire_output_tokens },
+        { key: 'Total Wire Output Tokens Per Minute', value: data.total_wire_output_tokens_per_minute },
+        { key: 'Version', value: data.version }
+      ];
+
+      additionalFields.forEach(field => {
+        if (field.value !== undefined) {
+          table += `
+                        <tr>
+                            <td>${field.key}</td>
+                            <td>${field.value}</td>
+                            <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${field.value}')"></i></td>
+                        </tr>`;
+        }
+      });
+
+      table += '</table></div>';
+      return table;
+    }
+
+    function createCallLogTable(callLog) {
+      let table = '<div class="table-responsive"><table class="table table-striped table-sm" style="table-layout: fixed; width: 100%;">';
+      table += `
+                        <tr>
+                            <th style="width: 10%;">Role</th>
+                            <th style="width: 65%;">Content</th>
+                            <th style="width: 5%;">Latency</th>
+                            <th style="width: 5%;">Audio Latency</th>
+                            <th style="width: 5%;">Utterance Latency</th>
+                        </tr>
+                    `;
+      callLog.forEach(log => {
+        if (log.hasOwnProperty('tool_calls')) {
+          return;
+        }
+        const roleColors = {
+          'user': 'bg-primary text-white',
+          'assistant': 'bg-success text-white',
+          'system': 'bg-warning text-dark',
+          'other': 'bg-secondary text-white',
+          'system-log': 'bg-warning text-dark',
+          'tool': 'bg-info text-dark',
+          'other': 'bg-secondary text-dark',
+        };
+
+        const roleClass = roleColors[log.role] || 'bg-light text-dark';
+
+        table += `
+                        <tr class="${roleClass}">
+                            <td class="role">${log.role}</td>
+                            <td style="word-wrap: break-word;">${log.content.replace(/\n/g, '<br/>')}</td>
+                            <td>${log.latency ? log.latency + ' ms' : 'N/A'}</td>
+                            <td>${log.audio_latency ? log.audio_latency + ' ms' : 'N/A'}</td>
+                            <td>${log.utterance_latency ? log.utterance_latency + ' ms' : 'N/A'}</td>
+                        </tr>
+                    `;
+      });
+      table += '</table></div>';
+      return table;
+    }
+
+    function createTimesTable(times) {
+      let table = '<div class="table-responsive"><table class="table table-striped table-sm">';
+      table += `
+                        <tr>
+                            <th>Token Time</th>
+                            <th>Tokens</th>
+                            <th>TPS</th>
+                            <th>Avg TPS</th>
+                            <th>Response Word Count</th>
+                            <th>Response</th>
+                            <th>Answer Time</th>
+                        </tr>
+                    `;
+      times.forEach(time => {
+        table += `
+                        <tr>
+                            <td>${time.token_time}</td>
+                            <td>${time.tokens}</td>
+                            <td>${time.tps}</td>
+                            <td>${time.avg_tps}</td>
+                            <td>${time.response_word_count}</td>
+                            <td>${time.response}</td>
+                            <td>${time.answer_time}</td>
+                        </tr>
+                    `;
+      });
+      table += '</table></div>';
+      return table;
+    }
+
+    function createSWMLVarsTable(swmlVars) {
+      let table = '<div class="table-responsive"><table class="table table-striped table-sm">';
+      table += `
+                        <tr>
+                            <th>Key</th>
+                            <th>Value</th>
+                            <th>Copy</th>
+                        </tr>
+                    `;
+      for (const [key, value] of Object.entries(swmlVars)) {
+        table += `
+                        <tr>
+                            <td>${key}</td>
+                            <td>
+                                ${value}
+                                ${key === 'record_call_url' ? `<audio controls preload="none" src="${value}" style="margin-left: 10px;"></audio>` : ''}
+                            </td>
+                            <td class="copy-btn"><i class="fas fa-copy" data-copy="${value}" onclick="copyToClipboard('${value}')"></i></td>
+                        </tr>
+                    `;
+      }
+      table += '</table></div>';
+      return table;
+    }
+
+    function createSwaigLogTable(swaigLog) {
+      let table = '<div class="table-responsive"><table class="table table-striped table-sm">';
+      table += `
+                    <tr>
+                        <th>URL</th>
+                        <th>Active Count</th>
+                        <th>Command Name</th>
+                        <th>Command Arg</th>
+                        <th>Post Data</th>
+                        <th>Post Response</th>
+                        <th>Epoch Time</th>
+                    </tr>
+                `;
+
+      swaigLog.forEach(log => {
+        try {
+          const commandArg = JSON.parse(log.command_arg || '{}');
+          const postData = JSON.stringify(log.post_data, null, 2);
+          const postResponse = JSON.stringify(log.post_response, null, 2);
+
+          table += `
+                            <tr>
+                                <td>
+                                    <input type="text" readonly value="${log.url}" style="width: 200px;">
+                                    <i class="fas fa-copy copy-btn" data-copy="${log.url}" onclick="copyToClipboard(this.getAttribute('data-copy'))"></i>
+                                </td>
+                                <td>${log.active_count}</td>
+                                <td>${log.command_name}</td>
+                                <td>
+                                    <textarea readonly style="width: 100%; max-width: 200px;">${JSON.stringify(commandArg, null, 2)}</textarea>
+                                    <i class="fas fa-copy copy-btn" data-copy='${JSON.stringify(commandArg, null, 2)}' onclick="copyToClipboard(this.getAttribute('data-copy'))"></i>
+                                </td>
+                                <td>
+                                    <textarea readonly style="width: 100%; max-width: 300px;">${postData}</textarea>
+                                    <i class="fas fa-copy copy-btn" data-copy="${postData}" onclick="copyToClipboard(this.getAttribute('data-copy'))"></i>
+                                </td>
+                                <td>
+                                    <textarea readonly style="width: 100%; max-width: 300px;">${postResponse}</textarea>
+                                    <i class="fas fa-copy copy-btn" data-copy="${postResponse}" onclick="copyToClipboard(this.getAttribute('data-copy'))"></i>
+                                </td>
+                                <td class="nowrap">${new Date(log.epoch_time * 1000).toLocaleString()}</td>
+                            </tr>
+                        `;
+        } catch (error) {
+          console.error('Error parsing JSON in createSwaigLogTable:', error);
+        }
+      });
+
+      table += '</table></div>';
+      return table;
+    }
+
+    function createPostPromptDataTable(postPromptData) {
+      let table = '<div class="table-responsive"><table class="table table-striped table-sm">';
+
+      if (postPromptData.raw) {
+        table += `
+                        <tr>
+                            <td style="word-wrap: break-word; max-width: 100%; text-align: left;"><strong>Raw Data:</strong></td>
+                            <td style="word-wrap: break-word; max-width: 100%; text-align: left;">${postPromptData.raw}</td>
+                            <td style="word-wrap: break-word; max-width: 100%; text-align: left;">
+                                <i class="fas fa-copy copy-btn" data-copy='${JSON.stringify(postPromptData.raw, null, 2)}' onclick="copyToClipboard(this.getAttribute('data-copy'))"></i>
+                            </td>
+                        </tr>
+                    `;
+      }
+
+      if (postPromptData.substituted) {
+        table += `
+                        <tr>
+                            <td style="word-wrap: break-word; max-width: 100%; text-align: left;"><strong>Substituted Data:</strong></td>
+                            <td style="word-wrap: break-word; max-width: 100%; text-align: left;">${postPromptData.substituted}</td>
+                            <td style="word-wrap: break-word; max-width: 100%; text-align: left;">
+                                <i class="fas fa-copy copy-btn" data-copy='${JSON.stringify(postPromptData.substituted, null, 2)}' onclick="copyToClipboard(this.getAttribute('data-copy'))"></i>
+                            </td>
+                        </tr>
+                    `;
+      }
+
+      if (postPromptData.parsed && postPromptData.parsed.length > 0) {
+        postPromptData.parsed.forEach((parsedItem, index) => {
+          table += `
+                            <tr>
+                                <td style="word-wrap: break-word; max-width: 100%; text-align: left;"><strong>Parsed Item ${index + 1}:</strong></td>
+                                <td style="word-wrap: break-word; max-width: 100%; text-align: left;"><pre>${JSON.stringify(parsedItem, null, 2)}</pre></td>
+                                <td style="word-wrap: break-word; max-width: 100%; text-align: left;">
+                                    <i class="fas fa-copy copy-btn" data-copy='${JSON.stringify(parsedItem, null, 2)}' onclick="copyToClipboard(this.getAttribute('data-copy'))"></i>
+                                </td>
+                            </tr>
+                        `;
+        });
+      }
+
+      table += '</table></div>';
+      return table;
+    }
+  </script>
+</body>
+
+</html>
