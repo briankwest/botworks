@@ -163,6 +163,54 @@
 {% block scripts %}
 <script>
   $(document).ready(function () {
+    // Load languages for both add and edit forms
+    $.getJSON('/static/js/language.json', function (languages) {
+      populateDropdowns(languages.languages, '#fromLanguage');
+      populateDropdowns(languages.languages, '#toLanguage');
+      populateDropdowns(languages.languages, '#editFromLanguage');
+      populateDropdowns(languages.languages, '#editToLanguage');
+    }).fail(function() {
+      console.error('Failed to load languages');
+    });
+
+    // Load filters for both add and edit forms
+    $.getJSON('/static/js/filters.json', function (filters) {
+      populateDropdowns(filters, '#fromFilter');
+      populateDropdowns(filters, '#toFilter');
+      populateDropdowns(filters, '#editFromFilter');
+      populateDropdowns(filters, '#editToFilter');
+    }).fail(function() {
+      console.error('Failed to load filters');
+    });
+
+    // Load voices for both add and edit forms
+    const providers = ['elevenlabs'];
+    const voiceDropdowns = ['#fromVoice', '#toVoice', '#editFromVoice', '#editToVoice'];
+
+    voiceDropdowns.forEach(dropdownId => {
+      $(dropdownId).empty();
+    });
+
+    let voicesLoaded = 0;
+    const totalProviders = providers.length;
+
+    providers.forEach(provider => {
+      $.getJSON(`/static/js/${provider}.json`, function (voices) {
+        const optgroup = $('<optgroup>').attr('label', provider.charAt(0).toUpperCase() + provider.slice(1));
+        voices.forEach(voice => {
+          const value = `${provider}.${voice.name}`;
+          const option = $('<option>').val(value).text(voice.name);
+          optgroup.append(option);
+        });
+
+        voiceDropdowns.forEach(dropdownId => {
+          $(dropdownId).append(optgroup.clone());
+        });
+
+        voicesLoaded++;
+      });
+    });
+
     $('#translatorsTable').DataTable({
       "responsive": true,
       "autoWidth": true,
@@ -304,13 +352,19 @@
           $('#editCallerIdNumber').val(data.caller_id_number);
 
           $.getJSON('/static/js/language.json', function (languages) {
+            console.log('Languages loaded:', languages);
             populateDropdowns(languages.languages, '#editFromLanguage', data.from_language);
             populateDropdowns(languages.languages, '#editToLanguage', data.to_language);
+          }).fail(function() {
+            console.error('Failed to load languages');
           });
 
           $.getJSON('/static/js/filters.json', function (filters) {
+            console.log('Filters loaded:', filters);
             populateDropdowns(filters, '#editFromFilter', data.from_filter);
             populateDropdowns(filters, '#editToFilter', data.to_filter);
+          }).fail(function() {
+            console.error('Failed to load filters');
           });
 
           const providers = ['elevenlabs'];
@@ -353,12 +407,13 @@
           }
         },
         error: function (xhr, status, error) {
+          console.error('Failed to load translator data:', error);
           showToast('error', 'Failed to load translator data');
         }
       });
     });
 
-    function populateDropdowns(data, dropdownId, selectedValue) {
+    function populateDropdowns(data, dropdownId, selectedValue = '') {
       const dropdown = $(dropdownId);
       dropdown.empty();
 
