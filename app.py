@@ -19,9 +19,8 @@ from modules.signalwireml import SignalWireML
 from modules.models import db, AIAgent, AIUser, AISignalWireParams, AIFeatures, AIFunctions, AIIncludes, AIConversation, AISWMLRequest, AIParams, AIFunctionArgs, AIPrompt, AIPronounce, AILanguage, AIHints, AIIncludes, AISWMLRequest, AIDebugLogs, AIContext, AISteps, AIHooks, SharedAgent, SharedConversations, AITranslate, PasswordResetToken
 from modules.swml_generator import generate_swml_response
 from modules.utils import (
-    generate_random_password, get_signalwire_param, 
-    setup_default_agent_and_params, create_admin_user,
-    get_swaig_includes, get_signalwire_param_by_agent_id, agent_access_required
+    generate_random_password, get_feature, 
+    setup_default_agent_and_params, create_admin_user, get_signalwire_param_by_agent_id, agent_access_required, get_signalwire_param
 )
 import secrets
 if os.environ.get('DEBUG', False):
@@ -458,7 +457,7 @@ def get_yaml(id, agent_id):
     
     return response
 
-
+@app.route('/onboard/swaig/<int:agent_id>', methods=['POST'])
 @app.route('/swaig/<int:agent_id>', methods=['POST'])
 @auth.login_required
 def swaig(agent_id):
@@ -531,22 +530,97 @@ def swml(agent_id):
 @auth.login_required
 def postprompt(agent_id):
     data = request.get_json()
+    caller_id_name = data.get('caller_id_name', 'Unknown')
+    caller_id_number = data.get('caller_id_number', 'Unknown')
+    summary = data.get('post_prompt_data', {}).get('raw', '')
+    call_id = data.get('call_id')   
+    share_url = "Unknown"
+    
     new_conversation = AIConversation(
         agent_id=agent_id,
         data=data
     )
+
     db.session.add(new_conversation)
     db.session.commit()
+    conversation_id = new_conversation.id
 
-    call_id = data.get('call_id')
-    
+    share_conversation = get_feature(agent_id, 'SHARE_CONVERSATION')
+
+    if share_conversation:
+        existing_conversation = SharedConversations.query.filter_by(uuid=call_id).first()
+        if existing_conversation is None:
+            new_shared_conversation = SharedConversations(
+                uuid=call_id,
+                conversation_id=conversation_id
+            )
+            db.session.add(new_shared_conversation)
+            db.session.commit()
+            share_url = f"https://{request.host}/conversations/shared/{call_id}"
+
+    zendesk_enabled = get_feature(agent_id, 'ENABLE_ZENDESK_TICKET')
+    zendesk_api_key = get_feature(agent_id, 'ZENDESK_API_KEY')
+    zendesk_subdomain = get_feature(agent_id, 'ZENDESK_SUBDOMAIN')
+
+    if all([zendesk_enabled, zendesk_api_key, zendesk_subdomain]) and not caller_id_name.lower().startswith('outbound call'):
+        try:
+            url = f"https://{zendesk_subdomain}.zendesk.com/api/v2/tickets.json"
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': zendesk_api_key,
+                'User-Agent': 'SignalWire-AI-Agent/1.0'
+            }
+            
+            ticket_data = {
+                'ticket': {
+                    'comment': {
+                        'body': f"{share_url}\n\n{summary}\n\n--SignalWire AI Agent"
+                    },
+                    'priority': 'normal',
+                    'subject': f"Call Disposition - {caller_id_name} {caller_id_number}"
+                }
+            }
+            
+            response = requests.post(
+                url,
+                headers=headers,
+                json=ticket_data,
+                timeout=5
+            )
+            response.raise_for_status()
+        except Exception as e:
+            app.logger.error(f"Failed to create Zendesk ticket: {str(e)}")
+ 
     message = {
         "command": "conversation_ended",
         "call_info": {"call_id": f"{call_id}"},
         "conversation_add": {"content": f"call has ended"}
     }
-    
     redis_client.publish(f"debug_channel_{agent_id}", json.dumps(message))
+
+    slack_webhook_url = get_feature(agent_id, 'SLACK_WEBHOOK_URL')
+    slack_channel = get_feature(agent_id, 'SLACK_CHANNEL')
+    slack_username = get_feature(agent_id, 'SLACK_USERNAME')
+
+    if all([slack_webhook_url, slack_channel, slack_username]):
+        try:
+            slack_payload = {
+                "text": f":signalwire: :new: New Conversation {share_url}\n\n{summary}",
+                "channel": slack_channel,
+                "username": slack_username,
+                "icon_emoji": ":robot_face:"
+            }
+            
+            response = requests.post(
+                slack_webhook_url,
+                json=slack_payload,
+                headers={'Content-Type': 'application/json', 'User-Agent': 'SignalWire-AI-Agent/1.0'},
+                timeout=5
+            )
+            response.raise_for_status()
+        except Exception as e:
+            app.logger.error(f"Failed to send Slack notification: {str(e)}")
+
     return jsonify({'message': 'Conversation entry created successfully'}), 201
 
 @app.route('/datasphere/search/<uuid:document_id>', methods=['POST'])

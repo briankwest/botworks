@@ -15,11 +15,11 @@ def generate_swml_response(agent_id, request_body):
     outbound = request_body.get('outbound', False)
     
     enable_record_feature = get_feature(agent_id, 'ENABLE_RECORD')
-    if enable_record_feature and enable_record_feature.enabled:
+    if enable_record_feature:
         swml.add_application("main", "answer")
         swml.add_application("main", "record_call", {
             "stereo": True,
-            "format": enable_record_feature.value
+            "format": enable_record_feature
         })  
     
     if outbound:
@@ -85,9 +85,9 @@ def generate_swml_response(agent_id, request_body):
         post_prompt_url = f"https://{auth_user}:{auth_pass}@{request.host}/postprompt/{agent_id}"
         swml.set_aipost_prompt_url({"post_prompt_url": post_prompt_url})
 
-    web_hook_url = f"https://{request.host}/swaig/{agent_id}"
+    web_hook_url = f"https://{request.host}/onboard/swaig/{agent_id}"
     if auth_user and auth_pass:
-        web_hook_url = f"https://{auth_user}:{auth_pass}@{request.host}/swaig/{agent_id}"
+        web_hook_url = f"https://{auth_user}:{auth_pass}@{request.host}/onboard/swaig/{agent_id}"
         swml.add_aiswaigdefaults({"web_hook_url": web_hook_url})
 
     debug_webhook_url = f"https://{request.host}/debugwebhook/{agent_id}"
@@ -170,12 +170,12 @@ def generate_swml_response(agent_id, request_body):
 
     enable_message_feature = get_feature(agent_id, 'ENABLE_MESSAGE')
 
-    if enable_message_feature and enable_message_feature.enabled:
+    if enable_message_feature:
         msg = SignalWireML(version="1.0.0")
 
         msg.add_application("main", "send_sms", {
             "to_number": '%{args.to}',
-            "from_number": enable_message_feature.value,
+            "from_number": enable_message_feature,
             "body": '%{args.message}'
         })
 
@@ -183,7 +183,7 @@ def generate_swml_response(agent_id, request_body):
 
         swml.add_aiswaigfunction({
             "function": "send_message",
-            **({"active": False} if enable_message_inactive and enable_message_inactive.enabled else {}),
+            **({"active": False} if enable_message_inactive else {}),
             "description": "use to send text a message to the user",
             "parameters": {
                 "type": "object",
@@ -276,7 +276,7 @@ def generate_swml_response(agent_id, request_body):
 
     enable_transfer_feature = get_feature(agent_id, 'ENABLE_TRANSFER')
 
-    if enable_transfer_feature and enable_transfer_feature.enabled:
+    if enable_transfer_feature:
         transfer = SignalWireML(version="1.0.0")
 
         transfer.add_application("main", "connect", {
@@ -286,7 +286,7 @@ def generate_swml_response(agent_id, request_body):
 
         transfer_table = get_feature(agent_id, 'TRANSFER_TABLE')
         transfer_hash = {}
-        for pair in transfer_table.value.split('|'):
+        for pair in transfer_table.split('|'):
             key, value = pair.split(':', 1)
             transfer_hash[key] = value
 
@@ -294,7 +294,7 @@ def generate_swml_response(agent_id, request_body):
 
         swml.add_aiswaigfunction({
             "function": "transfer",
-            **({"active": False} if enable_transfer_inactive and enable_transfer_inactive.enabled else {}),
+            **({"active": False} if enable_transfer_inactive else {}),
             "description": "use to transfer to a target",
             "meta_data": {
                 "table": transfer_hash
@@ -330,12 +330,11 @@ def generate_swml_response(agent_id, request_body):
             }
         })
     
-    api_ninjas_key_feature = get_feature(agent_id, 'API_NINJAS_KEY')
-    api_ninjas_key = api_ninjas_key_feature.value if api_ninjas_key_feature and api_ninjas_key_feature.enabled else None
+    api_ninjas_key = get_feature(agent_id, 'API_NINJAS_KEY')
 
     if api_ninjas_key:
         api_ninjas_weather_feature = get_feature(agent_id, 'API_NINJAS_WEATHER')
-        if api_ninjas_weather_feature and api_ninjas_weather_feature.enabled:
+        if api_ninjas_weather_feature:
             swml.add_aiswaigfunction({
                 "function": "get_weather",
                 "description": "latest weather information for any city",
@@ -372,7 +371,7 @@ def generate_swml_response(agent_id, request_body):
             })
 
         api_ninjas_jokes_feature = get_feature(agent_id, 'API_NINJAS_JOKES')
-        if api_ninjas_jokes_feature and api_ninjas_jokes_feature.enabled:
+        if api_ninjas_jokes_feature:
             dj = SignalWireML(version="1.0.0")
             dj.add_application("main", "set", {"dad_joke": '%{array[0].joke}'})
 
@@ -405,7 +404,7 @@ def generate_swml_response(agent_id, request_body):
             })
 
         api_ninjas_trivia_feature = get_feature(agent_id, 'API_NINJAS_TRIVIA')
-        if api_ninjas_trivia_feature and api_ninjas_trivia_feature.enabled:
+        if api_ninjas_trivia_feature:
             swml.add_aiswaigfunction({
                 "function": "get_trivia",
                 "description": "get a trivia question",
@@ -433,7 +432,7 @@ def generate_swml_response(agent_id, request_body):
             })
 
         api_ninjas_facts_feature = get_feature(agent_id, 'API_NINJAS_FACTS')
-        if api_ninjas_facts_feature and api_ninjas_facts_feature.enabled:
+        if api_ninjas_facts_feature:
             swml.add_aiswaigfunction({
                 "function": "get_fact",
                 "description": "provide a random interesting fact",
@@ -453,7 +452,7 @@ def generate_swml_response(agent_id, request_body):
             })
 
         api_ninjas_quotes_feature = get_feature(agent_id, 'API_NINJAS_QUOTES')
-        if api_ninjas_quotes_feature and api_ninjas_quotes_feature.enabled:
+        if api_ninjas_quotes_feature:
             swml.add_aiswaigfunction({
                 "function": "get_quote",
                 "description": "provide a random quote",
@@ -494,7 +493,7 @@ def generate_swml_response(agent_id, request_body):
             })
             
         api_ninjas_cocktails_feature = get_feature(agent_id, 'API_NINJAS_COCKTAILS')
-        if api_ninjas_cocktails_feature and api_ninjas_cocktails_feature.enabled:
+        if api_ninjas_cocktails_feature:
             swml.add_aiswaigfunction({
                 "function": "get_cocktail",
                 "description": "fetch cocktail recipes by name or ingredients",
@@ -526,8 +525,8 @@ def generate_swml_response(agent_id, request_body):
             })
 
     enable_datasphere_feature = get_feature(agent_id, 'ENABLE_DATASPHERE')
-    if enable_datasphere_feature and enable_datasphere_feature.enabled:
-        document_id = enable_datasphere_feature.value
+    if enable_datasphere_feature:
+        document_id = enable_datasphere_feature
 
         space_name = get_signalwire_param_by_agent_id(agent_id, 'SPACE_NAME')
         project_id = get_signalwire_param_by_agent_id(agent_id, 'PROJECT_ID')

@@ -16,13 +16,15 @@ def generate_random_password(length=16):
     return ''.join(random.choice(characters) for i in range(length))
 
 def get_feature(agent_id, feature_name):
+    print(agent_id, feature_name)
     full_url = request.url
     parsed_url = urlparse(full_url)
     path_segments = parsed_url.path.split('/')
     agent_id = path_segments[-1]
 
-    feature = AIFeatures.query.filter_by(agent_id=agent_id, name=feature_name).first()
-    return feature
+    feature = AIFeatures.query.filter_by(agent_id=agent_id, name=feature_name, enabled=True).first()
+
+    return feature.value if feature else None
 
 
 def get_signalwire_param_by_agent_id(agent_id, param_name):
