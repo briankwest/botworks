@@ -935,7 +935,7 @@ def create_debuglog(agent_id):
 @login_required
 @agent_access_required
 def create_conversation_share(agent_id, conversation_id):
-    conversation = AIConversation.query.get_or_404(agent_id, conversation_id)
+    conversation = AIConversation.query.filter_by(id=conversation_id, agent_id=agent_id).first_or_404()
     
     share_uuid = str(uuid4())
 
