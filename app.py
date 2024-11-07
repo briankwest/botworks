@@ -937,6 +937,9 @@ def create_debuglog(agent_id):
 def create_conversation_share(agent_id, conversation_id):
     conversation = AIConversation.query.filter_by(id=conversation_id, agent_id=agent_id).first_or_404()
     
+    existing_share = SharedConversations.query.filter_by(conversation_id=conversation.id).first()
+    if existing_share:
+        return jsonify({'message': 'Conversation already shared', 'uuid': existing_share.uuid}), 200
     share_uuid = str(uuid4())
 
     shared_conversation = SharedConversations(
