@@ -57,7 +57,7 @@ CORS(app, resources={
 # Add API prefix constant
 API_PREFIX = '/api/v1'
 
-socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")
+socketio = SocketIO(app, async_mode='eventlet')
 
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
 
@@ -2807,9 +2807,7 @@ def init_db():
         db.create_all()
         create_admin_user()
 
-def on_starting(server):
-    from app import init_db
-    init_db()
+init_db()
 
 if __name__ == '__main__':
     app.run(threaded=True)
