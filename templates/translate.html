@@ -284,21 +284,18 @@
         caller_id_number: $('#callerIdNumber').val()
       };
 
-      const url = translatorId ? `/translators/${translatorId}` : '/translators';
-      const method = translatorId ? 'PUT' : 'POST';
-
       $.ajax({
-        type: method,
-        url: url,
+        type: 'POST',
+        url: `/translators`,
         contentType: 'application/json',
         data: JSON.stringify(formData),
         headers: {
           'Accept': 'application/json'
         },
         success: function (response) {
+          $('#editTranslatorModal').modal('hide');
           $('#translatorsTable').DataTable().ajax.reload();
-          $('#translatorForm')[0].reset();
-          $('#translatorId').val('');
+          console.log('Translator added successfully');
           showToast('success', translatorId ? 'Translator updated successfully' : 'Translator added successfully');
         },
         error: function (error) {
@@ -360,7 +357,6 @@
           });
 
           $.getJSON('/static/js/filters.json', function (filters) {
-            console.log('Filters loaded:', filters);
             populateDropdowns(filters, '#editFromFilter', data.from_filter);
             populateDropdowns(filters, '#editToFilter', data.to_filter);
           }).fail(function() {
@@ -426,6 +422,38 @@
 
       dropdown.val(selectedValue);
     }
+
+    $('#editTranslatorForm').submit(function (e) {
+      e.preventDefault();
+      const translatorId = $('#editTranslatorId').val();
+      const formData = {
+        from_language: $('#editFromLanguage').val(),
+        to_language: $('#editToLanguage').val(),
+        from_filter: $('#editFromFilter').val(),
+        to_filter: $('#editToFilter').val(),
+        from_voice: $('#editFromVoice').val(),
+        to_voice: $('#editToVoice').val(),
+        caller_id_number: $('#editCallerIdNumber').val()
+      };
+
+      $.ajax({
+        type: 'PUT',
+        url: `/translators/${translatorId}`,
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
+        headers: {
+          'Accept': 'application/json'
+        },
+        success: function (response) {
+          $('#translatorsTable').DataTable().ajax.reload();
+          $('#editTranslatorModal').modal('hide');
+          showToast('success', 'Translator updated successfully');
+        },
+        error: function (error) {
+          showToast('error', 'Error updating translator');
+        }
+      });
+    });
   });
 </script>
 {% endblock %}

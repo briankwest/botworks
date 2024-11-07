@@ -1,6 +1,6 @@
 import eventlet
 eventlet.monkey_patch()
-import os, jwt, base64, json, redis, yaml, requests, logging, threading
+import os, jwt, base64, json, redis, yaml, requests, logging
 import random
 from uuid import uuid4
 import string
