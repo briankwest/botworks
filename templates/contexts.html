@@ -282,8 +282,7 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script>
-  // Initialize functionMap
-  var functionMap = {};
+  var functionMap = [];
 
   $(document).ready(function () {
     window.fetchFunctions = fetchFunctions;
@@ -295,12 +294,10 @@
     let currentContextId = null;
 
     function initializePage() {
-      console.log('Initializing page...');
       $('.steps-section, .add-step-section').hide();
       loadContexts()
         .then(() => {
           if (currentContextId) {
-            console.log('Fetching steps for context ID:', currentContextId);
             fetchSteps(currentContextId);
           }
         })
@@ -309,7 +306,6 @@
     }
 
     function fetchData(url) {
-      console.log('Fetching data from:', url);
       return $.ajax({
         type: 'GET',
         url: url,
@@ -318,25 +314,17 @@
           "Accept": "application/json",
           "Content-Type": "application/json"
         }
-      }).promise().then(response => {
-        console.log('Response:', response);
-        return response;
-      });
+      }).promise().then(response => response);
     }
 
     function populateDropdown(dropdown, data, key, value) {
-      console.log(`Populating dropdown ${dropdown.attr('id')} with data:`, data);
       dropdown.empty();
       if (Array.isArray(data)) {
         data.forEach(item => {
-          console.log(`Adding option: ${item[value]} with value ${item[key]}`);
           dropdown.append(new Option(item[value], item[key]));
         });
       } else if (data && typeof data === 'object') {
-        console.log(`Adding single option: ${data[value]} with value ${data[key]}`);
         dropdown.append(new Option(data[value], data[key]));
-      } else {
-        console.error('Expected an array or object but got:', data);
       }
       dropdown.trigger('change');
     }
@@ -396,7 +384,6 @@
 
     function fetchSteps(contextId) {
       if (!contextId) {
-        console.warn('No context ID provided for fetching steps.');
         return;
       }
 
@@ -412,17 +399,13 @@
           "type": "GET",
           "dataSrc": function (json) {
             if (!json || json.length === 0) {
-              console.warn('No steps found for the context.');
-              // Clear the Valid Steps multi-selects if no steps are available
-              $('#validSteps, #editValidSteps').empty().append(new Option("-- None --", ""));
+              $('#validSteps, #editValidSteps').empty().append(new Option("", ""));
               return [];
             }
-            // Extract steps with id and name
             const steps = json.map(item => ({
               id: item.step.id,
               name: item.step.name
             }));
-            // Populate the Valid Steps and Edit Valid Steps dropdowns
             populateDropdown($('#validSteps'), steps, 'id', 'name');
             populateDropdown($('#editValidSteps'), steps, 'id', 'name');
             populateDropdown($('#functions'), functionMap, 'id', 'name');
@@ -453,6 +436,7 @@
           {
             "data": "step.functions",
             "render": function (data) {
+              console.log('Rendering functions:', data);
               return renderFunctions(data);
             }
           },
@@ -479,7 +463,15 @@
 
     function renderFunctions(data) {
       if (Array.isArray(data)) {
-        return data.map(funcId => functionMap[funcId] || 'Unknown Function').join(', ');
+        let names = data.map(funcId => {
+          for (let func of functionMap) {
+            if (func.id === Number(funcId)) {
+              return func.name;
+            }
+          }
+          return 'Unknown Function';
+        });
+        return names.join(', ');
       }
       return 'No Functions';
     }
@@ -599,6 +591,7 @@
           $('#validSteps, #validContexts, #functions').val(null).trigger('change');
           showToast('success', 'AI Step created successfully');
           populateContextDropdown();
+          fetchFunctions();
         },
         error: handleError('Error creating AI Step')
       });
@@ -815,14 +808,10 @@
           });
       }
 
-      console.log('Fetching functions...');
       fetchData(`/api/v1/agents/${agent_id}/functions`)
         .then(data => {
-          console.log('Functions data:', data);
-          data.forEach(func => {
-            functionMap[func.id] = func.name;
-          });
-          populateDropdown(functionsDropdowns, data, 'id', 'name');
+          functionMap = data;
+          populateDropdown(functionsDropdowns, functionMap, 'id', 'name');
         })
         .catch(handleError('Error fetching functions'));
     }
@@ -849,14 +838,10 @@
     }
 
     function fetchFunctions() {
-      console.log('Fetching functions...');
       fetchData(`/api/v1/agents/${agent_id}/functions`)
         .then(data => {
-          console.log('Functions data:', data);
-          data.forEach(func => {
-            functionMap[func.id] = func.name;
-          });
-          populateDropdown(functionsDropdowns, data, 'id', 'name');
+          functionMap = data;
+          populateDropdown(functionsDropdowns, functionMap, 'id', 'name');
         })
         .catch(handleError('Error fetching functions'));
     }
