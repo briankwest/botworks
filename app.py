@@ -680,7 +680,7 @@ def delete_datasphere(datasphere_id):
 def livedebug_page(agent_id):
     channel = f'debug_channel_{agent_id}'
 
-    return render_template('livedebug.html', channel=channel)
+    return render_template('livedebug.html', channel=channel, agent_id=agent_id)
 
 @socketio.on('connect')
 def on_connect():
