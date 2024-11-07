@@ -1,6 +1,6 @@
 import eventlet
 eventlet.monkey_patch()
-import os, jwt, base64, json, redis, yaml, requests, logging
+import os, jwt, base64, json, redis, yaml, requests, logging, threading
 import random
 from uuid import uuid4
 import string
@@ -2807,7 +2807,10 @@ def init_db():
         db.create_all()
         create_admin_user()
 
-init_db()
+def on_starting(server):
+    from app import init_db
+    init_db()
 
 if __name__ == '__main__':
+    app.run(threaded=True)
     socketio.run(app, host='0.0.0.0', port=5000, debug=app.config['DEBUG'])
