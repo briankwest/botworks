@@ -126,16 +126,19 @@
                 <div class="form-group">
                   <label for="validSteps">Valid Steps</label><br>
                   <select class="form-control" id="validSteps" name="valid_steps" multiple>
+                    <option value="">-- None --</option>
                   </select>
                 </div>
                 <div class="form-group">
                   <label for="validContexts">Valid Contexts</label><br>
                   <select class="form-control" id="validContexts" name="valid_contexts" multiple>
+                    <option value="">-- None --</option>
                   </select>
                 </div>
                 <div class="form-group">
                   <label for="functions">Functions</label><br>
                   <select class="form-control" id="functions" name="functions" multiple>
+                    <option value="">-- None --</option>
                   </select>
                 </div>
                 <div class="custom-control custom-switch">
@@ -222,16 +225,19 @@
           <div class="form-group">
             <label for="editValidSteps">Valid Steps</label><br>
             <select class="form-control" id="editValidSteps" name="valid_steps" multiple>
+              <option value="">-- None --</option>
             </select>
           </div>
           <div class="form-group">
             <label for="editValidContexts">Valid Contexts</label><br>
             <select class="form-control" id="editValidContexts" name="valid_contexts" multiple>
+              <option value="">-- None --</option>
             </select>
           </div>
           <div class="form-group">
             <label for="editFunctions">Functions</label><br>
             <select class="form-control" id="editFunctions" name="functions" multiple>
+              <option value="">-- None --</option>
             </select>
           </div>
           <div class="custom-control custom-switch">
@@ -280,7 +286,6 @@
   var functionMap = {};
 
   $(document).ready(function () {
-    // Expose functions to the global scope for debugging
     window.fetchFunctions = fetchFunctions;
     window.initializePage = initializePage;
 
@@ -320,10 +325,15 @@
     }
 
     function populateDropdown(dropdown, data, key, value) {
+      console.log(`Populating dropdown ${dropdown.attr('id')} with data:`, data);
       dropdown.empty();
       if (Array.isArray(data)) {
-        data.forEach(item => dropdown.append(new Option(item[value], item[key])));
+        data.forEach(item => {
+          console.log(`Adding option: ${item[value]} with value ${item[key]}`);
+          dropdown.append(new Option(item[value], item[key]));
+        });
       } else if (data && typeof data === 'object') {
+        console.log(`Adding single option: ${data[value]} with value ${data[key]}`);
         dropdown.append(new Option(data[value], data[key]));
       } else {
         console.error('Expected an array or object but got:', data);
@@ -403,8 +413,19 @@
           "dataSrc": function (json) {
             if (!json || json.length === 0) {
               console.warn('No steps found for the context.');
+              // Clear the Valid Steps multi-selects if no steps are available
+              $('#validSteps, #editValidSteps').empty().append(new Option("-- None --", ""));
               return [];
             }
+            // Extract steps with id and name
+            const steps = json.map(item => ({
+              id: item.step.id,
+              name: item.step.name
+            }));
+            // Populate the Valid Steps and Edit Valid Steps dropdowns
+            populateDropdown($('#validSteps'), steps, 'id', 'name');
+            populateDropdown($('#editValidSteps'), steps, 'id', 'name');
+            populateDropdown($('#functions'), functionMap, 'id', 'name');
             return json;
           },
           "headers": {
@@ -555,7 +576,7 @@
     $('#addStepForm').submit(function (e) {
       e.preventDefault();
       const formData = {
-        agent_id: agent_id, // Ensure agent_id is included
+        agent_id: agent_id,
         context_id: $('#stepContextId').val(),
         name: sanitizeInput($('#stepName').val()),
         text: $('#stepText').val(),
@@ -798,7 +819,6 @@
       fetchData(`/api/v1/agents/${agent_id}/functions`)
         .then(data => {
           console.log('Functions data:', data);
-          // Update functionMap
           data.forEach(func => {
             functionMap[func.id] = func.name;
           });
@@ -833,7 +853,6 @@
       fetchData(`/api/v1/agents/${agent_id}/functions`)
         .then(data => {
           console.log('Functions data:', data);
-          // Update functionMap
           data.forEach(func => {
             functionMap[func.id] = func.name;
           });
