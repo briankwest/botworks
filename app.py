@@ -2817,7 +2817,7 @@ def get_includes_post(agent_id):
 @login_required
 @agent_access_required
 def includes_page(agent_id):
-    return render_template('includes.html', user=current_user)
+    return render_template('includes.html', user=current_user, agent_id=agent_id)
 
 def init_db():
     with app.app_context():
