@@ -2620,7 +2620,21 @@ def create_function(agent_id):
     )
     db.session.add(new_function)
     db.session.commit()
-    return jsonify({'message': 'Function entry created successfully'}), 201
+    return jsonify({
+        'message': 'Function entry created successfully',
+        'function': {
+            'id': new_function.id,
+            'name': new_function.name,
+            'purpose': new_function.purpose,
+            'web_hook_url': new_function.web_hook_url,
+            'wait_file': new_function.wait_file,
+            'wait_file_loops': new_function.wait_file_loops,
+            'fillers': new_function.fillers,
+            'meta_data': new_function.meta_data,
+            'meta_data_token': new_function.meta_data_token,
+            'active': new_function.active
+        }
+    }), 201
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/functions/<int:function_id>', methods=['PATCH'])
 @login_required
