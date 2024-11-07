@@ -178,6 +178,7 @@
             <label for="editContextName">Context Name</label>
             <input type="text" class="form-control" id="editContextName" name="context_name" required>
           </div>
+          <input type="hidden" id="editAgentId" name="agent_id">
           <input type="hidden" id="editContextId" name="context_id">
           <button type="submit" class="btn btn-sm mr-2 btn-primary">
             <i class="fas fa-save"></i> Save changes
@@ -274,23 +275,32 @@
 <script type="text/javascript" src="https://unpkg.com/@signalwire/js@^1"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
-
 <script>
+  // Initialize functionMap
+  var functionMap = {};
+
   $(document).ready(function () {
+    // Expose functions to the global scope for debugging
+    window.fetchFunctions = fetchFunctions;
+    window.initializePage = initializePage;
+
     const contextDropdowns = $('#stepContextId, #editStepContextId, #validContexts, #editValidContexts');
     const stepsDropdowns = $('#validSteps, #editValidSteps');
     const functionsDropdowns = $('#functions, #editFunctions');
     let currentContextId = null;
 
     function initializePage() {
+      console.log('Initializing page...');
       $('.steps-section, .add-step-section').hide();
       loadContexts()
         .then(() => {
           if (currentContextId) {
+            console.log('Fetching steps for context ID:', currentContextId);
             fetchSteps(currentContextId);
           }
         })
         .catch(handleError('Error initializing page'));
+      fetchFunctions();
     }
 
     function fetchData(url) {
@@ -325,7 +335,7 @@
       if ($.fn.DataTable.isDataTable('#contextTable')) {
         $('#contextTable').DataTable().destroy();
       }
-      
+
       return new Promise((resolve, reject) => {
         $('#contextTable').DataTable({
           "responsive": true,
@@ -348,17 +358,17 @@
               "className": "text-right",
               "render": function (data, type, row) {
                 return `
-                  <button class="btn btn-sm btn-primary edit-context mr-2" data-id="${row.id}" data-agent-id="${row.agent_id}">
+                  <button class="btn btn-sm btn-primary edit-context mr-2" data-id="${row.id}">
                     <i class="fas fa-edit"></i> Edit
                   </button>
-                  <button class="btn btn-sm btn-danger delete-context" data-id="${row.id}" data-agent-id="${row.agent_id}">
+                  <button class="btn btn-sm btn-danger delete-context" data-id="${row.id}">
                     <i class="fas fa-trash-alt"></i> Delete
                   </button>
                 `;
               }
             }
           ],
-          "initComplete": function(settings, json) {
+          "initComplete": function (settings, json) {
             if (Array.isArray(json) && json.length > 0) {
               $('.steps-section, .add-step-section').show();
               populateDropdown(contextDropdowns, json, 'id', 'context_name');
@@ -367,7 +377,7 @@
             }
             resolve();
           },
-          "error": function(xhr, error, thrown) {
+          "error": function (xhr, error, thrown) {
             reject(error);
           }
         });
@@ -393,7 +403,6 @@
           "dataSrc": function (json) {
             if (!json || json.length === 0) {
               console.warn('No steps found for the context.');
-              // Optionally update the UI to indicate no steps are available
               return [];
             }
             return json;
@@ -432,7 +441,8 @@
             "render": function (data, type, row) {
               return createActionButtons(row.step.id);
             }
-          }
+          },
+          { "data": "step.context_id", "visible": false }
         ]
       });
     }
@@ -545,7 +555,7 @@
     $('#addStepForm').submit(function (e) {
       e.preventDefault();
       const formData = {
-        agent_id: $('#agentId').val(),
+        agent_id: agent_id, // Ensure agent_id is included
         context_id: $('#stepContextId').val(),
         name: sanitizeInput($('#stepName').val()),
         text: $('#stepText').val(),
@@ -575,28 +585,32 @@
 
     $('#contextTable').on('click', '.edit-context', function () {
       const contextId = $(this).data('id');
-      const agent_id = $(this).data('agent-id');
 
-      $.ajax({
-        type: 'GET',
-        url: `/api/v1/agents/${agent_id}/context/${contextId}`,
-        success: function (data) {
-          $('#editContextId').val(data.id);
-          $('#editContextName').val(data.context_name);
-          $('#editContextModal').modal('show');
-        },
-        error: handleError('Error fetching context details')
-      });
+      if (contextId) {
+        $.ajax({
+          type: 'GET',
+          url: `/api/v1/agents/${agent_id}/context/${contextId}`,
+          success: function (data) {
+            $('#editContextId').val(data.id);
+            $('#editContextName').val(data.context_name);
+            $('#editContextModal').modal('show');
+          },
+          error: handleError('Error fetching context details')
+        });
+      } else {
+        console.error('Context ID is missing');
+      }
     });
 
     $('#editContextForm').submit(function (e) {
       e.preventDefault();
       const contextId = $('#editContextId').val();
-      const agent_id = $('#editAgentId').val();
       const formData = {
         context_name: sanitizeInput($('#editContextName').val())
       };
-
+      console.log('formData', formData);
+      console.log('contextId', contextId);
+      console.log('agent_id', agent_id);
       $.ajax({
         type: 'PUT',
         url: `/api/v1/agents/${agent_id}/context/${contextId}`,
@@ -613,7 +627,7 @@
 
     $('#contextTable').on('click', '.delete-context', function () {
       const contextId = $(this).data('id');
-      const agent_id = $(this).data('agent-id');
+
       Swal.fire({
         title: 'Are you sure?',
         text: "You won't be able to revert this!",
@@ -642,10 +656,9 @@
 
     $('#stepsTable').on('click', '.edit-step', function () {
       const stepId = $(this).data('id');
+      const currentContextId = $('#stepContextId').val();
+
       if (stepId) {
-        console.log('Editing step with ID:', stepId);
-        const agent_id = $(this).data('agent-id');
-        const currentContextId = $('#stepContextId').val();
         $.ajax({
           type: 'GET',
           url: `/api/v1/agents/${agent_id}/context/${currentContextId}/steps/${stepId}`,
@@ -664,6 +677,8 @@
           },
           error: handleError('Error fetching step details')
         });
+      } else {
+        console.error('Step ID is missing');
       }
     });
 
@@ -672,30 +687,34 @@
       const stepId = $('#editStepId').val();
       const selectedContextId = $('#editStepContextId').val();
 
-      const formData = {
-        context_id: selectedContextId,
-        name: sanitizeInput($('#editStepName').val()),
-        text: $('#editStepText').val(),
-        step_criteria: $('#editStepCriteria').val() || null,
-        valid_steps: $('#editValidSteps').val() || null,
-        valid_contexts: $('#editValidContexts').val() || null,
-        functions: $('#editFunctions').val() || null,
-        end: $('#editEnd').is(':checked'),
-        skip_user_turn: $('#editSkipUserTurn').is(':checked')
-      };
+      if (stepId) {
+        const formData = {
+          context_id: selectedContextId,
+          name: sanitizeInput($('#editStepName').val()),
+          text: $('#editStepText').val(),
+          step_criteria: $('#editStepCriteria').val() || null,
+          valid_steps: $('#editValidSteps').val() || null,
+          valid_contexts: $('#editValidContexts').val() || null,
+          functions: $('#editFunctions').val() || null,
+          end: $('#editEnd').is(':checked'),
+          skip_user_turn: $('#editSkipUserTurn').is(':checked')
+        };
 
-      $.ajax({
-        type: 'PUT',
-        url: `/api/v1/agents/${agent_id}/context/${currentContextId}/steps/${stepId}`,
-        contentType: 'application/json',
-        data: JSON.stringify(formData),
-        success: function (response) {
-          $('#stepsTable').DataTable().ajax.reload();
-          $('#editStepModal').modal('hide');
-          showToast('success', 'AI Step updated successfully');
-        },
-        error: handleError('Error updating AI Step')
-      });
+        $.ajax({
+          type: 'PUT',
+          url: `/api/v1/agents/${agent_id}/context/${currentContextId}/steps/${stepId}`,
+          contentType: 'application/json',
+          data: JSON.stringify(formData),
+          success: function (response) {
+            $('#stepsTable').DataTable().ajax.reload();
+            $('#editStepModal').modal('hide');
+            showToast('success', 'AI Step updated successfully');
+          },
+          error: handleError('Error updating AI Step')
+        });
+      } else {
+        console.error('Step ID is missing');
+      }
     });
 
     $('#stepsTable').on('click', '.delete-step', function () {
@@ -775,10 +794,17 @@
           });
       }
 
+      console.log('Fetching functions...');
       fetchData(`/api/v1/agents/${agent_id}/functions`)
-          .then(data => {
-            populateDropdown(functionsDropdowns, data, 'id', 'name');
+        .then(data => {
+          console.log('Functions data:', data);
+          // Update functionMap
+          data.forEach(func => {
+            functionMap[func.id] = func.name;
           });
+          populateDropdown(functionsDropdowns, data, 'id', 'name');
+        })
+        .catch(handleError('Error fetching functions'));
     }
 
     function populateContextDropdown() {
@@ -800,6 +826,20 @@
           }
         })
         .catch(handleError('Error populating edit context dropdown'));
+    }
+
+    function fetchFunctions() {
+      console.log('Fetching functions...');
+      fetchData(`/api/v1/agents/${agent_id}/functions`)
+        .then(data => {
+          console.log('Functions data:', data);
+          // Update functionMap
+          data.forEach(func => {
+            functionMap[func.id] = func.name;
+          });
+          populateDropdown(functionsDropdowns, data, 'id', 'name');
+        })
+        .catch(handleError('Error fetching functions'));
     }
 
     initializePage();
