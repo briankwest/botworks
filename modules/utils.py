@@ -16,7 +16,6 @@ def generate_random_password(length=16):
     return ''.join(random.choice(characters) for i in range(length))
 
 def get_feature(agent_id, feature_name):
-    print(agent_id, feature_name)
     full_url = request.url
     parsed_url = urlparse(full_url)
     path_segments = parsed_url.path.split('/')
