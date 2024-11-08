@@ -143,6 +143,12 @@
           </a>
         </li>
         <li class="nav-item">
+          <a href="{{ url_for('domainapps') }}" class="nav-link {{ 'active' if request.endpoint == 'domainapps' else '' }}">
+            <i class="nav-icon fas fa-sitemap"></i>
+            <p>Domain Apps</p>
+          </a>
+        </li>
+        <li class="nav-item">
           <a href="{{ url_for('translate') }}" class="nav-link {{ 'active' if request.endpoint == 'translate' else '' }}">
             <i class="nav-icon fas fa-language"></i>
             <p>Translate</p>

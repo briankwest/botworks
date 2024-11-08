@@ -1088,6 +1088,256 @@ def transcribe():
     else:
         return render_template('transcribe.html', user=current_user)
 
+@app.route('/domainapps', methods=['GET'])
+@login_required
+def domainapps():
+    return render_template('domainapps.html', user=current_user)
+
+@app.route(f'{API_PREFIX}/domainapp', methods=['GET'])
+@login_required
+def list_domain_apps():
+    space_name = get_signalwire_param('SPACE_NAME')
+    project_id = get_signalwire_param('PROJECT_ID')
+    auth_token = get_signalwire_param('AUTH_TOKEN')
+    
+    encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
+    url = f'https://{space_name}/api/relay/rest/domain_applications'
+    authorization = f'Basic {encoded_credentials}'
+
+    headers = {
+        'Authorization': authorization,
+        'Accept': 'application/json'
+    }
+
+    params = {}
+    filter_name = request.args.get('filter_name')
+    if filter_name:
+        params['filter_name'] = filter_name
+
+    response = requests.get(url, headers=headers, params=params)
+
+    if response.status_code == 200:
+        return jsonify(response.json()), 200
+    elif response.status_code == 401:
+        return jsonify({'error': 'SignalWire credentials missing'}), 401
+    else:
+        return jsonify({'error': 'Failed to retrieve domain applications'}), response.status_code
+    
+@app.route(f'{API_PREFIX}/domainapp/<uuid:domain_app_id>', methods=['GET'])
+@login_required
+def get_domain_app(domain_app_id):
+    space_name = get_signalwire_param('SPACE_NAME')
+    project_id = get_signalwire_param('PROJECT_ID')
+    auth_token = get_signalwire_param('AUTH_TOKEN')
+    
+    encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
+    url = f'https://{space_name}/api/relay/rest/domain_applications/{domain_app_id}'
+    
+    headers = {
+        'Authorization': f'Basic {encoded_credentials}',
+        'Accept': 'application/json'
+    }
+
+    response = requests.get(url, headers=headers)
+
+    if response.status_code == 200:
+        data = response.json()
+        # Ensure we have all expected fields, with defaults if missing
+        domain_app = {
+            'type': data.get('type'),
+            'id': data.get('id'),
+            'name': data.get('name'),
+            'domain': data.get('domain'),
+            'identifier': data.get('identifier'),
+            'ip_auth_enabled': data.get('ip_auth_enabled', False),
+            'ip_auth': data.get('ip_auth', []),
+            'call_handler': data.get('call_handler'),
+            'calling_handler_resource_id': data.get('calling_handler_resource_id'),
+            'call_request_url': data.get('call_request_url'),
+            'call_request_method': data.get('call_request_method', 'POST'),
+            'call_fallback_url': data.get('call_fallback_url'),
+            'call_fallback_method': data.get('call_fallback_method', 'POST'),
+            'call_status_callback_url': data.get('call_status_callback_url'),
+            'call_status_callback_method': data.get('call_status_callback_method', 'POST'),
+            'call_laml_application_id': data.get('call_laml_application_id'),
+            'call_video_room_id': data.get('call_video_room_id', ''),
+            'call_relay_script_url': data.get('call_relay_script_url'),
+            'call_relay_context': data.get('call_relay_context', ''),
+            'call_relay_context_status_callback_url': data.get('call_relay_context_status_callback_url', ''),
+            'call_relay_topic': data.get('call_relay_topic', ''),
+            'call_relay_topic_status_callback_url': data.get('call_relay_topic_status_callback_url', ''),
+            'encryption': data.get('encryption', 'optional'),
+            'codecs': data.get('codecs', ['PCMU', 'PCMA']),
+            'ciphers': data.get('ciphers', [
+                'AEAD_AES_256_GCM_8',
+                'AES_256_CM_HMAC_SHA1_80',
+                'AES_CM_128_HMAC_SHA1_80',
+                'AES_256_CM_HMAC_SHA1_32',
+                'AES_CM_128_HMAC_SHA1_32'
+            ])
+        }
+        return jsonify(domain_app), 200
+    elif response.status_code == 401:
+        return jsonify({'error': 'SignalWire credentials missing'}), 401
+    elif response.status_code == 404:
+        return jsonify({'error': 'Domain application not found'}), 404
+    else:
+        return jsonify({'error': 'Failed to retrieve domain application'}), response.status_code
+
+@app.route(f'{API_PREFIX}/domainapp', methods=['POST'])
+@login_required
+def create_domain_app():
+    space_name = get_signalwire_param('SPACE_NAME')
+    project_id = get_signalwire_param('PROJECT_ID')
+    auth_token = get_signalwire_param('AUTH_TOKEN')
+    
+    encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
+    url = f'https://{space_name}/api/relay/rest/domain_applications'
+    
+    headers = {
+        'Authorization': f'Basic {encoded_credentials}',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    }
+
+    data = request.get_json()
+
+    payload = {
+        'name': data.get('name'),
+        'identifier': data.get('identifier'),
+        'ip_auth_enabled': data.get('ip_auth_enabled', False),
+        'ip_auth': data.get('ip_auth', []),
+        'call_handler': data.get('call_handler'),
+        'call_relay_context_status_callback_url': None
+    }
+    # Optional fields - only add if provided
+    optional_fields = [
+        'call_request_url',
+        'call_request_method',
+        'call_fallback_url',
+        'call_fallback_method',
+        'call_status_callback_url',
+        'call_status_callback_method',
+        'call_relay_context',
+        'call_relay_context_status_callback_url',
+        'call_relay_application',
+        'call_relay_script_url',
+        'call_laml_application_id',
+        'call_video_room_id',
+        'call_dialogflow_agent_id',
+        'call_ai_agent_id',
+        'call_flow_id',
+        'call_flow_version',
+        'encryption',
+        'codecs',
+        'ciphers'
+    ]
+
+    for field in optional_fields:
+        if field in data:
+            payload[field] = data[field]
+
+    response = requests.post(url, headers=headers, json=payload)
+
+    if response.status_code == 201:
+        return jsonify(response.json()), 201
+    elif response.status_code == 401:
+        return jsonify({'error': 'SignalWire credentials missing'}), 401
+    elif response.status_code == 400:
+        return jsonify({'error': 'Invalid request parameters'}), 400
+    else:
+        return jsonify({'error': 'Failed to create domain application'}), response.status_code
+
+@app.route(f'{API_PREFIX}/domainapp/<uuid:domain_app_id>', methods=['DELETE'])
+@login_required
+def delete_domain_app(domain_app_id):
+    space_name = get_signalwire_param('SPACE_NAME')
+    project_id = get_signalwire_param('PROJECT_ID')
+    auth_token = get_signalwire_param('AUTH_TOKEN')
+    
+    encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
+    url = f'https://briankwest.signalwire.com/api/relay/rest/domain_applications/{domain_app_id}'
+    
+    headers = {
+        'Authorization': f'Basic {encoded_credentials}',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    }
+
+    response = requests.delete(url, headers=headers)
+
+    if response.status_code == 204:
+        return jsonify({'message': 'Domain app deleted successfully'}), 204
+    elif response.status_code == 401:
+        return jsonify({'error': 'SignalWire credentials missing'}), 401
+    elif response.status_code == 404:
+        return jsonify({'error': 'Domain app not found'}), 404
+    else:
+        return jsonify({'error': 'Failed to delete domain app'}), response.status_code
+
+@app.route(f'{API_PREFIX}/domainapp/<uuid:domain_app_id>', methods=['PUT'])
+@login_required
+def update_domain_app(domain_app_id):
+    space_name = get_signalwire_param('SPACE_NAME')
+    project_id = get_signalwire_param('PROJECT_ID')
+    auth_token = get_signalwire_param('AUTH_TOKEN')
+    
+    encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
+    url = f'https://{space_name}/api/relay/rest/domain_applications/{domain_app_id}'
+    
+    headers = {
+        'Authorization': f'Basic {encoded_credentials}',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    }
+
+    data = request.get_json()
+    payload = {}
+
+    # All possible fields that can be updated
+    updateable_fields = [
+        'name',
+        'identifier',
+        'ip_auth_enabled',
+        'ip_auth',
+        'call_handler',
+        'call_request_url',
+        'call_request_method',
+        'call_fallback_url',
+        'call_fallback_method',
+        'call_status_callback_url',
+        'call_status_callback_method',
+        'call_relay_context',
+        'call_relay_context_status_callback_url',
+        'call_relay_application',
+        'call_relay_script_url',
+        'call_laml_application_id',
+        'call_video_room_id',
+        'call_dialogflow_agent_id',
+        'call_ai_agent_id',
+        'call_flow_id',
+        'call_flow_version',
+        'encryption',
+        'codecs',
+        'ciphers'
+    ]
+    # Only include fields that are present in the request
+    for field in updateable_fields:
+        if field in data:
+            payload[field] = data[field]
+
+    response = requests.put(url, headers=headers, json=payload)
+    if response.status_code == 200:
+        return jsonify(response.json()), 200
+    elif response.status_code == 401:
+        return jsonify({'error': 'SignalWire credentials missing'}), 401
+    elif response.status_code == 404:
+        return jsonify({'error': 'Domain application not found'}), 404
+    elif response.status_code == 400:
+        return jsonify({'error': 'Invalid request parameters'}), 400
+    else:
+        return jsonify({'error': 'Failed to update domain application'}), response.status_code
+
 @app.route('/phone_numbers', methods=['GET'])
 @login_required
 def list_phone_numbers():
