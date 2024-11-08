@@ -1,0 +1,646 @@
+{% extends 'base.html' %}
+
+{% block title %}Domain Apps{% endblock %}
+
+{% block content %}
+{% include 'navbar.html' %}
+{% include 'sidebar.html' %}
+
+<div class="content-wrapper">
+  <section class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-12">
+          <h1 class="m-0">Domain Apps</h1>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="content">
+    <div class="container-fluid">
+      <!-- Domain Apps List -->
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header bg-primary">
+              <h3 class="card-title">Domain Apps List</h3>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-sm-12 col-md-6">
+                  <div class="dataTables_length" id="domainAppsTable_length"></div>
+                </div>
+                <div class="col-sm-12 col-md-6">
+                  <div id="domainAppsTable_filter" class="dataTables_filter"></div>
+                </div>
+              </div>
+              <div class="table-responsive">
+                <table id="domainAppsTable" class="table table-striped w-100">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Name</th>
+                      <th>Domain</th>
+                      <th>Identifier</th>
+                      <th>Call Handler</th>
+                      <th>Encryption</th>
+                      <th>IP Auth</th>
+                      <th class="text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Create Domain App Form -->
+      <div class="row mt-3">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header bg-success">
+              <h3 class="card-title">Create Domain App</h3>
+            </div>
+            <div class="card-body">
+              <form id="createDomainAppForm">
+                <div class="form-group">
+                  <label for="AppName">App Name</label>
+                  <input type="text" class="form-control" id="AppName" name="name" required>
+                </div>
+                <div class="form-group">
+                  <label for="Identifier">Identifier</label>
+                  <input type="text" class="form-control" id="Identifier" name="identifier" pattern="[a-zA-Z0-9\-]+"
+                    required>
+                </div>
+                <div class="form-group">
+                  <label for="ipAuthEnabled">IP Authentication</label>
+                  <div class="custom-control custom-switch">
+                    <input type="checkbox" class="custom-control-input" id="IpAuthEnabled" name="ip_auth_enabled">
+                    <label class="custom-control-label" for="IpAuthEnabled">Enable IP Authentication</label>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="IpAuth">IP Addresses (one per line)</label>
+                  <textarea class="form-control" id="IpAuth" name="ip_auth" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                  <label for="CallHandler">Call Handler</label>
+                  <select class="form-control" id="CallHandler" name="call_handler" required>
+                    <option value="relay_context">Relay Context</option>
+                    <option value="relay_application">Relay Application</option>
+                    <option value="laml_webhooks">LaML Webhooks</option>
+                    <option value="laml_application">LaML Application</option>
+                    <option value="video_room">Video Room</option>
+                    <option value="relay_script">SWML Script</option>
+                    <option value="dialogflow">Dialogflow</option>
+                    <option value="ai_agent">AI Agent</option>
+                    <option value="call_flow">Call Flow</option>
+                  </select>
+                </div>
+                <!-- Conditional fields based on call_handler -->
+                <div id="conditionalFields"></div>
+                <div class="form-group">
+                  <label for="Encryption">Encryption</label>
+                  <select class="form-control" id="Encryption" name="encryption" required>
+                    <option value="optional">Optional</option>
+                    <option value="required">Required</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="Codecs">Codecs</label>
+                  <select class="form-control" id="Codecs" name="codecs" multiple required>
+                    <option value="OPUS">OPUS</option>
+                    <option value="G722">G722</option>
+                    <option value="PCMU">PCMU</option>
+                    <option value="PCMA">PCMA</option>
+                    <option value="G729">G729</option>
+                    <option value="VP8">VP8</option>
+                    <option value="H264">H264</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="Ciphers">Ciphers</label>
+                  <select class="form-control" id="Ciphers" name="ciphers" multiple required>
+                    <option value="AEAD_AES_256_GCM_8">AEAD_AES_256_GCM_8</option>
+                    <option value="AES_256_CM_HMAC_SHA1_80">AES_256_CM_HMAC_SHA1_80</option>
+                    <option value="AES_CM_128_HMAC_SHA1_80">AES_CM_128_HMAC_SHA1_80</option>
+                    <option value="AES_256_CM_HMAC_SHA1_32">AES_256_CM_HMAC_SHA1_32</option>
+                    <option value="AES_CM_128_HMAC_SHA1_32">AES_CM_128_HMAC_SHA1_32</option>
+                  </select>
+                </div>
+                <button type="submit" class="btn btn-success">Create Domain App</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editDomainAppModal" tabindex="-1" role="dialog" aria-labelledby="editDomainAppModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editDomainAppModalLabel">Edit Domain App</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="editDomainAppForm">
+          <input type="hidden" id="editAppId" name="id">
+          <div class="form-group">
+            <label for="editAppName">App Name</label>
+            <input type="text" class="form-control" id="editAppName" name="name" required>
+          </div>
+          <div class="form-group">
+            <label for="editIdentifier">Identifier</label>
+            <input type="text" class="form-control" id="editIdentifier" name="identifier" pattern="[a-zA-Z0-9\-]+"
+              required>
+          </div>
+          <div class="form-group">
+            <label for="editIpAuthEnabled">IP Authentication</label>
+            <div class="custom-control custom-switch">
+              <input type="checkbox" class="custom-control-input" id="editIpAuthEnabled" name="ip_auth_enabled">
+              <label class="custom-control-label" for="editIpAuthEnabled">Enable IP Authentication</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="editIpAuth">IP Addresses (one per line)</label>
+            <textarea class="form-control" id="editIpAuth" name="ip_auth" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="editCallHandler">Call Handler</label>
+            <select class="form-control" id="editCallHandler" name="call_handler" required>
+              <option value="relay_context">Relay Context</option>
+              <option value="relay_application">Relay Application</option>
+              <option value="laml_webhooks">LaML Webhooks</option>
+              <option value="laml_application">LaML Application</option>
+              <option value="video_room">Video Room</option>
+              <option value="relay_script">SWML Script</option>
+              <option value="dialogflow">Dialogflow</option>
+              <option value="ai_agent">AI Agent</option>
+              <option value="call_flow">Call Flow</option>
+            </select>
+          </div>
+          <!-- Conditional fields based on call_handler -->
+          <div id="editConditionalFields"></div>
+          <div class="form-group">
+            <label for="editEncryption">Encryption</label>
+            <select class="form-control" id="editEncryption" name="encryption" required>
+              <option value="optional">Optional</option>
+              <option value="required">Required</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="editCodecs">Codecs</label>
+            <select class="form-control" id="editCodecs" name="codecs" multiple required>
+              <option value="OPUS">OPUS</option>
+              <option value="G722">G722</option>
+              <option value="PCMU">PCMU</option>
+              <option value="PCMA">PCMA</option>
+              <option value="G729">G729</option>
+              <option value="VP8">VP8</option>
+              <option value="H264">H264</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="editCiphers">Ciphers</label>
+            <select class="form-control" id="editCiphers" name="ciphers" multiple required>
+              <option value="AEAD_AES_256_GCM_8">AEAD_AES_256_GCM_8</option>
+              <option value="AES_256_CM_HMAC_SHA1_80">AES_256_CM_HMAC_SHA1_80</option>
+              <option value="AES_CM_128_HMAC_SHA1_80">AES_CM_128_HMAC_SHA1_80</option>
+              <option value="AES_256_CM_HMAC_SHA1_32">AES_256_CM_HMAC_SHA1_32</option>
+              <option value="AES_CM_128_HMAC_SHA1_32">AES_CM_128_HMAC_SHA1_32</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">Update Domain App</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% include 'footer.html' %}
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+  $(document).ready(function () {
+    // Initialize DataTable
+    const table = $('#domainAppsTable').DataTable({
+      "responsive": true,
+      "autoWidth": true,
+      "processing": true,
+      "serverSide": false,
+      "ajax": {
+        "url": "/api/v1/domainapp",
+        "dataSrc": "data",
+        "headers": {
+          "Accept": "application/json"
+        }
+      },
+      "columns": [
+        { "data": "id" },
+        { "data": "name" },
+        { "data": "domain" },
+        { "data": "identifier" },
+        { "data": "call_handler" },
+        { "data": "encryption" },
+        {
+          "data": "ip_auth_enabled",
+          "render": function (data, type, row) {
+            return data ? 'Enabled' : 'Disabled';
+          }
+        },
+        {
+          "data": null,
+          "className": "text-nowrap text-right",
+          "render": function (data, type, row) {
+            return `
+                        <div class="text-nowrap text-right">
+                            <button class="btn btn-sm mr-2 btn-primary edit-btn" data-id="${row.id}">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-sm mr-2 btn-danger delete-btn" data-id="${row.id}">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    `;
+          }
+        }
+      ],
+      "columnDefs": [
+        { "targets": -1, "className": "text-nowrap text-right" }
+      ]
+    });
+
+    function updateConditionalFields(handler, prefix = '') {
+      const container = prefix ? $(`#${prefix}ConditionalFields`) : $('#conditionalFields');
+      container.empty();
+
+      switch (handler) {
+        case 'laml_webhooks':
+          container.append(`
+                    <div class="form-group">
+                        <label for="${prefix}CallRequestUrl">Call Request URL</label>
+                        <input type="url" class="form-control" id="${prefix}CallRequestUrl" name="call_request_url" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="${prefix}CallRequestMethod">Call Request Method</label>
+                        <select class="form-control" id="${prefix}CallRequestMethod" name="call_request_method" required>
+                            <option value="GET">GET</option>
+                            <option value="POST">POST</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="${prefix}CallFallbackUrl">Call Fallback URL</label>
+                        <input type="url" class="form-control" id="${prefix}CallFallbackUrl" name="call_fallback_url" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="${prefix}CallFallbackMethod">Call Fallback Method</label>
+                        <select class="form-control" id="${prefix}CallFallbackMethod" name="call_fallback_method" required>
+                            <option value="GET">GET</option>
+                            <option value="POST">POST</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="${prefix}CallStatusCallbackUrl">Call Status Callback URL</label>
+                        <input type="url" class="form-control" id="${prefix}CallStatusCallbackUrl" name="call_status_callback_url" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="${prefix}CallStatusCallbackMethod">Call Status Callback Method</label>
+                        <select class="form-control" id="${prefix}CallStatusCallbackMethod" name="call_status_callback_method" required>
+                            <option value="GET">GET</option>
+                            <option value="POST">POST</option>
+                        </select>
+                    </div>
+                `);
+          break;
+        case 'relay_context':
+          container.append(`
+                    <div class="form-group">
+                        <label for="${prefix}CallRelayContext">Call Relay Context</label>
+                        <input type="text" class="form-control" id="${prefix}CallRelayContext" name="call_relay_context" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="${prefix}CallRelayContextStatusCallbackUrl">Call Relay Context Status Callback URL</label>
+                        <input type="url" class="form-control" id="${prefix}CallRelayContextStatusCallbackUrl" name="call_relay_context_status_callback_url" required>
+                    </div>
+                `);
+          break;
+        case 'relay_application':
+          container.append(`
+                    <div class="form-group">
+                        <label for="${prefix}CallRelayApplication">Call Relay Application</label>
+                        <input type="text" class="form-control" id="${prefix}CallRelayApplication" name="call_relay_application" required>
+                    </div>
+                `);
+          break;
+        case 'relay_script':
+          container.append(`
+                    <div class="form-group">
+                        <label for="${prefix}CallRelayScriptUrl">Call SWML Script URL</label>
+                        <input type="url" class="form-control" id="${prefix}CallRelayScriptUrl" name="call_relay_script_url" required>
+                    </div>
+                `);
+          break;
+        case 'laml_application':
+          container.append(`
+                    <div class="form-group">
+                        <label for="${prefix}CallLamlApplicationId">Call LaML Application ID</label>
+                        <input type="text" class="form-control" id="${prefix}CallLamlApplicationId" name="call_laml_application_id" required>
+                    </div>
+                `);
+          break;
+        case 'video_room':
+          container.append(`
+                    <div class="form-group">
+                        <label for="${prefix}CallVideoRoomId">Call Video Room ID</label>
+                        <input type="text" class="form-control" id="${prefix}CallVideoRoomId" name="call_video_room_id" required>
+                    </div>
+                `);
+          break;
+        case 'dialogflow':
+          container.append(`
+                    <div class="form-group">
+                        <label for="${prefix}CallDialogflowAgentId">Call Dialogflow Agent ID</label>
+                        <input type="text" class="form-control" id="${prefix}CallDialogflowAgentId" name="call_dialogflow_agent_id" required>
+                    </div>
+                `);
+          break;
+        case 'ai_agent':
+          container.append(`
+                    <div class="form-group">
+                        <label for="${prefix}CallAiAgentId">Call AI Agent ID</label>
+                        <input type="text" class="form-control" id="${prefix}CallAiAgentId" name="call_ai_agent_id" required>
+                    </div>
+                `);
+          break;
+        case 'call_flow':
+          container.append(`
+                    <div class="form-group">
+                        <label for="${prefix}CallFlowId">Call Flow ID</label>
+                        <input type="text" class="form-control" id="${prefix}CallFlowId" name="call_flow_id" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="${prefix}CallFlowVersion">Call Flow Version</label>
+                        <select class="form-control" id="${prefix}CallFlowVersion" name="call_flow_version" required>
+                            <option value="working_copy">Working Copy</option>
+                            <option value="current_deployed">Current Deployed</option>
+                        </select>
+                    </div>
+                `);
+          break;
+      }
+    }
+
+    function collectFormData(prefix = '') {
+      const name = $(`#${prefix}AppName`).val();
+      console.log("App Name value:", name);
+  
+      if (!name) {
+        console.error(`Could not find #${prefix}AppName, please check the ID or prefix usage.`);
+      }
+
+      const formData = {
+        name: $(`#${prefix}AppName`).val(),
+        identifier: $(`#${prefix}Identifier`).val(),
+        ip_auth_enabled: $(`#${prefix}IpAuthEnabled`).is(':checked'),
+        ip_auth: $(`#${prefix}IpAuth`).val() ? $(`#${prefix}IpAuth`).val().split('\n').map(ip => ip.trim()) : [],
+        call_handler: $(`#${prefix}CallHandler`).val(),
+        encryption: $(`#${prefix}Encryption`).val(),
+        codecs: $(`#${prefix}Codecs`).val(),
+        ciphers: $(`#${prefix}Ciphers`).val()
+      };
+
+      const selectedHandler = formData.call_handler;
+
+      switch(selectedHandler) {
+        case 'laml_webhooks':
+          formData.call_request_url = $(`#${prefix}CallRequestUrl`).val();
+          formData.call_request_method = $(`#${prefix}CallRequestMethod`).val();
+          formData.call_fallback_url = $(`#${prefix}CallFallbackUrl`).val();
+          formData.call_fallback_method = $(`#${prefix}CallFallbackMethod`).val();
+          formData.call_status_callback_url = $(`#${prefix}CallStatusCallbackUrl`).val();
+          formData.call_status_callback_method = $(`#${prefix}CallStatusCallbackMethod`).val();
+          break;
+        case 'relay_context':
+          formData.call_relay_context = $(`#${prefix}CallRelayContext`).val();
+          formData.call_relay_context_status_callback_url = $(`#${prefix}CallRelayContextStatusCallbackUrl`).val();
+          break;
+        case 'relay_application':
+          formData.call_relay_application = $(`#${prefix}CallRelayApplication`).val();
+          break;
+        case 'relay_script':
+          formData.call_relay_script_url = $(`#${prefix}CallRelayScriptUrl`).val();
+          break;
+        case 'laml_application':
+          formData.call_laml_application_id = $(`#${prefix}CallLamlApplicationId`).val();
+          break;
+        case 'video_room':
+          formData.call_video_room_id = $(`#${prefix}CallVideoRoomId`).val();
+          break;
+        case 'dialogflow':
+          formData.call_dialogflow_agent_id = $(`#${prefix}CallDialogflowAgentId`).val();
+          break;
+        case 'ai_agent':
+          formData.call_ai_agent_id = $(`#${prefix}CallAiAgentId`).val();
+          break;
+        case 'call_flow':
+          formData.call_flow_id = $(`#${prefix}CallFlowId`).val();
+          formData.call_flow_version = $(`#${prefix}CallFlowVersion`).val();
+          break;
+      }
+
+      return formData;
+    }
+
+    $('#CallHandler').change(function () {
+      updateConditionalFields($(this).val());
+    });
+
+    updateConditionalFields($('#CallHandler').val());
+
+    $('#createDomainAppForm').on('submit', function (e) {
+      e.preventDefault();
+      const formData = collectFormData();
+
+      $.ajax({
+        type: 'POST',
+        url: '/api/v1/domainapp',
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
+        success: function (response) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Domain app created successfully'
+          }).then(() => {
+            $('#createDomainAppForm')[0].reset();
+            $('#domainAppsTable').DataTable().ajax.reload();
+          });
+        },
+        error: function (error) {
+          Swal.fire({
+            icon: 'error',
+        title: 'Failed to create domain app',
+            text: error.responseJSON ? error.responseJSON.message : 'An error occurred'
+          });
+        }
+      });
+    });
+
+
+    // Edit Domain App
+    $('#domainAppsTable').on('click', '.edit-btn', function () {
+      const appId = $(this).data('id');
+      $.ajax({
+        url: `/api/v1/domainapp/${appId}`,
+        type: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        },
+        success: function (data) {
+          $('#editAppId').val(data.id);
+          $('#editAppName').val(data.name);
+          $('#editIdentifier').val(data.identifier);
+          $('#editIpAuthEnabled').prop('checked', data.ip_auth_enabled);
+          $('#editIpAuth').val(Array.isArray(data.ip_auth) ? data.ip_auth.join('\n') : '');
+          $('#editCallHandler').val(data.call_handler);
+          $('#editEncryption').val(data.encryption);
+
+          // Set selected codecs
+          $('#editCodecs').val(data.codecs).trigger('change');
+
+          // Set selected ciphers
+          $('#editCiphers').val(data.ciphers).trigger('change');
+
+          updateConditionalFields(data.call_handler, 'edit');
+
+          switch (data.call_handler) {
+            case 'laml_webhooks':
+              $('#editCallRequestUrl').val(data.call_request_url);
+              $('#editCallRequestMethod').val(data.call_request_method);
+              $('#editCallFallbackUrl').val(data.call_fallback_url);
+              $('#editCallFallbackMethod').val(data.call_fallback_method);
+              $('#editCallStatusCallbackUrl').val(data.call_status_callback_url);
+              $('#editCallStatusCallbackMethod').val(data.call_status_callback_method);
+              break;
+            case 'relay_context':
+              $('#editCallRelayContext').val(data.call_relay_context);
+              $('#editCallRelayContextStatusCallbackUrl').val(data.call_relay_context_status_callback_url);
+              break;
+            case 'relay_application':
+              $('#editCallRelayApplication').val(data.call_relay_application);
+              break;
+            case 'relay_script':
+              $('#editCallRelayScriptUrl').val(data.call_relay_script_url);
+              break;
+            case 'laml_application':
+              $('#editCallLamlApplicationId').val(data.call_laml_application_id);
+              break;
+            case 'video_room':
+              $('#editCallVideoRoomId').val(data.call_video_room_id);
+              break;
+            case 'dialogflow':
+              $('#editCallDialogflowAgentId').val(data.call_dialogflow_agent_id);
+              break;
+            case 'ai_agent':
+              $('#editCallAiAgentId').val(data.call_ai_agent_id);
+              break;
+            case 'call_flow':
+              $('#editCallFlowId').val(data.call_flow_id);
+              $('#editCallFlowVersion').val(data.call_flow_version);
+              break;
+          }
+
+          $('#editDomainAppModal').modal('show');
+        },
+        error: function (xhr) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Failed to load domain app details'
+          });
+        }
+      });
+    });
+
+    $('#editCallHandler').change(function () {
+      updateConditionalFields($(this).val(), 'edit');
+    });
+
+    $('#editDomainAppForm').on('submit', function (e) {
+      e.preventDefault();
+      const appId = $('#editAppId').val();
+      const formData = collectFormData('edit');
+
+      $.ajax({
+        type: 'PUT',
+        url: `/api/v1/domainapp/${appId}`,
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
+        success: function (response) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Domain app updated successfully'
+          }).then(() => {
+            $('#editDomainAppModal').modal('hide');
+            $('#domainAppsTable').DataTable().ajax.reload();
+          });
+        },
+        error: function (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Failed to update domain app',
+            text: error.responseJSON ? error.responseJSON.message : 'An error occurred'
+          });
+        }
+      });
+    });
+
+    $('#domainAppsTable').on('click', '.delete-btn', function () {
+      const appId = $(this).data('id');
+      Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          $.ajax({
+            url: `/api/v1/domainapp/${appId}`,
+            type: 'DELETE',
+            headers: {
+              'Accept': 'application/json'
+            },
+            success: function () {
+              table.ajax.reload();
+              Swal.fire({
+                icon: 'success',
+                title: 'Domain app deleted successfully'
+              });
+            },
+            error: function () {
+              Swal.fire({
+                icon: 'error',
+                title: 'Failed to delete domain app'
+              });
+            }
+          });
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

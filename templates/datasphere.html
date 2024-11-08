@@ -144,17 +144,15 @@
           "className": "text-nowrap text-right",
           "render": function (data, type, row) {
             return `
-              <div class="btn-group" role="group">
-                <button class="btn btn-primary btn-sm mr-2 edit-btn" data-id="${row.id}">
+                <button type="button" class="btn btn-sm mr-2 btn-primary edit-btn" data-id="${row.id}">
                   <i class="fas fa-edit"></i> Edit
                 </button>
-                <button class="btn btn-danger btn-sm mr-2 delete-btn" data-id="${row.id}">
+                <button type="button" class="btn btn-sm mr-2 btn-danger delete-btn" data-id="${row.id}">
                   <i class="fas fa-trash-alt"></i> Delete
                 </button>
-                <button class="btn btn-success btn-sm mr-2 query-btn" data-id="${row.id}" data-chunks="${row.number_of_chunks}">
+                <button type="button" class="btn btn-sm mr-2 btn-success query-btn" data-id="${row.id}" data-chunks="${row.number_of_chunks}">
                   <i class="fas fa-search"></i> Query
                 </button>
-              </div>
             `;
           }
         }
@@ -410,12 +408,14 @@
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-sm mr-2 btn-secondary" data-dismiss="modal">
-          <i class="fas fa-times"></i> Close
-        </button>
-        <button type="submit" class="btn btn-sm mr-2 btn-primary" form="editDocumentForm">
-          <i class="fas fa-save"></i> Save changes
-        </button>
+        <div class="btn-group" role="group">
+          <button type="button" class="btn btn-sm mr-2 btn-secondary" data-dismiss="modal">
+            <i class="fas fa-times"></i> Close
+          </button>
+          <button type="submit" class="btn btn-sm mr-2 btn-primary" form="editDocumentForm">
+            <i class="fas fa-save"></i> Save changes
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -487,9 +487,11 @@
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-sm mr-2 btn-secondary" data-dismiss="modal">
-          <i class="fas fa-times"></i> Close
-        </button>
+        <div class="btn-group" role="group"></div>
+          <button type="button" class="btn btn-sm mr-2 btn-secondary" data-dismiss="modal">
+            <i class="fas fa-times"></i> Close
+          </button>
+        </div>
       </div>
     </div>
   </div>
