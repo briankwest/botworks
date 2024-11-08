@@ -117,7 +117,7 @@
                 </div>
                 <div class="form-group">
                   <label for="stepText">Step Text</label>
-                  <textarea class="form-control" id="stepText" name="text" required></textarea>
+                  <textarea class="form-control" id="stepText" name="text"></textarea>
                 </div>
                 <div class="form-group">
                   <label for="stepCriteria">Step Criteria</label>
@@ -194,7 +194,7 @@
 
 <div class="modal fade" id="editStepModal" tabindex="-1" role="dialog" aria-labelledby="editStepModalLabel"
   aria-hidden="true">
-  <div class="modal-dialog" role="document">
+  <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="editStepModalLabel">Edit AI Step</h5>
@@ -216,7 +216,7 @@
           </div>
           <div class="form-group">
             <label for="editStepText">Step Text</label>
-            <textarea class="form-control" id="editStepText" name="text" required></textarea>
+            <textarea class="form-control" id="editStepText" name="text"></textarea>
           </div>
           <div class="form-group">
             <label for="editStepCriteria">Step Criteria</label>
@@ -254,7 +254,7 @@
             <button type="button" class="btn btn-sm btn-secondary mr-2" data-dismiss="modal">
               <i class="fas fa-times"></i> Close
             </button>
-            <button type="submit" class="btn btn-sm btn-primary mr-2">
+            <button type="button" class="btn btn-sm btn-primary mr-2" id="saveEditStep">
               <i class="fas fa-save"></i> Save changes
             </button>
           </div>
@@ -281,6 +281,8 @@
 <script type="text/javascript" src="https://unpkg.com/@signalwire/js@^1"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
+<script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
 <script>
   var functionMap = [];
 
@@ -292,6 +294,26 @@
     const stepsDropdowns = $('#validSteps, #editValidSteps');
     const functionsDropdowns = $('#functions, #editFunctions');
     let currentContextId = null;
+
+    var addStepEditor = new EasyMDE({
+      element: document.getElementById('stepText'),
+      toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview"],
+      status: false,
+      minHeight: "300px",
+      maxHeight: "300px",
+      autoRefresh: true,
+      spellChecker: false
+    });
+
+    var editStepEditor = new EasyMDE({
+      element: document.getElementById('editStepText'),
+      toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen"],
+      status: false,
+      minHeight: "300px",
+      maxHeight: "300px",
+      autoRefresh: true,
+      spellChecker: false
+    });
 
     function initializePage() {
       $('.steps-section, .add-step-section').hide();
@@ -567,11 +589,18 @@
 
     $('#addStepForm').submit(function (e) {
       e.preventDefault();
+      
+      // Check if EasyMDE editor is empty
+      if (addStepEditor.value().trim() === '') {
+        showToast('error', 'Step text is required.');
+        return;
+      }
+
       const formData = {
         agent_id: agent_id,
         context_id: $('#stepContextId').val(),
         name: sanitizeInput($('#stepName').val()),
-        text: $('#stepText').val(),
+        text: addStepEditor.value(),
         step_criteria: $('#stepCriteria').val() || null,
         valid_steps: $('#validSteps').val() || [],
         valid_contexts: $('#validContexts').val() || [],
@@ -588,6 +617,7 @@
         success: function (response) {
           $('#stepsTable').DataTable().ajax.reload();
           $('#addStepForm')[0].reset();
+          addStepEditor.value(''); // Clear the EasyMDE editor
           $('#validSteps, #validContexts, #functions').val(null).trigger('change');
           showToast('success', 'AI Step created successfully');
           populateContextDropdown();
@@ -679,7 +709,8 @@
           success: function (data) {
             $('#editStepId').val(data.id);
             $('#editStepName').val(data.name);
-            $('#editStepText').val(data.text);
+            editStepEditor.value(data.text);
+            editStepEditor.codemirror.refresh();
             $('#editStepCriteria').val(data.step_criteria || '');
             $('#editValidSteps').val(data.valid_steps).trigger('change');
             $('#editValidContexts').val(data.valid_contexts).trigger('change');
@@ -696,8 +727,19 @@
       }
     });
 
-    $('#editStepForm').submit(function (e) {
-      e.preventDefault();
+    $('#editStepForm').on('submit', function(event) {
+      event.preventDefault();
+    });
+
+    $('#saveEditStep').click(function (event) {
+      event.preventDefault();
+      
+      // Check if EasyMDE editor is empty
+      if (editStepEditor.value().trim() === '') {
+        showToast('error', 'Step text is required.');
+        return;
+      }
+
       const stepId = $('#editStepId').val();
       const selectedContextId = $('#editStepContextId').val();
 
@@ -705,7 +747,7 @@
         const formData = {
           context_id: selectedContextId,
           name: sanitizeInput($('#editStepName').val()),
-          text: $('#editStepText').val(),
+          text: editStepEditor.value(),
           step_criteria: $('#editStepCriteria').val() || null,
           valid_steps: $('#editValidSteps').val() || null,
           valid_contexts: $('#editValidContexts').val() || null,
@@ -726,8 +768,6 @@
           },
           error: handleError('Error updating AI Step')
         });
-      } else {
-        console.error('Step ID is missing');
       }
     });
 
@@ -845,6 +885,16 @@
         })
         .catch(handleError('Error fetching functions'));
     }
+
+    // Add this function to handle modal events
+    $('#editStepModal').on('shown.bs.modal', function () {
+      editStepEditor.codemirror.refresh();
+    });
+
+    $('#editStepModal').on('hidden.bs.modal', function () {
+      $('#editStepForm')[0].reset();
+      editStepEditor.value('');
+    });
 
     initializePage();
   });

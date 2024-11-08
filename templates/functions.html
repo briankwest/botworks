@@ -482,6 +482,19 @@
       }
 
       const functionName = $('#functionName').val();
+      const functionArguments = [];
+      
+      $('#functionArgumentsContainer tr').each(function () {
+        const $row = $(this);
+        functionArguments.push({
+          name: $row.find('input[name="arg_name"]').val(),
+          type: $row.find('select[name="arg_type"]').val(),
+          description: $row.find('input[name="arg_description"]').val(),
+          required: $row.find('input.toggle-required').is(':checked'),
+          enum: $row.find('input[name="arg_enum"]').val(),
+          default: $row.find('input[name="arg_default"]').val()
+        });
+      });
 
       fetch(`/api/v1/agents/${agentId}/functions/names`)
         .then(response => response.json())
@@ -500,21 +513,8 @@
             fillers: $('#functionFillers').val(),
             meta_data: JSON.parse(metaData || '{}'),
             meta_data_token: $('#functionMetaDataToken').val(),
-            active: $('#functionActive').is(':checked'),
-            arguments: []
+            active: $('#functionActive').is(':checked')
           };
-
-          $('#functionArgumentsContainer tr').each(function () {
-            const $row = $(this);
-            data.arguments.push({
-              name: $row.find('input[name="arg_name"]').val(),
-              type: $row.find('select[name="arg_type"]').val(),
-              description: $row.find('input[name="arg_description"]').val(),
-              required: $row.find('input.toggle-required').is(':checked'),
-              enum: $row.find('input[name="arg_enum"]').val(),
-              default: $row.find('input[name="arg_default"]').val()
-            });
-          });
 
           fetch(`/api/v1/agents/${agentId}/functions`, {
             method: 'POST',
@@ -527,13 +527,32 @@
             .then(response => response.json())
             .then(data => {
               if (data.message === 'Function entry created successfully') {
-                Toast.fire({
-                  icon: 'success',
-                  title: 'Function entry created successfully'
+                const functionId = data.function.id;
+                
+                const createArgPromises = functionArguments.map(arg => {
+                  return fetch(`/api/v1/agents/${agentId}/functions/${functionId}/args`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(arg)
+                  });
                 });
-                $('#addFunctionForm')[0].reset();
-                $('#functionArgumentsContainer').empty();
-                $('#functionTable').DataTable().ajax.reload();
+
+                Promise.all(createArgPromises)
+                  .then(() => {
+                    Toast.fire({
+                      icon: 'success',
+                      title: 'Function and arguments created successfully'
+                    });
+                    $('#addFunctionForm')[0].reset();
+                    $('#functionArgumentsContainer').empty();
+                    $('#functionTable').DataTable().ajax.reload();
+                  })
+                  .catch(error => {
+                    Swal.fire('Error', 'Error creating function arguments', 'error');
+                  });
               } else if (data.message) {
                 Swal.fire('Error', data.message, 'error');
               } else {
