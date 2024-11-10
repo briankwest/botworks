@@ -125,7 +125,7 @@ def generate_swml_response(agent_id, request_body):
     for function in functions:
         function_data = {
             "function": function.name,
-            "description": function.purpose,
+            "description": function.description,
         }
 
         function_data = {
@@ -159,7 +159,7 @@ def generate_swml_response(agent_id, request_body):
 
         function_payload = {
             "function": function.name,
-            "description": function.purpose,
+            "description": function.description,
             "parameters": function_data["parameters"],
             "required": [arg.name for arg in function_args if arg.required]
         }
