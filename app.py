@@ -2669,22 +2669,41 @@ def get_or_delete_conversation(agent_id, id):
     llm_in_cog = float(get_signalwire_param_by_agent_id(agent_id, 'LLM_IN_COG') or 0.0)
     llm_out_cog = float(get_signalwire_param_by_agent_id(agent_id, 'LLM_OUT_COG') or 0.0)
     retail_pm = float(get_signalwire_param_by_agent_id(agent_id, 'RETAIL_PM') or 0.0)
+
+    ai_start_date = (conversation.data.get('ai_start_date', 0) // 1000) - 5000
+    ai_end_date = (conversation.data.get('ai_end_date', 0) // 1000) + 5000
+    call_id = conversation.data.get('call_id', '')
+    grafana_url = get_signalwire_param_by_agent_id(agent_id, 'GRAFANA_URL')
     
-    return jsonify({
+    print(f"Grafana URL: {grafana_url}")
+
+    if grafana_url:
+        grafana_url = grafana_url.format(start=ai_start_date, end=ai_end_date, call_id=call_id)
+    else:
+        grafana_url = None  # or set a default URL if applicable
+    response_data = {
         'id': conversation.id,
         'created': conversation.created,
         'data': conversation.data,
         'next': next_conversation.id if next_conversation else None,
-        'prev': prev_conversation.id if prev_conversation else None,
-        'cogs': {
-            'tts_cog': tts_cog,
-            'asr_cog': asr_cog,
-            'llm_in_cog': llm_in_cog,
-            'llm_out_cog': llm_out_cog,
-            'retail_pm': retail_pm
-        } if all([tts_cog, asr_cog, llm_in_cog, llm_out_cog, retail_pm]) else None
-    }), 200
+        'prev': prev_conversation.id if prev_conversation else None
+    }
 
+    cogs = {
+        'tts_cog': tts_cog,
+        'asr_cog': asr_cog,
+        'llm_in_cog': llm_in_cog,
+        'llm_out_cog': llm_out_cog,
+        'retail_pm': retail_pm
+    }
+
+    if all(cogs.values()):
+        response_data['cogs'] = cogs
+
+    if grafana_url:
+        response_data['grafana_url'] = grafana_url
+
+    return jsonify(response_data), 200
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/conversation/<int:id>', methods=['DELETE'])
 @login_required

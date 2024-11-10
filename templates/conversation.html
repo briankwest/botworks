@@ -278,6 +278,9 @@
         if (responseData.cogs) {
           responseData.data.cogs = responseData.cogs;
         }
+        if (responseData.grafana_url) {
+          responseData.data.grafana_url = responseData.grafana_url;
+        } 
         displayData(responseData.data);
         setupNavigationButtons(agentId, responseData.next, responseData.prev);
       })
@@ -496,7 +499,9 @@
         </tr>
         <tr>
             <td>Call ID</td>
-            <td>${data.call_id || ''}</td>
+            <td>
+                ${data.grafana_url ? `<a href="${data.grafana_url}" target="_blank">${data.call_id}</a>` : data.call_id}
+            </td>
             <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.call_id || ''}')"></i></td>
         </tr>
         <tr>
@@ -551,26 +556,33 @@
       const total_llm_in_cost = (data.total_wire_input_tokens / 1000000) * data.cogs.llm_in_cog;
       const total_llm_out_cost = (data.total_wire_output_tokens / 1000000) * data.cogs.llm_out_cog;
       const total_retail_cost = data.total_minutes * data.cogs.retail_pm;
+
       if (data.total_tts_chars) {
         additionalFields.push({ key: 'Total TTS Cost', value: total_tts_cost.toFixed(6) });
       }
+
       if (data.total_asr_minutes) {
         additionalFields.push({ key: 'Total ASR Cost', value: total_asr_cost.toFixed(6) });
       }
+
       if (data.total_wire_input_tokens) {
         additionalFields.push({ key: 'Total LLM In Cost', value: total_llm_in_cost.toFixed(6) });
       }
+
       if (data.total_wire_output_tokens) {
         additionalFields.push({ key: 'Total LLM Out Cost', value: total_llm_out_cost.toFixed(6) });
       }
+
       if (data.cogs) {
         const totalCog = total_tts_cost + total_asr_cost + total_llm_in_cost + total_llm_out_cost;
         additionalFields.push({ key: 'Total COG', value: totalCog.toFixed(6) });
       }
+
       if (data.total_minutes) {
         additionalFields.push({ key: 'Total Retail', value: total_retail_cost.toFixed(6) });
       }
-    if (data.cogs ) {
+
+      if (data.cogs ) {
         const totalCog = total_tts_cost + total_asr_cost + total_llm_in_cost + total_llm_out_cost;
         const totalRetail = data.total_minutes * data.cogs.retail_pm;
         const profit = totalRetail - totalCog;
