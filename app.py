@@ -1548,6 +1548,30 @@ def update_phone_number(phone_number_id):
     else:
         return jsonify({'error': 'Failed to update phone number'}), response.status_code
     
+@app.route('/voice/logs/<uuid:log_id>', methods=['GET'])
+@login_required
+def get_voice_log(log_id):
+    space_name = get_signalwire_param('SPACE_NAME')
+    project_id = get_signalwire_param('PROJECT_ID')
+    auth_token = get_signalwire_param('AUTH_TOKEN')
+
+    encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
+    url = f'https://briankwest.signalwire.com/api/voice/logs/{log_id}'
+    authorization = f'Basic {encoded_credentials}'
+
+    headers = {
+        'Authorization': authorization,
+        'Accept': 'application/json'
+    }
+
+    response = requests.get(url, headers=headers)
+
+    if response.status_code == 200:
+        return jsonify(response.json()), 200
+    else:
+        return jsonify({'error': 'Failed to retrieve voice log'}), response.status_code
+
+    
 @app.route('/phone_numbers/<uuid:phone_number_id>', methods=['DELETE'])
 @login_required
 def release_phone_number(phone_number_id):

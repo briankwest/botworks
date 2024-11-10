@@ -79,6 +79,40 @@
       </div>
     </div>
   </div>
+
+  <!-- Add a new modal for billing information -->
+  <div id="billingModal" class="modal" role="dialog" aria-labelledby="billingModalTitle" aria-hidden="true" tabindex="-1"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.8); z-index:1050;">
+    <div class="modal-content" tabindex="0" style="position:relative; width:100%; height:100%; overflow:auto;">
+      <span class="close"
+        style="position:fixed; top:10px; right:20px; font-size:30px; color:black; cursor:pointer; z-index:1100;">&times;</span>
+      <div class="p-3">
+        <section class="content-header">
+          <div class="container-fluid">
+            <div class="row mb-2">
+              <div class="col-6">
+                <h1 id="billingModalTitle" class="m-0">Billing Details</h1>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="content">
+          <div class="row">
+            <div class="col-md-12">
+              <div class="card card-primary">
+                <div class="card-header bg-primary">
+                  <h3 class="card-title">Billing Information</h3>
+                </div>
+                <div class="card-body">
+                  <div id="billingDataContent"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
 </div>
 
 {% include 'footer.html' %}
@@ -194,7 +228,8 @@
 
     $('#conversationsTable').on('click', '.view-conversation', function () {
       const id = $(this).data('id');
-      const triggerElement = this;
+      const callId = $(this).data('call-id');
+      $('#fullScreenModal').data('call-id', callId);
 
       $('#fullScreenModal').show();
       $('#fullScreenModal').attr('aria-hidden', 'false');
@@ -259,6 +294,17 @@
             break;
         }
       }
+    });
+
+    // Example trigger for fetching billing data
+    $('#conversationsTable').on('click', '.view-billing', function () {
+      const uuid = $(this).data('uuid');
+      fetchBillingData(uuid);
+    });
+
+    $('.close').on('click', function () {
+      $('#billingModal').hide();
+      $('#billingModal').attr('aria-hidden', 'true');
     });
   });
 
@@ -501,6 +547,10 @@
             <td>Call ID</td>
             <td>
                 ${data.grafana_url ? `<a href="${data.grafana_url}" target="_blank">${data.call_id}</a>` : data.call_id}
+                <button class="btn btn-warning btn-sm ml-2" onclick="fetchBillingData('${data.call_id}', this)">
+                    <i class="fas fa-file-invoice-dollar"></i> Billing Details
+                </button>
+                <div id="billingDetails_${data.call_id}" class="billing-details" style="display: none;"></div>
             </td>
             <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.call_id || ''}')"></i></td>
         </tr>
@@ -799,6 +849,30 @@
 
     table += '</table></div>';
     return table;
+  }
+
+  function fetchBillingData(callId, button) {
+    fetch(`/voice/logs/${callId}`)
+        .then(response => response.json())
+        .then(data => {
+            const billingDetailsDiv = document.getElementById(`billingDetails_${callId}`);
+            billingDetailsDiv.innerHTML = `
+                <table class="table table-bordered mt-2">
+                    <tr><th>ID</th><td>${data.id}</td></tr>
+                    <tr><th>From</th><td>${data.from}</td></tr>
+                    <tr><th>To</th><td>${data.to}</td></tr>
+                    <tr><th>Direction</th><td>${data.direction}</td></tr>
+                    <tr><th>Status</th><td>${data.status}</td></tr>
+                    <tr><th>Duration</th><td>${data.duration} seconds</td></tr>
+                    <tr><th>Charge</th><td>$${data.charge.toFixed(2)}</td></tr>
+                    <tr><th>Charge Details</th><td><ul>${data.charge_details.map(detail => `<li>${detail.description}: $${detail.charge.toFixed(2)}</li>`).join('')}</ul></td></tr>
+                </table>
+            `;
+            billingDetailsDiv.style.display = billingDetailsDiv.style.display === 'none' ? 'block' : 'none';
+        })
+        .catch(error => {
+            console.error('Error fetching billing data:', error);
+        });
   }
 
   window.copyToClipboard = function (value) {
