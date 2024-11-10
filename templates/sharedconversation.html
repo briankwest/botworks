@@ -127,6 +127,11 @@
         return;
       }
 
+      if (data) {
+        const interactionDetailsCard = createCard('Interaction Details', createInteractionDetailsTable(data), 'bg-info');
+        content.appendChild(interactionDetailsCard);
+      }
+
       if (data.raw_call_log) {
         const callLogCard = createCard('Call Log', createCallLogTable(data.raw_call_log), 'bg-success');
         content.appendChild(callLogCard);
@@ -135,11 +140,6 @@
       if (data.times) {
         const timesCard = createCard('Times', createTimesTable(data.times), 'bg-warning');
         content.appendChild(timesCard);
-      }
-
-      if (data.SWMLVars) {
-        const swmlVarsCard = createCard('SWML Vars', createSWMLVarsTable(data.SWMLVars), 'bg-danger');
-        content.appendChild(swmlVarsCard);
       }
 
       if (data.swaig_log) {
@@ -219,32 +219,6 @@
                     <td>${data.ai_end_date ? new Date(data.ai_end_date / 1000).toLocaleString() : ''}</td>
                     <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.ai_end_date ? new Date(data.ai_end_date / 1000).toLocaleString() : ''}')"></i></td>
                 </tr>`;
-
-      const additionalFields = [
-        { key: 'Total Input Tokens', value: data.total_input_tokens },
-        { key: 'Total Output Tokens', value: data.total_output_tokens },
-        { key: 'Total ASR Cost Factor', value: data.total_asr_cost_factor },
-        { key: 'Total ASR Minutes', value: data.total_asr_minutes },
-        { key: 'Total Minutes', value: data.total_minutes },
-        { key: 'Total TTS Chars', value: data.total_tts_chars },
-        { key: 'Total TTS Chars Per Minute', value: data.total_tts_chars_per_min },
-        { key: 'Total Wire Input Tokens', value: data.total_wire_input_tokens },
-        { key: 'Total Wire Input Tokens Per Minute', value: data.total_wire_input_tokens_per_minute },
-        { key: 'Total Wire Output Tokens', value: data.total_wire_output_tokens },
-        { key: 'Total Wire Output Tokens Per Minute', value: data.total_wire_output_tokens_per_minute },
-        { key: 'Version', value: data.version }
-      ];
-
-      additionalFields.forEach(field => {
-        if (field.value !== undefined) {
-          table += `
-                        <tr>
-                            <td>${field.key}</td>
-                            <td>${field.value}</td>
-                            <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${field.value}')"></i></td>
-                        </tr>`;
-        }
-      });
 
       table += '</table></div>';
       return table;

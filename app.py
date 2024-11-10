@@ -2620,13 +2620,26 @@ def get_or_delete_conversation(agent_id, id):
             AIConversation.id < id,
             AIConversation.agent_id == agent_id
         ).order_by(AIConversation.id.desc()).first()
-
+    
+    tts_cog = float(get_signalwire_param_by_agent_id(agent_id, 'TTS_COG') or 0.0)
+    asr_cog = float(get_signalwire_param_by_agent_id(agent_id, 'ASR_COG') or 0.0)
+    llm_in_cog = float(get_signalwire_param_by_agent_id(agent_id, 'LLM_IN_COG') or 0.0)
+    llm_out_cog = float(get_signalwire_param_by_agent_id(agent_id, 'LLM_OUT_COG') or 0.0)
+    retail_pm = float(get_signalwire_param_by_agent_id(agent_id, 'RETAIL_PM') or 0.0)
+    
     return jsonify({
         'id': conversation.id,
         'created': conversation.created,
         'data': conversation.data,
         'next': next_conversation.id if next_conversation else None,
-        'prev': prev_conversation.id if prev_conversation else None
+        'prev': prev_conversation.id if prev_conversation else None,
+        'cogs': {
+            'tts_cog': tts_cog,
+            'asr_cog': asr_cog,
+            'llm_in_cog': llm_in_cog,
+            'llm_out_cog': llm_out_cog,
+            'retail_pm': retail_pm
+        } if all([tts_cog, asr_cog, llm_in_cog, llm_out_cog, retail_pm]) else None
     }), 200
 
 
