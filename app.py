@@ -1059,7 +1059,10 @@ def create_conversation_share(agent_id, conversation_id):
 def view_shared_conversation(uuid):
     shared_conversation = SharedConversations.query.filter_by(uuid=uuid).first_or_404()
     conversation = shared_conversation.conversation
-    print(f"Conversation: {conversation}")
+
+    if 'SWMLVars' in conversation.data:
+        del conversation.data['SWMLVars']
+        
     return jsonify({
         'id': conversation.id,
         'created': conversation.created,
