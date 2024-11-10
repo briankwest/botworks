@@ -852,10 +852,19 @@
   }
 
   function fetchBillingData(callId, button) {
+    const billingDetailsDiv = document.getElementById(`billingDetails_${callId}`);
+
+    // Check if the billing details are already loaded
+    if (billingDetailsDiv.innerHTML.trim() !== '') {
+        // Toggle visibility without fetching data again
+        billingDetailsDiv.style.display = billingDetailsDiv.style.display === 'none' ? 'block' : 'none';
+        return;
+    }
+
+    // Fetch data if not already loaded
     fetch(`/voice/logs/${callId}`)
         .then(response => response.json())
         .then(data => {
-            const billingDetailsDiv = document.getElementById(`billingDetails_${callId}`);
             billingDetailsDiv.innerHTML = `
                 <table class="table table-bordered mt-2">
                     <tr><th>ID</th><td>${data.id}</td></tr>
@@ -864,11 +873,11 @@
                     <tr><th>Direction</th><td>${data.direction}</td></tr>
                     <tr><th>Status</th><td>${data.status}</td></tr>
                     <tr><th>Duration</th><td>${data.duration} seconds</td></tr>
-                    <tr><th>Charge</th><td>$${data.charge.toFixed(13)}</td></tr>
-                    <tr><th>Charge Details</th><td><ul>${data.charge_details.map(detail => `<li>${detail.description}: $${detail.charge.toFixed(13)}</li>`).join('')}</ul></td></tr>
+                    <tr><th>Charge</th><td>$${data.charge.toFixed(2)}</td></tr>
+                    <tr><th>Charge Details</th><td><ul>${data.charge_details.map(detail => `<li>${detail.description}: $${detail.charge.toFixed(2)}</li>`).join('')}</ul></td></tr>
                 </table>
             `;
-            billingDetailsDiv.style.display = billingDetailsDiv.style.display === 'none' ? 'block' : 'none';
+            billingDetailsDiv.style.display = 'block';
         })
         .catch(error => {
             console.error('Error fetching billing data:', error);
