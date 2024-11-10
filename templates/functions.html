@@ -32,7 +32,7 @@
                     <tr>
                       <th>ID</th>
                       <th>Name</th>
-                      <th>Purpose</th>
+                      <th>Description</th>
                       <th>Active</th>
                       <th class="text-right">Actions</th>
                     </tr>
@@ -59,8 +59,8 @@
                   <input type="text" class="form-control" id="functionName" name="name" required>
                 </div>
                 <div class="form-group">
-                  <label for="functionPurpose">Function Purpose</label>
-                  <input type="text" class="form-control" id="functionPurpose" name="purpose" required>
+                  <label for="functionDescription">Function Description</label>
+                  <input type="text" class="form-control" id="functionDescription" name="description" required>
                 </div>
                 <div class="form-group">
                   <label for="functionWebhookUrl">Function Webhook URL</label>
@@ -145,8 +145,8 @@
                   <input type="text" class="form-control" id="editFunctionName" name="name" readonly>
                 </div>
                 <div class="form-group">
-                  <label for="editFunctionPurpose">Function Purpose</label>
-                  <input type="text" class="form-control" id="editFunctionPurpose" name="purpose" required>
+                  <label for="editFunctionDescription">Function Description</label>
+                  <input type="text" class="form-control" id="editFunctionDescription" name="description" required>
                 </div>
                 <div class="form-group">
                   <label for="editFunctionWebhookUrl">Function Webhook URL</label>
@@ -246,7 +246,7 @@
       "columns": [
         { "data": "id" },
         { "data": "name" },
-        { "data": "purpose" },
+        { "data": "description" },
         {
           "data": "active",
           "render": function (data, type, row) {
@@ -342,7 +342,7 @@
         .then(data => {
           $('#editFunctionId').val(data.id);
           $('#editFunctionName').val(data.name);
-          $('#editFunctionPurpose').val(data.purpose);
+          $('#editFunctionDescription').val(data.description);
           $('#editFunctionWebhookUrl').val(data.web_hook_url);
           $('#editFunctionWaitFile').val(data.wait_file);
           $('#editFunctionWaitFileLoops').val(data.wait_file_loops);
@@ -506,7 +506,7 @@
 
           const data = {
             name: functionName,
-            purpose: $('#functionPurpose').val(),
+            description: $('#functionDescription').val(),
             web_hook_url: $('#functionWebhookUrl').val(),
             wait_file: $('#functionWaitFile').val(),
             wait_file_loops: $('#functionWaitFileLoops').val(),
@@ -673,7 +673,7 @@
       }
 
       const functionData = {
-        purpose: $('#editFunctionPurpose').val(),
+        description: $('#editFunctionDescription').val(),
         web_hook_url: $('#editFunctionWebhookUrl').val(),
         wait_file: $('#editFunctionWaitFile').val(),
         wait_file_loops: $('#editFunctionWaitFileLoops').val(),

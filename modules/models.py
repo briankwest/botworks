@@ -78,7 +78,7 @@ class AIFunctions(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
     name = db.Column(db.Text, nullable=True)
-    purpose = db.Column(db.Text, nullable=True)
+    description = db.Column(db.Text, nullable=True)
     active = db.Column(db.Boolean, nullable=False, default=True)
     web_hook_url = db.Column(db.String(255), nullable=True)
     wait_file = db.Column(db.String(255), nullable=True)

@@ -184,11 +184,11 @@ def process_ai_data(agent_id, ai_data):
     swaig = ai_data.get('SWAIG', {})
     functions = swaig.get('functions', [])
     for function in functions:
-        purpose = function.get('purpose') or function.get('description')
+        description = function.get('description') or function.get('description')
         new_function = AIFunctions(
             agent_id=agent_id,
             name=function.get('function'),
-            purpose=purpose,
+            description=description,
             active=True
         )
         db.session.add(new_function)
@@ -206,16 +206,6 @@ def process_ai_data(agent_id, ai_data):
                     required=prop in function.get('parameters', {}).get('required', [])
                 )
                 db.session.add(new_argument)
-
-        data_map = function.get('data_map', {})
-        webhooks = data_map.get('webhooks', [])
-        for webhook in webhooks:
-            new_hook = AIHooks(
-                agent_id=agent_id,
-                data=webhook,
-                hook_type=AIHooks.HookType.other
-            )
-            db.session.add(new_hook)
 
     includes = swaig.get('includes', [])
     for include in includes:
@@ -2893,7 +2883,7 @@ def list_functions(agent_id):
     functions_data = [{
         'id': function.id,
         'name': function.name,
-        'purpose': function.purpose,
+        'description': function.description,
         'active': function.active
     } for function in functions]
     return jsonify(functions_data), 200
@@ -2906,7 +2896,7 @@ def get_function(agent_id, function_id):
     return jsonify({
         'id': function.id,
         'name': function.name,
-        'purpose': function.purpose,
+        'description': function.description,
         'web_hook_url': function.web_hook_url,
         'wait_file': function.wait_file,
         'wait_file_loops': function.wait_file_loops,
@@ -2933,7 +2923,7 @@ def create_function(agent_id):
     new_function = AIFunctions(
         agent_id=agent_id,
         name=data['name'],
-        purpose=data['purpose'],
+        description=data['description'],
         web_hook_url=data.get('web_hook_url'),
         wait_file=data.get('wait_file'),
         wait_file_loops=data.get('wait_file_loops', 1),
@@ -2949,7 +2939,7 @@ def create_function(agent_id):
         'function': {
             'id': new_function.id,
             'name': new_function.name,
-            'purpose': new_function.purpose,
+            'description': new_function.description,
             'web_hook_url': new_function.web_hook_url,
             'wait_file': new_function.wait_file,
             'wait_file_loops': new_function.wait_file_loops,
@@ -2966,7 +2956,7 @@ def create_function(agent_id):
 def update_function(agent_id, function_id):
     function = AIFunctions.query.filter_by(id=function_id, agent_id=agent_id).first_or_404()
     data = request.get_json()
-    function.purpose = data.get('purpose', function.purpose)
+    function.description = data.get('description', function.description)
     function.web_hook_url = data.get('web_hook_url', function.web_hook_url)
     function.wait_file = data.get('wait_file', function.wait_file)
     function.wait_file_loops = data.get('wait_file_loops', function.wait_file_loops)
@@ -3006,7 +2996,6 @@ def list_function_args(agent_id, function_id):
 @login_required
 @agent_access_required
 def create_function_arg(agent_id, function_id):
-    print(f"Creating argument for function {function_id}, agent_id: {agent_id}")
     data = request.get_json()
     new_arg = AIFunctionArgs(
         function_id=function_id,
