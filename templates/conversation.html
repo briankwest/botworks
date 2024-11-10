@@ -329,6 +329,12 @@
         navigationGroup.appendChild(nextButton);
     }
 
+    const downloadButton = document.createElement('button');
+    downloadButton.className = 'btn btn-info btn-sm mr-2';
+    downloadButton.innerHTML = '<i class="fas fa-download"></i> Download JSON';
+    downloadButton.onclick = () => downloadConversationData();
+    actionsGroup.appendChild(downloadButton);
+
     const shareButton = document.createElement('button');
     shareButton.className = 'btn btn-success btn-sm';
     shareButton.innerHTML = '<i class="fas fa-share"></i> Share';
@@ -337,6 +343,28 @@
 
     navContainer.appendChild(navigationGroup);
     navContainer.appendChild(actionsGroup);
+  }
+
+  function downloadConversationData() {
+    const conversationId = $('#fullScreenModal').data('conversation-id');
+    const agentId = window.location.href.split('/').slice(-2, -1)[0];
+
+    fetch(`/api/v1/agents/${agentId}/conversation/${conversationId}`)
+        .then(response => response.json())
+        .then(data => {
+            const blob = new Blob([JSON.stringify(data.data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `conversation_${conversationId}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        })
+        .catch(error => {
+            console.error('Error downloading JSON:', error);
+        });
   }
 
   function shareConversation() {
