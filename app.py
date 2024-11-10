@@ -147,13 +147,25 @@ def dashboard():
 
     return render_template('dashboard.html', user=current_user, number_of_requests=number_of_requests, number_of_conversations=number_of_conversations, number_of_functions=number_of_functions, number_of_agents=number_of_agents)
 
-@app.route('/import_swml', methods=['POST'])
+@app.route('/import', methods=['POST'])
 @login_required
 def import_swml():
-    data = request.get_json()
+    try:
+        data = request.get_json(force=True)
+        if not isinstance(data, dict):
+            raise ValueError("Invalid JSON format")
 
-    version = data.get('version')
-    sections = data.get('sections', {})
+        # Parse the 'import' string as JSON
+        import_data = json.loads(data.get('import', '{}'))
+        if not isinstance(import_data, dict):
+            raise ValueError("Invalid 'import' JSON format")
+    except Exception as e:
+        return jsonify({'error': 'Invalid JSON data'}), 400
+
+    version = import_data.get('version')
+    sections = import_data.get('sections', {})
+
+    print(sections)
     main_section = sections.get('main', [])
 
     new_agent = AIAgent(
@@ -165,47 +177,70 @@ def import_swml():
     db.session.commit()
 
     for section in main_section:
+        print(section)
         if 'ai' in section:
             ai_data = section['ai']
+            print(ai_data)
             process_ai_data(new_agent.id, ai_data)
 
     return jsonify({'message': 'SWML imported successfully', 'agent_id': new_agent.id}), 201
 
+@app.route('/import', methods=['GET'])
+@login_required
+def import_page():
+    return render_template('import.html')
+
 def process_ai_data(agent_id, ai_data):
+    agent_id = int(agent_id)
     params = ai_data.get('params', {})
+    print(params)
     for key, value in params.items():
-        new_param = AIParams(
-            agent_id=agent_id,
-            name=key,
-            value=value
-        )
-        db.session.add(new_param)
+        try:
+            if not isinstance(value, str):
+                value = str(value)
+            
+            new_param = AIParams(
+                agent_id=agent_id,
+                name=key,
+                value=value
+            )
+            db.session.add(new_param)
+        except Exception as e:
+            app.logger.error(f"Failed to add parameter {key}: {e}")
 
     swaig = ai_data.get('SWAIG', {})
     functions = swaig.get('functions', [])
+    
     for function in functions:
-        description = function.get('description') or function.get('description')
+        description = function.get('description') or function.get('purpose')
         new_function = AIFunctions(
             agent_id=agent_id,
             name=function.get('function'),
             description=description,
-            active=True
+            active=function.get('active', 'false') == 'true'
         )
         db.session.add(new_function)
         db.session.commit()
 
-        argument = function.get('argument') or function.get('parameters', {}).get('properties')
-        if argument:
-            for prop, details in argument.items():
-                new_argument = AIFunctionArgs(
+        # Handle function arguments
+        argument = function.get('argument', function.get('parameters', {}))
+        if isinstance(argument, dict):  # Ensure argument is a dictionary
+            properties = argument.get('properties', {})
+            required = argument.get('required', [])
+
+            for arg_name, arg_details in properties.items():
+                print(arg_details)
+                new_arg = AIFunctionArgs(
                     function_id=new_function.id,
                     agent_id=agent_id,
-                    name=prop,
-                    type=details.get('type'),
-                    description=details.get('description'),
-                    required=prop in function.get('parameters', {}).get('required', [])
+                    name=arg_name,
+                    type=arg_details.get('type'),
+                    description=arg_details.get('description'),
+                    required=arg_name in required
                 )
-                db.session.add(new_argument)
+                db.session.add(new_arg)
+
+        db.session.commit()
 
     includes = swaig.get('includes', [])
     for include in includes:
@@ -220,36 +255,41 @@ def process_ai_data(agent_id, ai_data):
     new_prompt = AIPrompt(
         agent_id=agent_id,
         prompt_type='prompt',
-        prompt_text=prompt.get('text'),
-        top_p=prompt.get('top_p'),
-        temperature=prompt.get('temperature')
+        prompt_text=prompt.get('text', ''),
+        top_p=prompt.get('top_p', 0.5),
+        temperature=prompt.get('temperature', 0.5),
+        presence_penalty=prompt.get('presence_penalty', 0),
+        frequency_penalty=prompt.get('frequency_penalty', 0)
     )
     db.session.add(new_prompt)
-
     languages = ai_data.get('languages', [])
+
     for language in languages:
+        engine = language.get('engine', '')
+        voice = language.get('voice', '')
+        if engine:
+            voice = f"{engine}.{voice}"
+
         new_language = AILanguage(
             agent_id=agent_id,
             name=language.get('name'),
             code=language.get('code'),
-            voice=language.get('voice')
+            voice=voice,
+            function_fillers=','.join(language.get('function_fillers', [])),
+            speech_fillers=','.join(language.get('speech_fillers', []))
         )
         db.session.add(new_language)
         db.session.commit()
-
-        for filler in language.get('function_fillers', []):
-            new_filler = AILanguageFiller(
-                language_id=new_language.id,
-                text=filler
-            )
-            db.session.add(new_filler)
-
+        
     post_prompt = ai_data.get('post_prompt', {})
-    new_post_prompt = AIPostPrompt(
+    new_post_prompt = AIPrompt(
         agent_id=agent_id,
-        text=post_prompt.get('text'),
-        top_p=post_prompt.get('top_p'),
-        temperature=post_prompt.get('temperature')
+        prompt_type='post_prompt',
+        prompt_text=post_prompt.get('text', ''),
+        top_p=post_prompt.get('top_p', 0.5),
+        temperature=post_prompt.get('temperature', 0.5),
+        presence_penalty=post_prompt.get('presence_penalty', 0),
+        frequency_penalty=post_prompt.get('frequency_penalty', 0)
     )
     db.session.add(new_post_prompt)
 

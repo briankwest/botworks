@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Import{% endblock %}
+
+{% block content %}
+{% include 'navbar.html' %}
+{% include 'sidebar.html' %}
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-6">
+                    <h1 class="m-0">Import</h1>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-success">
+                            <h3 class="card-title">Add Import</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="addImportForm">
+                                <div class="form-group">
+                                    <label for="importText">AI Agent</label>
+                                    <textarea class="form-control" id="importText" name="import" rows="10" required></textarea>
+                                </div>
+                                <div class="card-footer mt-3">
+                                    <button type="submit" class="btn btn-sm mr-2 btn-success">
+                                        <i class="fas fa-plus"></i> Import SWML Agent
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+{% include 'footer.html' %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        function showToast(icon, title) {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            });
+
+            Toast.fire({
+                icon: icon,
+                title: title
+            });
+        }
+
+        $('#addImportForm').submit(function (e) {
+            e.preventDefault();
+            const formData = {
+                import: $('#importText').val()
+            };
+
+            $.ajax({
+                type: 'POST',
+                url: `/import`,
+                contentType: 'application/json',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                data: JSON.stringify(formData),
+                success: function (response) {
+                    showToast('success', 'SWML Agent imported successfully');
+                },
+                error: function (error) {
+                    showToast('error', 'Error importing SWML Agent');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

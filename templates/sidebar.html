@@ -172,6 +172,12 @@
             <p>SignalWire</p>
           </a>
         </li>
+        <li class="nav-item">
+          <a href="{{ url_for('import_page') }}" class="nav-link {{ 'active' if request.endpoint == 'import_page' else '' }}">
+            <i class="nav-icon fas fa-cogs"></i>
+            <p>Import</p>
+          </a>
+        </li>
         <li class="nav-item mt-auto">
           <a href="{{ url_for('logout') }}" class="nav-link">
             <i class="nav-icon fas fa-sign-out-alt"></i>

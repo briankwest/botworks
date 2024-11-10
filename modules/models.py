@@ -205,8 +205,8 @@ class AIParams(db.Model):
     __tablename__ = 'ai_params'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     agent_id = db.Column(db.Integer, db.ForeignKey('ai_agents.id', ondelete='CASCADE'), nullable=False)
-    name = db.Column(db.String(100), nullable=False)
-    value = db.Column(db.String(255), nullable=True)
+    name = db.Column(db.String, nullable=False)
+    value = db.Column(db.String, nullable=True)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
