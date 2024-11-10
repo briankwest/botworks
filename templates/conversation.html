@@ -873,8 +873,28 @@
                     <tr><th>Direction</th><td>${data.direction}</td></tr>
                     <tr><th>Status</th><td>${data.status}</td></tr>
                     <tr><th>Duration</th><td>${data.duration} seconds</td></tr>
-                    <tr><th>Charge</th><td>$${data.charge.toFixed(2)}</td></tr>
-                    <tr><th>Charge Details</th><td><ul>${data.charge_details.map(detail => `<li>${detail.description}: $${detail.charge.toFixed(2)}</li>`).join('')}</ul></td></tr>
+                    <tr><th>Charge</th><td>$${data.charge.toFixed(13)}</td></tr>
+                    <tr>
+                        <th>Charge Details</th>
+                        <td>
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Description</th>
+                                        <th>Charge</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${data.charge_details.map(detail => `
+                                        <tr>
+                                            <td>${detail.description}</td>
+                                            <td>$${detail.charge.toFixed(13)}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
                 </table>
             `;
             billingDetailsDiv.style.display = 'block';
