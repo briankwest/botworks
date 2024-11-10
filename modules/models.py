@@ -435,3 +435,12 @@ class PasswordResetToken(db.Model):
     def is_valid(self):
         return not self.used and not self.is_expired()
 
+class Subscription(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('ai_users.id', ondelete='CASCADE'), nullable=False)
+    endpoint = db.Column(db.String, nullable=False)
+    keys = db.Column(db.JSON, nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.now())
+    updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
+
+    user = db.relationship('AIUser', backref=db.backref('subscriptions', cascade='all, delete-orphan'))

@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% include 'navbar.html' %}
+{% include 'sidebar.html' %}
+
+<div class="content-wrapper">
+  <section class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1>Push Notification Testing</h1>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header bg-info">
+              <h3 class="card-title">Test Push Notifications</h3>
+            </div>
+            <div class="card-body">
+              <div class="button-group mb-4">
+                <button id="subscribeButton" type="button" class="btn btn-secondary btn-flat"
+                  onclick="subscribeUserToPush()">
+                  <i class="fas fa-bell"></i> Subscribe to Notifications
+                </button>
+                <button id="unsubscribeButton" type="button" class="btn btn-warning btn-flat d-none"
+                  onclick="unsubscribeFromPush()">
+                  <i class="fas fa-bell-slash"></i> Unsubscribe
+                </button>
+              </div>
+
+              <div class="form-group">
+                <label for="notificationTitle">Notification Title</label>
+                <input type="text" class="form-control" id="notificationTitle" placeholder="Enter notification title">
+              </div>
+              <div class="form-group">
+                <label for="notificationBody">Notification Body</label>
+                <textarea class="form-control" id="notificationBody" rows="3"
+                  placeholder="Enter notification message"></textarea>
+              </div>
+              <button type="button" class="btn btn-primary btn-flat" onclick="sendTestNotification()">
+                <i class="fas fa-paper-plane"></i> Send Test Notification
+              </button>
+
+              <div id="subscriptionStatus" class="mt-3"></div>
+              <div id="notificationStatus" class="mt-3"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  async function subscribeUserToPush() {
+    console.log('Starting subscription process');
+
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      console.log('Service Worker is ready');
+
+      let subscription = await registration.pushManager.getSubscription();
+
+      if (subscription) {
+        console.log('Already subscribed:', subscription);
+        updateSubscriptionStatus(true);
+        return;
+      }
+
+      console.log('Fetching VAPID public key...');
+      const response = await fetch('/vapid-public-key');
+      const data = await response.json();
+
+      if (!data.publicKey) {
+        throw new Error('Invalid public key received from server');
+      }
+
+      console.log('Received VAPID key:', data.publicKey);
+      const convertedVapidKey = urlBase64ToUint8Array(data.publicKey);
+
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: convertedVapidKey
+      });
+      console.log('Push subscription created:', subscription);
+
+      const subscribeResponse = await fetch('/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(subscription)
+      });
+
+      if (!subscribeResponse.ok) {
+        throw new Error('Failed to send subscription to server');
+      }
+
+      console.log('Subscription sent to server successfully');
+      updateSubscriptionStatus(true);
+
+      Swal.fire({
+        toast: true,
+        icon: 'success',
+        title: 'Successfully subscribed to notifications',
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000
+      });
+
+    } catch (error) {
+      console.error('Subscription process failed:', error);
+      updateSubscriptionStatus(false);
+      Swal.fire({
+        toast: true,
+        icon: 'error',
+        title: 'Failed to subscribe: ' + error.message,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000
+      });
+    }
+  }
+
+  async function unsubscribeFromPush() {
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+
+      if (subscription) {
+        await subscription.unsubscribe();
+
+        await fetch('/unsubscribe', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(subscription)
+        });
+
+        updateSubscriptionStatus(false);
+
+        Swal.fire({
+          toast: true,
+          icon: 'success',
+          title: 'Successfully unsubscribed from notifications',
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3000
+        });
+      }
+    } catch (error) {
+      console.error('Failed to unsubscribe:', error);
+      Swal.fire({
+        toast: true,
+        icon: 'error',
+        title: 'Failed to unsubscribe: ' + error.message,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000
+      });
+    }
+  }
+
+  function updateSubscriptionStatus(isSubscribed) {
+    const subscribeButton = document.getElementById('subscribeButton');
+    const unsubscribeButton = document.getElementById('unsubscribeButton');
+    const statusDiv = document.getElementById('subscriptionStatus');
+
+    if (isSubscribed) {
+      subscribeButton.classList.add('d-none');
+      unsubscribeButton.classList.remove('d-none');
+      statusDiv.innerHTML = '<div class="alert alert-success">Currently subscribed to push notifications</div>';
+    } else {
+      subscribeButton.classList.remove('d-none');
+      unsubscribeButton.classList.add('d-none');
+      statusDiv.innerHTML = '<div class="alert alert-warning">Not subscribed to push notifications</div>';
+    }
+  }
+
+  function urlBase64ToUint8Array(base64String) {
+    try {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64 = (base64String + padding)
+        .replace(/\-/g, '+')
+        .replace(/_/g, '/');
+
+      const rawData = window.atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+
+      for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+      }
+      return outputArray;
+    } catch (error) {
+      console.error('Error converting VAPID key:', error);
+      throw new Error('Invalid VAPID key format');
+    }
+  }
+
+  // Check subscription status on page load
+  document.addEventListener('DOMContentLoaded', async () => {
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+      updateSubscriptionStatus(!!subscription);
+    } catch (error) {
+      console.error('Error checking subscription status:', error);
+      updateSubscriptionStatus(false);
+    }
+  });
+
+  async function sendTestNotification() {
+    try {
+      const title = document.getElementById('notificationTitle').value || 'Test Notification';
+      const body = document.getElementById('notificationBody').value || 'This is a test notification';
+
+      const response = await fetch('/test-send-notification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ title, body })
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        // Swal.fire({
+        //   toast: true,
+        //   icon: 'success',
+        //   title: `Sent ${result.sent} of ${result.total} notifications`,
+        //   position: 'top-end',
+        //   showConfirmButton: false,
+        //   timer: 3000
+        // });
+      } else {
+        throw new Error(result.message || 'Failed to send notification');
+      }
+    } catch (error) {
+      console.error('Error sending notification:', error);
+      Swal.fire({
+        toast: true,
+        icon: 'error',
+        title: 'Failed to send notification: ' + error.message,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000
+      });
+    }
+  }
+</script>
+{% endblock %}

@@ -1,6 +1,8 @@
 import eventlet
 eventlet.monkey_patch()
 import os, jwt, base64, json, redis, yaml, requests, logging
+from pywebpush import webpush, WebPushException
+from flask import send_from_directory
 import random
 from uuid import uuid4
 import string
@@ -16,7 +18,7 @@ from flask_migrate import Migrate
 from dotenv import load_dotenv
 from urllib.parse import urlparse
 from modules.signalwireml import SignalWireML
-from modules.models import db, AIAgent, AIUser, AISignalWireParams, AIFeatures, AIFunctions, AIIncludes, AIConversation, AISWMLRequest, AIParams, AIFunctionArgs, AIPrompt, AIPronounce, AILanguage, AIHints, AIIncludes, AISWMLRequest, AIDebugLogs, AIContext, AISteps, AIHooks, SharedAgent, SharedConversations, AITranslate, PasswordResetToken
+from modules.models import db, AIAgent, AIUser, AISignalWireParams, AIFeatures, AIFunctions, AIIncludes, AIConversation, AISWMLRequest, AIParams, AIFunctionArgs, AIPrompt, AIPronounce, AILanguage, AIHints, AIIncludes, AISWMLRequest, AIDebugLogs, AIContext, AISteps, AIHooks, SharedAgent, SharedConversations, AITranslate, PasswordResetToken, Subscription
 from modules.swml_generator import generate_swml_response
 from modules.utils import (
     generate_random_password, get_feature, get_swaig_includes,
@@ -1641,6 +1643,182 @@ def phone_authenticate():
     else:
         return jsonify({'error': 'Authentication failed'}), response.status_code
 
+def send_push_notification(subscription, notification_data):
+    try:
+        response = webpush(
+            subscription_info={
+                "endpoint": subscription.endpoint,
+                "keys": subscription.keys
+            },
+            data=json.dumps(notification_data),
+            vapid_private_key=os.getenv('VAPID_PRIVATE_KEY'),
+            vapid_claims={
+                "sub": f"mailto:{os.getenv('VAPID_CLAIMS_EMAIL')}"
+            }
+        )
+        print(f"Push notification sent. Response: {response}")
+        return True
+    except WebPushException as e:
+        print(f"Failed to send push notification: {e}")
+        # If subscription is expired/invalid, remove it
+        if e.response and e.response.status_code in [404, 410]:
+            try:
+                db.session.delete(subscription)
+                db.session.commit()
+            except Exception as db_error:
+                print(f"Error removing invalid subscription: {db_error}")
+        return False
+    except Exception as e:
+        print(f"Unexpected error sending push notification: {e}")
+        return False
+
+@app.route('/vapid-public-key')
+@login_required
+def get_vapid_public_key():
+    vapid_public_key = os.getenv('VAPID_PUBLIC_KEY')
+    if not vapid_public_key:
+        return jsonify({'error': 'VAPID public key not configured'}), 500
+        
+    # Return the raw public key
+    return jsonify({'publicKey': vapid_public_key}), 200
+
+@app.route('/subscribe', methods=['POST'])
+@login_required
+def subscribe():
+    try:
+        subscription_data = request.get_json()
+        
+        # Extract the necessary data from the subscription
+        endpoint = subscription_data.get('endpoint')
+        keys = {
+            'p256dh': subscription_data['keys']['p256dh'],
+            'auth': subscription_data['keys']['auth']
+        }
+
+        # Check if subscription already exists for this user and endpoint
+        existing_sub = Subscription.query.filter_by(
+            user_id=current_user.id,
+            endpoint=endpoint
+        ).first()
+
+        if existing_sub:
+            # Update existing subscription
+            existing_sub.keys = keys
+            existing_sub.updated_at = db.func.now()
+            db.session.commit()
+        else:
+            # Create new subscription
+            new_subscription = Subscription(
+                user_id=current_user.id,
+                endpoint=endpoint,
+                keys=keys
+            )
+            db.session.add(new_subscription)
+            db.session.commit()
+
+        return jsonify({'status': 'success'}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error saving subscription: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/unsubscribe', methods=['POST'])
+@login_required
+def unsubscribe():
+    try:
+        subscription_data = request.get_json()
+        endpoint = subscription_data.get('endpoint')
+
+        # Find and delete the subscription
+        subscription = Subscription.query.filter_by(
+            user_id=current_user.id,
+            endpoint=endpoint
+        ).first()
+
+        if subscription:
+            db.session.delete(subscription)
+            db.session.commit()
+            return jsonify({'status': 'success'}), 200
+        else:
+            return jsonify({'status': 'not_found'}), 404
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error removing subscription: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+    
+@app.route('/send-notification', methods=['POST'])
+@login_required
+def send_notification():
+    try:
+        notification_data = request.get_json()
+        user_id = current_user.id
+        
+        # Get all subscriptions for the user
+        subscriptions = Subscription.query.filter_by(user_id=user_id).all()
+        
+        success_count = 0
+        for subscription in subscriptions:
+            if send_push_notification(subscription, notification_data):
+                success_count += 1
+
+        return jsonify({
+            'status': 'success',
+            'sent': success_count,
+            'total': len(subscriptions)
+        }), 200
+
+    except Exception as e:
+        print(f"Error sending notifications: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/test-send-notification', methods=['POST'])
+@login_required
+def test_send_notification():
+    try:
+        data = request.get_json()
+        title = data.get('title', 'Test Notification')
+        body = data.get('body', 'This is a test notification')
+        
+        # Get all subscriptions for the current user
+        subscriptions = Subscription.query.filter_by(user_id=current_user.id).all()
+        
+        if not subscriptions:
+            return jsonify({
+                'status': 'error',
+                'message': 'No subscriptions found'
+            }), 404
+
+        success_count = 0
+        for subscription in subscriptions:
+            notification_data = {
+                'title': title,
+                'body': body,
+                'timestamp': datetime.now().isoformat()
+            }
+            
+            if send_push_notification(subscription, notification_data):
+                success_count += 1
+
+        return jsonify({
+            'status': 'success',
+            'sent': success_count,
+            'total': len(subscriptions)
+        }), 200
+
+    except Exception as e:
+        print(f"Error sending test notification: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+    
+@app.route('/testpush', methods=['GET'])
+@login_required
+def testpush():
+    return render_template('testpush.html', user=current_user)
+
 @app.route('/phone', methods=['GET'])
 @login_required
 def phone():
@@ -1731,6 +1909,12 @@ def delete_translator(id):
     db.session.delete(translator)
     db.session.commit()
     return jsonify({'message': 'Translator deleted successfully'})
+
+
+@app.route('/service-worker.js', methods=['GET'])
+@login_required
+def service_worker():
+    return send_from_directory('static', 'js/service-worker.js')
 
 @app.errorhandler(404)
 def not_found_error(error):

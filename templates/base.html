@@ -64,6 +64,38 @@
       const userEmail = "{{ current_user.email }}";
       setGravatarImg(userEmail);
     };
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(function (registration) {
+          console.log('Service Worker registered with scope:', registration.scope);
+        })
+        .catch(function (error) {
+          console.error('Service Worker registration failed:', error);
+        });
+    }
+    navigator.serviceWorker.addEventListener('message', function (event) {
+        if (event.data.type === 'SHOW_ALERT') {
+          Swal.fire({
+            title: event.data.title,
+            text: event.data.body,
+            icon: 'info',
+            imageUrl: event.data.icon,
+            position: 'top-end',
+            toast: true,
+            showConfirmButton: true,
+            confirmButtonText: 'Open',
+            showCancelButton: true,
+            cancelButtonText: 'Close',
+            timer: 8000,
+            timerProgressBar: true
+          }).then((result) => {
+            if (result.isConfirmed && event.data.url) {
+              window.location.href = event.data.url;
+            }
+          });
+        }
+      });
   </script>
   <script type="text/javascript">
     var agent_id = {{ agent_id| tojson }};
