@@ -167,7 +167,7 @@
         $('#editFeatureId').val(data.id);
         $('#editFeatureName').val(data.name);
         $('#editFeatureValue').val(data.value);
-        $('#editFeatureEnabled').prop('checked', data.enabled);
+        $('#editFeatureEnabled').val(data.enabled);
         $('#editFeatureModal').modal('show');
 
         if (editFeatureDataEditor) {
@@ -182,7 +182,7 @@
       const id = $('#editFeatureId').val();
       const name = $('#editFeatureName').val();
       const value = $('#editFeatureValue').val();
-      const enabled = $('#editFeatureEnabled').is(':checked');
+      const enabled = $('#editFeatureEnabled').val() === 'true';
       const data = JSON.parse(editFeatureDataEditor.getValue());
 
       $.ajax({
@@ -355,6 +355,7 @@
       <div class="modal-body">
         <form id="editFeatureForm">
           <input type="hidden" id="editFeatureId">
+          <input type="hidden" id="editFeatureEnabled">
           <div class="form-group">
             <label for="editFeatureName">Name</label>
             <input type="text" class="form-control" id="editFeatureName" required disabled>

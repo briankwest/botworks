@@ -426,6 +426,22 @@
               const prompts = Array.isArray(data) ? data : [data];
               const table = $('#promptTable').DataTable();
               table.clear().rows.add(prompts).draw();
+
+              const existingPromptTypes = prompts.map(prompt => prompt.prompt_type);
+              const promptTypeSelect = $('#newPromptType');
+              promptTypeSelect.empty();
+              const allPromptTypes = [
+                { display: 'Prompt', value: 'prompt' },
+                { display: 'Post Prompt', value: 'post_prompt' },
+                { display: 'Outbound Prompt', value: 'outbound_prompt' },
+                { display: 'Outbound Post Prompt', value: 'outbound_post_prompt' }
+              ];
+
+              allPromptTypes.forEach(type => {
+                if (!existingPromptTypes.includes(type.value)) {
+                  promptTypeSelect.append(new Option(type.display, type.value));
+                }
+              });
             },
             error: function (xhr, status, error) {
               showToast('error', 'Error reloading prompts: ' + xhr.responseText);
