@@ -98,7 +98,6 @@ async function checkSubscriptionStatus() {
         pushSubscription = await registration.pushManager.getSubscription();
         
         if (pushSubscription) {
-            // Check with server if subscription is still valid
             const response = await fetch('/check-subscription', {
                 method: 'POST',
                 headers: {
@@ -108,7 +107,6 @@ async function checkSubscriptionStatus() {
             });
             
             if (!response.ok) {
-                console.log('Subscription not found in database, unsubscribing...');
                 await pushSubscription.unsubscribe();
                 pushSubscription = null;
             }
@@ -223,23 +221,23 @@ function urlBase64ToUint8Array(base64String) {
     }
 }
 
-// Initialize subscription checking
 document.addEventListener('DOMContentLoaded', async () => {
     const subscribeButton = document.getElementById('subscribeButton');
     const statusDiv = document.getElementById('subscriptionStatus');
-  // Check if it's iOS
+
+    const isIOSPWA = window.navigator.standalone;
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    if (isIOS) {
-        console.warn('Push notifications not supported on iOS');
+    const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+    
+    if (isIOS && isSafari && !isIOSPWA) {
         subscribeButton.disabled = true;
         subscribeButton.classList.add('btn-secondary');
         subscribeButton.classList.remove('btn-primary');
-        statusDiv.innerHTML = '<div class="alert alert-danger">Push notifications are not supported on iOS devices without installing this app as a PWA.</div>';
+        statusDiv.innerHTML = '<div class="alert alert-warning">To receive push notifications, please add this website to your home screen using Safari\'s "Add to Home Screen" option.</div>';
         return;
     }
-    // Check if the browser supports push notifications
+
     if (!('serviceWorker' in navigator && 'PushManager' in window)) {
-        console.warn('Push notifications not supported');
         subscribeButton.disabled = true;
         subscribeButton.classList.add('btn-secondary');
         subscribeButton.classList.remove('btn-primary');
@@ -247,12 +245,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-
     try {
         await navigator.serviceWorker.register('/service-worker.js');
         await checkSubscriptionStatus();
         
-        // Set up periodic checking every 5 minutes
         setInterval(checkSubscriptionStatus, 5 * 60 * 1000);
         
     } catch (error) {
