@@ -6,34 +6,11 @@
   </ul>
 
   <ul class="navbar-nav ml-auto">
-    <!--
-    <li class="nav-item">
-      <a class="nav-link" data-widget="navbar-search" href="#" role="button">
-        <i class="fas fa-search"></i>
-      </a>
-
-      <div class="navbar-search-block">
-        <form class="form-inline">
-          <div class="input-group input-group-sm">
-            <input class="form-control form-control-navbar" type="search" placeholder="Search" aria-label="Search">
-            <div class="input-group-append">
-              <button class="btn btn-navbar" type="submit">
-                <i class="fas fa-search"></i>
-              </button>
-              <button class="btn btn-navbar" type="button" data-widget="navbar-search">
-                <i class="fas fa-times"></i>
-              </button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </li>
-  -->
     <li class="nav-item dropdown">
     </li>
     <li class="nav-item dropdown">
     </li>
-    <li class="nav-item dropdown">
+    <li class="nav-item dropdown" id="agent-dropdown" style="display: none;">
       <select id="agent-select" class="form-control" style="display: inline-block; width: auto; margin-left: 10px;"
         onchange="handleAgentChange(event)">
         <option value="">-- Select an Agent --</option>
@@ -44,6 +21,14 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', function () {
+    const agentDropdown = document.getElementById('agent-dropdown');
+    if (window.location.pathname.includes('/agents/')) {
+      agentDropdown.style.display = 'block';
+      initializeAgentDropdown();
+    }
+  });
+
+  function initializeAgentDropdown() {
     const agentSelect = document.getElementById('agent-select');
 
     fetch('{{ url_for("list_agents", agent_id=agent_id) }}', {
@@ -53,13 +38,13 @@
     })
       .then(response => response.json())
       .then(data => {
-        const selectedAgentId = {{ agent_id }};
+        const selectedAgentId = getCookie('selectedAgentId');
 
         data.forEach(agent => {
           const option = document.createElement('option');
           option.value = agent.id;
           option.textContent = agent.name;
-          if (agent.id == {{ agent_id }}) {
+          if (agent.id == selectedAgentId) {
             option.selected = true;
           }
           agentSelect.appendChild(option);
@@ -80,7 +65,7 @@
         });
       })
       .catch(error => console.error('Error fetching agents:', error));
-  });
+  }
 
   function handleAgentChange(event) {
     const selectedAgentId = event.target.value;
