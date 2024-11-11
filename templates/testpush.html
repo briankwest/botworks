@@ -96,6 +96,34 @@ async function checkSubscriptionStatus() {
     try {
         const registration = await navigator.serviceWorker.ready;
         pushSubscription = await registration.pushManager.getSubscription();
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        
+        if (isIOS) {
+            const storedSubscription = localStorage.getItem('pushSubscription');
+            
+            if (!pushSubscription && storedSubscription) {
+                try {
+                    pushSubscription = await registration.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: await getApplicationServerKey()
+                    });
+                    
+                    await fetch('/subscribe', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(pushSubscription)
+                    });
+                    
+                    localStorage.setItem('pushSubscription', JSON.stringify(pushSubscription.toJSON()));
+                } catch (error) {
+                    console.error('Failed to resubscribe:', error);
+                    localStorage.removeItem('pushSubscription');
+                    pushSubscription = null;
+                }
+            }
+        }
         
         if (pushSubscription) {
             const response = await fetch('/check-subscription', {
@@ -107,6 +135,9 @@ async function checkSubscriptionStatus() {
             });
             
             if (!response.ok) {
+                if (isIOS) {
+                    localStorage.removeItem('pushSubscription');
+                }
                 await pushSubscription.unsubscribe();
                 pushSubscription = null;
             }
@@ -117,6 +148,12 @@ async function checkSubscriptionStatus() {
         console.error('Error checking subscription status:', error);
         updateSubscriptionUI(false);
     }
+}
+
+async function getApplicationServerKey() {
+    const response = await fetch('/vapid-public-key');
+    const data = await response.json();
+    return urlBase64ToUint8Array(data.publicKey);
 }
 
 function updateSubscriptionUI(isSubscribed) {
@@ -148,6 +185,11 @@ async function subscribeUserToPush() {
             userVisibleOnly: true,
             applicationServerKey: urlBase64ToUint8Array(data.publicKey)
         });
+
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIOS) {
+            localStorage.setItem('pushSubscription', JSON.stringify(pushSubscription.toJSON()));
+        }
 
         await fetch('/subscribe', {
             method: 'POST',
