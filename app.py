@@ -563,19 +563,18 @@ def laml(agent_id):
     db.session.add(new_debug_log)
     db.session.commit()
    
-    response = make_response('<?xml version="1.0" encoding="UTF-8"?><Response/>')
-    response.headers['Content-Type'] = 'text/xml'
-
     call_id = call_tracking['number_to_call'].get(to) or call_tracking['number_to_call'].get(from_)
 
     if call_id:
+        response = make_response('<?xml version="1.0" encoding="UTF-8"?><Response/>')
+        response.headers['Content-Type'] = 'text/xml'
+
         space_name = get_signalwire_param_by_agent_id(agent_id, 'SPACE_NAME')
         auth_token = get_signalwire_param_by_agent_id(agent_id, 'AUTH_TOKEN')
         project_id = get_signalwire_param_by_agent_id(agent_id, 'PROJECT_ID')
 
         if not space_name or not auth_token or not project_id:
             app.logger.error(f"Missing SignalWire parameters for agent_id {agent_id}")
-            return jsonify({'error': 'Missing SignalWire parameters'}), 500
 
         encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
         url = f"https://{space_name}/api/calling/calls"
@@ -600,8 +599,14 @@ def laml(agent_id):
             app.logger.error(f"Failed to send command: {ai_response.text}")
         else:   
             app.logger.info("Command sent successfully")
-
-    return response
+        
+        return response, 200        
+    else:
+        app.logger.error(f"No call_id found for {to}")
+        response = make_response('<?xml version="1.0" encoding="UTF-8"?><Response><Message>Sorry, No active call found.</Message></Response>')
+        response.headers['Content-Type'] = 'text/xml'
+        
+        return response, 200
 
 @app.route('/swml/<int:agent_id>', methods=['POST', 'GET'])
 @auth.login_required

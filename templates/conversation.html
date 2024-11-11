@@ -146,8 +146,18 @@
             return data;
           }
         },
-        { "data": "data.caller_id_name" },
-        { "data": "data.caller_id_number" },
+        {
+          "data": "data.caller_id_name",
+          "render": function (data, type, row) {
+            return data || 'N/A';
+          }
+        },
+        {
+          "data": "data.caller_id_number",
+          "render": function (data, type, row) {
+            return data || 'N/A';
+          }
+        },
         {
           "data": null,
           "render": function (data, type, row) {
@@ -319,7 +329,7 @@
         return response.json();
       })
       .then(responseData => {
-        console.log('Received data:', responseData); // Log the received data
+        console.log('Received data:', responseData);
         clearContent();
         if (responseData.cogs) {
           responseData.data.cogs = responseData.cogs;
@@ -328,7 +338,8 @@
           responseData.data.grafana_url = responseData.grafana_url;
         } 
         displayData(responseData.data);
-        setupNavigationButtons(agentId, responseData.next, responseData.prev);
+        console.log('Setting up navigation buttons', agentId, responseData.next, responseData.prev, responseData.data.SWMLVars.record_call_url);
+        setupNavigationButtons(agentId, responseData.next, responseData.prev, responseData.data.SWMLVars.record_call_url);
       })
       .catch(error => {
         console.error('Error fetching JSON:', error);
@@ -343,9 +354,9 @@
     content.innerHTML = '';
   }
 
-  function setupNavigationButtons(agentId, nextId, prevId) {
+  function setupNavigationButtons(agentId, nextId, prevId, recordCallUrl) {
     const content = document.getElementById('PostPromptDataContent');
-
+    console.log('Setting up navigation buttons', agentId, nextId, prevId, recordCallUrl);
     let navContainer = document.getElementById('navContainer');
     if (!navContainer) {
         navContainer = document.createElement('div');
@@ -376,6 +387,27 @@
             fetchData(agentId, nextId);
         };
         navigationGroup.appendChild(nextButton);
+    }
+
+    if (recordCallUrl) {
+        const audio = new Audio(recordCallUrl);
+
+        const playStopButton = document.createElement('button');
+        playStopButton.className = 'btn btn-info btn-sm mr-2';
+        playStopButton.innerHTML = '<i class="fas fa-play"></i> Play';
+        playStopButton.onclick = () => {
+            if (audio.paused) {
+                audio.play();
+                playStopButton.innerHTML = '<i class="fas fa-stop"></i> Stop';
+                playStopButton.className = 'btn btn-danger btn-sm mr-2';
+            } else {
+                audio.pause();
+                audio.currentTime = 0;
+                playStopButton.innerHTML = '<i class="fas fa-play"></i> Play';
+                playStopButton.className = 'btn btn-info btn-sm mr-2';
+            }
+        };
+        actionsGroup.appendChild(playStopButton);
     }
 
     const downloadButton = document.createElement('button');
@@ -742,10 +774,7 @@
       table += `
                 <tr>
                     <td>${key}</td>
-                    <td>
-                        ${value}
-                        ${key === 'record_call_url' ? `<audio controls preload="none" src="${value}" style="margin-left: 10px;"></audio>` : ''}
-                    </td>
+                    <td>${value}</td>
                     <td class="copy-btn"><i class="fas fa-copy" data-copy="${value}" onclick="copyToClipboard('${value}')"></i></td>
                 </tr>
             `;
@@ -854,14 +883,11 @@
   function fetchBillingData(callId, button) {
     const billingDetailsDiv = document.getElementById(`billingDetails_${callId}`);
 
-    // Check if the billing details are already loaded
     if (billingDetailsDiv.innerHTML.trim() !== '') {
-        // Toggle visibility without fetching data again
         billingDetailsDiv.style.display = billingDetailsDiv.style.display === 'none' ? 'block' : 'none';
         return;
     }
 
-    // Fetch data if not already loaded
     fetch(`/voice/logs/${callId}`)
         .then(response => response.json())
         .then(data => {
