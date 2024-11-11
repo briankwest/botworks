@@ -62,6 +62,36 @@
 <script>
 let pushSubscription = null;
 
+const Toast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true,
+    target: document.body,
+    didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer)
+        toast.addEventListener('mouseleave', Swal.resumeTimer)
+    }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const style = document.createElement('style');
+    style.textContent = `
+        .swal2-container {
+            z-index: 1050 !important;
+        }
+        .swal2-container.swal2-top-end {
+            align-items: flex-start;
+            justify-content: flex-end;
+        }
+        .swal2-container.swal2-top-end .swal2-popup {
+            margin-top: 10px;
+        }
+    `;
+    document.head.appendChild(style);
+});
+
 async function checkSubscriptionStatus() {
     try {
         const registration = await navigator.serviceWorker.ready;
@@ -130,24 +160,16 @@ async function subscribeUserToPush() {
         });
 
         updateSubscriptionUI(true);
-        Swal.fire({
-            toast: true,
+        Toast.fire({
             icon: 'success',
-            title: 'Successfully subscribed to notifications',
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000
+            title: 'Successfully subscribed to notifications'
         });
     } catch (error) {
         console.error('Failed to subscribe:', error);
         updateSubscriptionUI(false);
-        Swal.fire({
-            toast: true,
+        Toast.fire({
             icon: 'error',
-            title: 'Failed to subscribe: ' + error.message,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000
+            title: 'Failed to subscribe: ' + error.message
         });
     }
 }
@@ -167,24 +189,16 @@ async function unsubscribeFromPush() {
             pushSubscription = null;
             updateSubscriptionUI(false);
             
-            Swal.fire({
-                toast: true,
+            Toast.fire({
                 icon: 'success',
-                title: 'Successfully unsubscribed from notifications',
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 3000
+                title: 'Successfully unsubscribed from notifications'
             });
         }
     } catch (error) {
         console.error('Error unsubscribing:', error);
-        Swal.fire({
-            toast: true,
+        Toast.fire({
             icon: 'error',
-            title: 'Failed to unsubscribe: ' + error.message,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000
+            title: 'Failed to unsubscribe: ' + error.message
         });
     }
 }
@@ -250,23 +264,15 @@ async function sendTestNotification() {
             throw new Error('Failed to send notification');
         }
 
-        // Swal.fire({
-        //     toast: true,
-        //     icon: 'success',
-        //     title: 'Test notification sent successfully',
-        //     position: 'top-end',
-        //     showConfirmButton: false,
-        //     timer: 3000
+        //Toast.fire({
+        //    icon: 'success',
+        //    title: 'Test notification sent successfully'
         //});
     } catch (error) {
         console.error('Error sending notification:', error);
-        Swal.fire({
-            toast: true,
+        Toast.fire({
             icon: 'error',
-            title: 'Failed to send notification: ' + error.message,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000
+            title: 'Failed to send notification: ' + error.message
         });
     }
 }

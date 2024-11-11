@@ -93,28 +93,43 @@
           console.error('Service Worker registration failed:', error);
         });
     }
-    navigator.serviceWorker.addEventListener('message', function (event) {
-        if (event.data.type === 'SHOW_ALERT') {
-          Swal.fire({
-            title: event.data.title,
-            text: event.data.body,
-            icon: 'info',
-            imageUrl: event.data.icon,
-            position: 'top-end',
-            toast: true,
-            showConfirmButton: true,
-            confirmButtonText: 'Open',
-            showCancelButton: true,
-            cancelButtonText: 'Close',
-            timer: 8000,
-            timerProgressBar: true
-          }).then((result) => {
-            if (result.isConfirmed && event.data.url) {
-              window.location.href = event.data.url;
-            }
-          });
-        }
+
+    let notificationQueue = [];
+    let isShowingNotification = false;
+
+    function showNextNotification() {
+      if (notificationQueue.length === 0 || isShowingNotification) {
+        return;
+      }
+
+      isShowingNotification = true;
+      const notification = notificationQueue.shift();
+
+      Swal.fire({
+        title: notification.title,
+        text: notification.body,
+        icon: 'info',
+        position: 'top-end',
+        toast: true,
+        timer: 8000,
+        timerProgressBar: true,
+        showConfirmButton: false
+      }).then(() => {
+        isShowingNotification = false;
+        showNextNotification();
       });
+    }
+
+    navigator.serviceWorker.addEventListener('message', function (event) {
+      if (event.data.type === 'SHOW_ALERT') {
+        console.log('Queueing alert:', event.data);
+        notificationQueue.push({
+          title: event.data.title,
+          body: event.data.body
+        });
+        showNextNotification();
+      }
+    });
   </script>
   <script type="text/javascript">
     var agent_id = {{ agent_id| tojson }};

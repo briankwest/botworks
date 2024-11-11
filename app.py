@@ -1823,6 +1823,18 @@ def test_send_notification():
                 'status': 'error',
                 'message': 'No subscriptions found'
             }), 404
+        # Options for notification_data:
+        # - title: The title of the notification
+        # - body: The main content or message of the notification
+        # - icon: URL to an icon image to display with the notification
+        # - badge: URL to an image to display as a badge for the notification
+        # - image: URL to an image to display within the notification
+        # - timestamp: The time at which the notification is created
+        # - actions: A list of actions (buttons) to display with the notification
+        # - vibrate: A vibration pattern for devices that support it
+        # - requireInteraction: Boolean indicating if the notification should remain active until the user interacts with it
+        # - silent: Boolean indicating if the notification should be silent
+
 
         success_count = 0
         for subscription in subscriptions:
