@@ -3,6 +3,7 @@ eventlet.monkey_patch()
 import os, jwt, base64, json, redis, yaml, requests, logging
 from pywebpush import webpush, WebPushException
 from flask import send_from_directory
+from threading import Lock
 import random
 from uuid import uuid4
 import string
@@ -57,6 +58,12 @@ CORS(app, resources={
 
 # Add API prefix constant
 API_PREFIX = '/api/v1'
+
+call_tracking = {
+    'call_to_number': {},  # Maps call_id to phone number
+    'number_to_call': {}   # Maps phone number to call_id
+}
+call_tracking_lock = Lock()
 
 socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")
 
@@ -532,6 +539,70 @@ def status(agent_id):
     
     return jsonify({'response': 'Status updated successfully'}), 200
 
+@app.route('/laml/<int:agent_id>', methods=['POST'])
+@auth.login_required
+def laml(agent_id):
+    to = request.form.get('To')
+    from_ = request.form.get('From')
+    message = request.form.get('Body')
+    sid = request.form.get('MessageSid')
+    
+    debug_log = {
+        'agent_id': agent_id,
+        'to': to,
+        'from': from_,
+        'message': message,
+        'sid': sid
+    }
+    
+    new_debug_log = AIDebugLogs(
+        agent_id=agent_id,
+        data=debug_log,
+        ip_address=request.headers.get('X-Forwarded-For', request.remote_addr)
+    )
+    db.session.add(new_debug_log)
+    db.session.commit()
+   
+    response = make_response('<?xml version="1.0" encoding="UTF-8"?><Response/>')
+    response.headers['Content-Type'] = 'text/xml'
+
+    call_id = call_tracking['number_to_call'].get(to) or call_tracking['number_to_call'].get(from_)
+
+    if call_id:
+        space_name = get_signalwire_param_by_agent_id(agent_id, 'SPACE_NAME')
+        auth_token = get_signalwire_param_by_agent_id(agent_id, 'AUTH_TOKEN')
+        project_id = get_signalwire_param_by_agent_id(agent_id, 'PROJECT_ID')
+
+        if not space_name or not auth_token or not project_id:
+            app.logger.error(f"Missing SignalWire parameters for agent_id {agent_id}")
+            return jsonify({'error': 'Missing SignalWire parameters'}), 500
+
+        encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
+        url = f"https://{space_name}/api/calling/calls"
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Basic {encoded_credentials}"
+        }
+
+        payload = {
+            "id": call_id,
+            "command": "calling.ai_message",
+            "params": {
+                "role": "bot",
+                "message_text": f"The user just sent the following message: {message}"
+            }
+        }
+        
+        ai_response = requests.put(url, headers=headers, data=json.dumps(payload))
+
+        if ai_response.status_code != 200:
+            app.logger.error(f"Failed to send command: {ai_response.text}")
+        else:   
+            app.logger.info("Command sent successfully")
+
+    return response
+
 @app.route('/swml/<int:agent_id>', methods=['POST', 'GET'])
 @auth.login_required
 def swml(agent_id):
@@ -540,10 +611,20 @@ def swml(agent_id):
     else:
         data = request.args.to_dict()
 
+    # Track call mapping if this is a new call
+    if 'call' in data and data['call'].get('call_state') == 'created':
+        call_info = data['call']
+        call_id = call_info.get('call_id')
+        from_number = call_info.get('from_number')
+        
+        if call_id and from_number:
+            with call_tracking_lock:
+                call_tracking['call_to_number'][call_id] = from_number
+                call_tracking['number_to_call'][from_number] = call_id
+
     response_data = generate_swml_response(agent_id, request_body=data)
-
+    
     ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
-
     new_swml_request = AISWMLRequest(
         agent_id=agent_id,
         request=jsonify(data).json,
@@ -555,17 +636,25 @@ def swml(agent_id):
     
     response = make_response(jsonify(response_data))
     response.headers['Content-Type'] = 'application/json'
-    
     return response
 
 @app.route('/postprompt/<int:agent_id>', methods=['POST'])
 @auth.login_required
 def postprompt(agent_id):
     data = request.get_json()
+    call_id = data.get('call_id')
+
+    if call_id:
+        with call_tracking_lock:
+            if call_id in call_tracking['call_to_number']:
+                from_number = call_tracking['call_to_number'][call_id]
+                del call_tracking['call_to_number'][call_id]
+                if from_number in call_tracking['number_to_call']:
+                    del call_tracking['number_to_call'][from_number]
+
     caller_id_name = data.get('caller_id_name', 'Unknown')
     caller_id_number = data.get('caller_id_number', 'Unknown')
     summary = data.get('post_prompt_data', {}).get('raw', '')
-    call_id = data.get('call_id')   
     share_url = "Unknown"
     
     new_conversation = AIConversation(
@@ -1520,7 +1609,7 @@ def update_phone_number(phone_number_id):
     auth_token = get_signalwire_param('AUTH_TOKEN')
     auth_user = get_signalwire_param('HTTP_USERNAME')
     swml_url = f"https://{auth_user}:{auth_pass}@{request.host}/swml/{agent_id}"  
-    
+    laml_url = f"https://{auth_user}:{auth_pass}@{request.host}/laml/{agent_id}"
     encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
     url = f'https://{space_name}/api/relay/rest/phone_numbers/{phone_number_id}'
     authorization = f'Basic {encoded_credentials}'
@@ -1535,8 +1624,14 @@ def update_phone_number(phone_number_id):
         "call_handler": "relay_script",
         "call_receive_mode": "voice",
         "call_request_method": "POST",
-        "call_relay_script_url": swml_url
+        "call_relay_script_url": swml_url,
+        "message_handler": "laml_webhooks",
+        "message_request_url": laml_url,
+        "message_request_method": "POST",
+        "message_fallback_url": laml_url,
+        "message_fallback_method": "POST"
     }
+    print(data)
 
     headers = {
         'Authorization': authorization,
@@ -1544,7 +1639,7 @@ def update_phone_number(phone_number_id):
     }
 
     response = requests.put(url, headers=headers, json=data)
-
+    print(response)
     if response.status_code == 200:
         return jsonify(response.json()), 200
     else:
