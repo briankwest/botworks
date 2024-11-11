@@ -701,7 +701,7 @@
                 <th style="width: 5%;">Utterance Latency</th>
             </tr>
         `;
-    callLog.forEach(log => {
+    callLog.forEach((log, index) => {
       if (log.hasOwnProperty('tool_calls')) {
         return;
       }
@@ -709,10 +709,9 @@
         'user': 'bg-primary text-white',
         'assistant': 'bg-success text-white',
         'system': 'bg-warning text-dark',
-        'other': 'bg-secondary text-white',
+        'other': 'bg-secondary text-dark',
         'system-log': 'bg-warning text-dark',
         'tool': 'bg-info text-dark',
-        'other': 'bg-secondary text-dark',
       };
 
       const roleClass = roleColors[log.role] || 'bg-light text-dark';
@@ -728,7 +727,95 @@
             `;
     });
     table += '</table></div>';
+
+    // Add a canvas for the latency chart with reduced height
+    table += '<canvas id="latencyChart" width="400" height="100"></canvas>';
+
+    // Initialize the chart after the table
+    setTimeout(() => {
+      const ctx = document.getElementById('latencyChart').getContext('2d');
+      const latencyData = interpolateMissingData(callLog.map(log => log.latency));
+      const audioLatencyData = interpolateMissingData(callLog.map(log => log.audio_latency));
+      const utteranceLatencyData = interpolateMissingData(callLog.map(log => log.utterance_latency));
+
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: callLog.map((_, index) => index + 1), // Use index as the label
+          datasets: [
+            {
+              label: 'Latency',
+              data: latencyData,
+              borderColor: 'rgba(75, 192, 192, 0.6)',
+              backgroundColor: 'rgba(75, 192, 192, 0.2)',
+              fill: true,
+              spanGaps: true, // Connect points with missing data
+            },
+            {
+              label: 'Audio Latency',
+              data: audioLatencyData,
+              borderColor: 'rgba(153, 102, 255, 0.6)',
+              backgroundColor: 'rgba(153, 102, 255, 0.2)',
+              fill: true,
+              spanGaps: true, // Connect points with missing data
+            },
+            {
+              label: 'Utterance Latency',
+              data: utteranceLatencyData,
+              borderColor: 'rgba(255, 159, 64, 0.6)',
+              backgroundColor: 'rgba(255, 159, 64, 0.2)',
+              fill: true,
+              spanGaps: true, // Connect points with missing data
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'Log Entry'
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'Latency (ms)'
+              }
+            }
+          }
+        }
+      });
+    }, 0);
+
     return table;
+  }
+
+  function interpolateMissingData(data) {
+    const interpolatedData = [...data];
+    for (let i = 0; i < data.length; i++) {
+      if (data[i] === undefined || data[i] === null) {
+        let prev = i > 0 ? data[i - 1] : null;
+        let next = null;
+        for (let j = i + 1; j < data.length; j++) {
+          if (data[j] !== undefined && data[j] !== null) {
+            next = data[j];
+            break;
+          }
+        }
+        if (prev !== null && next !== null) {
+          interpolatedData[i] = (prev + next) / 2;
+        } else if (prev !== null) {
+          interpolatedData[i] = prev;
+        } else if (next !== null) {
+          interpolatedData[i] = next;
+        } else {
+          interpolatedData[i] = null; // Leave as null to skip in chart
+        }
+      }
+    }
+    return interpolatedData;
   }
 
   function createTimesTable(times) {
@@ -758,6 +845,151 @@
             `;
     });
     table += '</table></div>';
+
+    // Add canvases for the charts with reduced height
+    table += `
+      <canvas id="timeChart" width="400" height="100"></canvas>
+      <canvas id="tokensChart" width="400" height="100"></canvas>
+      <canvas id="tpsChart" width="400" height="100"></canvas>
+    `;
+
+    // Initialize the charts after the table
+    setTimeout(() => {
+      const timeCtx = document.getElementById('timeChart').getContext('2d');
+      const tokensCtx = document.getElementById('tokensChart').getContext('2d');
+      const tpsCtx = document.getElementById('tpsChart').getContext('2d');
+
+      // Token Time and Answer Time Chart
+      new Chart(timeCtx, {
+        type: 'line',
+        data: {
+          labels: times.map((_, index) => index + 1),
+          datasets: [
+            {
+              label: 'Token Time',
+              data: times.map(time => time.token_time),
+              borderColor: 'rgba(75, 192, 192, 0.6)',
+              backgroundColor: 'rgba(75, 192, 192, 0.2)',
+              fill: true,
+              spanGaps: true,
+            },
+            {
+              label: 'Answer Time',
+              data: times.map(time => time.answer_time),
+              borderColor: 'rgba(153, 102, 255, 0.6)',
+              backgroundColor: 'rgba(153, 102, 255, 0.2)',
+              fill: true,
+              spanGaps: true,
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'Entry'
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'Time (s)'
+              }
+            }
+          }
+        }
+      });
+
+      // Tokens and Response Word Count Chart
+      new Chart(tokensCtx, {
+        type: 'line',
+        data: {
+          labels: times.map((_, index) => index + 1),
+          datasets: [
+            {
+              label: 'Tokens',
+              data: times.map(time => time.tokens),
+              borderColor: 'rgba(255, 159, 64, 0.6)',
+              backgroundColor: 'rgba(255, 159, 64, 0.2)',
+              fill: true,
+              spanGaps: true,
+            },
+            {
+              label: 'Response Word Count',
+              data: times.map(time => time.response_word_count),
+              borderColor: 'rgba(54, 162, 235, 0.6)',
+              backgroundColor: 'rgba(54, 162, 235, 0.2)',
+              fill: true,
+              spanGaps: true,
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'Entry'
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'Count'
+              }
+            }
+          }
+        }
+      });
+
+      // TPS and Avg TPS Chart
+      new Chart(tpsCtx, {
+        type: 'line',
+        data: {
+          labels: times.map((_, index) => index + 1),
+          datasets: [
+            {
+              label: 'TPS',
+              data: times.map(time => time.tps),
+              borderColor: 'rgba(255, 99, 132, 0.6)',
+              backgroundColor: 'rgba(255, 99, 132, 0.2)',
+              fill: true,
+              spanGaps: true,
+            },
+            {
+              label: 'Avg TPS',
+              data: times.map(time => time.avg_tps),
+              borderColor: 'rgba(75, 192, 192, 0.6)',
+              backgroundColor: 'rgba(75, 192, 192, 0.2)',
+              fill: true,
+              spanGaps: true,
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'Entry'
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'TPS'
+              }
+            }
+          }
+        }
+      });
+
+    }, 0);
+
     return table;
   }
 
