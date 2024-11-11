@@ -225,20 +225,38 @@ function urlBase64ToUint8Array(base64String) {
 
 // Initialize subscription checking
 document.addEventListener('DOMContentLoaded', async () => {
-    if ('serviceWorker' in navigator && 'PushManager' in window) {
-        try {
-            await navigator.serviceWorker.register('/service-worker.js');
-            await checkSubscriptionStatus();
-            
-            // Set up periodic checking every 5 minutes
-            setInterval(checkSubscriptionStatus, 5 * 60 * 1000);
-            
-        } catch (error) {
-            console.error('Service Worker registration failed:', error);
-            updateSubscriptionUI(false);
-        }
-    } else {
+    const subscribeButton = document.getElementById('subscribeButton');
+    const statusDiv = document.getElementById('subscriptionStatus');
+  // Check if it's iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    if (isIOS) {
+        console.warn('Push notifications not supported on iOS');
+        subscribeButton.disabled = true;
+        subscribeButton.classList.add('btn-secondary');
+        subscribeButton.classList.remove('btn-primary');
+        statusDiv.innerHTML = '<div class="alert alert-danger">Push notifications are not supported on iOS devices without installing this app as a PWA.</div>';
+        return;
+    }
+    // Check if the browser supports push notifications
+    if (!('serviceWorker' in navigator && 'PushManager' in window)) {
         console.warn('Push notifications not supported');
+        subscribeButton.disabled = true;
+        subscribeButton.classList.add('btn-secondary');
+        subscribeButton.classList.remove('btn-primary');
+        statusDiv.innerHTML = '<div class="alert alert-danger">Push notifications are not supported in this browser. Please use a compatible browser like Chrome, Firefox, or Edge.</div>';
+        return;
+    }
+
+
+    try {
+        await navigator.serviceWorker.register('/service-worker.js');
+        await checkSubscriptionStatus();
+        
+        // Set up periodic checking every 5 minutes
+        setInterval(checkSubscriptionStatus, 5 * 60 * 1000);
+        
+    } catch (error) {
+        console.error('Service Worker registration failed:', error);
         updateSubscriptionUI(false);
     }
 });
