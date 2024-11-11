@@ -1737,6 +1737,23 @@ def unsubscribe():
         ).first()
 
         if subscription:
+            # Notify the push service that the subscription is gone
+            try:
+                webpush(
+                    subscription_info={
+                        "endpoint": subscription.endpoint,
+                        "keys": subscription.keys
+                    },
+                    data=None,
+                    vapid_private_key=os.getenv('VAPID_PRIVATE_KEY'),
+                    vapid_claims={
+                        "sub": f"mailto:{os.getenv('VAPID_CLAIMS_EMAIL')}"
+                    }
+                )
+            except WebPushException as e:
+                # Ignore errors since we're deleting anyway
+                pass
+
             db.session.delete(subscription)
             db.session.commit()
             return jsonify({'status': 'success'}), 200
