@@ -420,7 +420,7 @@
     const shareButton = document.createElement('button');
     shareButton.className = 'btn btn-success btn-sm';
     shareButton.innerHTML = '<i class="fas fa-share"></i> Share';
-    shareButton.onclick = () => shareConversation();
+    shareButton.onclick = () => shareConversation(currentConversationId);
     actionsGroup.appendChild(shareButton);
 
     navContainer.appendChild(navigationGroup);
@@ -448,12 +448,11 @@
         });
   }
 
-  function shareConversation() {
+  function shareConversation(currentConversationId) {
     const currentUrl = window.location.href;
-    const conversationId = $('#fullScreenModal').data('conversation-id');
     const agentId = currentUrl.split('/').slice(-2, -1)[0];
 
-    fetch(`/api/v1/agents/${agentId}/conversations/${conversationId}/share`, {
+    fetch(`/api/v1/agents/${agentId}/conversations/${currentConversationId}/share`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
