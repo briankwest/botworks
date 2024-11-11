@@ -1790,6 +1790,23 @@ def send_notification():
         print(f"Error sending notifications: {str(e)}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
+@app.route('/check-subscription', methods=['POST'])
+def check_subscription():
+    try:
+        subscription_data = request.get_json()
+        endpoint = subscription_data.get('endpoint')
+        
+        # Check if subscription exists in database
+        subscription = Subscription.query.filter_by(endpoint=endpoint).first()
+        
+        if subscription:
+            return jsonify({'status': 'valid'}), 200
+        else:
+            return jsonify({'status': 'invalid'}), 404
+            
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/test-send-notification', methods=['POST'])
 @login_required
 def test_send_notification():

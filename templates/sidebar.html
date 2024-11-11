@@ -173,6 +173,12 @@
           </a>
         </li>
         <li class="nav-item">
+          <a href="{{ url_for('testpush') }}" class="nav-link {{ 'active' if request.endpoint == 'testpush' else '' }}">
+            <i class="nav-icon fas fa-cogs"></i>
+            <p>Test Push</p>
+          </a>
+        </li>
+        <li class="nav-item">
           <a href="{{ url_for('import_page') }}" class="nav-link {{ 'active' if request.endpoint == 'import_page' else '' }}">
             <i class="nav-icon fas fa-cogs"></i>
             <p>Import</p>

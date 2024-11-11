@@ -66,6 +66,24 @@ async function checkSubscriptionStatus() {
     try {
         const registration = await navigator.serviceWorker.ready;
         pushSubscription = await registration.pushManager.getSubscription();
+        
+        if (pushSubscription) {
+            // Check with server if subscription is still valid
+            const response = await fetch('/check-subscription', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(pushSubscription)
+            });
+            
+            if (!response.ok) {
+                console.log('Subscription not found in database, unsubscribing...');
+                await pushSubscription.unsubscribe();
+                pushSubscription = null;
+            }
+        }
+        
         updateSubscriptionUI(!!pushSubscription);
     } catch (error) {
         console.error('Error checking subscription status:', error);
@@ -191,12 +209,16 @@ function urlBase64ToUint8Array(base64String) {
     }
 }
 
-// Event Listeners
+// Initialize subscription checking
 document.addEventListener('DOMContentLoaded', async () => {
     if ('serviceWorker' in navigator && 'PushManager' in window) {
         try {
             await navigator.serviceWorker.register('/service-worker.js');
             await checkSubscriptionStatus();
+            
+            // Set up periodic checking every 5 minutes
+            setInterval(checkSubscriptionStatus, 5 * 60 * 1000);
+            
         } catch (error) {
             console.error('Service Worker registration failed:', error);
             updateSubscriptionUI(false);
