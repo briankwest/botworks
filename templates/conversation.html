@@ -120,6 +120,8 @@
 
 {% block scripts %}
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
   $(document).ready(function () {
     console.log('Document is ready');
@@ -339,7 +341,7 @@
         } 
         displayData(responseData.data);
         console.log('Setting up navigation buttons', agentId, responseData.next, responseData.prev, responseData.data.SWMLVars.record_call_url);
-        setupNavigationButtons(agentId, responseData.next, responseData.prev, responseData.data.SWMLVars.record_call_url);
+        setupNavigationButtons(agentId, responseData.next, responseData.prev, responseData.data.SWMLVars.record_call_url, id);
       })
       .catch(error => {
         console.error('Error fetching JSON:', error);
@@ -354,9 +356,8 @@
     content.innerHTML = '';
   }
 
-  function setupNavigationButtons(agentId, nextId, prevId, recordCallUrl) {
+  function setupNavigationButtons(agentId, nextId, prevId, recordCallUrl, currentConversationId) {
     const content = document.getElementById('PostPromptDataContent');
-    console.log('Setting up navigation buttons', agentId, nextId, prevId, recordCallUrl);
     let navContainer = document.getElementById('navContainer');
     if (!navContainer) {
         navContainer = document.createElement('div');
@@ -413,7 +414,7 @@
     const downloadButton = document.createElement('button');
     downloadButton.className = 'btn btn-info btn-sm mr-2';
     downloadButton.innerHTML = '<i class="fas fa-download"></i> Download JSON';
-    downloadButton.onclick = () => downloadConversationData();
+    downloadButton.onclick = () => downloadConversationData(currentConversationId);
     actionsGroup.appendChild(downloadButton);
 
     const shareButton = document.createElement('button');
@@ -426,11 +427,10 @@
     navContainer.appendChild(actionsGroup);
   }
 
-  function downloadConversationData() {
-    const conversationId = $('#fullScreenModal').data('conversation-id');
+  function downloadConversationData(currentConversationId) {
     const agentId = window.location.href.split('/').slice(-2, -1)[0];
 
-    fetch(`/api/v1/agents/${agentId}/conversation/${conversationId}`)
+    fetch(`/api/v1/agents/${agentId}/conversation/${currentConversationId}`)
         .then(response => response.json())
         .then(data => {
             const blob = new Blob([JSON.stringify(data.data, null, 2)], { type: 'application/json' });
@@ -891,38 +891,77 @@
     fetch(`/voice/logs/${callId}`)
         .then(response => response.json())
         .then(data => {
+            const chargeDetails = data.charge_details;
+            const labels = chargeDetails.map(detail => detail.description);
+            const charges = chargeDetails.map(detail => detail.charge);
+
             billingDetailsDiv.innerHTML = `
-                <table class="table table-bordered mt-2">
-                    <tr><th>From</th><td>${data.from}</td></tr>
-                    <tr><th>To</th><td>${data.to}</td></tr>
-                    <tr><th>Direction</th><td>${data.direction}</td></tr>
-                    <tr><th>Status</th><td>${data.status}</td></tr>
-                    <tr><th>Duration</th><td>${data.duration} seconds</td></tr>
-                    <tr><th>Charge</th><td>$${data.charge.toFixed(13)}</td></tr>
-                    <tr>
-                        <th>Charge Details</th>
-                        <td>
-                            <table class="table table-sm">
-                                <thead>
-                                    <tr>
-                                        <th>Description</th>
-                                        <th>Charge</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${data.charge_details.map(detail => `
-                                        <tr>
-                                            <td>${detail.description}</td>
-                                            <td>$${detail.charge.toFixed(13)}</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </td>
-                    </tr>
-                </table>
+                <div style="display: flex; flex-wrap: wrap; align-items: flex-start;">
+                  <div style="flex: 1 1 300px; min-width: 300px;">
+                    <table class="table table-bordered mt-2">
+                        <tr><th>From</th><td>${data.from}</td></tr>
+                        <tr><th>To</th><td>${data.to}</td></tr>
+                        <tr><th>Direction</th><td>${data.direction}</td></tr>
+                        <tr><th>Status</th><td>${data.status}</td></tr>
+                        <tr><th>Duration</th><td>${data.duration} seconds</td></tr>
+                        <tr><th>Charge</th><td>$${data.charge.toFixed(13)}</td></tr>
+                    </table>
+                  </div>
+                  <div style="flex: 1 1 400px; padding-left: 20px; min-width: 400px;">
+                    <canvas id="chargeChart_${callId}" width="400" height="400"></canvas>
+                  </div>
+                  <div style="flex: 1 1 300px; min-width: 300px; margin-left: 20px;">
+                    <table class="table table-bordered mt-2">
+                        <thead>
+                          <tr>
+                            <th>Description</th>
+                            <th>Charge</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          ${chargeDetails.map(detail => `
+                            <tr>
+                              <td>${detail.description}</td>
+                              <td>$${detail.charge.toFixed(13)}</td>
+                            </tr>
+                          `).join('')}
+                        </tbody>
+                    </table>
+                  </div>
+                </div>
             `;
             billingDetailsDiv.style.display = 'block';
+
+            const ctx = document.getElementById(`chargeChart_${callId}`).getContext('2d');
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: charges,
+                        backgroundColor: [
+                            '#FF6384',
+                            '#36A2EB',
+                            '#FFCE56',
+                            '#4BC0C0',
+                            '#9966FF',
+                            '#FF9F40'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Charge Details'
+                        }
+                    }
+                }
+            });
         })
         .catch(error => {
             console.error('Error fetching billing data:', error);
