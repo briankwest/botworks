@@ -225,9 +225,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const subscribeButton = document.getElementById('subscribeButton');
     const statusDiv = document.getElementById('subscriptionStatus');
 
-    const isIOSPWA = window.navigator.standalone;
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+    const isIOSPWA = window.navigator.standalone || matchMedia('(display-mode: standalone)').matches;
     
     if (isIOS && isSafari && !isIOSPWA) {
         subscribeButton.disabled = true;
@@ -246,9 +246,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-        await navigator.serviceWorker.register('/service-worker.js');
-        await checkSubscriptionStatus();
+        if (isIOS && isIOSPWA) {
+            await navigator.serviceWorker.getRegistrations().then(async (registrations) => {
+                for (let registration of registrations) {
+                    await registration.unregister();
+                }
+            });
+        }
+
+        const registration = await navigator.serviceWorker.register('/service-worker.js', {
+            scope: '/'
+        });
         
+        await navigator.serviceWorker.ready;
+        
+        if (registration.waiting) {
+            registration.waiting.postMessage({type: 'SKIP_WAITING'});
+        }
+        
+        await checkSubscriptionStatus();
         setInterval(checkSubscriptionStatus, 5 * 60 * 1000);
         
     } catch (error) {
