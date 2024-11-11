@@ -393,22 +393,67 @@
     if (recordCallUrl) {
         const audio = new Audio(recordCallUrl);
 
-        const playStopButton = document.createElement('button');
-        playStopButton.className = 'btn btn-info btn-sm mr-2';
-        playStopButton.innerHTML = '<i class="fas fa-play"></i> Play';
-        playStopButton.onclick = () => {
-            if (audio.paused) {
-                audio.play();
-                playStopButton.innerHTML = '<i class="fas fa-stop"></i> Stop';
-                playStopButton.className = 'btn btn-danger btn-sm mr-2';
-            } else {
-                audio.pause();
-                audio.currentTime = 0;
-                playStopButton.innerHTML = '<i class="fas fa-play"></i> Play';
-                playStopButton.className = 'btn btn-info btn-sm mr-2';
-            }
+        const playButton = document.createElement('button');
+        playButton.className = 'btn btn-info btn-sm mr-2';
+        playButton.innerHTML = '<i class="fas fa-play"></i> Play';
+        playButton.onclick = () => {
+            audio.play();
         };
-        actionsGroup.appendChild(playStopButton);
+
+        const pauseButton = document.createElement('button');
+        pauseButton.className = 'btn btn-warning btn-sm mr-2';
+        pauseButton.innerHTML = '<i class="fas fa-pause"></i> Pause';
+        pauseButton.onclick = () => {
+            audio.pause();
+        };
+
+        const stopButton = document.createElement('button');
+        stopButton.className = 'btn btn-danger btn-sm mr-2';
+        stopButton.innerHTML = '<i class="fas fa-stop"></i> Stop';
+        stopButton.onclick = () => {
+            audio.pause();
+        };
+
+        const restartButton = document.createElement('button');
+        restartButton.className = 'btn btn-secondary btn-sm mr-2';
+        restartButton.innerHTML = '<i class="fas fa-redo"></i> Restart';
+        restartButton.onclick = () => {
+            audio.currentTime = 0;
+            audio.play();
+        };
+
+        actionsGroup.appendChild(playButton);
+        actionsGroup.appendChild(pauseButton);
+        actionsGroup.appendChild(stopButton);
+        actionsGroup.appendChild(restartButton);
+
+        const stopAudio = () => {
+            audio.pause();
+        };
+
+        if (prevId) {
+            const prevButton = document.createElement('button');
+            prevButton.className = 'btn btn-primary btn-sm mr-2';
+            prevButton.innerHTML = '<i class="fas fa-arrow-left"></i> Previous';
+            prevButton.onclick = () => {
+                stopAudio();
+                fetchData(agentId, prevId);
+            };
+            navigationGroup.appendChild(prevButton);
+        }
+
+        if (nextId) {
+            const nextButton = document.createElement('button');
+            nextButton.className = 'btn btn-primary btn-sm';
+            nextButton.innerHTML = 'Next <i class="fas fa-arrow-right"></i>';
+            nextButton.onclick = () => {
+                stopAudio();
+                fetchData(agentId, nextId);
+            };
+            navigationGroup.appendChild(nextButton);
+        }
+
+        $('.close').on('click', stopAudio);
     }
 
     const downloadButton = document.createElement('button');
@@ -550,6 +595,8 @@
     const cardHeader = document.createElement('div');
     cardHeader.className = 'card-header ' + (headerClass || 'bg-info');
 
+    cardHeader.dataset.cardWidget = 'collapse';
+    
     const cardTitle = document.createElement('h5');
     cardTitle.className = 'card-title';
     cardTitle.innerText = title;

@@ -165,6 +165,8 @@
     const cardHeader = document.createElement('div');
     cardHeader.className = 'card-header ' + (headerClass || 'bg-info');
 
+    cardHeader.dataset.cardWidget = 'collapse';
+
     const cardTitle = document.createElement('h5');
     cardTitle.className = 'card-title';
     cardTitle.innerText = title;
