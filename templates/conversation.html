@@ -124,6 +124,18 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
+
   function copyShareUrl(url) {
     navigator.clipboard.writeText(url).then(() => {
       const copyButton = document.querySelector('.swal2-html-container .btn');
