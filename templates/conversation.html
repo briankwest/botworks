@@ -133,6 +133,34 @@
       }, 1000);
     });
   }
+
+  function copyToClipboard(value) {
+    const tempInput = document.createElement('textarea');
+    tempInput.style.position = 'absolute';
+    tempInput.style.left = '-9999px';
+    tempInput.value = value;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    document.execCommand('copy');
+    document.body.removeChild(tempInput);
+    const Toast = Swal.mixin({
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 1500,
+      timerProgressBar: true,
+      didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer)
+        toast.addEventListener('mouseleave', Swal.resumeTimer)
+      }
+    });
+
+    Toast.fire({
+      icon: 'success',
+      title: 'Copied to clipboard'
+    });
+  }
+
   $(document).ready(function () {
     console.log('Document is ready');
     const agentId = {{ agent_id }};
@@ -318,7 +346,6 @@
     }
   });
 
-  // Example trigger for fetching billing data
   $('#conversationsTable').on('click', '.view-billing', function () {
     const uuid = $(this).data('uuid');
     fetchBillingData(uuid);
@@ -477,7 +504,6 @@
     downloadButton.onclick = () => downloadConversationData(currentConversationId);
     actionsGroup.appendChild(downloadButton);
 
-    // Create share and delete buttons with IDs
     const shareButton = document.createElement('button');
     shareButton.id = 'shareConversationBtn';
     shareButton.className = 'btn btn-success btn-sm mr-2';
@@ -632,7 +658,6 @@
       .then(data => {
         const shareUrl = `${window.location.origin}/conversations/shared/${data.uuid}`;
         
-        // Update button visibility using IDs
         const shareButton = document.getElementById('shareConversationBtn');
         const deleteButton = document.getElementById('deleteSharedBtn');
         if (shareButton && deleteButton) {
@@ -1293,33 +1318,6 @@
 
     table += '</table></div>';
     return table;
-  }
-
-  window.copyToClipboard = function (value) {
-    const tempInput = document.createElement('textarea');
-    tempInput.style.position = 'absolute';
-    tempInput.style.left = '-9999px';
-    tempInput.value = value;
-    document.body.appendChild(tempInput);
-    tempInput.select();
-    document.execCommand('copy');
-    document.body.removeChild(tempInput);
-    const Toast = Swal.mixin({
-      toast: true,
-      position: 'top-end',
-      showConfirmButton: false,
-      timer: 1500,
-      timerProgressBar: true,
-      didOpen: (toast) => {
-        toast.addEventListener('mouseenter', Swal.stopTimer)
-        toast.addEventListener('mouseleave', Swal.resumeTimer)
-      }
-    });
-
-    Toast.fire({
-      icon: 'success',
-      title: 'Copied to clipboard'
-    });
   }
 });
 
