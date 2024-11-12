@@ -1156,9 +1156,6 @@ def view_shared_conversation(uuid):
     shared_conversation = SharedConversations.query.filter_by(uuid=uuid).first_or_404()
     conversation = shared_conversation.conversation
 
-    if 'SWMLVars' in conversation.data:
-        del conversation.data['SWMLVars']
-        
     return jsonify({
         'id': conversation.id,
         'created': conversation.created,
@@ -1385,7 +1382,7 @@ def delete_domain_app(domain_app_id):
     auth_token = get_signalwire_param('AUTH_TOKEN')
     
     encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
-    url = f'https://briankwest.signalwire.com/api/relay/rest/domain_applications/{domain_app_id}'
+    url = f'https://{space_name}.signalwire.com/api/relay/rest/domain_applications/{domain_app_id}'
     
     headers = {
         'Authorization': f'Basic {encoded_credentials}',
@@ -1649,6 +1646,32 @@ def update_phone_number(phone_number_id):
         return jsonify(response.json()), 200
     else:
         return jsonify({'error': 'Failed to update phone number'}), response.status_code
+
+@app.route(f'{API_PREFIX}/voice/logs/shared/<uuid:log_id>', methods=['GET'])
+def get_shared_voice_log(log_id):
+    shared_conversation = SharedConversations.query.filter_by(uuid=log_id).first()
+    if not shared_conversation:
+        return jsonify({'error': 'Shared log not found'}), 404
+
+    space_name = get_signalwire_param('SPACE_NAME')
+    project_id = get_signalwire_param('PROJECT_ID')
+    auth_token = get_signalwire_param('AUTH_TOKEN')
+
+    encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
+    url = f'https://{space_name}.signalwire.com/api/voice/logs/{log_id}'
+    authorization = f'Basic {encoded_credentials}'
+
+    headers = {
+        'Authorization': authorization,
+        'Accept': 'application/json'
+    }
+
+    response = requests.get(url, headers=headers)
+
+    if response.status_code == 200:
+        return jsonify(response.json()), 200
+    else:
+        return jsonify({'error': 'Failed to retrieve shared voice log'}), response.status_code
     
 @app.route('/voice/logs/<uuid:log_id>', methods=['GET'])
 @login_required
@@ -1658,7 +1681,7 @@ def get_voice_log(log_id):
     auth_token = get_signalwire_param('AUTH_TOKEN')
 
     encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
-    url = f'https://briankwest.signalwire.com/api/voice/logs/{log_id}'
+    url = f'https://{space_name}.signalwire.com/api/voice/logs/{log_id}'
     authorization = f'Basic {encoded_credentials}'
 
     headers = {
