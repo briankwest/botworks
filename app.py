@@ -1382,7 +1382,7 @@ def delete_domain_app(domain_app_id):
     auth_token = get_signalwire_param('AUTH_TOKEN')
     
     encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
-    url = f'https://{space_name}.signalwire.com/api/relay/rest/domain_applications/{domain_app_id}'
+    url = f'https://{space_name}/api/relay/rest/domain_applications/{domain_app_id}'
     
     headers = {
         'Authorization': f'Basic {encoded_credentials}',
@@ -1658,7 +1658,7 @@ def get_shared_voice_log(log_id):
     auth_token = get_signalwire_param('AUTH_TOKEN')
 
     encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
-    url = f'https://{space_name}.signalwire.com/api/voice/logs/{log_id}'
+    url = f'https://{space_name}/api/voice/logs/{log_id}'
     authorization = f'Basic {encoded_credentials}'
 
     headers = {
@@ -1681,7 +1681,7 @@ def get_voice_log(log_id):
     auth_token = get_signalwire_param('AUTH_TOKEN')
 
     encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
-    url = f'https://{space_name}.signalwire.com/api/voice/logs/{log_id}'
+    url = f'https://{space_name}/api/voice/logs/{log_id}'
     authorization = f'Basic {encoded_credentials}'
 
     headers = {
