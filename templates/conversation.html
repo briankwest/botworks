@@ -372,101 +372,103 @@
     const content = document.getElementById('PostPromptDataContent');
     let navContainer = document.getElementById('navContainer');
     if (!navContainer) {
-      navContainer = document.createElement('div');
-      navContainer.id = 'navContainer';
-      navContainer.className = 'd-flex justify-content-between align-items-center mb-3';
-      content.insertAdjacentElement('beforebegin', navContainer);
+        navContainer = document.createElement('div');
+        navContainer.id = 'navContainer';
+        navContainer.className = 'd-flex justify-content-between align-items-center mb-3';
+        content.insertAdjacentElement('beforebegin', navContainer);
     }
     navContainer.innerHTML = '';
 
     const navigationGroup = document.createElement('div');
+    navigationGroup.className = 'd-flex align-items-center';
     const actionsGroup = document.createElement('div');
+    actionsGroup.className = 'd-flex align-items-center ms-auto';
 
     navContainer.style.display = 'flex';
     navContainer.style.flexWrap = 'nowrap';
     navContainer.style.overflowX = 'auto';
 
     if (prevId) {
-      const prevButton = document.createElement('button');
-      prevButton.className = 'btn btn-primary btn-sm mr-2';
-      prevButton.innerHTML = '<i class="fas fa-arrow-left"></i> Previous';
-      prevButton.onclick = () => {
-        stopAudio();
-        fetchData(agentId, prevId);
-      };
-      navigationGroup.appendChild(prevButton);
+        const prevButton = document.createElement('button');
+        prevButton.className = 'btn btn-primary btn-sm mr-2';
+        prevButton.innerHTML = '<i class="fas fa-arrow-left"></i> Previous';
+        prevButton.onclick = () => {
+            stopAudio();
+            fetchData(agentId, prevId);
+        };
+        navigationGroup.appendChild(prevButton);
     }
 
     if (nextId) {
-      const nextButton = document.createElement('button');
-      nextButton.className = 'btn btn-primary btn-sm';
-      nextButton.innerHTML = 'Next <i class="fas fa-arrow-right"></i>';
-      nextButton.onclick = () => {
-        stopAudio();
-        fetchData(agentId, nextId);
-      };
-      navigationGroup.appendChild(nextButton);
+        const nextButton = document.createElement('button');
+        nextButton.className = 'btn btn-primary btn-sm mr-2';
+        nextButton.innerHTML = 'Next <i class="fas fa-arrow-right"></i>';
+        nextButton.onclick = () => {
+            stopAudio();
+            fetchData(agentId, nextId);
+        };
+        navigationGroup.appendChild(nextButton);
     }
 
     if (recordCallUrl) {
-      audio = new Audio(recordCallUrl);
+        audio = new Audio(recordCallUrl);
 
-      const playButton = document.createElement('button');
-      playButton.className = 'btn btn-info btn-sm mr-2';
-      playButton.innerHTML = '<i class="fas fa-play"></i> Play';
-      playButton.onclick = () => {
-        audio.play();
-      };
+        const playButton = document.createElement('button');
+        playButton.className = 'btn btn-info btn-sm mr-2';
+        playButton.innerHTML = '<i class="fas fa-play"></i> Play';
+        playButton.onclick = () => {
+            audio.play();
+        };
 
-      const pauseButton = document.createElement('button');
-      pauseButton.className = 'btn btn-warning btn-sm mr-2';
-      pauseButton.innerHTML = '<i class="fas fa-pause"></i> Pause';
-      pauseButton.onclick = () => {
-        audio.pause();
-      };
+        const pauseButton = document.createElement('button');
+        pauseButton.className = 'btn btn-warning btn-sm mr-2';
+        pauseButton.innerHTML = '<i class="fas fa-pause"></i> Pause';
+        pauseButton.onclick = () => {
+            audio.pause();
+        };
 
-      const stopButton = document.createElement('button');
-      stopButton.className = 'btn btn-danger btn-sm mr-2';
-      stopButton.innerHTML = '<i class="fas fa-stop"></i> Stop';
-      stopButton.onclick = () => {
-        audio.pause();
-      };
+        const stopButton = document.createElement('button');
+        stopButton.className = 'btn btn-danger btn-sm mr-2';
+        stopButton.innerHTML = '<i class="fas fa-stop"></i> Stop';
+        stopButton.onclick = () => {
+            audio.pause();
+        };
 
-      const restartButton = document.createElement('button');
-      restartButton.className = 'btn btn-secondary btn-sm mr-2';
-      restartButton.innerHTML = '<i class="fas fa-redo"></i> Restart';
-      restartButton.onclick = () => {
-        audio.currentTime = 0;
-        audio.play();
-      };
+        const restartButton = document.createElement('button');
+        restartButton.className = 'btn btn-secondary btn-sm mr-2';
+        restartButton.innerHTML = '<i class="fas fa-redo"></i> Restart';
+        restartButton.onclick = () => {
+            audio.currentTime = 0;
+            audio.play();
+        };
 
-      const downloadAudioButton = document.createElement('button');
-      downloadAudioButton.className = 'btn btn-success btn-sm mr-2';
-      downloadAudioButton.innerHTML = '<i class="fas fa-download"></i> Download Audio';
-      const filename = recordCallUrl.split('/').pop();
-      downloadAudioButton.onclick = () => {
-        fetch(recordCallUrl)
-          .then(response => response.blob())
-          .then(blob => {
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-          })
-          .catch(error => console.error('Error downloading audio:', error));
-      };
+        const downloadAudioButton = document.createElement('button');
+        downloadAudioButton.className = 'btn btn-success btn-sm mr-2';
+        downloadAudioButton.innerHTML = '<i class="fas fa-download"></i> Download Audio';
+        const filename = recordCallUrl.split('/').pop();
+        downloadAudioButton.onclick = () => {
+            fetch(recordCallUrl)
+                .then(response => response.blob())
+                .then(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                })
+                .catch(error => console.error('Error downloading audio:', error));
+        };
 
-      actionsGroup.appendChild(playButton);
-      actionsGroup.appendChild(pauseButton);
-      actionsGroup.appendChild(stopButton);
-      actionsGroup.appendChild(restartButton);
-      actionsGroup.appendChild(downloadAudioButton);
+        actionsGroup.appendChild(playButton);
+        actionsGroup.appendChild(pauseButton);
+        actionsGroup.appendChild(stopButton);
+        actionsGroup.appendChild(restartButton);
+        actionsGroup.appendChild(downloadAudioButton);
 
-      $('.close').on('click', stopAudio);
+        $('.close').on('click', stopAudio);
     }
 
     const downloadButton = document.createElement('button');
@@ -475,36 +477,75 @@
     downloadButton.onclick = () => downloadConversationData(currentConversationId);
     actionsGroup.appendChild(downloadButton);
 
+    // Create share and delete buttons with IDs
     const shareButton = document.createElement('button');
+    shareButton.id = 'shareConversationBtn';
     shareButton.className = 'btn btn-success btn-sm mr-2';
     shareButton.innerHTML = '<i class="fas fa-share"></i> Share';
+    shareButton.style.width = '120px';
+    shareButton.style.display = 'inline-block';
     shareButton.onclick = () => shareConversation(currentConversationId);
     actionsGroup.appendChild(shareButton);
 
     const deleteSharedButton = document.createElement('button');
-    deleteSharedButton.className = 'btn btn-danger btn-sm';
-    deleteSharedButton.innerHTML = '<i class="fas fa-trash-alt"></i> Share';
+    deleteSharedButton.id = 'deleteSharedBtn';
+    deleteSharedButton.className = 'btn btn-danger btn-sm mr-2';
+    deleteSharedButton.innerHTML = '<i class="fas fa-trash-alt"></i> Delete Share';
+    deleteSharedButton.style.width = '120px';
+    deleteSharedButton.style.display = 'none';
     deleteSharedButton.onclick = () => {
-      const uuid = call_id;
-      if (uuid) {
-        deleteSharedConversation(uuid);
-      } else {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'No shared link found to delete',
-          toast: true,
-          position: 'top-end',
-          timer: 3000,
-          showConfirmButton: false
-        });
-      }
+        if (call_id) {
+            deleteSharedConversation(call_id);
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No shared link found to delete',
+                toast: true,
+                position: 'top-end',
+                timer: 3000,
+                showConfirmButton: false
+            });
+        }
     };
     actionsGroup.appendChild(deleteSharedButton);
 
     navContainer.appendChild(navigationGroup);
     navContainer.appendChild(actionsGroup);
+
+    if (call_id) {
+        setTimeout(() => checkShareStatus(call_id), 100);
+    }
   }
+
+  const debouncedCheckShareStatus = debounce((uuid) => {
+    if (!uuid) return;
+    
+    fetch(`/conversations/shared/${uuid}`)
+        .then(response => {
+            const shareButton = document.getElementById('shareConversationBtn');
+            const deleteButton = document.getElementById('deleteSharedBtn');
+            
+            if (shareButton && deleteButton) {
+                if (response.ok) {
+                    shareButton.style.display = 'none';
+                    deleteButton.style.display = 'inline-block';
+                } else {
+                    shareButton.style.display = 'inline-block';
+                    deleteButton.style.display = 'none';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error checking share status:', error);
+            const shareButton = document.getElementById('shareConversationBtn');
+            const deleteButton = document.getElementById('deleteSharedBtn');
+            if (shareButton && deleteButton) {
+                shareButton.style.display = 'inline-block';
+                deleteButton.style.display = 'none';
+            }
+        });
+}, 500);
 
   function deleteSharedConversation(uuid) {
     fetch(`/api/v1/agents/${agentId}/conversations/shared/${uuid}`, {
@@ -517,6 +558,7 @@
       if (!response.ok) {
         throw new Error('Failed to delete shared conversation');
       }
+      checkShareStatus(uuid);
       return response.json();
     })
     .then(() => {
@@ -589,7 +631,16 @@
       })
       .then(data => {
         const shareUrl = `${window.location.origin}/conversations/shared/${data.uuid}`;
-
+        
+        // Update button visibility using IDs
+        const shareButton = document.getElementById('shareConversationBtn');
+        const deleteButton = document.getElementById('deleteSharedBtn');
+        if (shareButton && deleteButton) {
+            shareButton.style.display = 'none';
+            deleteButton.style.display = 'inline-block';
+        }
+        
+        setTimeout(() => debouncedCheckShareStatus(data.uuid), 100);
         Swal.fire({
           title: 'Share Link Created',
           html: `
@@ -854,10 +905,8 @@
     });
     table += '</table></div>';
 
-    // Add a canvas for the latency chart with reduced height
     table += '<canvas id="latencyChart" width="400" height="100"></canvas>';
 
-    // Initialize the chart after the table
     setTimeout(() => {
       const ctx = document.getElementById('latencyChart').getContext('2d');
       const latencyData = interpolateMissingData(callLog.map(log => log.latency));
@@ -941,7 +990,7 @@
         } else if (next !== null) {
           interpolatedData[i] = next;
         } else {
-          interpolatedData[i] = null; // Leave as null to skip in chart
+          interpolatedData[i] = null;
         }
       }
     }
@@ -976,20 +1025,17 @@
     });
     table += '</table></div>';
 
-    // Add canvases for the charts with reduced height
     table += `
       <canvas id="timeChart" width="400" height="100"></canvas>
       <canvas id="tokensChart" width="400" height="100"></canvas>
       <canvas id="tpsChart" width="400" height="100"></canvas>
     `;
 
-    // Initialize the charts after the table
     setTimeout(() => {
       const timeCtx = document.getElementById('timeChart').getContext('2d');
       const tokensCtx = document.getElementById('tokensChart').getContext('2d');
       const tpsCtx = document.getElementById('tpsChart').getContext('2d');
 
-      // Token Time and Answer Time Chart
       new Chart(timeCtx, {
         type: 'line',
         data: {
@@ -1032,7 +1078,6 @@
         }
       });
 
-      // Tokens and Response Word Count Chart
       new Chart(tokensCtx, {
         type: 'line',
         data: {
@@ -1075,7 +1120,6 @@
         }
       });
 
-      // TPS and Avg TPS Chart
       new Chart(tpsCtx, {
         type: 'line',
         data: {
@@ -1242,8 +1286,6 @@
     return table;
   }
 
-
-
   window.copyToClipboard = function (value) {
     const tempInput = document.createElement('textarea');
     tempInput.style.position = 'absolute';
@@ -1272,7 +1314,6 @@
   }
 });
 
-  // Define fetchBillingData in the global scope
   function fetchBillingData(callId, button) {
     const billingDetailsDiv = document.getElementById(`billingDetails_${callId}`);
 
@@ -1361,47 +1402,23 @@
       });
   }
 
-  document.addEventListener('DOMContentLoaded', function() {
-    const uuid = 'your-uuid-here'; // Replace with the actual UUID
-    const shareButton = document.getElementById('share-button');
-    const deleteButton = document.getElementById('delete-button');
+  function checkShareStatus(uuid) {
+    fetch(`/conversations/shared/${uuid}`)
+      .then(response => {
+        const shareButton = document.getElementById('shareConversationBtn');
+        const deleteButton = document.getElementById('deleteSharedBtn');
 
-    // Function to check the share status
-    function checkShareStatus() {
-        fetch(`/conversations/shared/${uuid}`)
-            .then(response => {
-                if (response.ok) {
-                    // If the conversation is shared, show the delete button
-                    shareButton.style.display = 'none';
-                    deleteButton.style.display = 'block';
-                } else {
-                    // If the conversation is not shared, show the share button
-                    shareButton.style.display = 'block';
-                    deleteButton.style.display = 'none';
-                }
-            })
-            .catch(error => console.error('Error checking share status:', error));
-    }
 
-    // Event listener for the share button
-    shareButton.addEventListener('click', function() {
-        // Implement the logic to share the conversation
-        console.log('Share button clicked');
-        // After sharing, update the UI
-        checkShareStatus();
-    });
-
-    // Event listener for the delete button
-    deleteButton.addEventListener('click', function() {
-        // Implement the logic to delete the share
-        console.log('Delete button clicked');
-        // After deleting, update the UI
-        checkShareStatus();
-    });
-
-    // Initial check of the share status
-    checkShareStatus();
-  });
+        if (response.ok) {
+          if (shareButton) shareButton.style.display = 'none';
+          if (deleteButton) deleteButton.style.display = 'block';
+        } else {
+          if (shareButton) shareButton.style.display = 'block';
+          if (deleteButton) deleteButton.style.display = 'none';
+        }
+      })
+      .catch(error => console.error('Error checking share status:', error));
+  }
 </script>
 
 {% endblock %}
