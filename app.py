@@ -61,8 +61,8 @@ CORS(app, resources={
 API_PREFIX = '/api/v1'
 
 call_tracking = {
-    'call_to_number': {},  # Maps call_id to phone number
-    'number_to_call': {}   # Maps phone number to call_id
+    'call_to_number': {},
+    'number_to_call': {}
 }
 call_tracking_lock = Lock()
 
@@ -131,28 +131,24 @@ def load_user(user_id):
 @app.route('/')
 @login_required
 def dashboard():
-    # Count requests for agents owned by current user
     number_of_requests = db.session.query(AISWMLRequest).join(
         AIAgent, AISWMLRequest.agent_id == AIAgent.id
     ).filter(
         AIAgent.user_id == current_user.id
     ).count()
 
-    # Count conversations for agents owned by current user 
     number_of_conversations = db.session.query(AIConversation).join(
         AIAgent, AIConversation.agent_id == AIAgent.id
     ).filter(
         AIAgent.user_id == current_user.id
     ).count()
 
-    # Count functions for agents owned by current user
     number_of_functions = db.session.query(AIFunctions).join(
         AIAgent, AIFunctions.agent_id == AIAgent.id
     ).filter(
         AIAgent.user_id == current_user.id
     ).count()
 
-    # Count agents owned by current user
     number_of_agents = AIAgent.query.filter_by(user_id=current_user.id).count()
 
     return render_template('dashboard.html', user=current_user, number_of_requests=number_of_requests, number_of_conversations=number_of_conversations, number_of_functions=number_of_functions, number_of_agents=number_of_agents)
@@ -165,7 +161,6 @@ def import_swml():
         if not isinstance(data, dict):
             raise ValueError("Invalid JSON format")
 
-        # Parse the 'import' string as JSON
         import_data = json.loads(data.get('import', '{}'))
         if not isinstance(import_data, dict):
             raise ValueError("Invalid 'import' JSON format")
@@ -232,9 +227,8 @@ def process_ai_data(agent_id, ai_data):
         db.session.add(new_function)
         db.session.commit()
 
-        # Handle function arguments
         argument = function.get('argument', function.get('parameters', {}))
-        if isinstance(argument, dict):  # Ensure argument is a dictionary
+        if isinstance(argument, dict):
             properties = argument.get('properties', {})
             required = argument.get('required', [])
 
@@ -326,7 +320,6 @@ def process_ai_data(agent_id, ai_data):
 @app.route('/dashboard/completed', methods=['GET'])
 @login_required
 def dashboard_completed():
-    # Use utcnow() to ensure the time is in UTC
     end_time = (datetime.utcnow() + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
     start_time = end_time - timedelta(hours=23)
 
@@ -617,7 +610,6 @@ def swml(agent_id):
     else:
         data = request.args.to_dict()
 
-    # Track call mapping if this is a new call
     if 'call' in data and data['call'].get('call_state') == 'created':
         call_info = data['call']
         call_id = call_info.get('call_id')
@@ -1272,7 +1264,7 @@ def get_domain_app(domain_app_id):
 
     if response.status_code == 200:
         data = response.json()
-        # Ensure we have all expected fields, with defaults if missing
+
         domain_app = {
             'type': data.get('type'),
             'id': data.get('id'),
@@ -1340,7 +1332,7 @@ def create_domain_app():
         'call_handler': data.get('call_handler'),
         'call_relay_context_status_callback_url': None
     }
-    # Optional fields - only add if provided
+
     optional_fields = [
         'call_request_url',
         'call_request_method',
@@ -1424,7 +1416,6 @@ def update_domain_app(domain_app_id):
     data = request.get_json()
     payload = {}
 
-    # All possible fields that can be updated
     updateable_fields = [
         'name',
         'identifier',
@@ -1451,7 +1442,7 @@ def update_domain_app(domain_app_id):
         'codecs',
         'ciphers'
     ]
-    # Only include fields that are present in the request
+
     for field in updateable_fields:
         if field in data:
             payload[field] = data[field]
@@ -1798,7 +1789,7 @@ def send_push_notification(subscription, notification_data):
         return True
     except WebPushException as e:
         print(f"Failed to send push notification: {e}")
-        # If subscription is expired/invalid, remove it
+
         if e.response and e.response.status_code in [404, 410]:
             try:
                 db.session.delete(subscription)
@@ -1817,7 +1808,6 @@ def get_vapid_public_key():
     if not vapid_public_key:
         return jsonify({'error': 'VAPID public key not configured'}), 500
         
-    # Return the raw public key
     return jsonify({'publicKey': vapid_public_key}), 200
 
 @app.route('/subscribe', methods=['POST'])
@@ -1826,26 +1816,22 @@ def subscribe():
     try:
         subscription_data = request.get_json()
         
-        # Extract the necessary data from the subscription
         endpoint = subscription_data.get('endpoint')
         keys = {
             'p256dh': subscription_data['keys']['p256dh'],
             'auth': subscription_data['keys']['auth']
         }
 
-        # Check if subscription already exists for this user and endpoint
         existing_sub = Subscription.query.filter_by(
             user_id=current_user.id,
             endpoint=endpoint
         ).first()
 
         if existing_sub:
-            # Update existing subscription
             existing_sub.keys = keys
             existing_sub.updated_at = db.func.now()
             db.session.commit()
         else:
-            # Create new subscription
             new_subscription = Subscription(
                 user_id=current_user.id,
                 endpoint=endpoint,
@@ -1868,14 +1854,12 @@ def unsubscribe():
         subscription_data = request.get_json()
         endpoint = subscription_data.get('endpoint')
 
-        # Find and delete the subscription
         subscription = Subscription.query.filter_by(
             user_id=current_user.id,
             endpoint=endpoint
         ).first()
 
         if subscription:
-            # Notify the push service that the subscription is gone
             try:
                 webpush(
                     subscription_info={
@@ -1889,7 +1873,6 @@ def unsubscribe():
                     }
                 )
             except WebPushException as e:
-                # Ignore errors since we're deleting anyway
                 pass
 
             db.session.delete(subscription)
@@ -1904,13 +1887,12 @@ def unsubscribe():
         return jsonify({'status': 'error', 'message': str(e)}), 500
     
 @app.route('/send-notification', methods=['POST'])
-@login_required
+@auth.login_required
 def send_notification():
     try:
         notification_data = request.get_json()
         user_id = current_user.id
-        
-        # Get all subscriptions for the user
+
         subscriptions = Subscription.query.filter_by(user_id=user_id).all()
         
         success_count = 0
@@ -1934,7 +1916,6 @@ def check_subscription():
         subscription_data = request.get_json()
         endpoint = subscription_data.get('endpoint')
         
-        # Check if subscription exists in database
         subscription = Subscription.query.filter_by(endpoint=endpoint).first()
         
         if subscription:
@@ -1953,7 +1934,6 @@ def test_send_notification():
         title = data.get('title', 'Test Notification')
         body = data.get('body', 'This is a test notification')
         
-        # Get all subscriptions for the current user
         subscriptions = Subscription.query.filter_by(user_id=current_user.id).all()
         
         if not subscriptions:
@@ -2024,8 +2004,8 @@ def get_translators():
             'id': translator.id,
             'from_language': translator.from_language,
             'to_language': translator.to_language,
-            'from_filter': translator.from_filter,  # Ensure this field is included
-            'to_filter': translator.to_filter,      # Ensure this field is included
+            'from_filter': translator.from_filter,
+            'to_filter': translator.to_filter,
             'from_voice': translator.from_voice,
             'to_voice': translator.to_voice,
             'caller_id_number': translator.caller_id_number
@@ -2135,16 +2115,13 @@ def forgot_password():
         user = AIUser.query.filter_by(email=email).first()
         
         if user:
-            # Generate token and save to database
             token = secrets.token_urlsafe(32)
             reset_token = PasswordResetToken(user_id=user.id, token=token)
             db.session.add(reset_token)
             db.session.commit()
             
-            # Generate reset URL
             reset_url = url_for('reset_password', token=token, _external=True)
             
-            # Send email
             try:
                 response = send_password_reset_email(email, reset_url)
                 if response.status_code == 200:
@@ -2156,7 +2133,6 @@ def forgot_password():
                 flash('Failed to send reset email. Please try again later.', 'error')
                 
         else:
-            # To prevent email enumeration, show the same message even if email doesn't exist
             flash('Password reset instructions have been sent to your email if it exists in our system.', 'success')
             
         return redirect(url_for('login'))
@@ -2165,7 +2141,6 @@ def forgot_password():
 
 @app.route('/reset-password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
-    # Find the token in database
     reset_token = PasswordResetToken.query.filter_by(token=token).first()
     
     if not reset_token or not reset_token.is_valid():
@@ -2180,11 +2155,9 @@ def reset_password(token):
             flash('Passwords do not match.', 'error')
             return render_template('reset_password.html')
         
-        # Update user's password
         user = AIUser.query.get(reset_token.user_id)
         user.password = generate_password_hash(password, method='pbkdf2:sha256')
         
-        # Mark token as used
         reset_token.used = True
         
         db.session.commit()
@@ -2661,17 +2634,14 @@ def update_prompt(agent_id, prompt_id):
     prompt = AIPrompt.query.filter_by(id=prompt_id, agent_id=agent_id).first_or_404()
     data = request.get_json()
     
-    # Convert empty strings to None for float fields
     float_fields = ['top_p', 'temperature', 'confidence', 'frequency_penalty', 'presence_penalty']
     for field in float_fields:
         if field in data:
             prompt.__setattr__(field, None if data[field] == '' else data[field])
             
-    # Convert empty string to None for integer field
     if 'max_tokens' in data:
         prompt.max_tokens = None if data['max_tokens'] == '' else data['max_tokens']
     
-    # Update other fields
     if 'prompt_type' in data:
         prompt.prompt_type = data['prompt_type']
     if 'prompt_text' in data:
@@ -2687,7 +2657,6 @@ def patch_prompt(agent_id, prompt_id):
     prompt = AIPrompt.query.filter_by(id=prompt_id, agent_id=agent_id).first_or_404()
     data = request.get_json()
     
-    # Convert empty strings to None for float fields
     float_fields = ['top_p', 'temperature', 'confidence', 'frequency_penalty', 'presence_penalty']
     for field in float_fields:
         if field in data:
@@ -2695,13 +2664,11 @@ def patch_prompt(agent_id, prompt_id):
             if value is not None:
                 setattr(prompt, field, value)
     
-    # Convert empty string to None for integer field
     if 'max_tokens' in data:
         value = None if data['max_tokens'] == '' else data['max_tokens']
         if value is not None:
             prompt.max_tokens = value
     
-    # Update other fields if present
     if 'prompt_type' in data:
         prompt.prompt_type = data['prompt_type']
     if 'prompt_text' in data:
@@ -3072,7 +3039,7 @@ def get_or_delete_conversation(agent_id, id):
     if grafana_url:
         grafana_url = grafana_url.format(start=ai_start_date, end=ai_end_date, call_id=call_id)
     else:
-        grafana_url = None  # or set a default URL if applicable
+        grafana_url = None
     response_data = {
         'id': conversation.id,
         'created': conversation.created,
