@@ -26,6 +26,7 @@ from modules.utils import (
     setup_default_agent_and_params, create_admin_user, get_signalwire_param_by_agent_id, agent_access_required, get_signalwire_param
 )
 import secrets
+from sqlalchemy import cast, String
 if os.environ.get('DEBUG', False):
     debug_pin = f"{random.randint(100, 999)}-{random.randint(100, 999)}-{random.randint(100, 999)}"
     os.environ['WERKZEUG_DEBUG_PIN'] = debug_pin
@@ -1139,17 +1140,19 @@ def create_conversation_share(agent_id, conversation_id):
     
     existing_share = SharedConversations.query.filter_by(conversation_id=conversation.id).first()
     if existing_share:
+        print(f"Conversation already shared: {existing_share.uuid}")
         return jsonify({'message': 'Conversation already shared', 'uuid': existing_share.uuid}), 200
-    share_uuid = str(uuid4())
-
+    print(f"Conversation not shared: {conversation.id}")
+    call_id = conversation.data['call_id']
+    print(f"Call ID: {call_id}")
     shared_conversation = SharedConversations(
-        uuid=share_uuid,
+        uuid=call_id,
         conversation_id=conversation.id
     )
     db.session.add(shared_conversation)
     db.session.commit()
     
-    return jsonify({'message': 'Conversation shared successfully', 'uuid': share_uuid}), 201
+    return jsonify({'message': 'Conversation shared successfully', 'uuid': call_id}), 201
 
 @app.route(f'{API_PREFIX}/conversations/shared/<string:uuid>', methods=['GET'])
 def view_shared_conversation(uuid):
@@ -1162,10 +1165,11 @@ def view_shared_conversation(uuid):
         'data': conversation.data
     }), 200
 
-@app.route(f'{API_PREFIX}/conversations/shared/<string:uuid>', methods=['DELETE'])
+@app.route(f'{API_PREFIX}/agents/<int:agent_id>/conversations/shared/<string:uuid>', methods=['DELETE'])
 @login_required
 @agent_access_required
-def remove_conversation_share(uuid):
+def remove_conversation_share(agent_id, uuid):
+    print(f"Removing shared conversation with UUID: {uuid}")
     shared_conversation = SharedConversations.query.filter_by(uuid=uuid).first_or_404()
     db.session.delete(shared_conversation)
     db.session.commit()
@@ -1649,13 +1653,24 @@ def update_phone_number(phone_number_id):
 
 @app.route(f'{API_PREFIX}/voice/logs/shared/<uuid:log_id>', methods=['GET'])
 def get_shared_voice_log(log_id):
-    shared_conversation = SharedConversations.query.filter_by(uuid=log_id).first()
+    shared_conversation = SharedConversations.query.filter_by(uuid=str(log_id)).first()
     if not shared_conversation:
         return jsonify({'error': 'Shared log not found'}), 404
 
-    space_name = get_signalwire_param('SPACE_NAME')
-    project_id = get_signalwire_param('PROJECT_ID')
-    auth_token = get_signalwire_param('AUTH_TOKEN')
+    from sqlalchemy import text
+    conversation = AIConversation.query.filter(
+        text(f"data->>'call_id' = '{shared_conversation.uuid}'")
+    ).first()
+
+    print(f"conversation: {conversation}")
+    if not conversation:
+        return jsonify({'error': 'Conversation not found'}), 404
+
+    agent_id = conversation.agent_id
+    print(f"agent_id: {agent_id}")
+    space_name = get_signalwire_param_by_agent_id(agent_id, 'SPACE_NAME')
+    project_id = get_signalwire_param_by_agent_id(agent_id, 'PROJECT_ID')
+    auth_token = get_signalwire_param_by_agent_id(agent_id, 'AUTH_TOKEN')
 
     encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
     url = f'https://{space_name}/api/voice/logs/{log_id}'

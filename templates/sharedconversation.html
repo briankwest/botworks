@@ -149,7 +149,7 @@
             }
             displayData(responseData.data);
             console.log('Setting up navigation buttons', responseData.data.SWMLVars.record_call_url);
-            setupNavigationButtons(responseData.data.SWMLVars.record_call_url, uuid);
+            setupNavigationButtons(responseData.data.SWMLVars.record_call_url, responseData.data.call_id);
         })
         .catch(error => {
             console.error('Error fetching JSON:', error);

@@ -351,7 +351,7 @@
         }
         displayData(responseData.data);
         console.log('Setting up navigation buttons', agentId, responseData.next, responseData.prev, responseData.data.SWMLVars.record_call_url);
-        setupNavigationButtons(agentId, responseData.next, responseData.prev, responseData.data.SWMLVars.record_call_url, id);
+        setupNavigationButtons(agentId, responseData.next, responseData.prev, responseData.data.SWMLVars.record_call_url, id, responseData.data.call_id);
       })
       .catch(error => {
         console.error('Error fetching JSON:', error);
@@ -366,9 +366,9 @@
     content.innerHTML = '';
   }
 
-  let audio; // Define audio variable outside the function
+  let audio;
 
-  function setupNavigationButtons(agentId, nextId, prevId, recordCallUrl, currentConversationId) {
+  function setupNavigationButtons(agentId, nextId, prevId, recordCallUrl, currentConversationId, call_id) {
     const content = document.getElementById('PostPromptDataContent');
     let navContainer = document.getElementById('navContainer');
     if (!navContainer) {
@@ -409,7 +409,7 @@
     }
 
     if (recordCallUrl) {
-      audio = new Audio(recordCallUrl); // Initialize audio
+      audio = new Audio(recordCallUrl);
 
       const playButton = document.createElement('button');
       playButton.className = 'btn btn-info btn-sm mr-2';
@@ -476,13 +476,70 @@
     actionsGroup.appendChild(downloadButton);
 
     const shareButton = document.createElement('button');
-    shareButton.className = 'btn btn-success btn-sm';
+    shareButton.className = 'btn btn-success btn-sm mr-2';
     shareButton.innerHTML = '<i class="fas fa-share"></i> Share';
     shareButton.onclick = () => shareConversation(currentConversationId);
     actionsGroup.appendChild(shareButton);
 
+    const deleteSharedButton = document.createElement('button');
+    deleteSharedButton.className = 'btn btn-danger btn-sm';
+    deleteSharedButton.innerHTML = '<i class="fas fa-trash-alt"></i> Share';
+    deleteSharedButton.onclick = () => {
+      const uuid = call_id;
+      if (uuid) {
+        deleteSharedConversation(uuid);
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No shared link found to delete',
+          toast: true,
+          position: 'top-end',
+          timer: 3000,
+          showConfirmButton: false
+        });
+      }
+    };
+    actionsGroup.appendChild(deleteSharedButton);
+
     navContainer.appendChild(navigationGroup);
     navContainer.appendChild(actionsGroup);
+  }
+
+  function deleteSharedConversation(uuid) {
+    fetch(`/api/v1/agents/${agentId}/conversations/shared/${uuid}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to delete shared conversation');
+      }
+      return response.json();
+    })
+    .then(() => {
+      Swal.fire({
+        icon: 'success',
+        title: 'Shared conversation deleted',
+        toast: true,
+        position: 'top-end',
+        timer: 3000,
+        showConfirmButton: false
+      });
+    })
+    .catch(error => {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.message,
+        toast: true,
+        position: 'top-end',
+        timer: 3000,
+        showConfirmButton: false
+      });
+    });
   }
 
   function stopAudio() {
@@ -1303,6 +1360,48 @@
         console.error('Error fetching billing data:', error);
       });
   }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const uuid = 'your-uuid-here'; // Replace with the actual UUID
+    const shareButton = document.getElementById('share-button');
+    const deleteButton = document.getElementById('delete-button');
+
+    // Function to check the share status
+    function checkShareStatus() {
+        fetch(`/conversations/shared/${uuid}`)
+            .then(response => {
+                if (response.ok) {
+                    // If the conversation is shared, show the delete button
+                    shareButton.style.display = 'none';
+                    deleteButton.style.display = 'block';
+                } else {
+                    // If the conversation is not shared, show the share button
+                    shareButton.style.display = 'block';
+                    deleteButton.style.display = 'none';
+                }
+            })
+            .catch(error => console.error('Error checking share status:', error));
+    }
+
+    // Event listener for the share button
+    shareButton.addEventListener('click', function() {
+        // Implement the logic to share the conversation
+        console.log('Share button clicked');
+        // After sharing, update the UI
+        checkShareStatus();
+    });
+
+    // Event listener for the delete button
+    deleteButton.addEventListener('click', function() {
+        // Implement the logic to delete the share
+        console.log('Delete button clicked');
+        // After deleting, update the UI
+        checkShareStatus();
+    });
+
+    // Initial check of the share status
+    checkShareStatus();
+  });
 </script>
 
 {% endblock %}
