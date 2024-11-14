@@ -607,6 +607,7 @@ def laml(agent_id):
 def swml(agent_id):
     if request.method == 'POST':
         data = request.get_json()
+        data['outbound'] = request.args.get('outbound', 'false')
     else:
         data = request.args.to_dict()
 

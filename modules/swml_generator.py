@@ -95,6 +95,9 @@ def generate_swml_response(agent_id, request_body):
         debug_webhook_url = f"https://{auth_user}:{auth_pass}@{request.host}/debugwebhook/{agent_id}"
         swml.add_aiparams({"debug_webhook_url": debug_webhook_url})
 
+    if outbound:
+        swml.add_aiparams({"wait_for_user": "true"})
+
     hints = AIHints.query.filter_by(agent_id=agent_id).all()
     swml.add_aihints([hint.hint for hint in hints])
             
