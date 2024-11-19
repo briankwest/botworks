@@ -38,7 +38,7 @@
     })
       .then(response => response.json())
       .then(data => {
-        const selectedAgentId = getCookie('selectedAgentId');
+        const selectedAgentId = {{ agent_id}};
 
         data.forEach(agent => {
           const option = document.createElement('option');
@@ -94,7 +94,7 @@
       .then(data => {
         console.log('Fetched agents:', data);
         if (Array.isArray(data)) {
-          const selectedAgentId = getCookie('selectedAgentId');
+          const selectedAgentId = {{ agent_id }};
           data.forEach(agent => {
             const option = document.createElement('option');
             option.value = agent.id;

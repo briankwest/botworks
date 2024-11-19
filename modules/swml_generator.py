@@ -1,5 +1,5 @@
 import json, base64
-from flask import request, jsonify
+from flask import request
 from modules.models import (
     AIPrompt, AIParams, AIHints, AILanguage, AIPronounce, 
     AIFunctions, AIFunctionArgs, AIIncludes, AISteps, AIContext
@@ -53,7 +53,7 @@ def generate_swml_response(agent_id, request_body):
         aiprompt_data["max_tokens"] = prompt.max_tokens
     if prompt.confidence is not None and prompt.confidence != 0.0:
         aiprompt_data["confidence"] = prompt.confidence
-   
+        
     swml.set_aiprompt(aiprompt_data)
     
     if post_prompt:
@@ -66,7 +66,7 @@ def generate_swml_response(agent_id, request_body):
             post_prompt_data["frequency_penalty"] = post_prompt.frequency_penalty
         if post_prompt.presence_penalty is not None and post_prompt.presence_penalty != 0.0:
             post_prompt_data["presence_penalty"] = post_prompt.presence_penalty
-        if post_prompt.max_tokens is not None:
+        if post_prompt.max_tokens is not None and post_prompt.max_tokens != 0:
             post_prompt_data["max_tokens"] = post_prompt.max_tokens
         if post_prompt.confidence is not None and post_prompt.confidence != 0.0:
             post_prompt_data["confidence"] = post_prompt.confidence
