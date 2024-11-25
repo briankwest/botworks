@@ -582,7 +582,7 @@ def laml(agent_id):
             "id": call_id,
             "command": "calling.ai_message",
             "params": {
-                "role": "bot",
+                "role": "user",
                 "message_text": f"The user just sent the following message: {message}"
             }
         }
@@ -610,17 +610,18 @@ def swml(agent_id):
         data['outbound'] = request.args.get('outbound', None)
     else:
         data = request.args.to_dict()
-
+    print(data)
     if 'call' in data and data['call'].get('call_state') == 'created':
         call_info = data['call']
         call_id = call_info.get('call_id')
         from_number = call_info.get('from_number')
         
         if call_id and from_number:
+            app.logger.info(f"Call ID: {call_id}, From Number: {from_number}")
             with call_tracking_lock:
                 call_tracking['call_to_number'][call_id] = from_number
                 call_tracking['number_to_call'][from_number] = call_id
-
+                print(call_tracking)
     response_data = generate_swml_response(agent_id, request_body=data)
     
     ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
