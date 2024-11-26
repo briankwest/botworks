@@ -1022,6 +1022,7 @@ def on_disconnect():
 @socketio.on('send_message')
 def handle_message(data):
     access_token = request.cookies.get('access_token')
+
     if not access_token:
         emit('error', {'message': 'Access token is missing'}, namespace='/')
         disconnect()
@@ -1043,15 +1044,13 @@ def handle_message(data):
             emit('error', {'message': 'Invalid data format'}, namespace='/')
             return
 
-        command = parsed_data.get('command', {})
-        channel = parsed_data.get('channel', {} )
-        call_id = parsed_data.get('call_info', {}).get('call_id')
-        content = parsed_data.get('conversation_add', {}).get('content')
-        role = parsed_data.get('conversation_add', {}).get('role')
-
-        if not call_id or not content or not channel:
-            emit('error', {'message': 'Invalid data format'}, namespace='/')
-            return
+        command = parsed_data.get('command')  # Get command directly from parsed_data
+        channel = parsed_data.get('channel')
+        call_info = parsed_data.get('call_info', {})
+        call_id = call_info.get('call_id')
+        conversation_add = parsed_data.get('conversation_add', {})
+        content = conversation_add.get('content')
+        role = conversation_add.get('role')
 
         agent_id = int(channel.rsplit('_', 1)[-1])     
 
@@ -1061,6 +1060,7 @@ def handle_message(data):
 
         encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
         url = f"https://{space_name}/api/calling/calls"
+        print("Debug: ", url)
 
         headers = {
             "Content-Type": "application/json",
@@ -1068,8 +1068,9 @@ def handle_message(data):
         }
 
         payload = {}
-
+        print("Debug: ", command, call_id)
         if command == 'hangup':
+            print("Hanging up call")
             payload = {
                 "id": call_id,
                 "command": "calling.end",
@@ -1077,7 +1078,62 @@ def handle_message(data):
                     "reason": "hangup",
                 }
             }
-        else:
+        elif command == 'hold':
+            print("Holding call")
+            payload = {
+                "id": call_id,
+                "command": "calling.ai_hold",
+                "params": {}
+            }
+        elif command == 'unhold':
+            print("Unholding call")
+            payload = {
+                "id": call_id,
+                "command": "calling.ai_unhold",
+                "params": {}
+            }
+        elif command == 'transfer':
+            phone = parsed_data.get('phone', None)
+            print("Transferring call ", phone)
+            payload = {
+                "id": call_id,
+                "command": "update",
+                "params": {
+                    "id": call_id,
+                    "dest": {
+                        "version": "1.0.0",
+                        "sections": {
+                            "main": [
+                                {
+                                    "connect": {
+                                        "to": phone
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        elif command == 'dial':
+            print("Dialing for agent", agent_id)
+            auth_user = get_signalwire_param('HTTP_USERNAME')
+            auth_password = get_signalwire_param('HTTP_PASSWORD')
+            from_number = get_signalwire_param('FROM_NUMBER')
+            phone = parsed_data.get('phone', None)
+            swml_url = f"https://{auth_user}:{auth_password}@{request.host}/swml/{agent_id}?outbound=true" 
+            print("Debug: ", swml_url)
+            print("Debug: ", from_number)
+            print("Debug: ", phone)
+            payload = {
+                "command": "dial",
+                "params": {
+                    "to": phone,
+                    "url": swml_url,
+                    "from": from_number
+                }
+            }
+        elif command == 'message':
+            print("Sending message")
             payload = {
                 "id": call_id,
                 "command": "calling.ai_message",
@@ -1086,8 +1142,13 @@ def handle_message(data):
                     "message_text": f"{content}"
                 }
             }
-        
-        response = requests.put(url, headers=headers, data=json.dumps(payload))
+        else:
+            raise ValueError(f"Invalid command: {command}")
+
+        if command == 'dial':
+            response = requests.post(url, headers=headers, data=json.dumps(payload))
+        else:
+            response = requests.put(url, headers=headers, data=json.dumps(payload))
 
         if response.status_code != 200:
             emit('error', {'message': f'Failed to send command: {response.text}'}, namespace='/')

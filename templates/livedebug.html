@@ -58,14 +58,22 @@
               <input id="message" type="text" placeholder="Enter message to inject into the AI conversation"
                 class="form-control mb-2">
               <div class="d-flex align-items-center mb-2">
-
-                <button class="btn btn-sm btn-success mr-2" onclick="sendMessage()">
+                <button class="btn btn-sm btn-success mr-2" onclick="sendCommand('message')" disabled>
                   <i class="fas fa-paper-plane"></i> Send
                 </button>
-                <button class="btn btn-sm btn-danger mr-2" onclick="clearMessages()">
-                  <i class="fas fa-trash"></i> Clear
+                <button class="btn btn-sm btn-info mr-2" onclick="sendCommand('hold')" disabled>
+                  <i class="fas fa-pause"></i> Hold
                 </button>
-                <button class="btn btn-sm btn-warning mr-2" onclick="hangup()">
+                <button class="btn btn-sm btn-info mr-2" onclick="sendCommand('unhold')" disabled>
+                  <i class="fas fa-play"></i> Unhold
+                </button>
+                <button class="btn btn-sm btn-primary mr-2" onclick="sendCommand('transfer')" disabled>
+                  <i class="fas fa-exchange-alt"></i> Transfer
+                </button>
+                <button class="btn btn-sm btn-warning mr-2" onclick="sendCommand('dial')" disabled>
+                  <i class="fas fa-phone"></i> Dial
+                </button>
+                <button class="btn btn-sm btn-danger mr-2" onclick="sendCommand('hangup')" disabled>
                   <i class="fas fa-phone-slash"></i> Hangup
                 </button>
                 <div class="d-flex flex-column align-items-start mb-2">
@@ -249,7 +257,15 @@
       if (wasEmpty) {
         dropdown.value = callId;
         filterMessagesByCallId();
+        const sendButton = document.querySelector('button[onclick="sendCommand(\'message\')"]');
+        const holdButton = document.querySelector('button[onclick="sendCommand(\'hold\')"]');
+        const unholdButton = document.querySelector('button[onclick="sendCommand(\'unhold\')"]');
+        const transferButton = document.querySelector('button[onclick="sendCommand(\'transfer\')"]');
+        const hangupButton = document.querySelector('button[onclick="sendCommand(\'hangup\')"]');
+        
         sendButton.disabled = false;
+        holdButton.disabled = false;
+        unholdButton.disabled = false;
         hangupButton.disabled = false;
       } else {
         dropdown.value = currentSelection;
@@ -301,30 +317,66 @@
       }
     }
 
-    function sendMessage() {
-      const message = document.getElementById('message').value;
+    function sendCommand(command) {
       const selectedCallId = document.getElementById('callIdDropdown').value;
+      const messageContent = document.getElementById('message').value;
       const isSystemRole = document.getElementById('roleToggle').checked;
       const role = isSystemRole ? 'system' : 'user';
 
-      if (socket && socket.connected && selectedCallId && message) {
-        const messageData = {
-          data: JSON.stringify({
-            channel: currentChannel,
-            call_info: {
-              call_id: selectedCallId
-            },
-            conversation_add: {
-              content: message,
-              role: role
-            }
-          })
-        };
-        socket.emit('send_message', messageData);
+      if (!socket || !socket.connected) {
+        console.error('Socket not connected');
+        return;
+      }
+
+      if (command !== 'dial' && !selectedCallId) {
+        console.error('No call selected');
+        return;
+      }
+
+      let messageData = {
+        data: JSON.stringify({
+          command: command,
+          channel: currentChannel,
+          call_info: {
+            call_id: selectedCallId
+          }
+        })
+      };
+
+      if (command === 'message') {
+        messageData.data = JSON.stringify({
+          command: command,
+          channel: currentChannel,
+          call_info: {
+            call_id: selectedCallId
+          },
+          conversation_add: {
+            content: messageContent,
+            role: role
+          }
+        });
+      } else if (command === 'transfer') {
+        messageData.data = JSON.stringify({
+          command: 'transfer',
+          phone: messageContent,
+          channel: currentChannel,
+          call_info: {
+            call_id: selectedCallId
+          }
+        });
+      } else if (command === 'dial') {
+        messageData.data = JSON.stringify({
+          command: 'dial',
+          phone: messageContent,
+          channel: currentChannel
+        }); 
+      }
+
+      console.log('Sending command:', command, messageData);
+      socket.emit('send_message', messageData);
+      
+      if (command === 'message' || command === 'transfer') {
         document.getElementById('message').value = '';
-        console.log('Sent message with call_id:', selectedCallId, 'and role:', role);
-      } else {
-        console.error('Cannot send message: socket not connected or call_id/message is empty');
       }
     }
 
@@ -358,46 +410,46 @@
 
     window.joinChannel = joinChannel;
     window.leaveChannel = leaveChannel;
-    window.sendMessage = sendMessage;
+    window.sendCommand = sendCommand;
     window.clearMessages = clearMessages;
     window.connectSocket = connectSocket;
     window.disconnectSocket = disconnectSocket;
     window.hangup = hangup;
+    window.filterMessagesByCallId = filterMessagesByCallId;
 
-    const sendButton = document.querySelector('button[onclick="sendMessage()"]');
-    const hangupButton = document.querySelector('button[onclick="hangup()"]');
+    const sendButton = document.querySelector('button[onclick="sendCommand(\'message\')"]');
+    const holdButton = document.querySelector('button[onclick="sendCommand(\'hold\')"]');
+    const unholdButton = document.querySelector('button[onclick="sendCommand(\'unhold\')"]');
+    const transferButton = document.querySelector('button[onclick="sendCommand(\'transfer\')"]');
+    const dialButton = document.querySelector('button[onclick="sendCommand(\'dial\')"]');
+    const hangupButton = document.querySelector('button[onclick="sendCommand(\'hangup\')"]');
     const callIdDropdown = document.getElementById('callIdDropdown');
 
     callIdDropdown.addEventListener('change', function () {
-      const isCallIdSelected = !!callIdDropdown.value;
-      sendButton.disabled = !isCallIdSelected;
-      hangupButton.disabled = !isCallIdSelected;
+        const isCallIdSelected = !!callIdDropdown.value;
+        sendButton.disabled = !isCallIdSelected;
+        holdButton.disabled = !isCallIdSelected;
+        unholdButton.disabled = !isCallIdSelected;
+        transferButton.disabled = !isCallIdSelected;
+        hangupButton.disabled = !isCallIdSelected;
     });
 
+    // Initialize buttons as disabled except for dial
     sendButton.disabled = !callIdDropdown.value;
+    holdButton.disabled = !callIdDropdown.value;
+    unholdButton.disabled = !callIdDropdown.value;
+    transferButton.disabled = !callIdDropdown.value;
     hangupButton.disabled = !callIdDropdown.value;
+    dialButton.disabled = !document.getElementById('message').value;
 
     connectSocket();
     joinChannel();
 
     document.getElementById('message').addEventListener('keydown', function (event) {
       if (event.key === 'Enter') {
-        sendMessage();
+        sendCommand('message');
       }
     });
-
-    window.filterMessagesByCallId = function() {
-      const selectedCallId = document.getElementById('callIdDropdown').value;
-      console.log('Filtering messages for callId:', selectedCallId);
-      const messagesTextarea = document.getElementById('messages');
-      messagesTextarea.value = '';
-      if (selectedCallId && messagesByCallId[selectedCallId]) {
-        messagesByCallId[selectedCallId].forEach(message => {
-          messagesTextarea.value += message + '\n';
-        });
-        console.log('Displayed messages for callId:', selectedCallId);
-      }
-    };
 
     function removeCallIdFromDropdown(callId) {
       const dropdown = document.getElementById('callIdDropdown');
@@ -408,9 +460,69 @@
         console.log('Removed callId from dropdown:', callId);
       }
       
-      const sendButton = document.querySelector('button[onclick="sendMessage()"]');
       sendButton.disabled = dropdown.options.length <= 1;
+      holdButton.disabled = dropdown.options.length <= 1;
+      unholdButton.disabled = dropdown.options.length <= 1;
       hangupButton.disabled = dropdown.options.length <= 1;
+    }
+
+    // Update the initial button setup
+    dialButton.disabled = !document.getElementById('message').value;
+
+    // Add event listener for message input
+    document.getElementById('message').addEventListener('input', function() {
+        const messageContent = this.value;
+        dialButton.disabled = !messageContent;
+    });
+
+    // Update button state management
+    function updateButtonStates() {
+        const messageContent = document.getElementById('message').value;
+        const hasCallId = !!callIdDropdown.value;
+        
+        // Regular call buttons - need only call ID
+        sendButton.disabled = !hasCallId;
+        holdButton.disabled = !hasCallId;
+        unholdButton.disabled = !hasCallId;
+        hangupButton.disabled = !hasCallId;
+        
+        // Transfer needs both call ID and message content
+        transferButton.disabled = !(hasCallId && messageContent);
+        
+        // Dial only works when there's NO call ID
+        dialButton.disabled = hasCallId || !messageContent;
+    }
+
+    // Add event listeners
+    document.getElementById('message').addEventListener('input', updateButtonStates);
+    callIdDropdown.addEventListener('change', updateButtonStates);
+
+    // Initialize all buttons
+    function initializeButtons() {
+        const messageContent = document.getElementById('message').value;
+        const hasCallId = !!callIdDropdown.value;
+        
+        sendButton.disabled = !hasCallId;
+        holdButton.disabled = !hasCallId;
+        unholdButton.disabled = !hasCallId;
+        hangupButton.disabled = !hasCallId;
+        transferButton.disabled = !(hasCallId && messageContent);
+        dialButton.disabled = hasCallId || !messageContent;
+    }
+
+    // Call initially to set correct state
+    initializeButtons();
+
+    // Update removeCallIdFromDropdown to use the new function
+    function removeCallIdFromDropdown(callId) {
+        const dropdown = document.getElementById('callIdDropdown');
+        const options = Array.from(dropdown.options);
+        const optionToRemove = options.find(option => option.value === callId);
+        if (optionToRemove) {
+            dropdown.removeChild(optionToRemove);
+            console.log('Removed callId from dropdown:', callId);
+        }
+        updateButtonStates();
     }
   });
 </script>
