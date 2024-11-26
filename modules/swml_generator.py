@@ -281,7 +281,9 @@ def generate_swml_response(agent_id, request_body):
 
     enable_transfer_feature = get_feature(agent_id, 'ENABLE_TRANSFER')
 
+
     if enable_transfer_feature:
+        assistant_number = get_feature(agent_id, 'ASSISTANT_NUMBER')
         transfer = SignalWireML(version="1.0.0")
 
         transfer.add_application("main", "connect", {
