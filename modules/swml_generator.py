@@ -288,7 +288,7 @@ def generate_swml_response(agent_id, request_body):
 
         transfer.add_application("main", "connect", {
             "to": '%{meta_data.table.%{lc:args.target}}',
-            "from": 'assistant'
+            "from": assistant_number
         })
 
         transfer_table = get_feature(agent_id, 'TRANSFER_TABLE')
