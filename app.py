@@ -1060,7 +1060,6 @@ def handle_message(data):
 
         encoded_credentials = base64.b64encode(f"{project_id}:{auth_token}".encode()).decode()
         url = f"https://{space_name}/api/calling/calls"
-        print("Debug: ", url)
 
         headers = {
             "Content-Type": "application/json",
@@ -1068,9 +1067,8 @@ def handle_message(data):
         }
 
         payload = {}
-        print("Debug: ", command, call_id)
+
         if command == 'hangup':
-            print("Hanging up call")
             payload = {
                 "id": call_id,
                 "command": "calling.end",
@@ -1079,14 +1077,12 @@ def handle_message(data):
                 }
             }
         elif command == 'hold':
-            print("Holding call")
             payload = {
                 "id": call_id,
                 "command": "calling.ai_hold",
                 "params": {}
             }
         elif command == 'unhold':
-            print("Unholding call")
             payload = {
                 "id": call_id,
                 "command": "calling.ai_unhold",
@@ -1094,13 +1090,11 @@ def handle_message(data):
             }
         elif command == 'transfer':
             phone = parsed_data.get('phone', None)
-            print("Transferring call ", phone)
             payload = {
                 "id": call_id,
-                "command": "update",
+                "command": "calling.transfer",
                 "params": {
-                    "id": call_id,
-                    "swml": {
+                    "dest": {
                         "version": "1.0.0",
                         "sections": {
                             "main": [
@@ -1115,15 +1109,12 @@ def handle_message(data):
                 }
             }
         elif command == 'dial':
-            print("Dialing for agent", agent_id)
             auth_user = get_signalwire_param('HTTP_USERNAME')
             auth_password = get_signalwire_param('HTTP_PASSWORD')
             from_number = get_signalwire_param('FROM_NUMBER')
             phone = parsed_data.get('phone', None)
             swml_url = f"https://{auth_user}:{auth_password}@{request.host}/swml/{agent_id}?outbound=true" 
-            print("Debug: ", swml_url)
-            print("Debug: ", from_number)
-            print("Debug: ", phone)
+
             payload = {
                 "command": "dial",
                 "params": {
@@ -1133,7 +1124,6 @@ def handle_message(data):
                 }
             }
         elif command == 'message':
-            print("Sending message")
             payload = {
                 "id": call_id,
                 "command": "calling.ai_message",
