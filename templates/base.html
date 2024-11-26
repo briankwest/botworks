@@ -132,7 +132,7 @@
     });
   </script>
   <script type="text/javascript">
-    var agent_id = {{ agent_id| tojson }};
+    var agent_id = getCookie('selectedAgentId');
   </script>
   {% block scripts %}{% endblock %}
 
