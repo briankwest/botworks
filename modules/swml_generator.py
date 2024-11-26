@@ -129,20 +129,24 @@ def generate_swml_response(agent_id, request_body):
         function_data = {
             "function": function.name,
             "description": function.description,
-        }
-
-        function_data = {
-            **({"web_hook_url": web_hook_url} if function.web_hook_url else {}),
-            **({"wait_file": function.wait_file} if function.wait_file else {}),
-            **({"wait_file_loops": function.wait_file_loops} if function.wait_file_loops else {}),
-            **({"fillers": function.fillers} if function.fillers else {}),
-            **({"meta_data": function.meta_data} if function.meta_data else {}),
-            **({"meta_data_token": function.meta_data_token} if function.meta_data_token else {}),
             "parameters": {
+                "type": "object",
                 "properties": {}
             }
         }
-
+        if function.web_hook_url:
+            function_data["web_hook_url"] = function.web_hook_url
+        if function.wait_file:
+            function_data["wait_file"] = function.wait_file
+        if function.wait_file_loops:
+            function_data["wait_file_loops"] = function.wait_file_loops
+        if function.fillers:
+            function_data["fillers"] = function.fillers
+        if function.meta_data:
+            function_data["meta_data"] = function.meta_data
+        if function.meta_data_token:
+            function_data["meta_data_token"] = function.meta_data_token
+        print("Debug: ", function_data)
         function_args = AIFunctionArgs.query.filter_by(function_id=function.id, agent_id=agent_id).all()
         for arg in function_args:
             function_data["parameters"]["properties"][arg.name] = {
@@ -158,12 +162,10 @@ def generate_swml_response(agent_id, request_body):
             if arg.enum and arg.type == 'array':
                 function_data["parameters"]["properties"][arg.name]["enum"] = arg.enum.split(',')
 
-        function_data["parameters"]["type"] = "object"
-
         function_payload = {
             "function": function.name,
             "description": function.description,
-            "parameters": function_data["parameters"],
+            **function_data,
             "required": [arg.name for arg in function_args if arg.required]
         }
         if not function.active:
