@@ -1100,7 +1100,7 @@ def handle_message(data):
                 "command": "update",
                 "params": {
                     "id": call_id,
-                    "dest": {
+                    "swml": {
                         "version": "1.0.0",
                         "sections": {
                             "main": [
