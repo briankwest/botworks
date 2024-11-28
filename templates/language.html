@@ -172,6 +172,10 @@
     function populateLanguageDropdowns() {
       $.getJSON('/static/js/language.json', function (data) {
         const languages = data.languages;
+
+        // Sort languages by a specific property, e.g., 'name'
+        languages.sort((a, b) => a.name.localeCompare(b.name));
+
         const nameDropdowns = $('#name, #editName');
         const codeDropdowns = $('#code, #editCode');
 
@@ -204,7 +208,11 @@
         return;
       }
 
-      const providers = ['azure', 'openai', 'deepgram', 'gcloud', 'elevenlabs', 'cartesia'];
+      let providers = ['azure', 'openai', 'deepgram', 'gcloud', 'elevenlabs', 'cartesia'];
+      
+      // Sort providers alphabetically
+      providers.sort();
+
       const dropdowns = ['#voice', '#editVoice'];
       const languagePrefix = languageCode.split('-')[0]; // Get the first part of the language code
 
