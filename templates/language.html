@@ -272,6 +272,7 @@
         const language = data.languages.find(lang => lang.name === selectedName);
         if (language) {
           codeDropdown.val(language.code);
+          loadVoices(language.code); // Load voices based on the selected language name
         }
       });
     });
