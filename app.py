@@ -1090,6 +1090,8 @@ def handle_message(data):
             }
         elif command == 'transfer':
             phone = parsed_data.get('phone', None)
+            language = AILanguage.query.filter_by(agent_id=agent_id).order_by(AILanguage.language_order.asc()).first()
+            voice = language.voice if language else None
             payload = {
                 "id": call_id,
                 "command": "calling.transfer",
@@ -1098,6 +1100,16 @@ def handle_message(data):
                         "version": "1.0.0",
                         "sections": {
                             "main": [
+                                {
+                                    "set": {
+                                        "say_voice": voice
+                                    }
+                                },
+                                {
+                                    "play": {
+                                        "url": "say:Please hold while I transfer your call."
+                                    }
+                                },
                                 {
                                     "connect": {
                                         "to": phone
@@ -2952,6 +2964,8 @@ def patch_language(agent_id, id):
         language_entry.speech_fillers = data.get('speech_fillers', language_entry.speech_fillers)
         language_entry.function_fillers = data.get('function_fillers', language_entry.function_fillers)
         language_entry.language_order = data.get('language_order', language_entry.language_order)
+        language_entry.auto_emotion = data.get('auto_emotion', language_entry.auto_emotion)
+        language_entry.auto_speed = data.get('auto_speed', language_entry.auto_speed)
 
         db.session.commit()
         return jsonify({'message': 'Language entry updated successfully'}), 200
@@ -2973,6 +2987,8 @@ def update_language(agent_id, id):
     language_entry.speech_fillers = data.get('speech_fillers', language_entry.speech_fillers)
     language_entry.function_fillers = data.get('function_fillers', language_entry.function_fillers)
     language_entry.language_order = data.get('language_order', language_entry.language_order)
+    language_entry.auto_emotion = data.get('auto_emotion', language_entry.auto_emotion)
+    language_entry.auto_speed = data.get('auto_speed', language_entry.auto_speed)
     
     db.session.commit()
     return jsonify({'message': 'Language entry updated successfully'}), 200
@@ -2989,7 +3005,9 @@ def get_language_by_id(agent_id, id):
         'voice': language_entry.voice,
         'speech_fillers': language_entry.speech_fillers,
         'function_fillers': language_entry.function_fillers,
-        'language_order': language_entry.language_order
+        'language_order': language_entry.language_order,
+        'auto_emotion': language_entry.auto_emotion,
+        'auto_speed': language_entry.auto_speed
     }), 200
 
 @app.route(f'{API_PREFIX}/agents/<int:agent_id>/language/<int:id>', methods=['DELETE'])
@@ -3014,7 +3032,9 @@ def get_languages(agent_id):
             'voice': l.voice,
             'speech_fillers': l.speech_fillers,
             'function_fillers': l.function_fillers,
-            'language_order': l.language_order
+            'language_order': l.language_order,
+            'auto_emotion': l.auto_emotion,
+            'auto_speed': l.auto_speed
         } for l in languages]
         return jsonify(language_list), 200
     else:
@@ -3032,6 +3052,8 @@ def create_language(agent_id):
         speech_fillers=data['speech_fillers'],
         function_fillers=data['function_fillers'],
         language_order=data.get('language_order', 0),
+        auto_emotion=data.get('auto_emotion', False),
+        auto_speed=data.get('auto_speed', False),
         agent_id=agent_id
     )
     db.session.add(new_language)
@@ -3051,6 +3073,8 @@ def update_language_entry(agent_id):
     language_entry.speech_fillers = data.get('speech_fillers', language_entry.speech_fillers)
     language_entry.function_fillers = data.get('function_fillers', language_entry.function_fillers)
     language_entry.language_order = data.get('language_order', language_entry.language_order)
+    language_entry.auto_emotion = data.get('auto_emotion', language_entry.auto_emotion)
+    language_entry.auto_speed = data.get('auto_speed', language_entry.auto_speed)
     
     db.session.commit()
     return jsonify({'message': 'Language entry updated successfully'}), 200

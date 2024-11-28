@@ -71,6 +71,16 @@
                   <select class="form-control" id="voice" name="voice">
                   </select>
                 </div>
+                <div class="form-group voice-options d-none">
+                  <div class="custom-control custom-switch">
+                    <input type="checkbox" class="custom-control-input" id="autoEmotion" name="auto_emotion">
+                    <label class="custom-control-label" for="autoEmotion">Auto Emotion</label>
+                  </div>
+                  <div class="custom-control custom-switch mt-2">
+                    <input type="checkbox" class="custom-control-input" id="autoSpeed" name="auto_speed">
+                    <label class="custom-control-label" for="autoSpeed">Auto Speed</label>
+                  </div>
+                </div>
                 <div class="form-group">
                   <label for="speechFillers">Speech Fillers</label>
                   <input type="text" class="form-control" id="speechFillers" name="speech_fillers">
@@ -120,6 +130,16 @@
               <select class="form-control" id="editVoice" name="editVoice">
               </select>
             </div>
+            <div class="form-group edit-voice-options d-none">
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" id="editAutoEmotion" name="auto_emotion">
+                <label class="custom-control-label" for="editAutoEmotion">Auto Emotion</label>
+              </div>
+              <div class="custom-control custom-switch mt-2">
+                <input type="checkbox" class="custom-control-input" id="editAutoSpeed" name="auto_speed">
+                <label class="custom-control-label" for="editAutoSpeed">Auto Speed</label>
+              </div>
+            </div>
             <div class="form-group">
               <label for="editSpeechFillers">Speech Fillers</label>
               <input type="text" class="form-control" id="editSpeechFillers" name="speech_fillers">
@@ -159,19 +179,68 @@
         codeDropdowns.empty();
 
         $.each(languages, function (index, language) {
-          const nameOption = $('<option></option>').attr('value', language.name).text(language.name);
-          const codeOption = $('<option></option>').attr('value', language.code).text(language.code);
+          const nameOption = $('<option></option>')
+            .attr('value', language.name)
+            .text(language.name);
+
+          const codeOption = $('<option></option>')
+            .attr('value', language.code)
+            .text(language.code);
 
           nameDropdowns.append(nameOption);
           codeDropdowns.append(codeOption);
         });
 
-        nameDropdowns.val('English (United States)');
+        nameDropdowns.val(languages.find(lang => lang.code === 'en-US').name);
         codeDropdowns.val('en-US');
       });
     }
 
     populateLanguageDropdowns();
+
+    function loadVoices(languageCode) {
+      if (!languageCode) {
+        console.error("Invalid language code:", languageCode);
+        return;
+      }
+
+      const providers = ['azure', 'openai', 'deepgram', 'gcloud', 'elevenlabs', 'cartesia'];
+      const dropdowns = ['#voice', '#editVoice'];
+      const languagePrefix = languageCode.split('-')[0]; // Get the first part of the language code
+
+      dropdowns.forEach(dropdownId => {
+        $(dropdownId).empty(); // Clear existing options
+      });
+
+      providers.forEach(provider => {
+        $.getJSON(`/static/js/${provider}.json`, function (data) {
+          const optgroup = $('<optgroup>').attr('label', provider.charAt(0).toUpperCase() + provider.slice(1));
+          data.forEach(voice => {
+            if (Array.isArray(voice.languageCodes)) { // Ensure languageCodes is an array
+              const matches = voice.languageCodes.some(code => code.split('-')[0] === languagePrefix);
+              if (matches) { // If any language code matches the prefix
+                const value = `${provider}.${voice.name}`;
+                const option = $('<option>')
+                  .val(value)
+                  .text(voice.displayName);
+
+                optgroup.append(option);
+              }
+            }
+          });
+
+          if (optgroup.children().length > 0) {
+            dropdowns.forEach(dropdownId => {
+              $(dropdownId).append(optgroup.clone());
+            });
+          } else {
+            console.warn(`No voices found for provider: ${provider} and language prefix: ${languagePrefix}`);
+          }
+        }).fail(function() {
+          console.error(`Failed to load voices from /static/js/${provider}.json`);
+        });
+      });
+    }
 
     $('#code, #editCode').change(function () {
       const selectedCode = $(this).val();
@@ -183,6 +252,8 @@
           nameDropdown.val(language.name);
         }
       });
+
+      loadVoices(selectedCode); // Load voices based on selected language code
     });
 
     $('#name, #editName').change(function () {
@@ -253,6 +324,27 @@
       });
     }
 
+    function toggleVoiceOptions(voiceValue, isEdit = false) {
+      const prefix = isEdit ? 'edit-' : '';
+      const optionsDiv = $(`.${prefix}voice-options`);
+      
+      if (voiceValue && voiceValue.startsWith('cartesia.')) {
+        optionsDiv.removeClass('d-none');
+      } else {
+        optionsDiv.addClass('d-none');
+        $(`#${prefix}autoEmotion`).prop('checked', false);
+        $(`#${prefix}autoSpeed`).prop('checked', false);
+      }
+    }
+
+    $('#voice').change(function() {
+      toggleVoiceOptions($(this).val());
+    });
+
+    $('#editVoice').change(function() {
+      toggleVoiceOptions($(this).val(), true);
+    });
+
     $('#addLanguageForm').submit(function (e) {
       e.preventDefault();
       const formData = {
@@ -261,7 +353,9 @@
         voice: $('#voice').val(),
         speech_fillers: $('#speechFillers').val(),
         function_fillers: $('#functionFillers').val(),
-        language_order: $('#languageOrder').val()
+        language_order: $('#languageOrder').val(),
+        auto_emotion: $('#autoEmotion').is(':checked'),
+        auto_speed: $('#autoSpeed').is(':checked')
       };
 
       $.ajax({
@@ -321,6 +415,9 @@
           $('#editSpeechFillers').val(response.speech_fillers);
           $('#editFunctionFillers').val(response.function_fillers);
           $('#editLanguageOrder').val(response.language_order);
+          $('#editAutoEmotion').prop('checked', response.auto_emotion);
+          $('#editAutoSpeed').prop('checked', response.auto_speed);
+          toggleVoiceOptions(response.voice, true);
           $('#editLanguageModal').modal('show');
         },
         error: function (error) {
@@ -337,7 +434,9 @@
         voice: $('#editVoice').val(),
         speech_fillers: $('#editSpeechFillers').val(),
         function_fillers: $('#editFunctionFillers').val(),
-        language_order: $('#editLanguageOrder').val()
+        language_order: $('#editLanguageOrder').val(),
+        auto_emotion: $('#editAutoEmotion').is(':checked'),
+        auto_speed: $('#editAutoSpeed').is(':checked')
       };
 
       $.ajax({
@@ -406,26 +505,10 @@
       });
     }
 
-    function loadVoices() {
-      const providers = ['azure', 'openai', 'deepgram', 'gcloud', 'elevenlabs'];
-      const dropdowns = ['#voice', '#editVoice'];
-
-      providers.forEach(provider => {
-        $.getJSON(`/static/js/${provider}.json`, function (data) {
-          const optgroup = $('<optgroup>').attr('label', provider.charAt(0).toUpperCase() + provider.slice(1));
-          data.forEach(voice => {
-            const value = `${provider}.${voice.name}`;
-            optgroup.append($('<option>').val(value).text(voice.name));
-          });
-
-          dropdowns.forEach(dropdownId => {
-            $(dropdownId).append(optgroup.clone());
-          });
-        });
-      });
-    }
-
-    loadVoices();
+    // Default to 'en-US' on initial load
+    const initialCode = $('#code').val() || 'en-US';
+    $('#code').val(initialCode); // Set the default value if not already set
+    loadVoices(initialCode); // Initial load based on default selected code
   });
 </script>
 {% endblock %}

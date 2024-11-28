@@ -180,6 +180,8 @@ class AILanguage(db.Model):
     speech_fillers = db.Column(db.Text, nullable=True)
     function_fillers = db.Column(db.Text, nullable=True)
     language_order = db.Column(db.Integer, nullable=False, default=0)
+    auto_emotion = db.Column(db.Boolean, nullable=False, default=False)
+    auto_speed = db.Column(db.Boolean, nullable=False, default=False)
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
