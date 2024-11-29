@@ -163,14 +163,108 @@
 {% block scripts %}
 <script>
   $(document).ready(function () {
-    // Load languages for both add and edit forms
-    $.getJSON('/static/js/language.json', function (languages) {
-      populateDropdowns(languages.languages, '#fromLanguage');
-      populateDropdowns(languages.languages, '#toLanguage');
-      populateDropdowns(languages.languages, '#editFromLanguage');
-      populateDropdowns(languages.languages, '#editToLanguage');
-    }).fail(function() {
-      console.error('Failed to load languages');
+    // Function to populate language dropdowns
+    function populateLanguageDropdowns() {
+      $.getJSON('/static/js/language.json', function (data) {
+        const languages = data.languages;
+        const fromLanguageDropdown = $('#fromLanguage');
+        const toLanguageDropdown = $('#toLanguage');
+        const editFromLanguageDropdown = $('#editFromLanguage');
+        const editToLanguageDropdown = $('#editToLanguage');
+
+        fromLanguageDropdown.empty();
+        toLanguageDropdown.empty();
+        editFromLanguageDropdown.empty();
+        editToLanguageDropdown.empty();
+
+        $.each(languages, function (index, language) {
+          const option = $('<option></option>')
+            .attr('value', language.code)
+            .text(language.name);
+
+          fromLanguageDropdown.append(option.clone());
+          toLanguageDropdown.append(option.clone());
+          editFromLanguageDropdown.append(option.clone());
+          editToLanguageDropdown.append(option.clone());
+        });
+
+        // Set default languages
+        const defaultFromLanguage = 'en-US';
+        const defaultToLanguage = 'es';
+
+        fromLanguageDropdown.val(defaultFromLanguage);
+        toLanguageDropdown.val(defaultToLanguage);
+
+        // Load voices for default languages
+        loadVoices(defaultFromLanguage, ['#fromVoice']);
+        loadVoices(defaultToLanguage, ['#toVoice']);
+      });
+    }
+
+    function loadVoices(languageCode, dropdowns) {
+      const providers = ['azure']; // Only use Azure voices
+      const languagePrefix = languageCode.split('-')[0]; // Get the first part of the language code
+
+      console.log(`Loading voices for language code: ${languageCode} with prefix: ${languagePrefix}`);
+
+      dropdowns.forEach(dropdownId => {
+        $(dropdownId).empty(); // Clear existing options
+      });
+
+      providers.forEach(provider => {
+        $.getJSON(`/static/js/${provider}.json`, function (voices) {
+          console.log(`Fetched voices from provider: ${provider}`, voices);
+
+          const optgroup = $('<optgroup>').attr('label', provider.charAt(0).toUpperCase() + provider.slice(1));
+          voices.forEach(voice => {
+            const languageCodes = Array.isArray(voice.languageCodes) ? voice.languageCodes : [];
+            console.log(`Checking voice: ${voice.name}, languageCodes: ${languageCodes}`);
+
+            if (languageCodes.includes(languageCode) || languageCodes.some(code => code.startsWith(languagePrefix))) {
+              console.log(`Voice ${voice.name} matches the language code or prefix`);
+
+              const value = `${provider}.${voice.name}`;
+              const option = $('<option>')
+                .val(value)
+                .text(voice.displayName);
+
+              optgroup.append(option);
+            } else {
+              console.log(`Voice ${voice.name} does not match`);
+            }
+          });
+
+          dropdowns.forEach(dropdownId => {
+            $(dropdownId).append(optgroup.clone());
+          });
+        }).fail(function() {
+          console.error(`Failed to fetch voices from provider: ${provider}`);
+        });
+      });
+    }
+
+    // Populate language dropdowns on page load
+    populateLanguageDropdowns();
+
+    // Event listeners for language selection
+    $('#fromLanguage').change(function () {
+      const selectedLanguage = $(this).val();
+      loadVoices(selectedLanguage, ['#fromVoice']);
+    });
+
+    $('#toLanguage').change(function () {
+      const selectedLanguage = $(this).val();
+      loadVoices(selectedLanguage, ['#toVoice']);
+    });
+
+    $('#editFromLanguage').change(function () {
+      const selectedLanguage = $(this).val();
+      loadVoices(selectedLanguage, ['#editFromVoice']);
+    });
+
+    $('#editToLanguage').change(function () {
+      const selectedLanguage = $(this).val();
+      loadVoices(selectedLanguage, ['#editToVoice']);
     });
 
     // Load filters for both add and edit forms
@@ -181,34 +275,6 @@
       populateDropdowns(filters, '#editToFilter');
     }).fail(function() {
       console.error('Failed to load filters');
-    });
-
-    // Load voices for both add and edit forms
-    const providers = ['elevenlabs'];
-    const voiceDropdowns = ['#fromVoice', '#toVoice', '#editFromVoice', '#editToVoice'];
-
-    voiceDropdowns.forEach(dropdownId => {
-      $(dropdownId).empty();
-    });
-
-    let voicesLoaded = 0;
-    const totalProviders = providers.length;
-
-    providers.forEach(provider => {
-      $.getJSON(`/static/js/${provider}.json`, function (voices) {
-        const optgroup = $('<optgroup>').attr('label', provider.charAt(0).toUpperCase() + provider.slice(1));
-        voices.forEach(voice => {
-          const value = `${provider}.${voice.name}`;
-          const option = $('<option>').val(value).text(voice.name);
-          optgroup.append(option);
-        });
-
-        voiceDropdowns.forEach(dropdownId => {
-          $(dropdownId).append(optgroup.clone());
-        });
-
-        voicesLoaded++;
-      });
     });
 
     $('#translatorsTable').DataTable({
@@ -378,7 +444,7 @@
               const optgroup = $('<optgroup>').attr('label', provider.charAt(0).toUpperCase() + provider.slice(1));
               voices.forEach(voice => {
                 const value = `${provider}.${voice.name}`;
-                const option = $('<option>').val(value).text(voice.name);
+                const option = $('<option>').val(value).text(voice.displayName);
                 optgroup.append(option);
               });
 
