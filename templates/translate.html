@@ -205,40 +205,28 @@
       const providers = ['azure']; // Only use Azure voices
       const languagePrefix = languageCode.split('-')[0]; // Get the first part of the language code
 
-      console.log(`Loading voices for language code: ${languageCode} with prefix: ${languagePrefix}`);
-
       dropdowns.forEach(dropdownId => {
         $(dropdownId).empty(); // Clear existing options
       });
 
       providers.forEach(provider => {
         $.getJSON(`/static/js/${provider}.json`, function (voices) {
-          console.log(`Fetched voices from provider: ${provider}`, voices);
-
           const optgroup = $('<optgroup>').attr('label', provider.charAt(0).toUpperCase() + provider.slice(1));
           voices.forEach(voice => {
             const languageCodes = Array.isArray(voice.languageCodes) ? voice.languageCodes : [];
-            console.log(`Checking voice: ${voice.name}, languageCodes: ${languageCodes}`);
-
             if (languageCodes.includes(languageCode) || languageCodes.some(code => code.startsWith(languagePrefix))) {
-              console.log(`Voice ${voice.name} matches the language code or prefix`);
-
               const value = `${provider}.${voice.name}`;
               const option = $('<option>')
                 .val(value)
                 .text(voice.displayName);
 
               optgroup.append(option);
-            } else {
-              console.log(`Voice ${voice.name} does not match`);
             }
           });
 
           dropdowns.forEach(dropdownId => {
             $(dropdownId).append(optgroup.clone());
           });
-        }).fail(function() {
-          console.error(`Failed to fetch voices from provider: ${provider}`);
         });
       });
     }
