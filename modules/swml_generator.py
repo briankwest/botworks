@@ -110,9 +110,9 @@ def generate_swml_response(agent_id, request_body):
             "code": language.code
         }
         if language.speech_fillers:
-            language_data["speech_fillers"] = language.speech_fillers
+            language_data["speech_fillers"] = [language.speech_fillers]
         if language.function_fillers:
-            language_data["function_fillers"] = language.function_fillers
+            language_data["function_fillers"] = [language.function_fillers]
 
         swml.add_ailanguage(language_data)
 
