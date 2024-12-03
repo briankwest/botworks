@@ -322,7 +322,7 @@ def generate_swml_response(agent_id, request_body):
                         "string": '%{meta_data.table.%{lc:args.target}}',
                         "pattern": '\\w+',
                         "output": {
-                            "response": "Tell the user you are going to transfer the call to whoever they asked for. Do not change languages from the one you are currently using. Do not hangup.",
+                            "response": "Tell the user you are going to transfer the call to whoever they asked for. Do not change languages from the one you are currently using. Do not hangup.", "post_process": 'true',
                             "action": [{"SWML": transfer.render(), "transfer": 'true'}]
                         }
                     },
