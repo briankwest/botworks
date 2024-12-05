@@ -597,6 +597,12 @@ def laml(agent_id):
         return response, 200        
     else:
         app.logger.error(f"No call_id found for {to}")
+
+        if to == from_:
+            response = make_response('<?xml version="1.0" encoding="UTF-8"?><Response/>')
+            response.headers['Content-Type'] = 'text/xml'
+            return response, 200
+        
         response = make_response('<?xml version="1.0" encoding="UTF-8"?><Response><Message>Sorry, No active call found.</Message></Response>')
         response.headers['Content-Type'] = 'text/xml'
         
