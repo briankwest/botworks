@@ -83,7 +83,7 @@ def generate_swml_response(agent_id, request_body):
     post_prompt_url = f"https://{request.host}/postprompt/{agent_id}"
     if auth_user and auth_pass:
         post_prompt_url = f"https://{auth_user}:{auth_pass}@{request.host}/postprompt/{agent_id}"
-        swml.set_aipost_prompt_url({"post_prompt_url": post_prompt_url})
+        swml.set_aipost_prompt_url({"post_prompt_url": post_prompt_url, "post_prompt_auth_user": auth_user, "post_prompt_auth_password": auth_pass })
 
     web_hook_url = f"https://{request.host}/onboard/swaig/{agent_id}"
     if auth_user and auth_pass:
