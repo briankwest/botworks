@@ -19,32 +19,36 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.2/dist/sweetalert2.all.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.1.0/js/adminlte.min.js"></script>
+  <style>
+    .card-body.p-0tr {
+      -webkit-flex: 1 1 auto;
+      -ms-flex: 1 1 auto;
+      flex: 1 1 auto;
+      min-height: 1px;
+      padding: 0 !important;
+    }
+
+    .card-body.p-0tr .table {
+      margin-bottom: 0 !important;
+    }
+
+    .card-body.p-0tr .table td,
+    .card-body.p-0tr .table th {
+      padding: 0.25rem !important;
+    }
+  </style>
 </head>
 
 <body>
   <div id="fullScreenModal" class="modal show" role="dialog" aria-labelledby="modalTitle" aria-hidden="false" tabindex="-1"
     style="display:block; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.8); z-index:1050;">
-    <div class="modal-content" tabindex="0" style="position:relative; width:100%; height:100%; overflow:auto;">
-      <div class="p-3">
-        <section class="content-header">
-          <div class="container-fluid">
-            <div class="row mb-2">
-              <div class="col-6">
-                <h1 id="modalTitle" class="m-0">Conversation Details</h1>
-              </div>
-            </div>
-          </div>
-        </section>
-        <section class="content">
-          <div class="row">
-            <div class="col-md-12">
-              <div class="card card-primary">
-                <div class="card-header bg-primary">
-                  <h3 class="card-title">Interaction Details</h3>
-                </div>
-                <div class="card-body">
+    <div class="modal-content" tabindex="0" style="position:relative; width:100%; height:100%; overflow:auto; margin:0;">
+      <div class="p-0">
+        <section class="content p-0">
+          <div class="row m-0">
+              <div class="card card-primary m-0">
+                <div class="card-body p-0">
                   <div id="PostPromptDataContent"></div>
-                </div>
               </div>
             </div>
           </div>
@@ -294,7 +298,7 @@
     const content = document.getElementById('PostPromptDataContent');
 
     if (data) {
-      const interactionDetailsCard = createCard('Interaction Details', createInteractionDetailsTable(data), 'bg-info');
+      const interactionDetailsCard = createCard('Interaction Details', createInteractionDetailsTable(data), 'bg-info', true);
       content.appendChild(interactionDetailsCard);
     }
 
@@ -304,29 +308,29 @@
     }
 
     if (data.times) {
-      const timesCard = createCard('Times', createTimesTable(data.times), 'bg-warning');
+      const timesCard = createCard('Times', createTimesTable(data.times), 'bg-warning', true);
       content.appendChild(timesCard);
     }
 
     if (data.SWMLVars) {
-      const swmlVarsCard = createCard('SWML Vars', createSWMLVarsTable(data.SWMLVars), 'bg-danger');
+      const swmlVarsCard = createCard('SWML Vars', createSWMLVarsTable(data.SWMLVars), 'bg-danger', true);
       content.appendChild(swmlVarsCard);
     }
 
     if (data.swaig_log) {
-      const swaigLogCard = createCard('SWAIG Log', createSwaigLogTable(data.swaig_log), 'bg-secondary');
+      const swaigLogCard = createCard('SWAIG Log', createSwaigLogTable(data.swaig_log), 'bg-secondary', true);
       content.appendChild(swaigLogCard);
     }
 
     if (data.post_prompt_data) {
-      const postPromptDataCard = createCard('Post Prompt Data', createPostPromptDataTable(data.post_prompt_data), 'bg-primary');
+      const postPromptDataCard = createCard('Post Prompt Data', createPostPromptDataTable(data.post_prompt_data), 'bg-primary', true);
       content.appendChild(postPromptDataCard);
     }
   }
 
-  function createCard(title, contentHtml, headerClass) {
+  function createCard(title, contentHtml, headerClass, collapsed = false) {
     const card = document.createElement('div');
-    card.className = 'card mb-3';
+    card.className = 'card mb-0';
 
     const cardHeader = document.createElement('div');
     cardHeader.className = 'card-header ' + (headerClass || 'bg-info');
@@ -339,7 +343,7 @@
     collapseButton.dataset.cardWidget = 'collapse';
 
     const collapseIcon = document.createElement('i');
-    collapseIcon.className = 'fas fa-minus';
+    collapseIcon.className = collapsed ? 'fas fa-plus' : 'fas fa-minus';
 
     collapseButton.appendChild(collapseIcon);
     cardTools.appendChild(collapseButton);
@@ -354,7 +358,7 @@
     cardHeader.appendChild(cardTitle);
 
     const cardBody = document.createElement('div');
-    cardBody.className = 'card-body';
+    cardBody.className = 'card-body p-0tr' + (collapsed ? ' collapse' : '');
     cardBody.innerHTML = contentHtml;
 
     card.appendChild(cardHeader);
@@ -369,7 +373,7 @@
         <tr>
             <th style="width: 45%;">Key</th>
             <th style="width: 45%;">Value</th>
-            <th style="width: 5%;">Copy</th>
+            <th style="width: 10%;">Copy</th>
         </tr>
         <tr>
             <td>Call ID</td>
@@ -411,6 +415,66 @@
             <td>AI End Date</td>
             <td>${data.ai_end_date ? new Date(data.ai_end_date / 1000).toLocaleString() : ''}</td>
             <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.ai_end_date ? new Date(data.ai_end_date / 1000).toLocaleString() : ''}')"></i></td>
+        </tr>
+        <tr>
+            <td>Total Input Tokens</td>
+            <td>${data.total_input_tokens}</td>
+            <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.total_input_tokens}')"></i></td>
+        </tr>
+        <tr>
+            <td>Total Output Tokens</td>
+            <td>${data.total_output_tokens}</td>
+            <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.total_output_tokens}')"></i></td>
+        </tr>
+        <tr>
+            <td>Total ASR Cost Factor</td>
+            <td>${data.total_asr_cost_factor}</td>
+            <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.total_asr_cost_factor}')"></i></td>
+        </tr>
+        <tr>
+            <td>Total ASR Minutes</td>
+            <td>${data.total_asr_minutes}</td>
+            <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.total_asr_minutes}')"></i></td>
+        </tr>
+        <tr>
+            <td>Total Minutes</td>
+            <td>${data.total_minutes}</td>
+            <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.total_minutes}')"></i></td>
+        </tr>
+        <tr>
+            <td>Total TTS Chars</td>
+            <td>${data.total_tts_chars}</td>
+            <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.total_tts_chars}')"></i></td>
+        </tr>
+        <tr>
+            <td>Total TTS Chars Per Minute</td>
+            <td>${data.total_tts_chars_per_min}</td>
+            <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.total_tts_chars_per_min}')"></i></td>
+        </tr>
+        <tr>
+            <td>Total Wire Input Tokens</td>
+            <td>${data.total_wire_input_tokens}</td>
+            <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.total_wire_input_tokens}')"></i></td>
+        </tr>
+        <tr>
+            <td>Total Wire Input Tokens Per Minute</td>
+            <td>${data.total_wire_input_tokens_per_minute}</td>
+            <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.total_wire_input_tokens_per_minute}')"></i></td>
+        </tr>
+        <tr>
+            <td>Total Wire Output Tokens</td>
+            <td>${data.total_wire_output_tokens}</td>
+            <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.total_wire_output_tokens}')"></i></td>
+        </tr>
+        <tr>
+            <td>Total Wire Output Tokens Per Minute</td>
+            <td>${data.total_wire_output_tokens_per_minute}</td>
+            <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.total_wire_output_tokens_per_minute}')"></i></td>
+        </tr>
+        <tr>
+            <td>Version</td>
+            <td>${data.version}</td>
+            <td class="copy-btn"><i class="fas fa-copy" onclick="copyToClipboard('${data.version}')"></i></td>
         </tr>`;
 
     const additionalFields = [
@@ -490,11 +554,7 @@
     let table = '<div class="table-responsive"><table class="table table-striped table-sm" style="table-layout: fixed; width: 100%;">';
     table += `
             <tr>
-                <th style="width: 10%;">Role</th>
-                <th style="width: 65%;">Content</th>
-                <th style="width: 5%;">Latency</th>
-                <th style="width: 5%;">Audio Latency</th>
-                <th style="width: 5%;">Utterance Latency</th>
+                <th style="width: 100%;">Content</th>
             </tr>
         `;
     callLog.forEach((log, index) => {
@@ -514,11 +574,18 @@
 
       table += `
                 <tr class="${roleClass}">
-                    <td class="role">${log.role}</td>
-                    <td style="word-wrap: break-word;">${log.content.replace(/\n/g, '<br/>')}</td>
-                    <td>${log.latency ? log.latency + ' ms' : 'N/A'}</td>
-                    <td>${log.audio_latency ? log.audio_latency + ' ms' : 'N/A'}</td>
-                    <td>${log.utterance_latency ? log.utterance_latency + ' ms' : 'N/A'}</td>
+                    <td class="role">${log.role}:<br/>
+                    ${log.content.replace(/\n/g, '<br/>')}
+                    ${(log.latency || log.audio_latency || log.utterance_latency || log.confidence) ? 
+                      `<br/>(${[
+                        (log.latency || log.audio_latency || log.utterance_latency) ? 
+                          `Latency: ${[
+                            log.latency ? log.latency + ' ms' : '',
+                            log.audio_latency ? log.audio_latency + ' ms' : '',
+                            log.utterance_latency ? log.utterance_latency + ' ms' : ''
+                          ].filter(Boolean).join(' / ')}` : '',
+                        log.confidence ? `Confidence: ${Number(log.confidence).toFixed(2)}` : ''
+                      ].filter(Boolean).join(' | ')})` : ''}</td>
                 </tr>
             `;
     });
