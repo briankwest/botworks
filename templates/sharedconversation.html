@@ -302,8 +302,8 @@
       content.appendChild(interactionDetailsCard);
     }
 
-    if (data.raw_call_log) {
-      const callLogCard = createCard('Call Log', createCallLogTable(data.raw_call_log), 'bg-success');
+    if (data.call_log) {
+      const callLogCard = createCard('Call Log', createCallLogTable(data.call_log), 'bg-success');
       content.appendChild(callLogCard);
     }
 
