@@ -1,21 +1,22 @@
 import json
 import yaml
 
-class SignalWireML:
-    VERSION = '1.22'
 
-    def __init__(self, version='1.0.0'):
+class SignalWireML:
+    VERSION = "1.22"
+
+    def __init__(self, version="1.0.0"):
         self._content = {
-            'version': version,
+            "version": version,
         }
         self._prompt = {}
         self._params = {}
         self._hints = []
         self._SWAIG = {
-            'defaults': {},
-            'functions': [],
-            'includes': [],
-            'native_functions': [],
+            "defaults": {},
+            "functions": [],
+            "includes": [],
+            "native_functions": [],
         }
         self._pronounce = []
         self._languages = []
@@ -24,41 +25,67 @@ class SignalWireML:
     def add_aiapplication(self, section):
         app = "ai"
         args = {}
-        for data in ['post_prompt', 'post_prompt_url', 'post_prompt_auth_user', 'post_prompt_auth_password',
-                     'languages', 'hints', 'params', 'prompt', 'SWAIG', 'pronounce', 'global_data']:
-            if hasattr(self, f'_{data}'):
-                args[data] = getattr(self, f'_{data}')
-        
-        self._content.setdefault('sections', {}).setdefault(section, []).append({app: args})
+        for data in [
+            "post_prompt",
+            "post_prompt_url",
+            "post_prompt_auth_user",
+            "post_prompt_auth_password",
+            "languages",
+            "hints",
+            "params",
+            "prompt",
+            "SWAIG",
+            "pronounce",
+            "global_data",
+        ]:
+            if hasattr(self, f"_{data}"):
+                args[data] = getattr(self, f"_{data}")
+
+        self._content.setdefault("sections", {}).setdefault(section, []).append(
+            {app: args}
+        )
 
     def set_context_steps(self, context_name, steps):
-        self._prompt.setdefault('contexts', {}).setdefault(context_name, {})['steps'] = steps
+        self._prompt.setdefault("contexts", {}).setdefault(context_name, {})[
+            "steps"
+        ] = steps
 
     def add_context_steps(self, context_name, steps):
-        self._prompt.setdefault('contexts', {}).setdefault(context_name, {}).setdefault('steps', []).extend(steps)
+        self._prompt.setdefault("contexts", {}).setdefault(context_name, {}).setdefault(
+            "steps", []
+        ).extend(steps)
 
     def set_prompt_contexts(self, contexts):
-        self._prompt['contexts'] = contexts
+        self._prompt["contexts"] = contexts
 
     def add_application(self, section, app, args=None):
         if args is None:
             args = {}
-        self._content.setdefault('sections', {}).setdefault(section, []).append({app: args})
+        self._content.setdefault("sections", {}).setdefault(section, []).append(
+            {app: args}
+        )
 
     def set_aipost_prompt_url(self, postprompt):
         for k, v in postprompt.items():
-            setattr(self, f'_{k}', v)
+            setattr(self, f"_{k}", v)
 
     def set_global_data(self, data):
-        self._content['_global_data'] = data
+        self._content["_global_data"] = data
 
     def set_aiparams(self, params):
         self._params = params
 
     def add_aiparams(self, params):
-        numeric_keys = ['end_of_speech_timeout', 'attention_timeout', 'outbound_attention_timeout',
-                        'background_file_loops', 'background_file_volume', 'digit_timeout', 'energy_level']
-        
+        numeric_keys = [
+            "end_of_speech_timeout",
+            "attention_timeout",
+            "outbound_attention_timeout",
+            "background_file_loops",
+            "background_file_volume",
+            "digit_timeout",
+            "energy_level",
+        ]
+
         for k, v in params.items():
             if k in numeric_keys:
                 self._params[k] = float(v) if v is not None else 0
@@ -75,10 +102,10 @@ class SignalWireML:
 
     def add_aiswaigdefaults(self, SWAIG):
         for k, v in SWAIG.items():
-            self._SWAIG['defaults'][k] = v
+            self._SWAIG["defaults"][k] = v
 
     def add_aiswaigfunction(self, SWAIG):
-        self._SWAIG['functions'].append(SWAIG)
+        self._SWAIG["functions"].append(SWAIG)
 
     def set_aipronounce(self, pronounce):
         self._pronounce = pronounce
@@ -93,14 +120,24 @@ class SignalWireML:
         self._languages.append(language)
 
     def add_aiinclude(self, include):
-        if 'url' in include and include['url']:
-            self._SWAIG['includes'].append(include)
+        if "url" in include and include["url"]:
+            self._SWAIG["includes"].append(include)
 
     def add_ainativefunction(self, native):
-        self._SWAIG['native_functions'].append(native)
+        self._SWAIG["native_functions"].append(native)
+
+    def add_aiinternalfillers(self, fillers):
+        self._prompt["internal_fillers"].append(fillers)
 
     def set_aipost_prompt(self, postprompt):
-        numeric_keys = ['confidence', 'barge_confidence', 'top_p', 'temperature', 'frequency_penalty', 'presence_penalty']
+        numeric_keys = [
+            "confidence",
+            "barge_confidence",
+            "top_p",
+            "temperature",
+            "frequency_penalty",
+            "presence_penalty",
+        ]
         for k, v in postprompt.items():
             if k in numeric_keys:
                 self._post_prompt[k] = float(v) if v is not None else 0
@@ -108,7 +145,14 @@ class SignalWireML:
                 self._post_prompt[k] = v
 
     def set_aiprompt(self, prompt):
-        numeric_keys = ['confidence', 'barge_confidence', 'top_p', 'temperature', 'frequency_penalty', 'presence_penalty']
+        numeric_keys = [
+            "confidence",
+            "barge_confidence",
+            "top_p",
+            "temperature",
+            "frequency_penalty",
+            "presence_penalty",
+        ]
         for k, v in prompt.items():
             if k in numeric_keys:
                 self._prompt[k] = float(v) if v is not None else 0
@@ -121,19 +165,18 @@ class SignalWireML:
     def swaig_response_json(self, response):
         return json.dumps(response, indent=4, ensure_ascii=False)
 
-
     def clean_empty_items(self):
-        keys_to_check = ['functions', 'native_functions', 'includes']
+        keys_to_check = ["functions", "native_functions", "includes"]
         for key in keys_to_check:
             if not self._SWAIG[key]:
                 del self._SWAIG[key]
-                
+
         self._hints = [hint for hint in self._hints if hint]
         self._pronounce = [pronounce for pronounce in self._pronounce if pronounce]
         self._languages = [language for language in self._languages if language]
         self._params = {k: v for k, v in self._params.items() if v}
         self._post_prompt = {k: v for k, v in self._post_prompt.items() if v}
-            
+
     def render(self):
         self.clean_empty_items()
         return self._content
