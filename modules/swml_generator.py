@@ -162,8 +162,8 @@ def generate_swml_response(agent_id, request_body):
     for pronounce in pronounces:
         swml.add_aipronounce(
             {
-                "replace_this": pronounce.replace_this,
-                "replace_with": pronounce.replace_with,
+                "replace": pronounce.replace_this,
+                "with": pronounce.replace_with,
                 "ignore_case": pronounce.ignore_case,
             }
         )
