@@ -142,7 +142,6 @@ def generate_swml_response(agent_id, request_body):
     )
     for language in languages:
         language_data = {
-            "language": language.name,
             "voice": language.voice,
             "name": language.name,
             "code": language.code,
